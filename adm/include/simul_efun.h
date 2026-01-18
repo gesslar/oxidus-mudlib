@@ -92,7 +92,7 @@ string get_long(object ob);
 
 // File: directory.c
 int assure_dir(string path);
-string query_directory(object ob);
+varargs string query_directory(object ob);
 
 // File: english.c
 string cap_words(string str);

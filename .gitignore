@@ -47,3 +47,6 @@ adm/etc/alarms/*.txt
 /adm/dist/bin/
 /adm/dist/run.log
 /include/driver/
+
+lpc-language-server
+node_modules

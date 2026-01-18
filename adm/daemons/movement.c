@@ -1,13 +1,27 @@
-// /adm/daemons/movement.c
-// Daemon that provides movement checks, etc.
-//
-// Created:     2024/01/30: Gesslar
-// Last Change: 2024/01/30: Gesslar
-//
-// 2024/01/30: Gesslar - Created
+/**
+ * @file /adm/daemons/movement.c
+ *
+ * Daemon that provides movement checks, etc.
+ *
+ * @created 2024-01-30 - Gesslar
+ * @last_modified 2024-01-30 - Gesslar
+ *
+ * @history
+ * 2024-01-30 - Gesslar - Created
+ */
 
 inherit STD_DAEMON;
 
+/**
+ * Checks if an object is allowed to walk in a specified direction.
+ *
+ * Verifies that the exit exists and, if it's a door, that it is open.
+ *
+ * @param {STD_BODY} ob - The object attempting to move
+ * @param {STD_ROOM} room - The room the object is currently in
+ * @param {string} dir - The direction to move
+ * @returns {mixed} Returns 1 if movement is allowed, or a string with an error message if not
+ */
 varargs mixed allow_walk_direction(object ob, object room, string dir) {
   if(!ob || !room || !dir)
     return 0;
@@ -21,6 +35,17 @@ varargs mixed allow_walk_direction(object ob, object room, string dir) {
   return 1;
 }
 
+/**
+ * Checks if movement to a destination should be prevented.
+ *
+ * Verifies that the current room allows the object to leave and that the
+ * destination room allows the object to enter.
+ *
+ * @param {STD_BODY} ob - The object attempting to move
+ * @param {STD_ROOM} room - The current room
+ * @param {STD_ROOM} dest - The destination room object
+ * @returns {mixed} Returns 0 if movement is allowed, or a string with an error message if prevented
+ */
 varargs mixed prevent_walk_direction(object ob, object room, mixed dest) {
   if(!ob || !room || !dest)
     return 1;
@@ -34,18 +59,40 @@ varargs mixed prevent_walk_direction(object ob, object room, mixed dest) {
   return 0;
 }
 
+/**
+ * Executes pre-exit function before an object moves in a direction.
+ *
+ * If the room has a pre-exit function defined for the specified direction,
+ * this function evaluates it with the moving object as a parameter.
+ *
+ * @param {STD_BODY} who - The object attempting to move
+ * @param {STD_ROOM} room - The room containing the exit
+ * @param {string} dir - The direction of movement
+ * @returns {void}
+ */
 varargs void pre_walk_direction(object who, object room, string dir) {
   if(!who || !room || !dir)
     return;
 
-  if(room->has_pre_exit_function(dir))
-    room->evaluate_pre_exit_function(dir, who);
+  if(room->has_pre_exit_func(dir))
+    room->evaluate_pre_exit_func(dir, who);
 }
 
+/**
+ * Executes post-exit function after an object moves in a direction.
+ *
+ * If the room has a post-exit function defined for the specified direction,
+ * this function evaluates it with the moving object as a parameter.
+ *
+ * @param {STD_BODY} who - The object that moved
+ * @param {STD_ROOM} room - The room containing the exit
+ * @param {string} dir - The direction that was taken
+ * @returns {void}
+ */
 varargs void post_walk_direction(object who, object room, string dir) {
   if(!who || !room || !dir)
     return;
 
-  if(room->has_post_exit_function(dir))
-    room->evaluate_post_exit_function(dir, who);
+  if(room->has_post_exit_func(dir))
+    room->evaluate_post_exit_func(dir, who);
 }

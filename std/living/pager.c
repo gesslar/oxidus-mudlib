@@ -42,7 +42,7 @@ varargs void page(mixed text, mixed *cb, int no_colour) {
 }
 
 void continue_page(string input, string *text, mixed *cb, int no_colour, int more_lines, string page_display, int num, int curr) {
-  int sz, end;
+  int end;
   string mess;
   string *this_page;
 
@@ -57,6 +57,7 @@ void continue_page(string input, string *text, mixed *cb, int no_colour, int mor
 
   this_page = text[curr..end];
   mess = implode(this_page, "\n");
+  mess = append(mess, "\n");
 
   // Update curr for the next iteration
   curr = end + 1;

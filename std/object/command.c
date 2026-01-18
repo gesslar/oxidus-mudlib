@@ -252,13 +252,13 @@ nomask varargs string *query_command_history(int index, int range) {
 
 int command_hook(string arg) {
   string verb, err, *cmds = ({});
-  string custom, tmp;
+
   object
   /** @type {STD_BODY}    */  caller,
   /** @type {STD_CMD}     */  cmd,
   /** @type {STD_ITEM}    */  ob,
   /** @type {STD_ITEM}*   */ *obs;
-  int i, sz;
+  int sz;
   mixed result;
   string complete;
   mixed return_value;
@@ -287,6 +287,7 @@ int command_hook(string arg) {
   obs = all_inventory();
   if(environment())
     obs += ({ environment() }) + all_inventory(environment());
+
   obs += ({ this_object() });
 
   foreach(ob in obs) {
@@ -366,17 +367,18 @@ public string find_command_path(string verb) {
 
 private nomask int evaluate_result(mixed result) {
   if(stringp(result)) {
-    if(!strlen(result))
+    if(!strlen(result)) {
       return 0;
-    else {
+    } else {
       result = append(result, "\n");
+      debug(result);
       page(result);
       return 1;
     }
   } else if(pointerp(result)) {
-    if(!sizeof(result))
+    if(!sizeof(result)) {
       return 0;
-    else {
+    } else {
       page(result);
       return 1;
     }

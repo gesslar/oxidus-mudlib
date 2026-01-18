@@ -171,12 +171,12 @@ varargs int move(mixed ob) {
   return result;
 }
 
-void event_remove(object prev) {
+void event_remove(object _prev) {
   object
   /** @type {STD_ITEM} */ ob,
   /** @type {STD_ITEM} */ next;
 
-  ob = first_inventory(this_object());
+  ob = first_inventory();
   while(ob) {
     next = next_inventory(ob);
     if(call_if(ob, "prevent_drop")) {

@@ -10,75 +10,97 @@ inherit STD_CMD;
 
 string query_wealth(object tp);
 
+/**
+ * Main entry point to the command.
+ *
+ * @param {STD_BODY} tp - This player.
+ * @param {string} args - The arguments to the command.
+ * @returns {mixed} The result of the command.
+ */
 mixed main(object tp, string args) {
-    object *inventory;
-    string *shorts;
-    string wealth;
-    int i;
-    int fill, cap;
-    object *equipped = values(tp->query_equipped());
-    object *wielded = values(tp->query_wielded());
+  object* /** @type {STD_ITEM*} */ inventory;
+  string *shorts;
+  object* /** @type {STD_CLOTHING*} */ equipped = values(tp->query_equipped());
+  object* /** @type {STD_WEAPON*} */ wielded = values(tp->query_wielded());
 
-    inventory = find_targets(tp, args, tp);
+  inventory = find_targets(tp, args, tp);
 
-    shorts = map(inventory, function(object ob, object tp, object *equipped, object *wielded) {
-        string result;
+  shorts = map(inventory, function(
+    object  /** @type {STD_ITEM} */ ob,
+    object  /** @type {STD_BODY} */ tp,
+    object* /** @type {STD_CLOTHING*} */ equipped,
+    object* /** @type {STD_WEAPON*} */ wielded
+  ) {
+    string result;
 
-        if(!ob->query_short())
-            return 0;
+    if(!ob->query_short())
+      return 0;
 
-        result = get_short(ob);
+    result = get_short(ob);
 
-        if(of(ob, equipped))
-            result += " (equipped)";
-        else if(of(ob, wielded))
-            result += " (wielded)";
+    if(of(ob, equipped))
+      result += " (equipped)";
+    else if(of(ob, wielded))
+      result += " (wielded)";
 
-        if(devp(tp))
-            result += " (" + file_name(ob) + ")";
+    if(devp(tp))
+      result += " (" + file_name(ob) + ")";
 
-        return result;
-    }, tp, equipped, wielded);
+    return result;
+  }, tp, equipped, wielded);
 
-    shorts -= ({ 0 });
+  shorts -= ({ 0 });
 
-    if(sizeof(shorts) > 1)
-        shorts += ({ "" });
+  if(sizeof(shorts) > 1)
+    shorts += ({ "" });
 
-    if(sizeof(shorts) > 0)
-        shorts = ({ "Inventory:" }) + shorts;
+  if(sizeof(shorts) > 0)
+    shorts = ({ "Inventory:" }) + shorts;
 
-    fill = tp->query_fill();
-    cap = tp->query_capacity();
+  string wealth = query_wealth(tp);
 
-    wealth = query_wealth(tp);
-    if(sizeof(wealth))
-        shorts += ({ "Your purse contains " + wealth + ".", "" });
+  if(sizeof(wealth))
+    shorts += ({ "Your purse contains " + wealth + ".", "" });
 
-    shorts += ({ sprintf("Carrying: %d/%d", fill, cap) });
+  int fill = tp->query_fill();
+  int cap = tp->query_capacity();
 
-    return shorts;
+  shorts += ({ sprintf("Carrying: %d/%d", fill, cap) });
+
+  return shorts;
 }
 
+/**
+ *
+ * @param {STD_BODY} tp - This player.
+ * @returns {string} The wealth string.
+ */
 string query_wealth(object tp) {
-    string *currencies = CURRENCY_D->currency_list();
-    string *out = ({ });
+  string *currencies = CURRENCY_D->currency_list();
+  string *out = ({ });
 
-    if(!sizeof(currencies))
-        return "No currency is currently in use.";
+  if(!sizeof(currencies))
+    return "No currency is currently in use.";
 
-    currencies = reverse_array(currencies);
-    foreach(string currency in currencies) {
-        int num = tp->query_wealth(currency);
-        if(num > 0)
-            out += ({ sprintf("%d %s", tp->query_wealth(currency), currency) });
-    }
+  currencies = reverse_array(currencies);
+  foreach(string currency in currencies) {
+    int num = tp->query_wealth(currency);
 
-    return implode(out, ", ");
+    if(num > 0)
+      out += ({ sprintf("%d %s", tp->query_wealth(currency), currency) });
+  }
+
+  return implode(out, ", ");
 }
 
-string help(object tp) {
-    return(" SYNTAX: inventory\n\n"
-        "This command displays a list of everything that is currently\n"
-        "in your inventory.\n");
+/**
+ * Help interface for this command.
+ *
+ * @param {STD_BODY} _tp - This player.
+ * @returns {string} The help text.
+ */
+string query_help(object _tp) {
+  return(" SYNTAX: inventory\n\n"
+      "This command displays a list of everything that is currently\n"
+      "in your inventory.\n");
 }

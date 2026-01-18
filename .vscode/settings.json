@@ -31,19 +31,6 @@
     "editor.semanticHighlighting.enabled": true
   },
   "editor.fontLigatures": "'ss02' on",
-  "editor.tokenColorCustomizations": {
-    "textMateRules": [
-      {
-        "scope": "comment",
-        "settings": {
-          "fontStyle": "italic"
-        }
-      }
-    ]
-  },
-  "files.associations": {
-    "*.lpml": "lpml",
-  },
   "[lpml]": {
     "editor.formatOnSave": false,
     "editor.defaultFormatter": null

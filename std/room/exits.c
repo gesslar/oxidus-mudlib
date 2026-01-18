@@ -261,8 +261,11 @@ mixed query_post_exit_func(string dir) {
  * @param {object} who - The object trying to use the exit
  */
 void evaluate_pre_exit_func(string dir, object who) {
-  if(stringp(_pre_exit_funcs[dir]))
-    return catch(call_other(this_object(), _pre_exit_funcs[dir], who));
+  if(stringp(_pre_exit_funcs[dir])) {
+   catch(call_other(this_object(), _pre_exit_funcs[dir], who));
+
+   return;
+  }
 
   if(valid_function(_pre_exit_funcs[dir])) {
     function f = _pre_exit_funcs[dir];
@@ -278,8 +281,11 @@ void evaluate_pre_exit_func(string dir, object who) {
  * @param {object} who - The object that used the exit
  */
 void evaluate_post_exit_func(string dir, object who) {
-  if(stringp(_post_exit_funcs[dir]))
-    return catch(call_other(this_object(), _pre_exit_funcs[dir], who));
+  if(stringp(_post_exit_funcs[dir])) {
+    catch(call_other(this_object(), _pre_exit_funcs[dir], who));
+
+    return;
+  }
 
   if(valid_function(_post_exit_funcs[dir])) {
     function f = _post_exit_funcs[dir];

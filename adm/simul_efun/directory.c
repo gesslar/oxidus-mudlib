@@ -63,7 +63,7 @@ mixed assure_dir(string path) {
  * @example
  * string dir = query_directory(sword);  // Returns "/obj/weapon/"
  */
-string query_directory(object ob) {
+varargs string query_directory(object ob) {
   string file, *parts;
   string dir;
 
