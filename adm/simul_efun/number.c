@@ -40,10 +40,26 @@ float clamp(float val, float min, float max) {
   return val;
 }
 
+/**
+ * Checks if a value is within a specified range, inclusive.
+ *
+ * @param {float} val - The value to check.
+ * @param {float} min - The minimum value.
+ * @param {float} max - The maximum value.
+ * @returns {int} 1 if the value is within the range (inclusive), 0 otherwise.
+ */
 int clamped(float val, float min, float max) {
   return val >= min && val <= max;
 }
 
+/**
+ * Checks if a value is between a specified range, exclusive.
+ *
+ * @param {float} val - The value to check.
+ * @param {float} min - The minimum value (exclusive).
+ * @param {float} max - The maximum value (exclusive).
+ * @returns {int} 1 if the value is between the range (exclusive), 0 otherwise.
+ */
 int between(float val, float min, float max) {
   return val > min && val < max;
 }
@@ -78,6 +94,19 @@ int sum(int *arr) {
   }, 0);
 }
 
+/**
+ * Evaluates a number against a simple condition.
+ *
+ * Handles basic operators (=, >, <, >=, <=, !=), modulo operator (%),
+ * range checks (e.g., "5-10"), and set inclusion/exclusion ([1,2,3] or
+ * ![1,2,3]).
+ *
+ * @param {int} number - The number to evaluate.
+ * @param {string} condition - The condition to evaluate against.
+ * @returns {int} 1 if the condition evaluates to true, 0 otherwise.
+ * @throws If an invalid operator is provided.
+ * @throws If the condition format is invalid.
+ */
 private int evaluate_simple_condition(int number, string condition) {
   string operator;
   int value, value2;
@@ -121,6 +150,16 @@ private int evaluate_simple_condition(int number, string condition) {
   throw("Invalid condition format: " + condition);
 }
 
+/**
+ * Evaluates a number against a compound condition.
+ *
+ * Handles compound conditions using logical operators AND and OR.
+ * AND has higher precedence than OR.
+ *
+ * @param {int} number - The number to evaluate.
+ * @param {string} condition - The compound condition to evaluate against.
+ * @returns {int} 1 if the compound condition evaluates to true, 0 otherwise.
+ */
 private int evaluate_compound_condition(int number, string condition) {
   string *parts, part;
   string *or_parts, or_part;
@@ -209,6 +248,7 @@ private int evaluate_compound_condition(int number, string condition) {
  * @param {int} number - The number to evaluate.
  * @param {string} condition - The condition to evaluate against.
  * @returns {int} 1 if the condition evaluates to true, 0 otherwise.
+ * @throws If the condition contains invalid syntax or operators.
  */
 int evaluate_number(int number, string condition) {
   // Remove all spaces from the condition

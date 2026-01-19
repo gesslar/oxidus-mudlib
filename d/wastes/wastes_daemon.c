@@ -493,12 +493,12 @@ void print_map() {
 
 // Print a row of the map.
 private nosave mapping colour_map = ([
-  "impassable" : COLOUR_D->rgb_to_colour(0, 0, 0),
-  "sandy" : COLOUR_D->rgb_to_colour(255, 223, 186),
-  "rocky" : COLOUR_D->rgb_to_colour(139, 137, 137),
-  "shallow water" : COLOUR_D->rgb_to_colour(40, 139, 184),
-  "water" : COLOUR_D->rgb_to_colour(35, 90, 186),
-  "deep water" : COLOUR_D->rgb_to_colour(24, 63, 130),
+  "impassable" : COLOUR_D->rgbToColour(0, 0, 0),
+  "sandy" : COLOUR_D->rgbToColour(255, 223, 186),
+  "rocky" : COLOUR_D->rgbToColour(139, 137, 137),
+  "shallow water" : COLOUR_D->rgbToColour(40, 139, 184),
+  "water" : COLOUR_D->rgbToColour(35, 90, 186),
+  "deep water" : COLOUR_D->rgbToColour(24, 63, 130),
 ]);
 private nosave mapping symbols_map = ([
   "impassable" : "#",

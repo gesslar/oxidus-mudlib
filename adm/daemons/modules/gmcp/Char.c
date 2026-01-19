@@ -19,6 +19,16 @@ inherit STD_DAEMON;
 // on labels in a GUI or messaging resulting from GMCP.
 //
 // The labels and values are all found in /include/gmcp_defines.h
+
+/**
+ * Sends the status variable labels to the player's client.
+ *
+ * Informs the client what to display for each variable in the Char.Status
+ * package, typically used for GUI labels or messaging.
+ *
+ * @param {STD_PLAYER} who - The player receiving the GMCP data.
+ * @param {mapping} payload - Optional custom label mappings.
+ */
 void StatusVars(object who, mapping payload) {
   mapping data = payload || ([
     GMCP_LBL_CHAR_STATUS_NAME        : GMCP_DIS_CHAR_STATUS_NAME,
@@ -32,6 +42,15 @@ void StatusVars(object who, mapping payload) {
   who->do_gmcp(GMCP_PKG_CHAR_STATUSVARS, data);
 }
 
+/**
+ * Sends the player's current status data to the client.
+ *
+ * Includes name, fill, capacity, experience, TNL (to next level), and
+ * wealth information.
+ *
+ * @param {STD_PLAYER} who - The player receiving the GMCP data.
+ * @param {mapping} payload - Optional custom status data.
+ */
 void Status(object who, mapping payload) {
   mapping wealth = who->query_all_wealth();
 
@@ -49,6 +68,15 @@ void Status(object who, mapping payload) {
   who->do_gmcp(GMCP_PKG_CHAR_STATUS, data);
 }
 
+/**
+ * Sends the player's vital statistics to the client.
+ *
+ * Includes current and maximum values for health points (HP), stamina
+ * points (SP), and mana points (MP).
+ *
+ * @param {STD_PLAYER} who - The player receiving the GMCP data.
+ * @param {mapping} payload - Optional custom vitals data.
+ */
 void Vitals(object who, mapping payload) {
   mapping data = payload || ([
     GMCP_LBL_CHAR_VITALS_HP     : sprintf("%.2f", who->query_hp()),
@@ -62,6 +90,16 @@ void Vitals(object who, mapping payload) {
   who->do_gmcp(GMCP_PKG_CHAR_VITALS, data);
 }
 
+/**
+ * Handles Char.Login GMCP submodules.
+ *
+ * Processes login-related GMCP messages and dispatches to the appropriate
+ * submodule handler.
+ *
+ * @param {STD_PLAYER} who - The player receiving the GMCP data.
+ * @param {string} submodule - The login submodule to process.
+ * @param {mapping} payload - The GMCP payload data.
+ */
 void Login(object who, string submodule, mapping payload) {
   switch(submodule) {
     case "Default" : {
@@ -74,6 +112,17 @@ void Login(object who, string submodule, mapping payload) {
 private string get_item_attrib(object item);
 private string get_item_location(object who, object item);
 
+/**
+ * Handles Char.Items GMCP submodules.
+ *
+ * Processes item-related GMCP messages including List, Add, Remove, and
+ * Update operations. Sends item data to the player's client, handling
+ * various locations (room, inventory, containers).
+ *
+ * @param {STD_PLAYER} who - The player receiving the GMCP data.
+ * @param {string} submodule - The items submodule (List, Add, Remove, Update).
+ * @param {mixed} arg - Location string for List, or array of [item, container] for others.
+ */
 void Items(object who, string submodule, mixed arg) {
   object container;
   object *items, item;
@@ -128,12 +177,12 @@ void Items(object who, string submodule, mixed arg) {
   // Now we do another switch to build the item data
   switch(submodule) {
     case "List" :
-      items = find_targets(who, null, container, (: $1 != $2 :), who);
+      items = find_targets(who, null, container, (: $1 != $2, $(who) :));
       item_data = ({});
 
       foreach(item in items) {
         item_data += ({ ([
-          "name": COLOUR_D->substitute_colour(get_short(item), "on"),
+          "name": COLOUR_D->substituteColour(get_short(item), "on"),
           "id"  : item->query_ids(),
           "attrib": get_item_attrib(item),
           "hash": hash("md4", file_name(item)),
@@ -148,7 +197,7 @@ void Items(object who, string submodule, mixed arg) {
         return;
 
       item_data = ([
-        "name"    : COLOUR_D->substitute_colour(get_short(item), "on"),
+        "name"    : COLOUR_D->substituteColour(get_short(item), "on"),
         "id"      : item->query_ids(),
         "attrib"  : get_item_attrib(item),
         "hash"    : hash("md4", file_name(item)),
@@ -160,28 +209,53 @@ void Items(object who, string submodule, mixed arg) {
   who->do_gmcp(package, data, 1);
 }
 
+/**
+ * Gets the attribute flags for an item.
+ *
+ * Determines item properties such as wearable, worn, wielded, container,
+ * takeable, monster, or dead monster status.
+ *
+ * @param {STD_BODY|STD_ITEM|STD_WEAPON|STD_ARMOUR|STD_CLOTHING} item - The item to get attributes for.
+ * @returns {string} A string of attribute flags.
+ */
 private string get_item_attrib(object item) {
   string attrib = "";
 
-  if(item->is_clothing() || item->is_armour())
-    if(item->equipped())
+  if(call_if(item, "is_clothing") || call_if(item, "is_armour"))
+    if(/** @type {STD_ARMOUR|STD_CLOTHING} */ (item)->equipped())
       attrib += GMCP_ITEM_ATTRIB_WORN;
     else
       attrib += GMCP_ITEM_ATTRIB_WEARABLE;
-    if(item->is_weapon() && item->equipped())
+
+  if(call_if(item, "is_weapon") && call_if(item, "equipped"))
     attrib += GMCP_ITEM_ATTRIB_WIELDED;
-  if(!living(item) && item->is_container())
+
+  if(!living(item) && call_if(item, "is_container"))
     attrib += GMCP_ITEM_ATTRIB_CONTAINER;
+
   if(!item->query_prevent_get())
     attrib += GMCP_ITEM_ATTRIB_TAKEABLE;
-  if(item->is_npc())
+
+  if(call_if(item, "is_npc"))
     attrib += GMCP_ITEM_ATTRIB_MONSTER;
-  if(item->is_npc_corpse())
+
+  if(call_if(item, "is_npc_corpse"))
     attrib += GMCP_ITEM_ATTRIB_DEAD_MONSTER;
 
   return attrib;
 }
 
+/**
+ * Determines the location identifier for an item container.
+ *
+ * Returns a location string indicating where the container is relative to
+ * the player: "inv" (player inventory), "room" (current room), a hash
+ * (container in inventory), or "unknown".
+ *
+ * @param {STD_PLAYER} who - The player reference.
+ * @param {object} container - The container to get the location for.
+ * @returns {string} The location identifier.
+ */
 private string get_item_location(object who, object container) {
   string location;
 

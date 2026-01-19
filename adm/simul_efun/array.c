@@ -326,7 +326,7 @@ varargs mixed *pad_array(mixed *arr, int sz, mixed val) {
     return arr;
 
   if(nullp(val))
-    val = UNDEFINED;
+    val = undefined;
 
   diff = sz - len;
 
@@ -959,7 +959,7 @@ mixed *flatten_array(mixed *arr) {
  *
  * @param {mixed*} arr - Array to search
  * @param {function} fun - Test function
- * @param {mixed} extra... - Additional arguments to pass to test function
+ * @param {mixed} [extra...] - Additional arguments to pass to test function
  * @returns {int} Index of first matching element or -1 if none found
  * @errors If arguments are invalid types
  */
@@ -981,7 +981,7 @@ varargs int find_index(mixed *arr, function fun, mixed extra...) {
  *
  * @param {mixed*} arr - Array to search
  * @param {function} fun - Test function
- * @param {mixed} extra... - Additional arguments to pass to test function
+ * @param {mixed} [extra...] - Additional arguments to pass to test function
  * @returns {mixed} First matching element or null if none found
  * @errors If arguments are invalid types
  */
@@ -1045,9 +1045,10 @@ varargs void each(mixed src, function fun, mixed extra...) {
  * the function returns a non-null value for any element, that value is
  * immediately returned. If no such value is found, returns UNDEFINED.
  *
- * @param {mixed*} src The array to search
- * @param {function} fun The function to apply to each element (called as fun(element, index, array, size, ...extra))
- * @param {mixed...} [extra] Optional extra arguments passed to the function
+ * @param {mixed*} src - The array to search
+ * @param {function} fun - The function to apply to each element (called as
+ *                         fun(element, index, array, size, ...extra))
+ * @param {mixed...} [extra] - Optional extra arguments passed to the function
  * @return {mixed} The first non-null result, or UNDEFINED if none found
  */
 varargs mixed eval_first(mixed *src, function fun, mixed extra...) {
@@ -1058,7 +1059,7 @@ varargs mixed eval_first(mixed *src, function fun, mixed extra...) {
 
   if((sz = sizeof(src)) > 0) {
     for(; i < sz; i++) {
-      mixed result =  extra
+      mixed result = extra
         ? fun(src[i], i,  src, sz, extra...)
         : fun(src[i], i, src, sz);
 

@@ -9,151 +9,239 @@
  * 2024-07-29 - Gesslar - Created
  */
 
+#include <equipment.h>
 #include <body.h>
 
+/**
+ * @typedef {STD_ARMOUR|STD_CLOTHING} Wearable
+ * @typedef {STD_WEAPON} Wieldable
+ */
+
+/** @type ([ string: Wearable ]) */
 protected nosave mapping equipment = ([ ]);
+/** @type ([ string: Wieldable ]) */
 protected nosave mapping wielded = ([ ]);
+
+/**
+ * Query all equipped items.
+ *
+ * @returns {([ string: Wieldable|Wearable ])} A copy of the equipment mapping
+ */
 public mapping query_equipped() { return copy(equipment); }
+
+/**
+ * Query all wielded items.
+ *
+ * @returns {([ string: STD_WEAPON ])} A copy of the wielded mapping
+ */
 public mapping query_wielded() { return copy(wielded); }
+
+/**
+ * Query what item is equipped on a specific slot.
+ *
+ * @param {string} slot - The slot to check
+ * @returns {Wearable|null} The equipped item or null if slot is empty
+ */
 public object equipped_on(string slot) { return equipment[slot] || null ; }
+
+/**
+ * Query what item is wielded in a specific slot.
+ *
+ * @param {string} slot - The slot to check
+ * @returns {STD_WEAPON|null} The wielded item or null if slot is empty
+ */
 public object wielded_in(string slot) { return wielded[slot] || null ; }
 
-int equip(object ob, string slot) {
-    string type;
+/**
+ * Attempt to equip an item.
+ *
+ * @param {Wieldable|Wearable} ob - The item being attempted to equip.
+ * @param {string} slot - The slot into which one is attempt to equip something.
+ * @returns {int} 1 for success, 0 for failure.
+ */
+public int equip(object ob, string slot) {
+  if(has(ob, "is_weapon"))
+    return equip_weapon(ob);
 
-    if(ob->is_weapon())
-        type = "weapon";
-    else if(ob->is_armour())
-        type = "armour";
-    else if(ob->is_clothing())
-        type = "clothing";
-    else
-        return 0;
+  if(has(ob, "is_armour"))
+    return equip_wearable(ob, slot);
 
-    switch(type) {
-        case "weapon": {
-            int slots = ob->query_hands();
-            mapping w = filter(wielded, (: !objectp($2) :));
-            string *all_weapon_slots = query_weapon_slots();
-            int sz = sizeof(all_weapon_slots);
+  if(has(ob, "is_clothing"))
+    return equip_wearable(ob, slot);
 
-            if(!of(slot, all_weapon_slots)) {
-                printf("Slot %s not found in %O\n", slot, all_weapon_slots);
-                return 0;
-            }
-            if(wielded[slot]) {
-                printf("Slot %s already occupied by %O\n", slot, wielded[slot]);
-                return 0;
-            }
-            if(slots > (sz - sizeof(w))) {
-                printf("Slots required: %d\n", slots);
-                printf("Size of w: %d\n", sizeof(w));
-                printf("Not enough hands to wield %O\n", ob);
-                printf("Occupied slots: %O\n", w);
-                return 0;
-            }
-            wielded[slot] = ob;
-            all_weapon_slots -= keys(wielded);
-            if(slots > 1) {
-                while(--slots) {
-                    string s = element_of(all_weapon_slots);
-                    wielded[s] = ob;
-                    all_weapon_slots -= ({ s });
-                }
-            }
-            break;
-        }
-        case "armour": case "clothing" :
-            if(!of(slot, query_body_slots()))
-                return 0;
-            if(equipment[slot])
-                return 0;
-            equipment[slot] = ob;
-            break;
-    }
-
-    return 1;
+  return 0;
 }
 
-mixed equipped(object ob) {
-    string *s;
+/**
+ * Determine if the body has this particular object wielded or worn.
+ *
+ * @param {Wieldable|Wearable} ob - The object to test.
+ * @returns {int} 1 if equipped, 0 otherwise.
+ */
+public int equipped(object ob) {
+  ob ??= this_object();
 
-    if(!ob)
-        return 0;
+  if(has(ob, "is_weapon"))
+    return includes(keys(wielded), ob);
 
-    if(ob->is_weapon()) {
-        s = filter(keys(wielded), (: $2 == $(ob) :));
-        if(sizeof(s))
-            return s;
-    } else {
-        s = filter(keys(equipment), (: $2 == $(ob) :));
-        if(sizeof(s))
-            return s[0];
-    }
+  else if(has(ob, "is_armour") || has(ob, "is_clothing"))
+    return includes(keys(equipment), ob);
 
-    return 0;
+  return 0;
 }
 
+/**
+ * Attempt to unequip an item.
+ *
+ * @param {STD_WEAPON|STD_ARMOUR|STD_CLOTHING|string} ob - The item to unequip
+ * @returns {int} 1 for success, 0 for failure
+ */
 int unequip(mixed ob) {
-    mixed slot;
-    mapping m;
+  if(has(ob, "is_weapon"))
+    return unequip_weapon(ob);
 
-    if(objectp(ob)) {
-        if(ob->is_weapon()) {
-            m = wielded;
-            m = filter(m, (: $2 != $(ob) :));
-            wielded = m;
-        } else {
-            m = equipment;
-            m = filter(m, (: $2 != $(ob) :));
-            equipment = m;
-        }
+  if(has(ob, "is_armour") || has(ob, "is_clothing"))
+    return unequip_wearable(ob);
 
-        return 1;
-    } else if(stringp(ob)) {
-        slot = ob;
-        if(of(slot, wielded)) {
-            return unequip(wielded[slot]);
-        } else if(of(slot, equipment)) {
-            return unequip(equipment[slot]);
-        } else {
-            return 0;
-        }
-    }
-
-    return 0;
+  return 0;
 }
 
+/**
+ * Check if an item can be equipped in a specific slot.
+ *
+ * @param {string|STD_WEAPON|STD_ARMOUR|STD_CLOTHING} ob - The item to check
+ * @param {string} slot - The slot to check
+ * @returns {int|string} 1 for success, error string for failure
+ */
 mixed can_equip(mixed ob, string slot) {
-    if(!objectp(ob))
-        return 0;
+  if(!objectp(ob))
+    return 0;
 
-    if(objectp(ob)) {
-        if(ob->is_weapon()) {
-            int hands = ob->query_hands();
-            string *all_weapon_slots = query_weapon_slots();
-            mapping w = filter(wielded, (: objectp($2) :));
-            int remaining_slots = sizeof(all_weapon_slots) - sizeof(w);
-            if(!of(slot, all_weapon_slots))
-                return "You cannot wield that there.";
-            if(wielded[slot])
-                return "You are already wielding something in that hand.";
-            if(remaining_slots < hands)
-                return "You do not have enough hands to wield that.";
-            return 1;
-        }
+  if(objectp(ob)) {
+    if(has(ob, "is_weapon")) {
+      int hands = /** @type {STD_WEAPON} */ (ob)->query_hands();
+      string *all_weapon_slots = query_weapon_slots();
+      mapping w = filter(wielded, (: objectp($2) :));
+      int remaining_slots = sizeof(all_weapon_slots) - sizeof(w);
+
+      if(!of(slot, all_weapon_slots))
+        return "You cannot wield that there.";
+
+      if(wielded[slot])
+        return "You are already wielding something in that hand.";
+
+      if(remaining_slots < hands)
+        return "You do not have enough hands to wield that.";
+
+      return 1;
     }
+  }
 
-    if(stringp(ob))
-        slot = ob;
-    else
-        return 0;
+  if(stringp(ob))
+    slot = ob;
+  else
+    return 0;
 
-    if(!of(slot, query_body_slots()))
-        return "Your body cannot wear something in there.";
+  if(!of(slot, query_body_slots()))
+    return "Your body cannot wear something in there.";
 
-    if(equipment[slot])
-        return "You are already wearing something like that.";
+  if(equipment[slot])
+    return "You are already wearing something like that.";
+
+  return 1;
+}
+
+/**
+ * Attempt to wield a weapon.
+ *
+ * @param {STD_WEAPON} weapon - The weapon to wield.
+ * @returns {int} 1 for success, 0 for failure.
+ */
+protected int equip_weapon(object weapon) {
+  int slots = weapon->query_hands();
+  mapping w = filter(wielded, (: !objectp($2) :));
+  string *all_weapon_slots = query_weapon_slots();
+  int sz = sizeof(all_weapon_slots);
+
+  if(!of(slot, all_weapon_slots)) {
+    printf("Slot %s not found in %O\n", slot, all_weapon_slots);
+    return 0;
+  }
+
+  if(wielded[slot]) {
+    printf("Slot %s already occupied by %O\n", slot, wielded[slot]);
+    return 0;
+  }
+
+  if(slots > (sz - sizeof(w))) {
+    printf("Slots required: %d\n", slots);
+    printf("Size of w: %d\n", sizeof(w));
+    printf("Not enough hands to wield %O\n", weapon);
+    printf("Occupied slots: %O\n", w);
+    return 0;
+  }
+
+  wielded[slot] = weapon;
+  all_weapon_slots -= keys(wielded);
+
+  if(slots > 1) {
+    while(--slots) {
+      string s = element_of(all_weapon_slots);
+
+      wielded[s] = weapon;
+      all_weapon_slots -= ({ s });
+    }
+  }
+
+  return 1;
+}
+/**
+ * Attempt to equip a wearable item.
+ *
+ * @param {STD_CLOTHING|STD_ARMOUR} wearable - The item being worn
+ * @param {string} slot - Into which slot should this be worn
+ * @returns {int} 1 for success, 0 for failure
+ */
+protected int equip_wearable(object wearable, string slot) {
+  if(!of(slot, query_body_slots()))
+    return 0;
+
+  if(equipment[slot])
+    return 0;
+
+  equipment[slot] = wearable;
+
+  return 1;
+}
+
+/**
+ * Unequip a wielded weapon.
+ *
+ * @param {STD_WEAPON} ob - The weapon to unequip
+ * @returns {int} 1 for success, 0 for failure
+ */
+protected int unequip_weapon(object ob) {
+  if(includes(keys(wielded), ob)) {
+    wielded = filter(wielded, (: $2 != $(ob) :));
 
     return 1;
+  }
+
+  return 0;
+}
+
+/**
+ * Unequip a wearable item.
+ *
+ * @param {STD_CLOTHING|STD_ARMOUR} ob - The item to unequip
+ * @returns {int} 1 for success, 0 for failure
+ */
+protected int unequip_wearable(object ob) {
+  if(includes(keys(equipment), ob)) {
+    equipment = filter(equipment, (: $2 != $(ob) :));
+
+    return 1;
+  }
+
+  return 0;
 }

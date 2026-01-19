@@ -185,7 +185,7 @@ varargs void debug(mixed str, mixed args...) {
     str = sprintf("%O", str);
   }
 
-  str = COLOUR_D->substitute_colour(str, "on");
+  str = COLOUR_D->substituteColour(str, "on");
 
   debug_message(str);
 }

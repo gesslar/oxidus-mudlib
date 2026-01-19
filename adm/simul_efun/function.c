@@ -37,15 +37,30 @@ int valid_function(mixed f) {
 }
 
 /**
- * Checks if an object has a specific function defined.
+ * Checks if an object has one or more specified functions defined.
+ *
+ * Accepts either a single function name or an array of function names. When
+ * given an array, checks each function in order and returns the location of
+ * the first one that exists.
  *
  * @param {object} ob - The object to check.
- * @param {string} functionName - The name of the function to look for.
- * @returns {string} The program name where the function is defined, or 0 if
- *                   not found or if ob is not an object.
+ * @param {string|string*} functionNames - Function name(s) to look for `(string|string*)`
+ * @returns {string|null} The filename where a function is defined, or null
+ *                        if none found or if ob is not an object.
+ * @example
+ * has(player, "query_level");  // Returns "/std/body.c" if exists
+ * has(item, ({ "is_weapon", "is_armour" }));  // Returns filename of first existing function
  */
-string has(object ob, string functionName) {
-  return objectp(ob) && function_exists(functionName, ob);
+string has(object ob, mixed functionNames) {
+  if(!objectp(ob))
+    return null;
+
+  if(stringp(functionNames))
+    return function_exists(functionNames, ob);
+  if(pointerp(functionNames) && uniform_array(functionNames, T_STRING))
+    return eval_first(functionNames, (: function_exists($1, $(ob)) :));
+
+  return null;
 }
 
 private nosave string *traceColours = ({

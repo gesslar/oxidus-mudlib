@@ -11,14 +11,9 @@
 
 inherit STD_CMD;
 
-mixed main(object tp, string args) {
-    string *out;
-    mapping config;
-    string temp;
+mixed main(object _tp, string _args) {
+  mapping config = CONFIG_D->get_all_config();
+  string temp = pretty_map(config);
 
-    config = CONFIG_D->get_all_config();
-
-    temp = pretty_map(config);
-
-    return ({ "Current MUD Configuration", "" }) + explode(temp, "\n");
+  return ({ "Current MUD Configuration", "" }) + explode(temp, "\n");
 }
