@@ -11,14 +11,14 @@
 
 inherit STD_DAEMON;
 
-// Functions
-int tnl(float level);
-
 // Variables
-float base_tnl;
-float tnl_rate;
-float overlevel_threshold, overlevel_xp_punish;
-float underlevel_threshold, underlevel_xp_bonus;
+public float base_tnl;
+public float tnl_rate;
+public float overlevel_threshold, overlevel_xp_punish;
+public float underlevel_threshold, underlevel_xp_bonus;
+
+// Functions
+public int tnl(float level);
 
 void setup() {
   base_tnl = mud_config("BASE_TNL");
@@ -30,13 +30,14 @@ void setup() {
 }
 
 /**
- * @function tnl
- * @description Calculates the total XP needed to reach the next level from the
- *              current level.
+ * Calculates the total XP needed to reach the next level from the current
+ * level.
+ *
+ * @public
  * @param {float} level - The current level to calculate TNL for.
- * @returns {int} - The total XP needed to reach the next level.
+ * @returns {int} The total XP needed to reach the next level.
  */
-int tnl(float level) {
+public int tnl(float level) {
   // Ensure level is at least 1.0
   if(level < 1.0)
     level = 1.0;
@@ -46,26 +47,26 @@ int tnl(float level) {
 }
 
 /**
- * @function can_advance
- * @description Checks if a character has enough XP to advance to the next level.
+ * Checks if a character has enough XP to advance to the next level.
+ *
+ * @public
  * @param {int} xp - The current XP amount.
  * @param {float} level - The current level.
- * @returns {int} - 1 if the character can advance, 0 otherwise.
+ * @returns {int} 1 if the character can advance, 0 otherwise.
  */
-int can_advance(int xp, float level) {
+public int can_advance(int xp, float level) {
   return xp >= tnl(level);
 }
 
 /**
- * @function advance
- * @description Advances a character to the next level if they have enough XP.
- *              Deducts the required XP, increments the level, and emits a
- *              signal.
+ * Advances a character to the next level if they have enough XP. Deducts the
+ * required XP, increments the level, and emits a signal.
+ *
+ * @public
  * @param {STD_PLAYER} tp - The player object to advance.
- * @returns {int} - 1 if the character advanced, 0 if they did not have enough
- *                  XP.
+ * @returns {int} 1 if the character advanced, 0 if they did not have enough XP.
  */
-int advance(object tp) {
+public int advance(object tp) {
   int xp = tp->query_xp();
   float level = tp->query_level();
   int tnl = tnl(level);
@@ -85,19 +86,16 @@ int advance(object tp) {
 }
 
 /**
- * @function earn_xp
- * @description Awards XP to a player and optionally auto-levels them if
- *              enabled in the mud configuration.
+ * Awards XP to a player and optionally auto-levels them if enabled in the mud
+ * configuration.
+ *
+ * @public
  * @param {STD_PLAYER} tp - The player object to award XP to.
  * @param {int} amount - The amount of XP to award.
- * @returns {int} - Always returns 1.
+ * @returns {int} Always returns 1.
  */
-int earn_xp(object tp, int amount) {
-  debug("earn_xp: " + amount);
-  debug("xp: " + tp->query_xp());
+public int earn_xp(object tp, int amount) {
   tp->adjust_xp(amount);
-  debug("xp: " + tp->query_xp());
-
 
   if(mud_config("PLAYER_AUTOLEVEL"))
     advance(tp);
@@ -106,11 +104,11 @@ int earn_xp(object tp, int amount) {
 }
 
 /**
- * @function kill_xp
- * @description Calculates and awards XP to a killer for defeating an opponent.
- *              The XP amount is based on the killed opponent's level with
- *              variance, and adjusted based on level difference between killer
- *              and killed.
+ * Calculates and awards XP to a killer for defeating an opponent. The XP
+ * amount is based on the killed opponent's level with variance, and adjusted
+ * based on level difference between killer and killed.
+ *
+ * @public
  * @param {STD_PLAYER} killer - The object that killed the opponent.
  * @param {STD_NPC | STD_PLAYER} killed - The object that was killed.
  * @returns {int} - The amount of XP awarded, or 0 if either object is null.
