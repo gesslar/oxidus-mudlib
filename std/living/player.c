@@ -30,9 +30,9 @@ void setup_body() {
   set_living_name(query_real_name());
   set_id(({query_real_name()}));
   // set_real_name(name());
-  set_heart_beat(mud_config("DEFAULT_HEART_RATE"));
-  if(!query_race()) set_race(mud_config("DEFAULT_RACE"));
-  if(!query_level()) set_level(1.0);
+  set_heart_beat(mudConfig("DEFAULT_HEART_RATE"));
+  if(!query_race()) set_race(mudConfig("DEFAULT_RACE"));
+  if(!queryLevel()) setLevel(1.0);
   set_level_mod(0.0);
   if(!query_env("cwd")) set_env("cwd", "/doc");
   if(!query_short()) set_short(query_name());

@@ -29,8 +29,8 @@ varargs void page(mixed text, mixed *cb, int no_colour) {
   if(!uniform_array(text, T_STRING))
       return 0;
 
-  more_lines = to_int(query_pref("morelines")) || mud_config("MORELINES");
-  page_display = query_pref("page_display") || mud_config("PAGE_DISPLAY");
+  more_lines = to_int(query_pref("morelines")) || mudConfig("MORELINES");
+  page_display = query_pref("page_display") || mudConfig("PAGE_DISPLAY");
 
   if(no_colour == 1)
       no_colour = MSG_PROMPT | NO_COLOUR;

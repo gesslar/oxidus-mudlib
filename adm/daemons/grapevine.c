@@ -55,7 +55,7 @@ private nomask void startup() {
         return;
     }
 
-    config = mud_config("GRAPEVINE");
+    config = mudConfig("GRAPEVINE");
 
     result = connect(config);
 
@@ -472,7 +472,7 @@ void grapevine_handle_players_sign_in(string reff, mapping data) {
     }
 
     catch(CHAN_D->grapevine_chat(([
-        "channel" : mud_config("GRAPEVINE")["notice"],
+        "channel" : mudConfig("GRAPEVINE")["notice"],
         "message" : sprintf("%s has signed in to %s", data["name"], data["game"]),
         "name" : "Grapevine",
         "game" : mud_name(),
@@ -505,7 +505,7 @@ void grapevine_handle_players_sign_out(string reff, mapping data) {
     }
 
     catch(CHAN_D->grapevine_chat(([
-        "channel" : mud_config("GRAPEVINE")["notice"],
+        "channel" : mudConfig("GRAPEVINE")["notice"],
         "message" : sprintf("%s has signed out of %s", data["name"], data["game"]),
         "name" : "Grapevine",
         "game" : mud_name(),
@@ -579,7 +579,7 @@ void grapevine_handle_tells_receive(string reff, mapping data) {
 
 void grapevine_handle_games_connect(string reff, mapping data) {
     catch(CHAN_D->grapevine_chat(([
-        "channel" : mud_config("GRAPEVINE")["notice"],
+        "channel" : mudConfig("GRAPEVINE")["notice"],
         "message" : sprintf("%s has connected to Grapevine", data["game"]),
         "name" : "Grapevine",
         "game" : mud_name(),
@@ -590,7 +590,7 @@ void grapevine_handle_games_connect(string reff, mapping data) {
 
 void grapevine_handle_games_disconnect(string reff, mapping data) {
     catch(CHAN_D->grapevine_chat(([
-        "channel" : mud_config("GRAPEVINE")["notice"],
+        "channel" : mudConfig("GRAPEVINE")["notice"],
         "message" : sprintf("%s has disconnected from Grapevine", data["game"]),
         "name" : "Grapevine",
         "game" : mud_name(),

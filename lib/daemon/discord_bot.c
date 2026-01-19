@@ -55,7 +55,7 @@ void mudlib_setup() {
         mapping discord_bot_config;
 
         bot_data = ([]);
-        discord_bot_config = mud_config("DISCORD_BOTS")[file];
+        discord_bot_config = mudConfig("DISCORD_BOTS")[file];
 
         set_bot_name(discord_bot_config["name"]);
         set_intents(discord_bot_config["intents"]...);

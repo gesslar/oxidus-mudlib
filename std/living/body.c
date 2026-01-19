@@ -149,7 +149,7 @@ void die() {
     ghost->set_mp(-1.0);
     ghost->move(environment());
   } else {
-    ADVANCE_D->kill_xp(killed_by(), this_object());
+    ADVANCE_D->killXp(killed_by(), this_object());
   }
 
   remove();

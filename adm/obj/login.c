@@ -47,7 +47,7 @@ string name, character;
 
 object body;
 
-string login_message = parse_tokens(read_file(mud_config("LOGIN_MSG")));
+string login_message = parse_tokens(read_file(mudConfig("LOGIN_MSG")));
 
 int call_out_id;
 int gmcp_login_status = 0;
@@ -411,7 +411,7 @@ void new_character(string str) {
 }
 
 void first_admin_login() {
-  if(!file_exists(mud_config("FIRST_USER"))) {
+  if(!file_exists(mudConfig("FIRST_USER"))) {
     object security_editor;
     string home_path = home_path(body->query_real_name());
     string privs = query_privs(body);
@@ -425,7 +425,7 @@ void first_admin_login() {
     security_editor->enable_membership(privs, "developer");
     security_editor->enable_membership(privs, "admin");
     security_editor->write_state(0);
-    write_file(mud_config("FIRST_USER"), privs, 1);
+    write_file(mudConfig("FIRST_USER"), privs, 1);
     _ok(this_object(), "You are now an admin.");
   }
 }

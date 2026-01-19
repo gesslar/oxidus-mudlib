@@ -58,7 +58,7 @@ mixed main(object tp, string str) {
 mixed list_waypoints(object tp) {
   string name = query_privs(tp);
   string file = user_data_directory(name) + "waypoints.txt";
-  int max_waypoints = mud_config("WAYPOINTS_MAX");
+  int max_waypoints = mudConfig("WAYPOINTS_MAX");
   mixed *wps = ({});
   int num, sz;
   string result = "";
@@ -95,7 +95,7 @@ mixed set_waypoint(object tp) {
   string *wp;
   int i, num;
   string result = "";
-  int max_waypoints = mud_config("WAYPOINTS_MAX");
+  int max_waypoints = mudConfig("WAYPOINTS_MAX");
   object room = environment(tp);
   string room_file = base_name(room);
   string room_short = room->query_short();

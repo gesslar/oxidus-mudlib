@@ -27,13 +27,13 @@ void virtual_setup(mixed args...) {
 
     // Set level
     if(nullp(data["level"]))
-        set_level(1);
+        setLevel(1);
     else if(intp(data["level"]))
-        set_level(data["level"]);
+        setLevel(data["level"]);
     else if(pointerp(data["level"]))
-        set_level(to_float(random(data["level"][1] - data["level"][0]) + data["level"][0]));
+        setLevel(to_float(random(data["level"][1] - data["level"][0]) + data["level"][0]));
     else
-        set_level(1);
+        setLevel(1);
 
     // Set gender
     if(!nullp(data["gender"])) {

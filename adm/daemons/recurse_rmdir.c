@@ -21,7 +21,7 @@ private nomask void handle_delete(string contents);
 private nosave nomask string *allowed = ({});
 
 nomask void setup() {
-    allowed = mud_config("ALLOW_RECURSE_RMDIR");
+    allowed = mudConfig("ALLOW_RECURSE_RMDIR");
 }
 
 public nomask void recurse_rmdir(string dir) {

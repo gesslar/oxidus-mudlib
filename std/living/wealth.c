@@ -19,7 +19,7 @@ int query_total_coins() {
 
 int query_total_wealth() {
   int total = 0;
-  mixed *config = mud_config("CURRENCY");
+  mixed *config = mudConfig("CURRENCY");
 
   foreach(mixed *c in config)
     total += _wealth[c[0]] * c[1];
@@ -48,7 +48,7 @@ mixed adjust_wealth(string currency, int amount) {
     if(_wealth[currency] - amount < 0)
       return "You don't have that many coins.\n";
 
-  if(mud_config("USE_MASS")) {
+  if(mudConfig("USE_MASS")) {
     mass = amount;
     if(!can_hold_mass(mass))
       return "You are overburdened and cannot carry the coins.\n";
@@ -66,7 +66,7 @@ mixed adjust_wealth(string currency, int amount) {
 }
 
 mapping set_wealth(mapping w) {
-  mixed *config = mud_config("CURRENCY");
+  mixed *config = mudConfig("CURRENCY");
 
   wipe_wealth();
 

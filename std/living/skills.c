@@ -120,7 +120,7 @@ float query_skill(string skill) {
         return null;
 
     if(function_exists("is_npc") && is_npc())
-        return query_level() * 3.0;
+        return queryLevel() * 3.0;
 
     sz = sizeof(path);
     for(x = 0; x < sz; x++) {

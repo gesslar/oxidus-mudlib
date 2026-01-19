@@ -105,7 +105,7 @@ public nomask void save_contents() {
     if(classp(storage_options)) {
         if(storage_options.restore_on_load &&
            storage_options.storage_id) {
-            string storage_dir = mud_config("STORAGE_DATA_DIR");
+            string storage_dir = mudConfig("STORAGE_DATA_DIR");
             string dest;
             string data;
 
@@ -142,7 +142,7 @@ public nomask void restore_contents() {
     if(classp(storage_options)) {
         if(storage_options.restore_on_load &&
            storage_options.storage_id) {
-            string storage_dir = mud_config("STORAGE_DATA_DIR");
+            string storage_dir = mudConfig("STORAGE_DATA_DIR");
             string dest;
             string data;
 

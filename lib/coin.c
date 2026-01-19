@@ -39,7 +39,7 @@ void update_descriptions() {
 }
 
 void set_up(string type, int num) {
-  mixed *config = mud_config("CURRENCY");
+  mixed *config = mudConfig("CURRENCY");
   int conversion;
   mixed *c;
 
@@ -68,7 +68,7 @@ int move(mixed dest) {
   if(!objectp(dest))
       dest = load_object(dest);
 
-  if(mud_config("USE_MASS")) {
+  if(mudConfig("USE_MASS")) {
     if(!dest->ignore_capacity()) {
       if(!dest->can_hold_object(this_object())) {
         return MOVE_TOO_HEAVY;
@@ -116,7 +116,7 @@ int adjust_coin_num(int num) {
   value = CURRENCY_D->convert_currency(
     new_sum,
     coin_type,
-    mud_config("CURRENCY")[0][0]
+    mudConfig("CURRENCY")[0][0]
   );
 
   update_descriptions();
