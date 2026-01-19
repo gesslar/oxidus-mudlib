@@ -38,7 +38,7 @@ inherit STD_DAEMON;
  * either the name or short description. For strings, returns them unmodified.
  *
  * @param {STD_PLAYER|STD_NPC|STD_ITEM|string} x - The item to get a description for
- * @returns {string} The appropriate short description
+ * @returns {string | *} The appropriate short description
  */
 private string short(mixed x) {
   assert(stringp(x) || objectp(x) && (has(x, "query_name") || has(x, "query_name")));
@@ -62,12 +62,12 @@ private string short(mixed x) {
  * For objects, returns their short description.
  * For strings, ensures they have an appropriate indefinite article.
  *
- * @param {STD_PLAYER|STD_NPC|STD_ITEM} x - The object or string to process
- * @returns {string} The description with appropriate article
+ * @param {STD_ITEM | string} x - The object or string to process
+ * @returns {string | *} The description with appropriate article
  */
 string a_short(mixed x) {
   if(objectp(x)) {
-    string short = x->query_short();
+    string short = /** @type {STD_ITEM} */ (x)->query_short();
 
     short = remove_article(short);
 
@@ -87,12 +87,12 @@ string a_short(mixed x) {
  * For objects, returns their short description.
  * For strings, ensures they have the definite article.
  *
- * @param {mixed} x - The object or string to process
- * @returns {string} The description with the definite article
+ * @param {STD_ITEM | string} x - The object or string to process
+ * @returns {string | *} The description with the definite article
  */
 string the_short(mixed x) {
   if(objectp(x)) {
-    string short = x->query_short();
+    string short = /** @type {STD_ITEM} */ (x)->query_short();
 
     short = remove_article(short);
 
@@ -113,7 +113,7 @@ string the_short(mixed x) {
  * articles, and proper referencing when objects have been previously
  * mentioned.
  *
- * @param {mixed*} obs - Array of objects to process
+ * @param {STD_ITEM*} obs - Array of objects to process
  * @param {string} res - The result string so far
  * @param {mapping} has - Mapping tracking which objects have been mentioned
  * @returns {mixed*} Array containing the modified result string and processed objects
