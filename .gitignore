@@ -10,7 +10,7 @@ log
 .rgignore
 /adm/etc/certs/*
 !/adm/etc/certs/*/.keep
-
+trace_lpcc.json
 /home/*
 !/home/*/.keep
 
