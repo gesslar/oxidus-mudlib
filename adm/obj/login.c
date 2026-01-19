@@ -157,7 +157,7 @@ void get_account(string str) {
   }
 #endif
 
-  account = ACCOUNT_D->load_account(name);
+  account = ACCOUNT_D->loadAccount(name);
   if(!account) {
     if(LOCKDOWN_D->query_player_lock()) {
       _error(LOCKDOWN_D->query_player_lock_msg());
@@ -223,13 +223,13 @@ void get_password(string str, int i) {
       return;
     }
 
-    if(!valid_account(account["name"])) {
-      if(!ACCOUNT_D->create_account(account["name"], crypt(str, 0))) {
+    if(!validAccount(account["name"])) {
+      if(!ACCOUNT_D->createAccount(account["name"], crypt(str, 0))) {
         _error("There was a problem creating your account.");
         return dest_me();
       }
 
-      account = ACCOUNT_D->load_account(account["name"]);
+      account = ACCOUNT_D->loadAccount(account["name"]);
     }
 
     _question("Please enter your password again to verify: ");
@@ -244,7 +244,7 @@ void verify_password(string str, int i) {
   curr = account["password"];
   str = crypt(str, curr);
   if(str != curr) {
-    ACCOUNT_D->remove_account(account["name"]);
+    ACCOUNT_D->removeAccount(account["name"]);
     _error("Your passwords do not match.");
     _question("Please enter your password: ");
     input_to("get_password", 1, i);
@@ -388,7 +388,7 @@ void new_character(string str) {
     return;
   }
 
-  if(!ACCOUNT_D->add_character(name, str)) {
+  if(!ACCOUNT_D->addCharacter(name, str)) {
     _error("There was a problem creating your character.");
     return dest_me();
   }

@@ -25,6 +25,7 @@
 #define false 0
 #define null ([])[0]
 #define nullzilla ([])[0]
+#define undefined ([])[0]
 
 #define DATE "%F"
 #define TIME "%T"

@@ -34,7 +34,7 @@ void boot(mixed arg...) {
 
   _log(1, "Boot #%d loaded.", ++boot_number);
 
-  save_data();
+  saveDatda();
 }
 
 /**

@@ -69,7 +69,7 @@ varargs mixed data_value(string file, string key, mixed def) {
   line = lines[i];
   parts = explode(line, "|");
   parts = parts[1..];
-  parts = map(parts, (: from_string :));
+  parts = map(parts, (: fromString :));
   if(sizeof(parts) == 1)
     return parts[0];
 

@@ -245,7 +245,7 @@ mapping query_all_environ() {
 }
 
 void set_environ_option(string key, mixed value) {
-  environ_data[key] = from_string(value);
+  environ_data[key] = fromString(value);
 
   _log(1, "Setting environ option: %s = %O", key, value);
 }

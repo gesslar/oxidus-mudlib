@@ -14,7 +14,7 @@ void Login(string submodule, mapping data) {
       username = lower_case(data["account"]);
       sscanf(username, "%s@%s", character, account_name);
 
-      account = ACCOUNT_D->load_account(account_name);
+      account = ACCOUNT_D->loadAccount(account_name);
       password = data["password"];
 
       if(!account || !account["password"]) {

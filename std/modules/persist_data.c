@@ -54,7 +54,7 @@ private string get_base_path(string path) {
 }
 
 // saving and loading data
-int save_data() {
+int saveDatda() {
     string base;
 
     if(!persistent)

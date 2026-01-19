@@ -17,7 +17,7 @@ private nosave mapping evals;
 void setup() {
   set_no_clean(1);
 
-  messages = from_string(read_file("/adm/etc/message/combat.txt"));
+  messages = fromString(read_file("/adm/etc/message/combat.txt"));
   evals = allocate_mapping(keys(messages), (: keys($(messages)[$1]) :));
 }
 
