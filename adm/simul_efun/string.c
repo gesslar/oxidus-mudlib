@@ -163,7 +163,7 @@ varargs string substr(string str, string sub, int reverse) {
  *                         remaining string.
  * @returns {mixed} - The LPC value represented by the string.
  */
-varargs mixed from_string(string str, int flag) {
+varargs mixed fromString(string str, int flag) {
     mixed *ret = ({ 0, "" });
 
     if(!str || !sizeof(str) || str == "")
@@ -196,7 +196,7 @@ varargs mixed from_string(string str, int flag) {
                 while(str[0] != '}') {
                     mixed *tmp;
 
-                    tmp = from_string(str, 1);
+                    tmp = fromString(str, 1);
                     ret[0] += ({ tmp[0] });
                     str = tmp[1];
                     while(str[0] == ' ' || str[0] == '\t')
@@ -236,13 +236,13 @@ varargs mixed from_string(string str, int flag) {
                     mixed *tmp;
                     mixed cle;
 
-                    tmp = from_string(str, 1);
+                    tmp = fromString(str, 1);
                     str = tmp[1];
                     while(str[0] == ' ' || str[0] == '\t') str = str[1..];
                     if(str[0] != ':')
                         error("Illegally formatting mapping: " + str + "\n");
                     cle = tmp[0];
-                    tmp = from_string(str[1..], 1);
+                    tmp = fromString(str[1..], 1);
                     ret[0][cle] = tmp[0];
                     str = tmp[1];
                     while(str[0] == ' ' || str[0] == '\t')

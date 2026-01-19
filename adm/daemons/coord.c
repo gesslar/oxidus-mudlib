@@ -26,7 +26,7 @@ void set_coordinate_data(mapping m) {
   rooms = m;
   rooms_array = map(values(rooms), (: $1.coords :));
 
-  save_data();
+  saveDatda();
 }
 
 mapping get_coordinate_data() {

@@ -40,7 +40,7 @@ public mapping query_wielded() { return copy(wielded); }
  * Query what item is equipped on a specific slot.
  *
  * @param {string} slot - The slot to check
- * @returns {Wearable|null} The equipped item or null if slot is empty
+ * @returns {Wearable|STD_WEAPON} The equipped item or null if slot is empty
  */
 public object equipped_on(string slot) { return equipment[slot] || null ; }
 
@@ -48,7 +48,7 @@ public object equipped_on(string slot) { return equipment[slot] || null ; }
  * Query what item is wielded in a specific slot.
  *
  * @param {string} slot - The slot to check
- * @returns {STD_WEAPON|null} The wielded item or null if slot is empty
+ * @returns {STD_WEAPON} The wielded item or null if slot is empty
  */
 public object wielded_in(string slot) { return wielded[slot] || null ; }
 

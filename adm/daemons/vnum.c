@@ -43,7 +43,7 @@ nomask int get_vnum(mixed room) {
 
     num = next_number ++;
 
-    save_data();
+    saveDatda();
 
     return num;
 }

@@ -87,7 +87,7 @@ void reload_alarms() {
       parse_alarm_in_file(alarm_file);
   }
 
-  save_data();
+  saveDatda();
 }
 
 /**
@@ -128,7 +128,7 @@ varargs int add_once(string master, string pattern, string file, string func, mi
     return 0;
 
   alarms += ({ alarm });
-  save_data();
+  saveDatda();
   return 1;
 }
 
@@ -216,7 +216,7 @@ void execute_alarm(class Alarm alarm) {
     log_file("system/alarm", "[%s] Error executing alarm %s: %O\n", ctime(), alarm.func, err);
   }
 
-  save_data();
+  saveDatda();
 }
 
 /**
@@ -312,7 +312,7 @@ class Alarm create_alarm(string *parts, int silent) {
       func = parts[4];
       if(sizeof(parts) >= 6) {
         args = parts[5..];
-        args = map(args, (: stringp($1) ? from_string($1) : $1 :));
+        args = map(args, (: stringp($1) ? fromString($1) : $1 :));
       }
     } else
       return null;
