@@ -216,8 +216,8 @@ public int determine_value_by_level(int level) {
   int value_per_level, ivariance, subtract;
   float variance;
 
-  value_per_level = mud_config("COIN_VALUE_PER_LEVEL");
-  config_variance = mud_config("COIN_VARIANCE");
+  value_per_level = mudConfig("COIN_VALUE_PER_LEVEL");
+  config_variance = mudConfig("COIN_VARIANCE");
 
   value = level * value_per_level;
   variance = config_variance * to_float(value);

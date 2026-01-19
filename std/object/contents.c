@@ -42,7 +42,7 @@ void clean_contents() {
  * @param {int} x - The new capacity value
  */
 void set_capacity(int x) {
-  if(!mud_config("USE_MASS"))
+  if(!mudConfig("USE_MASS"))
     return;
 
   _capacity = x;
@@ -66,7 +66,7 @@ void set_capacity(int x) {
  * @param {int} x - The amount to adjust capacity by (positive or negative)
  */
 void adjust_capacity(int x) {
-  if(!mud_config("USE_MASS"))
+  if(!mudConfig("USE_MASS"))
     return;
 
   _capacity += x;
@@ -87,7 +87,7 @@ void adjust_capacity(int x) {
  * @returns {int} The total capacity, or null if USE_MASS is disabled
  */
 int query_capacity() {
-  if(!mud_config("USE_MASS"))
+  if(!mudConfig("USE_MASS"))
     return null;
 
   return _capacity;
@@ -99,7 +99,7 @@ int query_capacity() {
  * @returns {int} The current fill level, or null if USE_MASS is disabled
  */
 int query_fill() {
-  if(!mud_config("USE_MASS"))
+  if(!mudConfig("USE_MASS"))
     return null;
 
   return _fill;
@@ -115,7 +115,7 @@ int query_fill() {
  * @returns {int} 1 if successful, 0 if adjustment would exceed limits
  */
 int adjust_fill(int x) {
-  if(!mud_config("USE_MASS"))
+  if(!mudConfig("USE_MASS"))
     return null;
 
   if(_fill + x < 0 || _fill + x > _capacity)
@@ -145,7 +145,7 @@ int can_hold_object(object ob) {
   int use_mass;
   int mass;
 
-  use_mass = mud_config("USE_MASS");
+  use_mass = mudConfig("USE_MASS");
 
   if(use_mass) {
     mass = ob->query_mass();
@@ -177,7 +177,7 @@ void rehash_capacity() {
   object ob, *obs;
   int total;
 
-  if(!mud_config("USE_MASS"))
+  if(!mudConfig("USE_MASS"))
     return;
 
   if(ignore_capacity())

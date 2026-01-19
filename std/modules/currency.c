@@ -133,7 +133,7 @@ mixed complex_transaction(object tp, int cost) {
 
     // Capacity checks
     {
-        int use_mass = mud_config("USE_MASS");
+        int use_mass = mudConfig("USE_MASS");
 
         if(use_mass) {
             int capacity = tp->query_capacity();

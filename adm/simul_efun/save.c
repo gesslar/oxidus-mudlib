@@ -10,7 +10,7 @@ string object_data_directory(object ob) {
     string source_dir = query_directory(ob);
     string save_dir;
 
-    save_dir = mud_config("OBJECT_DATA_DIR") + source_dir[1..];
+    save_dir = mudConfig("OBJECT_DATA_DIR") + source_dir[1..];
 
     return save_dir;
 }

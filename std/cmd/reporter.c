@@ -31,7 +31,7 @@ protected nomask void set_report_type(string type) {
 }
 
 protected nomask void set_git_hub_label(string label) {
-  mapping config = mud_config("GITHUB_REPORTER");
+  mapping config = mudConfig("GITHUB_REPORTER");
 
   if(!stringp(label) && !strlen(label))
     error("Bad argument 1 to set_git_hub_label().\n");

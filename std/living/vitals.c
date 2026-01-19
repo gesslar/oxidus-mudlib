@@ -241,7 +241,7 @@ int add_heart_rate(int x) {
 // This function calculates the number of pulses needed based on HEART_PULSE and HEARTBEATS_TO_REGEN
 void update_regen_interval() {
     // Calculate the number of pulses for the regen interval
-    regen_interval_pulses = to_int((mud_config("HEART_PULSE") * mud_config("HEARTBEATS_TO_REGEN")) / 1000.0); // Convert ms to seconds
+    regen_interval_pulses = to_int((mudConfig("HEART_PULSE") * mudConfig("HEARTBEATS_TO_REGEN")) / 1000.0); // Convert ms to seconds
     tick = 0;
 }
 

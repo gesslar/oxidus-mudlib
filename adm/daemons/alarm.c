@@ -73,7 +73,7 @@ void post_restore() {
  * alarm objects for each valid definition.
  */
 void reload_alarms() {
-  string alarm_path = mud_config("ALARMS_PATH");
+  string alarm_path = mudConfig("ALARMS_PATH");
   string alarm_file, *alarm_files;
   int next_minute = next_minute_start();
 

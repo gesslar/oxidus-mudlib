@@ -13,7 +13,7 @@ private string *currency_order;
 void setup() {
   mixed *currency_config;
 
-  currency_config = mud_config("CURRENCY");
+  currency_config = mudConfig("CURRENCY");
 
   // Transform the array into a mapping
   currency_map = ([]);

@@ -29,9 +29,9 @@ void setup_body() {
   add_action("revive", "revive");
   set_living_name(query_real_name());
   set_id(({query_real_name()}));
-  set_heart_beat(mud_config("DEFAULT_HEART_RATE"));
+  set_heart_beat(mudConfig("DEFAULT_HEART_RATE"));
   set_race("ghost");
-  set_level(1.0);
+  setLevel(1.0);
   set_hp(1.0);
   set_sp(1.0);
   set_mp(1.0);

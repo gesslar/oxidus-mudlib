@@ -99,10 +99,10 @@ public nomask mixed autodoc_scan() {
       _ok("Starting autodoc scan");
 
   writing = false;
-  doc_root = mud_config("AUTODOC_ROOT");
-  wiki_doc_root = mud_config("WIKI_DOC_ROOT");
+  doc_root = mudConfig("AUTODOC_ROOT");
+  wiki_doc_root = mudConfig("WIKI_DOC_ROOT");
   start_time = time_frac();
-  dirs_to_check = mud_config("AUTODOC_SOURCE_DIRS");
+  dirs_to_check = mudConfig("AUTODOC_SOURCE_DIRS");
   scanning = sizeof(dirs_to_check);
   total_dirs_scanned = 0;
   total_files_scanned = 0;

@@ -18,7 +18,7 @@ private nosave mapping destinations;
 private nosave string *dests;
 
 void setup() {
-  destinations = mud_config("TRAVEL_DESTINATIONS");
+  destinations = mudConfig("TRAVEL_DESTINATIONS");
   destinations = map(destinations, (: chop($2, ".c", -1) :));
   destinations = map(destinations, (: prepend($2, "/") :));
 

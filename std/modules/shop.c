@@ -196,7 +196,7 @@ mixed cmd_buy(object tp, string str) {
 mixed cmd_sell(object tp, string str) {
   object ob, *obs;
   int sz;
-  int use_mass = mud_config("USE_MASS");
+  int use_mass = mudConfig("USE_MASS");
 
   create_storage();
 

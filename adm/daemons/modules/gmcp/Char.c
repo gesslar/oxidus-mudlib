@@ -60,7 +60,7 @@ void Status(object who, mapping payload) {
     GMCP_LBL_CHAR_STATUS_NAME        : who->query_name(),
     GMCP_LBL_CHAR_STATUS_FILL        : sprintf("%d", who->query_fill()),
     GMCP_LBL_CHAR_STATUS_CAPACITY    : sprintf("%d", who->query_capacity()),
-    GMCP_LBL_CHAR_STATUS_XP          : sprintf("%d", who->query_xp()),
+    GMCP_LBL_CHAR_STATUS_XP          : sprintf("%d", who->queryXp()),
     GMCP_LBL_CHAR_STATUS_TNL         : sprintf("%d", who->query_tnl()),
     GMCP_LBL_CHAR_STATUS_WEALTH      : wealth,
   ]);

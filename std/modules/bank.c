@@ -39,7 +39,7 @@ mixed cmd_register(object tp, string arg) {
 }
 
 mixed cmd_deposit(object tp, string str) {
-  mixed *config = mud_config("CURRENCY");
+  mixed *config = mudConfig("CURRENCY");
   int num, conv, have;
   string type;
   mixed result;
@@ -80,7 +80,7 @@ mixed cmd_deposit(object tp, string str) {
 }
 
 mixed cmd_withdraw(object tp, string str) {
-  mixed *config = mud_config("CURRENCY");
+  mixed *config = mudConfig("CURRENCY");
   int num, base, have, rate;
   string type;
   mixed result;

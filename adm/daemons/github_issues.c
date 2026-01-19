@@ -46,7 +46,7 @@ void setup() {
 */
 
 varargs mixed create_issue(string type, string title, string body, mixed *callback) {
-  mapping config = mud_config("GITHUB_REPORTER");
+  mapping config = mudConfig("GITHUB_REPORTER");
 
   if(!stringp(type) || !strlen(type))
     return "Type must be a valid string";

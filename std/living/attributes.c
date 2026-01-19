@@ -19,7 +19,7 @@ void init_attributes() {
     string key;
     mixed data;
 
-    default_attributes = mud_config("ATTRIBUTES");
+    default_attributes = mudConfig("ATTRIBUTES");
 
     attributes = attributes || ([]);
 

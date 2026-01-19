@@ -47,13 +47,13 @@ string set_name(string name) {
     return result;
 }
 
-float set_level(float level) {
-    if(!::set_level(level))
+float setLevel(float level) {
+    if(!::setLevel(level))
         return null;
 
     adjust_skills_by_npc_level(level);
 
-    return query_level();
+    return queryLevel();
 }
 
 int force_me(string cmd) {
@@ -63,7 +63,7 @@ int force_me(string cmd) {
 int player_check();
 void start_heart_beat() {
     if(player_check())
-        set_heart_beat(mud_config("DEFAULT_HEART_RATE"));
+        set_heart_beat(mudConfig("DEFAULT_HEART_RATE"));
 }
 
 void stop_heart_beat() {

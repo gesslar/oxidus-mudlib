@@ -267,7 +267,7 @@ string sanitizeRegex(string msg);
 // File: system.c
 int port();
 object simul_efun();
-mixed mud_config(string str);
+mixed mudConfig(string str);
 string admin_email();
 string arch();
 string baselib_name();

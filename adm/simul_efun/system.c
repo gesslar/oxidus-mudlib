@@ -42,7 +42,7 @@ string mud_name() {
  * @returns {string} The library name.
  */
 string lib_name() {
-  return mud_config("LIB_NAME");
+  return mudConfig("LIB_NAME");
 }
 
 /**
@@ -51,7 +51,7 @@ string lib_name() {
  * @returns {string} The library version.
  */
 string lib_version() {
-  return mud_config("LIB_VERSION");
+  return mudConfig("LIB_VERSION");
 }
 
 /**
@@ -60,7 +60,7 @@ string lib_version() {
  * @returns {string} The open status of the MUD.
  */
 string open_status() {
-  return mud_config("OPEN_STATUS");
+  return mudConfig("OPEN_STATUS");
 }
 
 /**
@@ -69,7 +69,7 @@ string open_status() {
  * @returns {string} The admin email address.
  */
 string admin_email() {
-  return mud_config("ADMIN_EMAIL");
+  return mudConfig("ADMIN_EMAIL");
 }
 
 /**
@@ -121,7 +121,7 @@ string arch() {
  * @param {string} str - The configuration key to retrieve.
  * @returns {mixed} The configuration value.
  */
-mixed mud_config(string str) {
+mixed mudConfig(string str) {
   return CONFIG_D->get_mud_config(str);
 }
 
@@ -132,7 +132,7 @@ mixed mud_config(string str) {
  * @returns {string} The log directory.
  */
 string log_dir() {
-  return mud_config("LOG_DIR");
+  return mudConfig("LOG_DIR");
 }
 
 /**
@@ -141,7 +141,7 @@ string log_dir() {
  * @returns {string} The temporary directory.
  */
 string tmp_dir() {
-  return mud_config("TMP_DIR");
+  return mudConfig("TMP_DIR");
 }
 
 /**
@@ -151,7 +151,7 @@ string tmp_dir() {
  */
 
 string doc_dir() {
-  return mud_config("DOC_DIR");
+  return mudConfig("DOC_DIR");
 }
 
 /**

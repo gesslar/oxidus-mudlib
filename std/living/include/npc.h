@@ -1,7 +1,7 @@
 #ifndef __NPC_H__
 #define __NPC_H__
 
-float set_level(float level) ;
+float setLevel(float level) ;
 int force_me(string cmd) ;
 void start_heart_beat() ;
 void stop_heart_beat() ;

@@ -11,8 +11,8 @@
 
 inherit STD_DAEMON;
 
-string *locals = mud_config("GRAPEVINE")["local_only"];
-string *ch_list = mud_config("GRAPEVINE")["channels"] + locals;
+string *locals = mudConfig("GRAPEVINE")["local_only"];
+string *ch_list = mudConfig("GRAPEVINE")["channels"] + locals;
 
 mapping history = ([]);
 private nosave string module_name = query_file_name(this_object());

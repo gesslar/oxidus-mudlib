@@ -60,7 +60,7 @@ void setup() {
   cacheAttributes();
   cache256();
 
-  minimum_luminance = mud_config("COLOUR_MININUM_LUMINANCE") || 50.0;
+  minimum_luminance = mudConfig("COLOUR_MININUM_LUMINANCE") || 50.0;
 }
 
 /**
