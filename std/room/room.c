@@ -104,7 +104,7 @@ mapping gmcp_room_info() {
   ]);
 
   if(room_colour)
-    result["color"] = COLOUR_D->colour_to_rgb(room_colour);
+    result["color"] = COLOUR_D->colourToRgb(room_colour);
 
   gmcp_info = query_custom_gmcp();
   if(sizeof(gmcp_info))

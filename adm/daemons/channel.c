@@ -5,7 +5,6 @@
  Modular Channel Daemon
 
  Version 2.5
-
 */
 
 #include <gmcp_defines.h>
@@ -31,7 +30,7 @@ string *get_tuned(string argument);
 void rec_msg(string channel, string user, string msg);
 
 void setup() {
-  string str, err, *arr;
+  string err, *arr;
   int i;
   float time;
 

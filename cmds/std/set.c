@@ -104,7 +104,7 @@ void prompt_colour_result(string result, object tp, string variable) {
     default: {
       string colour;
 
-      result = COLOUR_D->substitute_too_dark(result);
+      result = COLOUR_D->substituteTooDark(result);
       sscanf(result, "{{%s}}", colour);
 
       tp->set_pref(variable, colour);

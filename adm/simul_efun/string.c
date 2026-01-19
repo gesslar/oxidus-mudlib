@@ -97,7 +97,7 @@ varargs string extract(string str, int from, int to) {
  * @returns {string} - The string without colour.
  */
 string no_ansi(string str) {
-    return COLOUR_D->substitute_colour(str, "plain");
+    return COLOUR_D->substituteColour(str, "plain");
 }
 
 /**

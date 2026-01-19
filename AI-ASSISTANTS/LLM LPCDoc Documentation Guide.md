@@ -150,6 +150,113 @@ For objects of specific types:
 
 Example: `{"/std/player.c"}`
 
+#### Using Macros for Object Types
+
+When macros are defined for object paths (typically in header files), prefer
+using the macro name over the literal path. This improves maintainability and
+readability.
+
+```c
+// If STD_PLAYER is defined as "/std/player.c"
+@param {STD_PLAYER} player - The player object
+```
+
+Common mudlib macros include:
+
+- `STD_BODY` - Base living object
+- `STD_PLAYER` - Player character object
+- `STD_NPC` - Non-player character object
+- `STD_WEAPON` - Weapon object
+- `STD_ARMOUR` - Armour object
+- `STD_CLOTHING` - Clothing object
+- `STD_ITEM` - Base item object
+- `STD_ROOM` - Room object
+
+#### Choosing Object Type Specificity
+
+When documenting object types, choose the **most general (highest level)**
+object type that satisfies all the requirements of the function. This principle
+ensures maximum flexibility while maintaining type safety.
+
+**Key Guidelines:**
+
+1. **Use the common parent for multi-type support**: If a function works with
+   both `STD_PLAYER` and `STD_NPC` objects, and it only uses methods available
+   in their common parent (`STD_BODY`), use `STD_BODY` as the type.
+
+   ```c
+   /**
+    * Gets the health of a living being.
+    *
+    * @param {STD_BODY} living - The living object (player or NPC)
+    * @returns {int} The current health value
+    */
+   int get_health(object living) {
+       return living->query_hp();
+   }
+   ```
+
+2. **Use specific types when required**: If a function relies on methods or
+   properties that only exist in a specific object type, use that specific
+   type.
+
+   ```c
+   /**
+    * Awards experience points to a player.
+    *
+    * @param {STD_PLAYER} player - The player to award
+    * @param {int} xp - Amount of experience
+    * @returns {int} New total experience
+    */
+   int award_xp(object player, int xp) {
+       // Uses player-specific methods not in STD_BODY
+       return player->add_exp(xp);
+   }
+   ```
+
+3. **Consider the inheritance hierarchy**: Understand the object hierarchy in
+   your mudlib to choose the appropriate level:
+   - `STD_OBJECT` → Most general
+   - `STD_ITEM` → For moveable objects
+   - `STD_BODY` → For living things (players and NPCs)
+   - `STD_PLAYER` / `STD_NPC` → Specific living types
+
+4. **Use union types when accepting multiple unrelated types**:
+
+   ```c
+   /**
+    * Equips an item to a body slot.
+    *
+    * @param {STD_ARMOUR|STD_CLOTHING} item - The wearable item
+    * @param {string} slot - The body slot
+    * @returns {int} 1 for success, 0 for failure
+    */
+   ```
+
+5. **Document custom type combinations**: For frequently used type
+   combinations, consider using `@typedef` at the file level:
+
+   ```c
+   /**
+    * @typedef {STD_ARMOUR|STD_CLOTHING} Wearable
+    * @typedef {STD_WEAPON} Wieldable
+    */
+   ```
+
+   Then use these throughout the file:
+
+   ```c
+   @param {Wearable} item - The item to wear
+   ```
+
+**Examples from equipment.c:**
+
+- Uses `STD_WEAPON` specifically for weapon-only operations
+- Uses `Wearable` (union of `STD_ARMOUR|STD_CLOTHING`) for items that can be
+  worn
+- Uses `STD_ITEM` as a more general type when checking generic item properties
+- Uses specific types in return values to clearly indicate what is returned
+
 ### Arrays
 
 For arrays of a specific type:

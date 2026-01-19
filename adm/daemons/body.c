@@ -34,14 +34,9 @@ object create_body(string name) {
     type = "player";
 
   string dest = sprintf("/%s/%s", type, name);
-  debug("DEST: " + dest);
 
-  /** @type {STD_PLAYER} */
-  object body;
+  /** @type {STD_PLAYER} */ object body;
   string err = catch(body = load_object(dest));
-
-  debug("ERR: " + err);
-  debug("BODY: %O", body);
 
   if(err)
     return 0;
@@ -63,7 +58,7 @@ mixed create_ghost(string name) {
 
   name = lower_case(name);
 
-  object ghost;
+  /** @type {STD_GHOST} */ object ghost;
   string err = catch(ghost = load_object(sprintf("/ghost/%s", name)));
   if(err) {
     log_file("ghost", err);

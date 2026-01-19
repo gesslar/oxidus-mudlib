@@ -12,17 +12,11 @@
 
 inherit STD_DAEMON;
 
-void setup() {
-  debug("%O\n", previous_object(-1));
-}
-
 public nomask object compile_object(string file) {
   object ob;
   string e;
   string type = query_file_name();
   string test = sprintf("^/%s/\\w+$", type);
-
-  debug("Loading %O %O", file, test);
 
   if(!pcre_match(file, test))
     return 0;

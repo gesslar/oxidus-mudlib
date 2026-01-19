@@ -18,10 +18,10 @@ string query_wealth(object tp);
  * @returns {mixed} The result of the command.
  */
 mixed main(object tp, string args) {
-  string *shorts;
+  string* shorts;
+  object* equipped = values(tp->query_equipped());
+  object* wielded = values(tp->query_wielded());
   /** @type {STD_ITEM*} */ object* inventory;
-  /** @type {STD_CLOTHING*} */ object* equipped = values(tp->query_equipped());
-  /** @type {STD_WEAPON*} */ object*  wielded = values(tp->query_wielded());
 
   inventory = find_targets(tp, args, tp);
 

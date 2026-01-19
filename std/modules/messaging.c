@@ -156,7 +156,7 @@ void do_receive(string message, int message_type) {
     }
 
     if(!(message_type & NO_COLOUR))
-      message = COLOUR_D->body_colour_replace(this_object(), message, message_type);
+      message = COLOUR_D->bodyColourReplace(this_object(), message, message_type);
   } else {
     // For non-user objects, also disable coloured messages.
     message_type |= NO_COLOUR;
@@ -165,9 +165,9 @@ void do_receive(string message, int message_type) {
   // If NO_COLOUR flag is set, substitute colours with "off" (i.e., no
   // colour).
   if(message_type & NO_COLOUR)
-    message = COLOUR_D->substitute_colour(message, "off");
+    message = COLOUR_D->substituteColour(message, "off");
   else
-    message = COLOUR_D->substitute_colour(message, term);
+    message = COLOUR_D->substituteColour(message, term);
 
   if(function_exists("query_environ")) {
     string encoding;

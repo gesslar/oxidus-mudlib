@@ -160,9 +160,9 @@ varargs mixed element_of(mixed *arr, int secure) {
 void debug_message(string str) {
   string timestamp;
 
-  str = chop(str, "\n", -1) ;
+  str = chop(str, "\n", -1);
 
-  timestamp = strftime("%Y/%m/%d %H:%M:%S", time()) ;
+  timestamp = strftime("%Y/%m/%d %H:%M:%S", time());
   efun::debug_message(sprintf("%s %s", timestamp, str));
   master()->log_file("debug.log", sprintf("%s %s\n", timestamp, str));
 }

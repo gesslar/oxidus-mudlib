@@ -103,7 +103,7 @@ void prompt_colour_result(string result, object tp, string variable) {
         default: {
             string colour;
 
-            result = COLOUR_D->substitute_too_dark(result);
+            result = COLOUR_D->substituteTooDark(result);
             colour = sprintf("{{0%s}}", result);
             tp->set_env(variable, result);
             _ok(tp, "You have selected %s%s{{res}} for `%s`.",
