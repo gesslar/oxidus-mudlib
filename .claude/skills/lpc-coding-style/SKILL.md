@@ -48,14 +48,60 @@ This applies to identifiers (variable names, function names, file names), commen
 
 - Opening braces for control structures are placed on the same line as the statement.
 - Closing braces get their own line unless followed by an `else` or similar continuations.
-- Single-statement blocks still use braces.
-- Example:
+- **Single-statement bodies do NOT use braces.** Place the body on the next line, indented.
+- **Consistency rule:** If ANY branch in an `if`/`else if`/`else` chain requires braces (because it has multiple statements), then ALL branches in that chain use braces. For `switch`, braces are per-case — only the specific `case` that needs multiple statements gets braces; other cases in the same switch remain braceless.
+- Examples:
 
   ```lpc
+  // Single-statement if — no braces
+  if(condition)
+    doSomething();
+
+  // Single-statement if/else — no braces
+  if(condition)
+    doSomething();
+  else
+    doOtherThing();
+
+  // Multi-statement branch — ALL branches get braces
   if(condition) {
-    // code
+    doSomething();
+    doMore();
   } else {
-    // more code
+    doOtherThing();
+  }
+
+  // Single-statement while — no braces
+  while(condition)
+    doSomething();
+
+  // Single-statement for — no braces
+  for(int i = 0; i < sz; i++)
+    doSomething(i);
+
+  // Switch: single-statement cases — no braces
+  switch(value) {
+    case 1:
+      doSomething();
+      break;
+    case 2:
+      doOtherThing();
+      break;
+    default:
+      doDefault();
+      break;
+  }
+
+  // Switch: multi-statement case — that case gets braces
+  switch(value) {
+    case 1: {
+      doSomething();
+      doMore();
+      break;
+    }
+    case 2:
+      doOtherThing();
+      break;
   }
   ```
 
@@ -125,21 +171,7 @@ float attackSpeed = 2.0;
 - Blank lines between logical sections of code.
 - For switch statements, the `case` keyword is not indented, but case content is indented one level.
 - Always include a `default` case in switch statements when appropriate.
-- Example:
-
-  ```lpc
-  switch(value) {
-    case 1:
-      // code
-      break;
-    case 2:
-      // code
-      break;
-    default:
-      // code
-      break;
-  }
-  ```
+- Switch bracing follows the rules in the **Bracing Style** section above — see there for examples.
 
 ## Comments
 
