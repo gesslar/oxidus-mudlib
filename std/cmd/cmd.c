@@ -141,31 +141,8 @@ int _usage(object tp) {
 }
 #endif
 
-private nosave string *_verb_rules = ({});
-
-// Verb functionality
-public void add_verb_rule(string rule) {
-  _verb_rules += ({ rule });
-}
-
-public void remove_verb_rule(string rule) {
-  _verb_rules -= ({ rule });
-}
-
-public void set_verb_rules(string *rules) {
-  _verb_rules = copy(rules);
-}
-
-public string *query_verb_rules() {
-  return copy(_verb_rules);
-}
-
 int is_command() {
   return 1;
-}
-
-int is_verb() {
-  return sizeof(_verb_rules) > 0;
 }
 
 string usage (object caller) { return null; }

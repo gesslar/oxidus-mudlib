@@ -14,7 +14,7 @@ You are helping create or modify commands for Oxidus. Commands are LPC files tha
 3. First checks `evaluate_command()` on inventory, environment, and room contents (for `add_command()`-based commands)
 4. Then checks soul emotes and channels
 5. Then searches the player's PATH directories for `<verb>.c`
-6. The command object is loaded and `main()` (or `process_verb_rules()` for verb commands) is called
+6. The command object is loaded and `main()` is called
 7. The return value is evaluated by `evaluate_result()`
 
 ## File Naming and Location
@@ -162,19 +162,6 @@ object ob = find_player(name);
 // Lower-level
 object ob = present(name, location);
 ```
-
-## Verb Rules
-
-Commands can define verb grammar rules for structured argument parsing:
-
-```lpc
-void setup() {
-    add_verb_rule("");        // No arguments
-    add_verb_rule("WRD");    // Single word argument
-}
-```
-
-When `is_verb()` returns true (i.e., verb rules are defined), `command_hook()` calls `process_verb_rules()` instead of `main()`.
 
 ## STD_ABILITY Features
 
