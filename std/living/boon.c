@@ -150,7 +150,7 @@ private nomask int query(
   if(!of(cl, src) || !of(type, src[cl]))
     return 0;
 
-  foreach(int tag, mapping data in src[cl][type]) {
+  foreach(mapping data in src[cl][type]) {
     total += data["amt"];
   }
 
