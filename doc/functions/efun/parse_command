@@ -1,3 +1,4 @@
+# parse_command
 
 ### NAME
 
@@ -181,4 +182,3 @@
 
        string parse_command_all_word()
           - Would normally return: "all"
-
