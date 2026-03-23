@@ -13,7 +13,7 @@ void set_skills(mapping s) ;
 varargs float improve_skill(string skill, float progress) ;
 int query_skill_progress(string skill) ;
 int modify_skill_level(string skill, int level) ;
-int adjust_skills_by_npc_level(float level) ;
+int adjust_skills_by_npc_level(float _level) ;
 private nomask mapping adjust_skill_levels(mapping current_skills) ;
 string *query_skill_path(string skill) ;
 int use_skill(string skill) ;
