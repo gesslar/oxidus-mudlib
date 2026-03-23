@@ -16,7 +16,7 @@ private nomask mapping reverse_vnums;
 private int next_number;
 
 void setup() {
-    set_persistent(1);
+    setPersistent(1);
 }
 
 nomask int get_vnum(mixed room) {
@@ -43,7 +43,7 @@ nomask int get_vnum(mixed room) {
 
     num = next_number ++;
 
-    saveDatda();
+    saveData();
 
     return num;
 }

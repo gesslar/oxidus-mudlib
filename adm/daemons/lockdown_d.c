@@ -57,7 +57,7 @@ int is_ip_banned(string ip);
 int is_user_banned(string user);
 
 int setup() {
-    set_persistent();
+    setPersistent();
 }
 
 void post_setup_1() {
@@ -232,7 +232,7 @@ mixed add_banned_user(string name) {
     else
         users_banned += ({ name });
 
-    saveDatda();
+    saveData();
 
     return 1;
 }
@@ -243,7 +243,7 @@ mixed remove_banned_user(string name) {
 
     users_banned -= ({ name });
 
-    saveDatda();
+    saveData();
 
     return 1;
 }
@@ -252,7 +252,7 @@ int remove_all_banned_users() {
     if(users_banned)
         users_banned = ({});
 
-    saveDatda();
+    saveData();
 
     return 1;
 }
@@ -270,7 +270,7 @@ mixed add_play_tester(string name) {
     else
         play_testers += ({ name });
 
-    saveDatda();
+    saveData();
 
     return 1;
 }
@@ -281,7 +281,7 @@ mixed remove_play_tester(string name) {
 
     play_testers -= ({ name });
 
-    saveDatda();
+    saveData();
 
     return 1;
 }
@@ -290,7 +290,7 @@ int remove_all_play_testers() {
     if(play_testers)
         play_testers = ({});
 
-    saveDatda();
+    saveData();
 
     return 1;
 }
@@ -308,7 +308,7 @@ mixed add_ip_ban(string ip) {
     else
         ips_banned += ({ ip });
 
-    saveDatda();
+    saveData();
 
     return 1;
 }
@@ -319,7 +319,7 @@ mixed remove_ip_ban(string ip) {
 
     ips_banned -= ({ ip });
 
-    saveDatda();
+    saveData();
 
     return 1;
 }
@@ -328,7 +328,7 @@ int remove_all_ip_bans() {
     if(ips_banned)
         ips_banned = ({});
 
-    saveDatda();
+    saveData();
 
     return 1;
 }
@@ -345,50 +345,50 @@ void unlock_mud() {
 
 void toggle_guest_account() {
     guest_lock = !guest_lock;
-    saveDatda();
+    saveData();
 }
 
 void toggle_new_player_creation() {
     player_creation = !player_creation;
-    saveDatda();
+    saveData();
 }
 
 void set_dev_lock() {
     dev_lock = 1;
-    saveDatda();
+    saveData();
 }
 
 void set_player_lock() {
     player_lock = 1;
-    saveDatda();
+    saveData();
 }
 
 void set_vip_lock() {
     vip_lock = 1;
-    saveDatda();
+    saveData();
 }
 
 void set_player_lock_msg(string arg) {
     player_lock_msg = arg;
-    saveDatda();
+    saveData();
 }
 
 void set_dev_lock_msg(string arg) {
     dev_lock_msg = arg;
-    saveDatda();
+    saveData();
 }
 
 void set_vip_lock_msg(string arg) {
     vip_lock_msg = arg;
-    saveDatda();
+    saveData();
 }
 
 void set_guest_lock_msg(string arg) {
     guest_lock_msg = arg;
-    saveDatda();
+    saveData();
 }
 
 void set_player_creation_msg(string arg) {
     player_creation_msg = arg;
-    saveDatda();
+    saveData();
 }

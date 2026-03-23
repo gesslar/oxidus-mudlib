@@ -11,6 +11,10 @@
  * 2024-08-09 - Gesslar - Created
  */
 
+#ifdef MOO
+#define aroo
+#endif
+
 #include <account.h>
 
 inherit STD_DAEMON;
@@ -35,7 +39,7 @@ private nomask mapping reverse = ([ ]);
  */
 void setup() {
   set_no_clean(1);
-  set_persistent(1);
+  setPersistent(1);
 }
 
 /**
@@ -81,7 +85,7 @@ public int createAccount(string name, string password) {
 
   accounts[name] = account;
 
-  saveDatda();
+  saveData();
 
   return true;
 }
@@ -146,7 +150,7 @@ string writeAccount(string name, string key, mixed data) {
 
   write_file(accountFile(name), pretty_map(account));
 
-  saveDatda();
+  saveData();
 
   return account[key];
 }
@@ -227,7 +231,7 @@ int removeAccount(string name) {
       map_delete(reverse, key);
   }
 
-  saveDatda();
+  saveData();
 
   return true;
 }
@@ -266,7 +270,7 @@ int addCharacter(string account_name, string str) {
 
   assure_dir(user_data_directory(str));
 
-  saveDatda();
+  saveData();
 
   return true;
 }
@@ -304,7 +308,7 @@ int removeCharacter(string account_name, string characterName) {
 
   map_delete(reverse, characterName);
 
-  saveDatda();
+  saveData();
 
   return true;
 }
@@ -329,7 +333,7 @@ string characterAccount(string characterName) {
  * Retrieves all characters associated with an account.
  *
  * @param {AccountName} accountName - The account name to look up
-* @returns {CharacterName*} Array of character names if found, null otherwise
+ * @returns {CharacterName*} Array of character names if found, null otherwise
 */
 string* accountCharacters(string accountName) {
   if(!accountName || !stringp(accountName))
@@ -347,3 +351,31 @@ string* accountCharacters(string accountName) {
 
   return account["characters"] || ({});
 }
+
+/**
+ * @typedef {0|1} Boolean
+ * 1 for true, 0 for false.
+ */
+
+ /**
+  * @typedef {string} AccountName
+  * An account name.
+  */
+
+/**
+ * @typedef {string} AccountPassword
+ * An account password.
+ */
+
+
+ /**
+  * @typedef {string} CharacterName
+  * A character name.
+  */
+
+ /**
+  * An account record.
+  * @typedef {mapping} AccountRecord
+  * @property {string*} characterNames - A list of character names for this account.
+  * @property {string} password - The password for this account.
+  */

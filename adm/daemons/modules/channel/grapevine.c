@@ -19,7 +19,7 @@ private nosave string module_name = query_file_name(this_object());
 
 void setup() {
   set_no_clean(1);
-  set_persistent();
+  setPersistent();
 }
 
 void post_setup_1() {
@@ -34,7 +34,7 @@ void post_setup_1() {
       history[ch_list[i]] = ({ });
   }
 
-  saveDatda();
+  saveData();
 }
 
 int rec_msg(string chan, string usr, string msg) {
@@ -104,7 +104,7 @@ int rec_msg(string chan, string usr, string msg) {
   if(!of(chan, locals))
     GRAPEVINE_D->grapevine_broadcast_message(chan, usr, msg);
 
-  saveDatda();
+  saveData();
 
   return 1;
 }
@@ -127,7 +127,7 @@ int rec_grapevine_msg(string chan, string usr, string msg, string game) {
   CHAN_D->rec_msg(chan, lower_case(name), "[" + capitalize(chan) + "] " + name + real_message + "\n");
   history[chan] += ({ ldate(time(),1) +" "+ltime() + " [" + capitalize(chan) + "] " + name + real_message + "\n" });
 
-  saveDatda();
+  saveData();
 
   return 1;
 }

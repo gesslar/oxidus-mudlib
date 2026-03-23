@@ -55,7 +55,7 @@ void mudlib_setup() {
   if(append(file_name(), ".c") == __FILE__)
     return;
 
-  set_persistent();
+  setPersistent();
   set_no_clean(1);
 
   /* Register to receive channel message signals and route them to
