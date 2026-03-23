@@ -336,10 +336,7 @@ int command_hook(string arg) {
       return 1;
     }
 
-    if(cmd->is_verb())
-      return_value = cmd->process_verb_rules(caller, arg || "");
-    else
-      return_value = cmd->main(caller, arg);
+    return_value = cmd->main(caller, arg);
 
     result = evaluate_result(return_value);
     if(result == 1)
