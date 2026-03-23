@@ -35,6 +35,7 @@ public class Alarm createAlarm(string *parts, int silent);
 public int calculateAlarmTime(class Alarm alarm, int next);
 public int validateAlarm(class Alarm alarm, int silent);
 public void reloadAlarms();
+private void executeAlarm(class Alarm alarm);
 
 // Variables
 private nomask class Alarm *alarms = ({});
@@ -105,14 +106,13 @@ varargs int add_once(string master, string pattern, string file, string func, mi
     return 0;
   }
 
-  mixed *parts = ({
+  string *parts = ({
     "O",
     pattern,
     master,
     file,
-    func,
-    args
-  });
+    func
+  }) + map(args, (: ""+$1 :));
 
   class Alarm alarm = createAlarm(parts, 1);
 
@@ -134,7 +134,7 @@ varargs int add_once(string master, string pattern, string file, string func, mi
  * - Updates alarm states and saves changes
  */
  void pollAlarms() {
-  int i, now, next, nextMinute, untilNextPoll;
+  int i, now, nextMinute, untilNextPoll;
 
   now = time();
   nextMinute = nextMinuteStart();
@@ -288,9 +288,8 @@ string *parseAlarmLine(string line) {
  */
 class Alarm createAlarm(string *parts, int silent) {
   class Alarm alarm;
-  string type, pattern, master, file, func, arg_line, *args;
+  string type, pattern, master, file, func, *args;
   mixed err;
-  object ob;
 
   err = catch {
     if(sizeof(parts) >= 5) {
@@ -341,8 +340,8 @@ class Alarm createAlarm(string *parts, int silent) {
 int calculateAlarmTime(class Alarm alarm, int next) {
   int current_time = time();
   int alarm_time = -1;
-  string fmt, alarm_time_str, weekday, timeOfDay, alarm_date_time, current_year_str;
-  int year, month, next_year, wday, alarm_wday, days_diff, hours, minutes;
+  string alarm_time_str, alarm_date_time;
+  int year, month, alarm_wday, hours, minutes;
   mixed err;
 
   err = catch {
@@ -504,10 +503,9 @@ private int nextMinuteStart() {
  * Only processes alarms of type "B" (Boot), scheduling them to execute
  * after their specified delay in seconds.
  *
- * @param {mixed} arg... - Signal arguments (unused)
  * @throws If called by anything other than the signal daemon
  */
-void execute_boot_alarms(mixed arg...) {
+void execute_boot_alarms() {
   class Alarm *boot_alarms, boot_alarm;
 
   if(previous_object() != signal_d())

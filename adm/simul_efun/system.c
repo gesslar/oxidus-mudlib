@@ -155,17 +155,6 @@ string doc_dir() {
 }
 
 /**
- * @property {string} type - The type of the message.
- * @property {message} message - The message to send to the player.
- *
- * A class representing a message to be sent to a player.
-*/
-class SystemMessage {
-  string type;
-  string message;
-}
-
-/**
  * Logs a debug message, optionally formatted with arguments.
  *
  * If the first argument is not a string, it will be printed using %O
@@ -230,6 +219,17 @@ private string _format_message(string type, int includeDecoration, string str, m
   return str;
 }
 
+/**
+ * @property {string} type - The type of the message.
+ * @property {message} message - The message to send to the player.
+ *
+ * A class representing a message to be sent to a player.
+*/
+class SystemMessage {
+  string type;
+  string message;
+}
+
 private varargs class SystemMessage constructMessageFromArgs(string type, mixed args...) {
   string str;
   class SystemMessage system_message;
@@ -268,8 +268,6 @@ private varargs class SystemMessage constructMessageFromArgs(string type, mixed 
 private int _feedback(string type, mixed args...) {
   class SystemMessage result;
   object tp;
-  string str;
-  string mess;
 
   result = constructMessageFromArgs(type, args...);
   if(!result)
@@ -292,15 +290,20 @@ private int _feedback(string type, mixed args...) {
  * Sends a message to a player using accessible notation to indicate
  * that it is a confirmation/success system message.
  *
- * @override varargs int _ok(object tp, string str, mixed... args)
- * @override varargs int _ok(string str, mixed... args)
- * @description Provides a confirmation message, optionally formatted with
- *              arguments. If no object is provided, the message will be sent
- *              to this_body(). If no object is found, the message will be
- *              sent to the debug log.
- * @param {STD_PLAYER} [tp] - The target object to receive the message.
+ * Provides a confirmation message, optionally formatted with
+ * arguments. If no object is provided, the message will be sent
+ * to this_body(). If no object is found, the message will be
+ * sent to the debug log.
+ *
+ * @overload
+ * @param {STD_PLAYER} tp - The target object to receive the message.
  * @param {string} str - The confirmation message.
- * @param {mixed...} [args] - Optional arguments to format the message.
+ * @param {mixed} [args] - Optional arguments to format the message.
+ * @returns {int} Always returns 1, unless there is no previous object.
+ *
+ * @overload
+ * @param {string} str - The confirmation message.
+ * @param {mixed} [args] - Optional arguments to format the message.
  * @returns {int} Always returns 1, unless there is no previous object.
  */
 varargs int _ok(mixed args...) {
@@ -309,17 +312,22 @@ varargs int _ok(mixed args...) {
 
 /**
  * Sends a message to a player using accessible notation to indicate
- * that it is a error/failure system message.
+ * that it is an error/failure system message.
  *
- * @override varargs int _error(object tp, string str, mixed... args)
- * @override varargs int _error(string str, mixed... args)
- * @description Provides a confirmation message, optionally formatted with
- *              arguments. If no object is provided, the message will be sent
- *              to this_body(). If no object is found, the message will be
- *              sent to the debug log.
- * @param {STD_PLAYER} [tp] - The target object to receive the message.
- * @param {string} str - The confirmation message.
- * @param {mixed...} [args] - Optional arguments to format the message.
+ * Provides an error message, optionally formatted with
+ * arguments. If no object is provided, the message will be sent
+ * to this_body(). If no object is found, the message will be
+ * sent to the debug log.
+ *
+ * @overload
+ * @param {STD_PLAYER} tp - The target object to receive the message.
+ * @param {string} str - The error message.
+ * @param {mixed} [args] - Optional arguments to format the message.
+ * @returns {int} Always returns 1, unless there is no previous object.
+ *
+ * @overload
+ * @param {string} str - The error message.
+ * @param {mixed} [args] - Optional arguments to format the message.
  * @returns {int} Always returns 1, unless there is no previous object.
  */
 varargs int _error(mixed args...) {
@@ -327,63 +335,96 @@ varargs int _error(mixed args...) {
 }
 
 /**
- * @simul_efun _warn
- * @def varargs int _warn(object tp, string str, mixed args...)
- * @def varargs int _warn(string str, mixed args...)
- * @description Provides an warning message, optionally formatted with
- *              arguments. If no object is provided, the message will be sent
- *              to this_body(). If no object is found, the message will be
- *              sent to the debug log.
+ * Sends a message to a player using accessible notation to indicate
+ * that it is a warning system message.
+ *
+ * Provides a warning message, optionally formatted with
+ * arguments. If no object is provided, the message will be sent
+ * to this_body(). If no object is found, the message will be
+ * sent to the debug log.
+ *
+ * @overload
+ * @param {STD_PLAYER} tp - The target object to receive the message.
  * @param {string} str - The warning message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} - Always returns 1, unless there is no previous object.
+ * @returns {int} Always returns 1, unless there is no previous object.
+ *
+ * @overload
+ * @param {string} str - The warning message.
+ * @param {mixed} [args] - Optional arguments to format the message.
+ * @returns {int} Always returns 1, unless there is no previous object.
  */
 varargs int _warn(mixed args...) {
   return _feedback("warn", args...);
 }
 
 /**
- * @simul_efun _info
- * @def varargs int _info(object tp, string str, mixed args...)
- * @def varargs int _info(string str, mixed args...)
- * @description Provides an informational message, optionally formatted with
- *              arguments. If no object is provided, the message will be sent
- *              to this_body(). If no object is found, the message will be
- *              sent to the debug log.
+ * Sends a message to a player using accessible notation to indicate
+ * that it is an informational system message.
+ *
+ * Provides an informational message, optionally formatted with
+ * arguments. If no object is provided, the message will be sent
+ * to this_body(). If no object is found, the message will be
+ * sent to the debug log.
+ *
+ * @overload
+ * @param {STD_PLAYER} tp - The target object to receive the message.
  * @param {string} str - The informational message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} - Always returns 1, unless there is no previous object.
+ * @returns {int} Always returns 1, unless there is no previous object.
+ *
+ * @overload
+ * @param {string} str - The informational message.
+ * @param {mixed} [args] - Optional arguments to format the message.
+ * @returns {int} Always returns 1, unless there is no previous object.
  */
 varargs int _info(mixed args...) {
   return _feedback("info", args...);
 }
 
 /**
- * @simul_efun _question
- * @def varargs int _question(object tp, string str, mixed args...)
- * @def varargs int _question(string str, mixed args...)
- * @description Provides a question message, optionally formatted with
- *              arguments. If no object is provided, the message will be sent
- *              to this_body(). If no object is found, the message will be
- *              discarded.
+ * Sends a message to a player using accessible notation to indicate
+ * that it is a question/query system message.
+ *
+ * Provides a question message, optionally formatted with
+ * arguments. If no object is provided, the message will be sent
+ * to this_body(). If no object is found, the message will be
+ * discarded.
+ *
+ * @overload
+ * @param {STD_PLAYER} tp - The target object to receive the message.
  * @param {string} str - The question message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} - Always returns 1, unless there is no body object.
+ * @returns {int} Always returns 1, unless there is no body object.
+ *
+ * @overload
+ * @param {string} str - The question message.
+ * @param {mixed} [args] - Optional arguments to format the message.
+ * @returns {int} Always returns 1, unless there is no body object.
  */
 varargs int _question(mixed args...) {
   return _feedback("question", args...);
 }
 
 /**
- * @def varargs int _debug(object tp, string str, mixed args...)
- * @def varargs int _debug(string str, mixed args...)
- * @description Provides a question message, optionally formatted with
- *              arguments. If no object is provided, the message will be sent
- *              to this_body(). If no object is found, the message will be
- *              discarded.
- * @param {string} str - The question message.
+ * Sends a message to a player using accessible notation to indicate
+ * that it is a debug system message.
+ *
+ * Provides a debug message, optionally formatted with
+ * arguments. If no object is provided, the message will be sent
+ * to this_body(). If no object is found, the message will be
+ * discarded.
+ *
+ * @overload
+ * @param {STD_PLAYER} tp - The target object to receive the message.
+ * @param {string} str - The debug message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} - Always returns 1, unless there is no body object.
+ * @returns {int} Always returns 1, unless there is no body object.
+ *
+ * @overload
+ * @param {string} str - The debug message.
+ * @param {mixed} [args] - Optional arguments to format the message.
+ * @returns {int} Always returns 1, unless there is no body object.
  */
 varargs int _debug(mixed args...) {
   return _feedback("debug", args...);
