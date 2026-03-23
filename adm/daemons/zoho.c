@@ -22,7 +22,7 @@ private mapping token_cache = ([]);
 private nosave mapping call = ([]);
 
 void setup() {
-  set_persistent(1);
+  setPersistent(1);
   set_log_prefix("(Zoho)");
   set_log_level(0);
 }
@@ -197,7 +197,7 @@ void handle_new_token(mapping response, mixed *cb) {
     "expires_at": time() + to_int(response["expires_in"])
   ]);
 
-  saveDatda();
+  saveData();
 
   call_back(cb, (["access_token": response["access_token"]]));
 }

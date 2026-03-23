@@ -12,7 +12,7 @@ private nosave string data_file = 0;
 varargs string set_data_file(string file);
 
 // whether this object will save/load
-varargs int set_persistent(int x: (: 1 :)) {
+varargs int setPersistent(int x: (: 1 :)) {
     x = !!x;
 
     if(!data_file) set_data_file();
@@ -54,7 +54,7 @@ private string get_base_path(string path) {
 }
 
 // saving and loading data
-int saveDatda() {
+int saveData() {
     string base;
 
     if(!persistent)
