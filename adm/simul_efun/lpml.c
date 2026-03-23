@@ -35,7 +35,7 @@
 #ifndef __STD_LPML_H
 #define __STD_LPML_H
 
-#define to_string(x)                ("\\" + (x))
+#define to_string(x)                ("" + (x))
 
 #define LPML_DECODE_PARSE_TEXT      0
 #define LPML_DECODE_PARSE_POS       1
@@ -47,6 +47,7 @@ private mixed lpml_decode_parse_value(mixed* parse);
 private varargs mixed lpml_decode_parse_string(mixed* parse, int quote_char);
 private string lpml_decode_parse_identifier(mixed* parse);
 private string lpml_decode_parse_spacey_key(mixed* parse);
+private varargs void lpml_decode_parse_error(mixed* parse, string msg, int ch);
 
 // If at or below the relative path. We do not do multi-cross-traversal.
 // examples:
@@ -69,8 +70,9 @@ private string resolve_relative_path(string relative_path, string relative_to) {
      relative_path[0] == '/' ||
 
      !stringp(relative_to) ||
-     !strlen(relative_to ||
-     relative_to[0] != '/'))
+     !strlen(relative_to) ||
+      relative_to[0] != '/'
+    )
 
     return relative_path;
 
@@ -91,7 +93,7 @@ private string resolve_relative_path(string relative_path, string relative_to) {
           "from '"+relative_to+"'"
         );
 
-      relative_path_parts = ({relative_to_parts[<1]}) + relative_path_parts[1..];
+      relative_path_parts = relative_path_parts[1..];
       relative_to_parts = relative_to_parts[0..<2];
     }
 
@@ -173,21 +175,29 @@ private void lpml_decode_skip_whitespace_and_comments(mixed* parse) {
         lpml_decode_parse_next_char(parse);  // Skip /
         lpml_decode_parse_next_char(parse);  // Skip *
 
-        while(parse[LPML_DECODE_PARSE_POS] + 1 < sizeof(parse[LPML_DECODE_PARSE_TEXT])) {
-          ch = parse[LPML_DECODE_PARSE_TEXT][parse[LPML_DECODE_PARSE_POS]];
-          next_ch = parse[LPML_DECODE_PARSE_TEXT][parse[LPML_DECODE_PARSE_POS] + 1];
+        {
+          int found_end = 0;
 
-          if(ch == '*' && next_ch == '/') {
-            lpml_decode_parse_next_char(parse);  // Skip *
-            lpml_decode_parse_next_char(parse);  // Skip /
-            break;
+          while(parse[LPML_DECODE_PARSE_POS] + 1 < sizeof(parse[LPML_DECODE_PARSE_TEXT])) {
+            ch = parse[LPML_DECODE_PARSE_TEXT][parse[LPML_DECODE_PARSE_POS]];
+            next_ch = parse[LPML_DECODE_PARSE_TEXT][parse[LPML_DECODE_PARSE_POS] + 1];
+
+            if(ch == '*' && next_ch == '/') {
+              lpml_decode_parse_next_char(parse);  // Skip *
+              lpml_decode_parse_next_char(parse);  // Skip /
+              found_end = 1;
+              break;
+            }
+
+            if(ch == '\n') {
+              lpml_decode_parse_next_line(parse);
+            } else {
+              lpml_decode_parse_next_char(parse);
+            }
           }
 
-          if(ch == '\n') {
-            lpml_decode_parse_next_line(parse);
-          } else {
-            lpml_decode_parse_next_char(parse);
-          }
+          if(!found_end)
+            lpml_decode_parse_error(parse, "Unterminated multi-line comment");
         }
 
         continue;
@@ -213,9 +223,15 @@ private int lpml_decode_hexdigit(int ch) {
  * Checks if the parse position matches the specified token.
  */
 private varargs int lpml_decode_parse_at_token(mixed* parse, string token, int start) {
-  int i, j;
+  int i, j, remaining;
 
-  for(i = start, j = strlen(token); i < j; i++)
+  j = strlen(token);
+  remaining = sizeof(parse[LPML_DECODE_PARSE_TEXT]) - parse[LPML_DECODE_PARSE_POS];
+
+  if(j - start > remaining)
+    return 0;
+
+  for(i = start; i < j; i++)
     if(parse[LPML_DECODE_PARSE_TEXT][parse[LPML_DECODE_PARSE_POS] + i] != token[i])
       return 0;
 
@@ -465,7 +481,6 @@ private varargs mixed lpml_decode_parse_string(mixed* parse, int quote_char) {
   string out;
   int ch;
   int has_real_newlines = 0;
-  int saved_pos, saved_line, saved_char;
   string next_str;
   int needs_space;
 
@@ -521,11 +536,33 @@ private varargs mixed lpml_decode_parse_string(mixed* parse, int quote_char) {
 
   out = string_decode(parse[LPML_DECODE_PARSE_TEXT][from .. to], "utf-8");
 
-  // Check for string concatenation - look for adjacent strings
-  // Save position before processing escapes in case we need to concatenate
-  saved_pos = parse[LPML_DECODE_PARSE_POS];
-  saved_line = parse[LPML_DECODE_PARSE_LINE];
-  saved_char = parse[LPML_DECODE_PARSE_CHAR];
+  // Fold source newlines BEFORE escape processing so that \n escapes survive.
+  // Real newlines in the source (from pressing Enter) become spaces,
+  // while escape sequences like \n are preserved as-is for later processing.
+  if(has_real_newlines && strsrch(out, "\n") != -1) {
+    string* lines;
+    int i, sz;
+
+    lines = explode(out, "\n");
+    out = "";
+
+    for(i = 0, sz = sizeof(lines); i < sz; i++) {
+      string line = trim(lines[i]);
+
+      if(strlen(line) == 0) {
+        // Blank line becomes paragraph break
+        if(strlen(out) > 0 && out[<1] != '\n')
+          out += "\n";
+      } else {
+        // Add space before line if needed
+        if(strlen(out) > 0 && out[<1] != '\n' && out[<1] != ' ')
+          out += " ";
+        out += line;
+      }
+    }
+
+    out = trim(out);
+  }
 
   // Process escape sequences
   // IMPORTANT: Process \\\\ first, then other escapes
@@ -553,39 +590,50 @@ private varargs mixed lpml_decode_parse_string(mixed* parse, int quote_char) {
     if(member_array('/', out) != -1)
       out = replace_string(out, "\\/", "/");
 
+    // Unicode escape sequences: \uXXXX
+    if(strsrch(out, "\\u") != -1) {
+      string uout = "";
+      int ui, usz;
+
+      for(ui = 0, usz = strlen(out); ui < usz; ui++) {
+        if(out[ui] == '\\' && ui + 5 < usz && out[ui+1] == 'u') {
+          int h0, h1, h2, h3, codepoint;
+
+          h0 = lpml_decode_hexdigit(out[ui+2]);
+          h1 = lpml_decode_hexdigit(out[ui+3]);
+          h2 = lpml_decode_hexdigit(out[ui+4]);
+          h3 = lpml_decode_hexdigit(out[ui+5]);
+
+          if(h0 != -1 && h1 != -1 && h2 != -1 && h3 != -1) {
+            codepoint = (h0 << 12) | (h1 << 8) | (h2 << 4) | h3;
+
+            if(codepoint < 0x80) {
+              uout += sprintf("%c", codepoint);
+            } else if(codepoint < 0x800) {
+              uout += sprintf("%c%c",
+                0xC0 | (codepoint >> 6),
+                0x80 | (codepoint & 0x3F));
+            } else {
+              uout += sprintf("%c%c%c",
+                0xE0 | (codepoint >> 12),
+                0x80 | ((codepoint >> 6) & 0x3F),
+                0x80 | (codepoint & 0x3F));
+            }
+
+            ui += 5;  // skip past \uXXXX (loop will increment once more)
+            continue;
+          }
+        }
+
+        uout += sprintf("%c", out[ui]);
+      }
+
+      out = uout;
+    }
+
     // Finally, convert placeholder back to single backslash
     if(strsrch(out, backslash_placeholder) != -1)
       out = replace_string(out, backslash_placeholder, "\\");
-  }
-
-  // No @ literal mode needed - use string concatenation instead
-
-  // Only fold if string had real newlines in source (not just \n escapes)
-  if(has_real_newlines && strsrch(out, "\n") != -1) {
-    // Folded mode - replace newlines with spaces
-    string* lines;
-    int i, sz;
-
-    lines = explode(out, "\n");
-    out = "";
-
-    for(i = 0, sz = sizeof(lines); i < sz; i++) {
-      string line = trim(lines[i]);
-
-      if(strlen(line) == 0) {
-        // Blank line becomes paragraph break (double space or newline)
-        if(strlen(out) > 0 && out[<1] != '\n')
-          out += "\n";
-      } else {
-        // Add space before line if needed
-        if(strlen(out) > 0 && out[<1] != '\n' && out[<1] != ' ')
-          out += " ";
-        out += line;
-      }
-    }
-
-    // Trim any trailing whitespace
-    out = trim(out);
   }
 
   // String concatenation: check if next non-whitespace token is another string
@@ -621,7 +669,6 @@ private varargs mixed lpml_decode_parse_string(mixed* parse, int quote_char) {
 private mixed lpml_decode_parse_number(mixed* parse) {
   int from, to, dot, exp, ch, next_ch;
   string number;
-  int is_hex = 0;
   int is_negative = 0;
   int result;
 
@@ -650,6 +697,12 @@ private mixed lpml_decode_parse_number(mixed* parse) {
         lpml_decode_parse_next_chars(parse, 9);
         return is_negative ? -MAX_FLOAT : MAX_FLOAT;
       }
+    }
+
+    // Check for Infinity after sign (e.g. -Infinity, +Infinity)
+    if(ch == 'I' && lpml_decode_parse_at_token(parse, "Infinity", 0)) {
+      lpml_decode_parse_next_chars(parse, 8);
+      return ([])[0];  // undefined - LPC has no Infinity
     }
   }
 
@@ -797,6 +850,18 @@ private mixed lpml_decode_parse_value(mixed* parse) {
   // undefined
   if(ch == 'u' && lpml_decode_parse_at_token(parse, "undefined", 0)) {
     lpml_decode_parse_next_chars(parse, 9);
+    return ([])[0];  // undefined
+  }
+
+  // Infinity (maps to undefined per spec - LPC has no Infinity)
+  if(ch == 'I' && lpml_decode_parse_at_token(parse, "Infinity", 0)) {
+    lpml_decode_parse_next_chars(parse, 8);
+    return ([])[0];  // undefined
+  }
+
+  // NaN (maps to undefined per spec - LPC has no NaN)
+  if(ch == 'N' && lpml_decode_parse_at_token(parse, "NaN", 0)) {
+    lpml_decode_parse_next_chars(parse, 3);
     return ([])[0];  // undefined
   }
 
@@ -1012,8 +1077,6 @@ varargs mixed lpml_decode(string text, string base_path) {
 
   // Preprocess includes
   text = lpml_decode_preprocess(text, base_path);
-
-  debug(text);
 
   endl = allocate_buffer(1);
   endl[0] = 0;

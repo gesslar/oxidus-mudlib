@@ -12,7 +12,7 @@
 inherit STD_CMD;
 inherit CLASS_ALARM;
 
-mixed main(object tp, string arg) {
+mixed main(string arg) {
     class Alarm *alarms = ALARM_D->query_alarms();
     class Alarm *boots;
     string *out;
@@ -74,7 +74,7 @@ mixed main(object tp, string arg) {
     return out;
 }
 
-string help(object tp) {
+string help() {
     return
 "Syntax: alarms [reload|time]\n\n"
 "This command will display all the alarms that are currently set. The alarms "

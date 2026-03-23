@@ -1,3 +1,5 @@
+// d/mobs/waste_rat.lpml
+
 {
   type: "mammal",
   name: "waste rat",

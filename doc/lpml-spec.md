@@ -57,6 +57,8 @@ name: 'single quotes work too'
 ```lpml
 {
   hex: 0xFF,           // Hexadecimal
+  octal: 0o77,         // Octal
+  binary: 0b1010,      // Binary
   decimal: 3.14,       // Standard
   leadingDot: .5,      // Leading decimal point
   trailingDot: 5.,     // Trailing decimal point
@@ -242,6 +244,19 @@ The `\#` escape prevents include processing and removes the backslash.
 
 **Note:** LPC doesn't have native Infinity/NaN support, so these are converted to `undefined` (accessed as `([])[0]`).
 
+### MAX_INT and MAX_FLOAT
+
+```lpml
+{
+  maxInt: MAX_INT,       // LPC maximum integer value
+  minInt: -MAX_INT,      // Negated MAX_INT
+  maxFloat: MAX_FLOAT,   // LPC maximum float value
+  minFloat: -MAX_FLOAT,  // Negated MAX_FLOAT
+}
+```
+
+**Note:** These are LPC-specific constants. Signs (`+`/`-`) are supported.
+
 ---
 
 ## Escape Sequences
@@ -268,7 +283,7 @@ Supported escapes:
 - `\n` - Newline
 - `\r` - Carriage return
 - `\t` - Tab
-- `\uXXXX` - Unicode (if supported by parser)
+- `\uXXXX` - Unicode code point
 
 ---
 
@@ -465,6 +480,8 @@ LPML uses buffer-based encoding for UTF-8 safety:
 | Spacey keys | ✗ | ✓ |
 | Single quotes | ✓ | ✓ |
 | Hex numbers | ✓ | ✓ |
+| Octal/binary numbers | ✗ | ✓ |
+| MAX_INT/MAX_FLOAT | ✗ | ✓ |
 | String concatenation | ✗ | ✓ |
 | File includes | ✗ | ✓ |
 | Multiline folding | ✗ | ✓ |
@@ -484,14 +501,16 @@ LPML uses buffer-based encoding for UTF-8 safety:
 
 ```
 value       ::= object | array | string | number | boolean | null
+                | 'undefined' | 'Infinity' | 'NaN' | 'MAX_INT' | 'MAX_FLOAT'
 object      ::= '{' members? '}'
 members     ::= pair (',' pair)* ','?
 pair        ::= key ':' value
-key         ::= identifier | string
+key         ::= identifier | spacey_key | string
+spacey_key  ::= (char - ':')+ ':'           // trimmed, unquoted key with spaces
 array       ::= '[' elements? ']'
 elements    ::= value (',' value)* ','?
 string      ::= '"' chars '"' | "'" chars "'" | string string  // concatenation
-number      ::= hex | decimal
+number      ::= hex | octal | binary | decimal
 boolean     ::= 'true' | 'false'
 null        ::= 'null'
 comment     ::= '//' [^\n]* | '/*' .*? '*/'
