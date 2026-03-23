@@ -87,6 +87,14 @@ Accessor functions use the prefix `query` rather than `get`:
 Mutator functions use the prefix `set`:
 - `setLevel()`, `setName()`, `setMaxHp()`
 
+### Private Functions
+
+Do **not** use an underscore `_` prefix to denote private functions — the `private` keyword is sufficient. Private helpers follow the same camelCase convention as all other functions.
+
+### Local Variable Names
+
+Do **not** name a local variable the same as any function in scope. This avoids shadowing and potential confusion. Choose a distinct name instead.
+
 ### Exceptions
 
 - **Constants** (`#define`) use `ALL_CAPS_WITH_UNDERSCORES`: `MAX_LEVEL`, `COLOUR_D`
