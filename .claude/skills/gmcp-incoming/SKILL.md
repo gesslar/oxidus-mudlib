@@ -1,6 +1,6 @@
 ---
 name: gmcp-incoming
-description: Understand and extend the incoming GMCP system for Threshold RPG. Covers message reception, normalization, parsing, submodule routing, supported packages from clients, caching, and how to add new incoming handlers.
+description: Understand and extend the incoming GMCP system for Oxidus. Covers message reception, parsing via ClassGMCP, submodule routing, supported packages from clients, cooldown limiting, and how to add new incoming handlers.
 ---
 
 # GMCP Incoming Skill
@@ -13,206 +13,222 @@ This skill covers the **incoming** side of GMCP (Generic MUD Communication Proto
 Client sends GMCP telopt
        │
        ▼
-std/modules/gmcp.c          ← driver calls gmcp(string message) on user object
+std/modules/gmcp.c::gmcp()     ← driver calls this on the user/login object
        │
-       ├─ normalize_input()  ← capitalizes package names
-       ├─ GMCP_D->gmcp_to_mapping()  ← parses into structured mapping
+       ├─ GMCP_D->convert_message()  ← parses into ClassGMCP
        │
        ▼
-invoke_submodule()           ← routes to handler file
+call_other() to handler         ← routes to handler file by package name
        │
-       ├─ std/modules/gmcp/Core.c      ← Core.Hello, Core.Supports, Core.Ping
-       ├─ std/modules/gmcp/Char.c      ← Char.Buffs.List, Char.Stats.List, etc.
-       └─ std/modules/gmcp/External.c  ← External.Discord.Hello, etc.
+       ├─ std/modules/gmcp/Core.c      ← Core.Hello, Core.Supports.*, Core.Ping
+       ├─ std/modules/gmcp/Char.c      ← Char.Login.Credentials, Char.Items.*
+       └─ std/modules/gmcp/External.c  ← External.Discord.*
 ```
 
 ## Core Files
 
 | File | Purpose |
 |---|---|
-| `std/modules/gmcp.c` | Main GMCP module loaded on user objects. Entry point for all incoming messages |
+| `std/modules/gmcp.c` | Main GMCP module (`M_GMCP`), inherited by player and login objects. Entry point for all incoming messages, also provides `do_gmcp()` for sending |
+| `std/modules/gmcp/gmcp_module.c` | Base class for handler modules. Provides cooldown system. Inherits `STD_DAEMON` |
 | `std/modules/gmcp/Core.c` | Handles Core protocol (Hello, Supports, Ping) |
-| `std/modules/gmcp/Char.c` | Handles character data requests (Buffs, Debuffs, Afflictions, Stats, Progress) |
-| `std/modules/gmcp/External.c` | Handles external service messages (Discord) |
-| `include/gmcp_defs.h` | All GMCP package name, key, and value defines |
-| `adm/daemons/gmcp.c` | GMCP daemon — message parsing, sending, and routing |
+| `std/modules/gmcp/Char.c` | Handles Char.Login.Credentials and Char.Items requests |
+| `std/modules/gmcp/External.c` | Handles External.Discord messages |
+| `std/classes/gmcp.c` | Defines `ClassGMCP` structure |
+| `include/gmcp_defines.h` | All GMCP package name, key, and value defines |
+| `adm/daemons/gmcp.c` | GMCP daemon — message parsing and outgoing routing |
 
 ## Message Flow
 
 ### 1. Reception
 
-The FluffOS driver calls `protected void gmcp(string message)` on the user object when a GMCP telopt arrives. This function lives in `std/modules/gmcp.c`, which is loaded as a module on user objects via `M_GMCP`.
+The FluffOS driver calls `void gmcp(string message)` on the user/login object when a GMCP telopt arrives. This function lives in `std/modules/gmcp.c` (`M_GMCP`), inherited by both `std/living/player.c` and `adm/obj/login.c`.
 
-### 2. Normalization
+The module does **not** check if the player has GMCP enabled at this stage — this ensures `Core.Hello` and `Core.Supports` are still processed during login.
 
-`normalize_input(string input)` capitalizes package name elements:
-- `"core.hello"` becomes `"Core.Hello"`
-- `"char.buffs.list"` becomes `"Char.Buffs.List"`
+### 2. Parsing
 
-The payload portion (after the first space) is left untouched.
-
-### 3. Parsing
-
-`GMCP_D->gmcp_to_mapping(message)` parses the message into a structured mapping:
+`GMCP_D->convert_message(message)` parses the message into a `ClassGMCP` object:
 
 ```lpc
-// Input: "Char.Buffs.List"
-// Output:
-([
-  "package"    : "Char",
-  "subpackage" : "Buffs",
-  "command"    : "List",
-  "payload"    : 0,  // or decoded JSON if present
-])
+class ClassGMCP {
+    string name;       // Full message (e.g., "Core.Supports.Set")
+    string package;    // First component (e.g., "Core")
+    string module;     // Second component (e.g., "Supports")
+    string submodule;  // Third component if present (e.g., "Set")
+    mixed payload;     // JSON-decoded data, or null
+}
 ```
 
-If a payload is present (space-separated after the package name), it is JSON-decoded.
+### 3. Routing
 
-### 4. Submodule Routing
+The handler file is loaded from `std/modules/gmcp/<Package>.c` based on the package name. Then:
 
-`invoke_submodule(package, message, command, data)` loads the handler file and calls the appropriate function:
+- **No submodule:** `call_other(ob, module, payload)`
+- **With submodule:** `call_other(ob, module, submodule, payload)`
 
-- File path: `std/modules/gmcp/<Package>.c` (e.g., `std/modules/gmcp/Core.c`)
-- Function called depends on the subpackage/command structure
-- Wrapped in `catch()` with logging to `"gmcp"` log file on error
-- Uses `seteuid()` protection for security
+Examples:
+- `Core.Hello {"client":"Mudlet"}` → `Core.c::Hello(payload)`
+- `Core.Supports.Set [...]` → `Core.c::Supports("Set", payload)`
+- `Char.Login.Credentials {...}` → `Char.c::Login("Credentials", payload)`
+- `Char.Items.Inv` → `Char.c::Items("Inv", null)`
+
+If the handler file doesn't exist, the error is logged to `system/gmcp`.
+
+## Handler Modules
+
+All handler modules inherit `gmcp_module.c` (which inherits `STD_DAEMON`):
+
+```lpc
+inherit __DIR__ "gmcp_module";
+```
+
+This provides the cooldown system (see below).
 
 ## Supported Incoming Packages
 
-### Core Protocol
+### Core Protocol (`std/modules/gmcp/Core.c`)
 
-**Handler:** `std/modules/gmcp/Core.c`
-
-| Package | Function Called | Data Expected | Action |
+| Message | Function | Payload | Action |
 |---|---|---|---|
-| `Core.Hello` | `Hello(mapping info)` | `([ "client": "Name", "version": "1.0" ])` | Stores client identification. Only accepts from CONNECTION objects |
-| `Core.Supports.Set` | `Supports("Set", string *info)` | `({ "Char 1", "Room 1" })` | Replaces client's supported package list |
-| `Core.Supports.Add` | `Supports("Add", string *info)` | `({ "Beip 1" })` | Adds to supported packages (deduplicates) |
-| `Core.Supports.Remove` | `Supports("Remove", string *info)` | `({ "Room 1" })` | Removes from supported packages |
-| `Core.Ping` | `Ping(int info)` | Integer timestamp | Echoes back via `GMCP_D->send_gmcp()` |
+| `Core.Hello` | `Hello(mapping)` | `([ "client": "Name", "version": "1.0" ])` | Stores client info. Only accepts from `LOGIN_OB` |
+| `Core.Supports.Set` | `Supports("Set", string*)` | `({ "Char 1", "Room 1" })` | Replaces supported packages list |
+| `Core.Supports.Add` | `Supports("Add", mixed)` | `({ "Beip 1" })` or `"Beip 1"` | Adds to supported packages |
+| `Core.Supports.Remove` | `Supports("Remove", mixed)` | `({ "Room 1" })` or `"Room 1"` | Removes from supported packages |
+| `Core.Ping` | `Ping(int)` | Integer timestamp | Echoes back via `GMCP_D->send_gmcp()`. Cooldown: 60 seconds |
 
-### Character Data Requests
+### Character Package (`std/modules/gmcp/Char.c`)
 
-**Handler:** `std/modules/gmcp/Char.c`
+| Message | Function | Payload | Action |
+|---|---|---|---|
+| `Char.Login.Credentials` | `Login("Credentials", mapping)` | `([ "account": "char@account", "password": "..." ])` | Authenticates user, sends `Char.Login.Result` |
+| `Char.Items.Contents` | `Items("Contents", string)` | Container target ID | Sends container contents list |
+| `Char.Items.Inv` | `Items("Inv", null)` | None | Sends inventory list |
+| `Char.Items.Room` | `Items("Room", null)` | None | Sends room items list |
 
-| Package | Function Called | Action |
+### External Package (`std/modules/gmcp/External.c`)
+
+| Message | Function | Action |
 |---|---|---|
-| `Char.Reset` | `Reset()` | Clears GMCP cache and resends all character data |
-| `Char.Buffs.List` | `Buffs("List")` | Sends current buff list to client |
-| `Char.Debuffs.List` | `Debuffs("List")` | Sends current debuff list to client |
-| `Char.Afflictions.List` | `Afflictions("List")` | Sends current affliction list to client |
-| `Char.Stats.List` | `Stats("List")` | Sends character stats to client |
-| `Char.Progress.List` | `Progress("List")` | Sends progression info (styles/crafting) to client |
-
-These are all "pull" requests — the client asks for data and the handler responds by calling the appropriate outgoing GMCP function.
-
-### External Services
-
-**Handler:** `std/modules/gmcp/External.c`
-
-| Package | Function Called | Action |
-|---|---|---|
-| `External.Discord.Hello` | `Discord("Hello")` | Sends Discord info (invite URL, app ID) and current status |
-| `External.Discord.Get` | `Discord("Get")` | Sends updated Discord play status |
+| `External.Discord.Hello` | `Discord("Hello", null)` | Sends Discord info to client |
+| `External.Discord.Get` | `Discord("Get", null)` | Sends Discord status to client |
 
 ## Client Support Tracking
 
-The module tracks what GMCP packages each client supports:
+The module tracks what GMCP packages each client supports in a hierarchical mapping structure:
 
 ```lpc
-// Check if client supports a package
-int supported = gmcp_supports("Char");     // returns 1 or 0
-int supported = gmcp_supports("Beip");     // Beip-specific check
+// Check if a package/module/submodule is supported
+int supported = prev->query_gmcp_supported("Char.Items");
+
+// Get full supports data
+mapping supports = prev->query_gmcp_supports();
 ```
 
-**Core packages are always supported** — Core, Core.Ping, Core.Hello, Core.Goodbye never need a support check.
+The supports hierarchy uses nested mappings with `"modules"` and `"submodules"` keys, each with a `"version"` field.
 
-**Some packages always send regardless of support:**
-- `Client.GUI`
-- `External.Discord.Status`
-- `External.Discord.Info`
+## State Functions on M_GMCP
 
-## Caching and Differential Updates
+| Function | Purpose |
+|---|---|
+| `set_gmcp_client(mapping)` | Store client identification from Core.Hello |
+| `query_gmcp_client()` | Retrieve stored client info |
+| `set_gmcp_supports(mapping)` | Store client capabilities |
+| `query_gmcp_supports()` | Retrieve client capabilities |
+| `query_gmcp_supported(string)` | Check if a specific package path is supported |
+| `gmcp_enabled()` | Check if GMCP is enabled (has GMCP + pref not "off") |
+| `do_gmcp(package, data)` | Send a GMCP message to the client (JSON-encodes data) |
+| `clear_gmcp_data()` | Reset all stored GMCP data |
 
-The incoming module manages a cache (`gmcp_cache`) for outgoing responses to minimize bandwidth:
+## Cooldown System
+
+Handler modules can rate-limit incoming requests:
 
 ```lpc
-// gmcp_diff() compares cached vs new values
-// Only changed fields are sent to the client
-mapping diff = gmcp_diff(package, new_data);
+// In setup():
+cooldown_limits = ([
+    GMCP_PKG_CORE_PING : 60,  // 60-second cooldown
+]);
+
+// In handler function:
+void Ping(int time) {
+    object prev = previous_object();
+
+    if(!cooldown_check(GMCP_PKG_CORE_PING, prev))
+        return;
+
+    apply_cooldown(GMCP_PKG_CORE_PING, prev);
+
+    // ... handle request
+}
 ```
 
-- `gmcp_cache` stores previously sent values per package
-- `gmcp_diff()` returns only the keys that have changed
-- A `refresh` flag can force sending all data even if unchanged
-- **Grapevine client exception**: always receives full `Char.Vitals` data (no diffing)
-
-To clear the cache and force a full resend, clients send `Char.Reset`.
-
-## Client Identification
-
-After `Core.Hello`, client info is stored and accessible:
-
-- Client name and version are normalized (keys lowercased)
-- Stored via `set_gmcp_client(info)` on the connection object
-- Used for client-specific behavior (e.g., Beip packages only sent to Beip clients)
+Cooldowns are tracked per-player using `query_privs()` as the key.
 
 ## Disabling GMCP
 
-Players can disable GMCP with `set_property("no_gmcp", 1)`. Ghost players also don't receive GMCP.
+Players can disable GMCP by setting the `"gmcp"` preference to `"off"`. The `gmcp_enabled()` function checks both that the connection has GMCP negotiated (`has_gmcp()`) and the preference is not off. Login objects always report GMCP as enabled.
 
 ## Adding a New Incoming Handler
 
 ### Adding to an existing package
 
-Add a new function to the appropriate handler file. For example, to handle `Char.Inventory.List`:
+Add a new function to the handler file. For example, to handle `Char.Skills.List`:
 
 ```lpc
 // In std/modules/gmcp/Char.c
 
-void Inventory(string command) {
-  object who = this_object();
+void Skills(string submodule, mixed data) {
+    object prev = previous_object();
 
-  if(command == "List") {
-    // Gather inventory data
-    // Send response via GMCP_D
-    GMCP_D->send_gmcp(who, GMCP_PKG_CHAR_INVENTORY_LIST, inventory_data);
-  }
+    switch(submodule) {
+        case "List":
+            GMCP_D->send_gmcp(prev, GMCP_PKG_CHAR_SKILLS_LIST);
+            break;
+    }
 }
 ```
 
-You'll also need to add the package define in `include/gmcp_defs.h`:
+Add the package define in `include/gmcp_defines.h`:
 
 ```lpc
-#define GMCP_PKG_CHAR_INVENTORY       "Char.Inventory"
-#define GMCP_PKG_CHAR_INVENTORY_LIST  "Char.Inventory.List"
+#define GMCP_PKG_CHAR_SKILLS_LIST "Char.Skills.List"
 ```
 
 ### Adding a new top-level package
 
-1. Create the handler file at `std/modules/gmcp/<Package>.c`
-2. Add package defines in `include/gmcp_defs.h`
-3. The routing in `invoke_submodule()` will automatically find it by file name
+1. Create `std/modules/gmcp/<Package>.c`
+2. Inherit the base module: `inherit __DIR__ "gmcp_module";`
+3. Add package defines in `include/gmcp_defines.h`
+4. The routing in `gmcp()` will automatically find it by file name
 
-### Handler function signatures
+```lpc
+// std/modules/gmcp/Custom.c
+#include <daemons.h>
+#include <gmcp_defines.h>
 
-The submodule router calls functions based on the message structure:
+inherit __DIR__ "gmcp_module";
 
-- `Core.Hello` → calls `Hello(payload)` with the parsed data
-- `Core.Supports.Set` → calls `Supports("Set", payload)` with subpackage as first arg
-- `Char.Buffs.List` → calls `Buffs("List")` with command as arg
-- `External.Discord.Hello` → calls `Discord("Hello")` with command as arg
+void Status(string submodule, mixed data) {
+    object prev = previous_object();
 
-The pattern is: the **subpackage** name becomes the function name. If there's a command, it's passed as the first argument. Payload data follows.
+    switch(submodule) {
+        case "Request":
+            GMCP_D->send_gmcp(prev, GMCP_PKG_CUSTOM_STATUS, status_data);
+            break;
+    }
+}
+```
 
 ## GMCP Defines Reference
 
-All defines live in `include/gmcp_defs.h`. The naming convention:
+All defines live in `include/gmcp_defines.h`. Naming convention:
 
 | Pattern | Example | Purpose |
 |---|---|---|
-| `GMCP_PKG_*` | `GMCP_PKG_CHAR_VITALS` | Package name strings |
+| `GMCP_PKG_*` | `GMCP_PKG_CORE_PING` | Package name strings |
 | `GMCP_KEY_*` | `GMCP_KEY_CHAR_VITALS_HP` | Data key names |
 | `GMCP_VAL_*` | `GMCP_VAL_CHAR_STATUS_DEAD` | Predefined values |
+| `GMCP_LIST_*` | `GMCP_LIST_INV`, `GMCP_LIST_ROOM` | List target constants |
 
-The `GMCP_D` daemon define is in `include/daemons.h`. The module directory path `DIR_STD_SUBMODULE_GMCP` is in `include/dirs.h`.
+The `GMCP_D` daemon define is in `include/daemons.h`. The module directory path `DIR_STD_MODULES` is used to locate handler files.

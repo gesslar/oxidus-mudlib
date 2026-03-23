@@ -1,296 +1,303 @@
 ---
 name: virtual-object-creation
-description: Create virtual (data-driven) items for Threshold RPG. Generates .loot, .food, .gem, .geode data files and new virtual item types with extension-based auto-discovery modules.
+description: Create virtual (data-driven) items and mobs for Oxidus. Covers LPML data files, extension-based routing, virtual compile modules, base classes, and how to add new virtual object types.
 ---
 
 # Virtual Object Creation Skill
 
-You are helping create virtual items for Threshold RPG. Virtual items are data-driven objects — instead of writing a `.c` file with code, you write a data file containing an LPC mapping of properties. The system compiles it into a game object by cloning the appropriate base class and applying the properties.
+You are helping create virtual items and mobs for Oxidus. Virtual objects are data-driven — instead of writing a `.c` file with code, you write an LPML data file containing properties. The system compiles it into a game object by cloning the appropriate base class and passing the data to `virtual_setup()`.
 
-## How Virtual Items Work
+## How Virtual Objects Work
 
-1. A data file exists at a path like `/obj/gems/ruby.gem`
-2. When the game needs the object, the driver calls the virtual daemon
-3. The daemon reads the file, parses the LPC mapping
-4. It clones the base class for that extension (`.gem` → `STD_GEM`)
-5. It applies all properties from the mapping to the object
-6. The object is ready to use — no `.c` file needed
+1. Code requests an object like `/obj/food/cheese.food`
+2. No `.c` file exists at that path — the driver calls `master->compile_object()`
+3. The master delegates to `VIRTUAL_D->compile_object(file)`
+4. VIRTUAL_D extracts the extension (`.food`) and routes to `adm/daemons/modules/virtual/food.c`
+5. The module reads the corresponding LPML file (`/obj/food/cheese.lpml`)
+6. It decodes the LPML and creates: `new("/obj/food/food.c", data)`
+7. The base class receives the data mapping in `virtual_setup()` and configures itself
 
-## Existing Item Types
+## Architecture
 
-| Extension | Base Class | Use For |
-|---|---|---|
-| `.loot` | `STD_LOOT` | Monster drops, vendor trash, crafting materials |
-| `.food` | `STD_FOOD` | Consumable food and drink |
-| `.gem` | `STD_GEM` | Gemstones with color display |
-| `.geode` | `STD_GEODE` | Collectible geode specimens |
-
-## Data File Format
-
-All virtual items use the same format — an LPC mapping:
-
-```c
-([
-    "id"    : "/item name/alt id/category",
-    "name"  : "item name",
-    "short" : "item name",
-    "long"  : "Description of the item.",
-    "mass"  : 30,
-    "value" : ({ 100, "danar" }),
-])
+```
+VIRTUAL_D (adm/daemons/virtual.c)
+    │
+    ├── Extension routing: .food → modules/virtual/food.c
+    ├── Extension routing: .loot → modules/virtual/loot.c
+    ├── Extension routing: .mob  → modules/virtual/mob.c
+    │
+    └── Directory routing: /d/ → modules/virtual/d.c (zones)
+                           /player/ → modules/virtual/player.c
+                           etc.
 ```
 
-### Syntax Rules
+## Core Files
 
-- File starts with `([` and ends with `])`
-- Each property is `"key" : value,` — trailing comma on last entry is OK
-- Strings use `"double quotes"` — multi-line strings use LPC string concatenation
-- Arrays use `({ element1, element2 })`
-- `\\n` in strings is converted to actual newlines at compile time
-- `id` uses slash-separated values: `"/primary name/alt1/alt2/category"`
+| File | Purpose |
+|---|---|
+| `adm/daemons/virtual.c` | Central router — extracts extension, loads module |
+| `adm/daemons/modules/virtual/ob.c` | Base compile module for items (food, loot inherit from this) |
+| `adm/daemons/modules/virtual/food.c` | Compile module for `.food` files (inherits `ob.c`) |
+| `adm/daemons/modules/virtual/loot.c` | Compile module for `.loot` files (inherits `ob.c`) |
+| `adm/daemons/modules/virtual/mob.c` | Compile module for `.mob` files |
+| `obj/food/food.c` | Base class for food items (inherits `STD_FOOD`) |
+| `obj/loot/loot.c` | Base class for loot items (inherits `STD_ITEM`) |
+| `std/mobs/monster.c` | Base class for mobs (inherits `STD_NPC`) |
 
-## Common Properties (All Types)
+## Data File Format (LPML)
 
-| Property | Type | Description |
-|---|---|---|
-| `id` | string | Slash-separated IDs. First element is primary. |
-| `name` | string | Object name. |
-| `short` | string | One-line display name. Supports `` `<color>` `` codes. |
-| `no_ansi_short` | string | Short without color codes (for sorting). |
-| `long` | string | Full description. Indent with spaces for formatting. |
-| `mass` | int | Weight in units. |
-| `value` | `({ int, "currency" })` | Fixed value, e.g. `({ 115, "danar" })`. |
-| `autovalue` | `"auto"` | Enable auto-value calculation from level. |
-| `autotype` | string | Currency for auto-value: `"danar"`, `"slag"`, `"crown"`. |
-| `autobonus` | int | Level bonus for auto-value calculation. |
-| `material` | `({ "type", "subtype" })` | Material tags. |
-| `stack_id` | string | Grouping ID for stackable items. |
-| `stack_max` | int | Maximum stack size. |
-| `stack_properties` | `({ "prop1" })` | Properties preserved in stack operations. |
-| `vendor_quantity` | int | Default shop quantity. |
-| `vendor_type` | string | Shop category. |
+Virtual objects use LPML files (see the **lpml** skill for full syntax). Key points:
 
-## Type-Specific Properties
+- LPML is a superset of JSON5 — use `{}` for objects, `[]` for arrays
+- Keys don't need quotes (but can have them)
+- Supports "spacey keys" like `additional ids`, `weapon name`
+- String concatenation with adjacent strings
+- Comments with `//`
+
+```lpml
+// obj/food/cheese.lpml
+
+{
+  id: ["cheese"],
+  additional ids: ["food", "snack"],
+  adj: ["small"],
+  name: "cheese",
+  short: "a small piece of cheese",
+  long: "This is a small, round piece of cheese. It looks tasty and would"
+        "make a good snack.",
+  mass: 10,
+  value: 15,
+  uses: 1,
+  properties: {
+    edible: true,
+  },
+}
+```
+
+## Existing Virtual Object Types
 
 ### Food (`.food`)
 
-| Property | Type | Description |
+**Data file location:** `obj/food/{name}.lpml`
+**Base class:** `obj/food/food.c` (inherits `STD_FOOD`)
+**Compile module:** `adm/daemons/modules/virtual/food.c` (inherits `ob.c`)
+
+| Property | Type | Purpose |
 |---|---|---|
-| `filling` | int | Core stat. Derives: healing (x10), mass (x20), cost (x50 slag). |
-| `healing` | int | Override all healing (HP/SP/EP). |
-| `hp_healing` | int | Override HP healing only. |
-| `sp_healing` | int | Override SP healing only. |
-| `ep_healing` | int | Override EP healing only. |
-| `cost` | int | Override derived cost. |
-| `eat_message` | string | Custom message shown when eaten. |
-| `no_grill` | int | Set to 1 to prevent grilling. |
+| `id` | `string[]` | Object identifiers |
+| `additional ids` | `string[]` | Extra IDs added via `add_id()` |
+| `adj` | `string[]` | Adjectives |
+| `name` | `string` | Object name |
+| `short` | `string` | Short description |
+| `long` | `string` | Long description |
+| `mass` | `int` | Weight |
+| `value` | `int` | Monetary value |
+| `uses` | `int` | Number of times it can be consumed |
+| `properties` | `mapping` | Custom properties (e.g., `edible: true`) |
 
-### Gem/Geode (`.gem`, `.geode`)
+### Loot (`.loot`)
 
-| Property | Type | Description |
+**Data file location:** `obj/loot/{name}.lpml`
+**Base class:** `obj/loot/loot.c` (inherits `STD_ITEM`)
+**Compile module:** `adm/daemons/modules/virtual/loot.c` (inherits `ob.c`)
+
+| Property | Type | Purpose |
 |---|---|---|
-| `color` | string | ANSI color code, e.g. `` "`<dab>`" ``. Applied to display. |
-| `collectible` | int | Mark as collectible (geodes default to 1). |
+| `id` | `string[]` | Object identifiers |
+| `additional ids` | `string[]` | Extra IDs |
+| `adj` | `string[]` | Adjectives |
+| `name` | `string` | Object name |
+| `short` | `string` | Short description |
+| `long` | `string` | Long description |
+| `mass` | `int` | Weight |
+| `value` | `int` | Monetary value |
+| `material` | `string[]` | Material tags |
+| `properties` | `mapping` | Custom properties (e.g., `crafting material: true`) |
+| `custom setup` | `function` | Optional function called with the object |
 
-## Creating a Virtual Item
-
-### Step 1: Choose the type and location
-
-- Loot: `obj/loot/drop/{name}.loot` or `obj/loot/d/{domain}/{zone}/{name}.loot`
-- Food: `obj/food/{category}/{name}.food`
-- Gems: `obj/gems/{name}.gem`
-- Geodes: `obj/collectible/geode/{name}.geode`
-
-### Step 2: Write the data file
-
-Use the LPC mapping format. Include at minimum: `id`, `short`, `name`, `long`, and a value mechanism (`value`, `loot_value`, or `autovalue`+`autotype`).
-
-### Step 3: Reference it in code
-
-```c
-// Clone the virtual item
-object ob = new("/obj/gems/ruby.gem");
-
-// Or add to a loot table, drop list, etc.
+Example (`obj/loot/rabbit_fur.lpml`):
+```lpml
+{
+  id: ["fur", "patch"],
+  adj: ["rabbit"],
+  name: "rabbit fur",
+  short: "a patch of soft rabbit fur",
+  long: "This is a small patch of soft, fluffy fur.",
+  mass: 10,
+  material: ["fur"],
+  properties: {
+    autovalue: true,
+    crafting material: true,
+  },
+}
 ```
 
-No registration needed — the virtual system handles compilation automatically.
+### Mobs (`.mob`)
 
-## Templates
+**Data file location:** `d/mobs/{name}.lpml`
+**Base class:** `std/mobs/{type}.c` (e.g., `std/mobs/mammal.c` inherits `std/mobs/monster.c`)
+**Compile module:** `adm/daemons/modules/virtual/mob.c`
 
-### Loot Drop (auto-valued, stackable)
+The `type` field in the LPML determines which mob base class is used.
 
-```c
-([
-    "short" : "ITEM_NAME",
-    "name" : "ITEM_NAME",
-    "long" :
-"   DESCRIPTION_TEXT",
-    "id" : "/ITEM_NAME/ALT_ID/CATEGORY",
-    "autovalue" : "auto",
-    "autotype" : "danar",
-    "mass" : MASS,
-    "material" : ({ "MATERIAL_TYPE", "SUBTYPE" }),
-    "stack_id" : "ITEM_NAME",
-])
+| Property | Type | Purpose |
+|---|---|---|
+| `type` | `string` | Mob type — maps to `std/mobs/{type}.c` (e.g., `"mammal"`) |
+| `name` | `string` | Mob name |
+| `short` | `string` | Short description |
+| `long` | `string` | Long description |
+| `id` | `string[]` | Identifiers |
+| `weapon name` | `string` | Name of natural weapon |
+| `weapon type` | `string` | Damage type (e.g., `"piercing"`) |
+| `level` | `int` or `int[]` | Fixed level or `[min, max]` range |
+| `gender` | `string` or `string[]` | Fixed or random from array |
+| `race` | `string` | Race classification |
+| `loot` | `string[]` | Paths to loot/food items dropped on death |
+| `loot chance` | `float` | Percentage chance to drop loot |
+| `coins` | `mapping` | Coin drops: `{ copper: [min, chance], ... }` |
+
+Example (`d/mobs/waste_rat.lpml`):
+```lpml
+{
+  type: "mammal",
+  name: "waste rat",
+  short: "waste rat",
+  long: "A scrappy waste rat scurries through the debris, searching for "
+        "scraps to eat.",
+  id: ["waste rat", "rat"],
+  weapon name: "teeth",
+  weapon type: "piercing",
+  level: [1, 3],
+  gender: ["male", "female"],
+  race: "mammal",
+  loot: [
+    "/obj/food/rat_meat.food",
+    "/obj/loot/rat_fur.loot",
+  ],
+  loot chance: 70.0,
+  coins: {
+    copper: [1, 20.0],
+  },
+}
 ```
 
-### Loot Drop (fixed value)
+## How the Compile Module Works
 
-```c
-([
-    "short" : "ITEM_NAME",
-    "name" : "ITEM_NAME",
-    "long" :
-"   DESCRIPTION_TEXT",
-    "id" : "/ITEM_NAME/ALT_ID",
-    "loot_value" : ({ AMOUNT, "danar" }),
-    "mass" : MASS,
-    "material" : ({ "MATERIAL_TYPE", "SUBTYPE" }),
-    "stack_id" : "ITEM_NAME",
-    "vendor_quantity" : 1,
-    "vendor_type" : "VENDOR_CATEGORY",
-])
+The base compile module (`ob.c`) follows this pattern:
+
+1. Extracts the object name from the file path
+2. Constructs the LPML file path: `/obj/{module}/{name}.lpml`
+3. Reads and decodes the LPML: `lpml_decode(read_file(lpml_file))`
+4. Creates the object: `new("/obj/{module}/{module}.c", data)`
+5. The data mapping is passed as a constructor argument
+
+The base class receives this data in `virtual_setup()`:
+
+```lpc
+varargs void virtual_setup(mixed args...) {
+    mapping data;
+    if(!args || !mapp(args[0])) return;
+    data = args[0];
+
+    if(!nullp(data["id"])) set_id(data["id"]);
+    if(!nullp(data["name"])) set_name(data["name"]);
+    if(!nullp(data["short"])) set_short(data["short"]);
+    if(!nullp(data["long"])) set_long(data["long"]);
+    if(!nullp(data["mass"])) set_mass(data["mass"]);
+    if(!nullp(data["value"])) set_value(data["value"]);
+    // ... type-specific properties
+}
 ```
 
-### Food Item
+## Referencing Virtual Objects in Code
 
-```c
-([
-    "id" : "/FOOD_NAME/ALT_ID/food",
-    "short" : "FOOD_NAME",
-    "name" : "FOOD_NAME",
-    "long" :
-"   DESCRIPTION_TEXT",
-    "eat_message" :
-"CUSTOM_EAT_MESSAGE\n",
-    "filling" : FILLING_VALUE,
-    "sp_healing" : HEALING_OVERRIDE,
-    "cost" : COST_OVERRIDE,
-    "mass" : MASS,
-    "no_grill" : 1,
-])
+```lpc
+// Clone a virtual food item
+object cheese = new("/obj/food/cheese.food");
+
+// Clone a mob
+object rat = new("/d/mobs/waste_rat.mob");
+
+// Add to loot tables, room inventory, etc.
+add_inventory("/obj/loot/rabbit_fur.loot");
 ```
 
-### Gem
+No registration needed — the virtual system handles compilation automatically based on file extension.
 
-```c
-([
-    "id" : "/GEM_NAME/gem/stone",
-    "name" : "GEM_NAME",
-    "short" : "`<COLOR_CODE>`GEM_NAME`<res>`",
-    "color" : "`<COLOR_CODE>`",
-    "no_ansi_short" : "GEM_NAME",
-    "long" : "\n"
-"   DESCRIPTION_TEXT\n"
-"\n",
-    "value" : ({ VALUE, "danar" }),
-])
-```
+## Creating a New Virtual Object Type
 
-### Geode
+To add an entirely new type (e.g., `.potion`):
 
-```c
-([
-    "short" : "`<COLOR_CODE>`GEODE_NAME`<res>`",
-    "color" : "`<COLOR_CODE>`",
-    "id" : "/GEODE_NAME geode/GEODE_NAME/geode",
-    "long" :
-"   DESCRIPTION_TEXT",
-    "stack_id" : "GEODE_NAME",
-])
-```
+### 1. Create the base class
 
-## Creating a New Virtual Item Type
+`obj/potion/potion.c`:
 
-To add an entirely new item type (e.g. `.potion`, `.scroll`, `.rune`):
-
-### Option A: Add to Legacy Item Module (Simple)
-
-1. **Create the base class** at `std/{type}.c`:
-
-```c
+```lpc
 inherit STD_ITEM;
 
-void mudlib_setup() {
-    set("TYPE_FLAG", 1);
-    // Default properties
+varargs void virtual_setup(mixed args...) {
+    mapping data;
+    if(!args || !mapp(args[0])) return;
+    data = args[0];
+
+    if(!nullp(data["id"])) set_id(data["id"]);
+    if(!nullp(data["name"])) set_name(data["name"]);
+    if(!nullp(data["short"])) set_short(data["short"]);
+    if(!nullp(data["long"])) set_long(data["long"]);
+    if(!nullp(data["mass"])) set_mass(data["mass"]);
+    if(!nullp(data["value"])) set_value(data["value"]);
+    // ... potion-specific setup
 }
 ```
 
-2. **Add the define** in `include/mudlib.h`:
+### 2. Create the compile module
 
-```c
-#define STD_POTION DIR_STD "potion"
+`adm/daemons/modules/virtual/potion.c`:
+
+```lpc
+inherit __DIR__ "ob";
 ```
 
-3. **Register in item module** — add to `STANDARD_INHERITIBLES` in `adm/daemons/modules/virtual/item.c`:
+That's it — inheriting from `ob.c` gives you the standard compile flow that reads `/obj/potion/{name}.lpml` and creates `/obj/potion/potion.c` with the data.
 
-```c
-private nosave mapping STANDARD_INHERITIBLES = ([
-    "food"   : STD_FOOD,
-    "loot"   : STD_LOOT,
-    "gem"    : STD_GEM,
-    "geode"  : STD_GEODE,
-    "potion" : STD_POTION,
-]);
-```
+### 3. Create LPML data files
 
-4. **Create `.potion` data files** using the standard mapping format.
+`obj/potion/healing.lpml`:
 
-### Option B: Extension-Based Module (Modern)
-
-Create a standalone module at `adm/daemons/modules/virtual/{extension}.c`. The virtual daemon auto-discovers it by matching the file extension to the module name. No registration needed.
-
-```c
-// adm/daemons/modules/virtual/potion.c
-#include <daemons.h>
-
-inherit STD_DAEMON;
-
-object compile_object(string path) {
-    string data = read_file(path);
-    if(!data) return 0;
-
-    mapping item_data = GLOBALS->from_string(data);
-    object ob = new(STD_POTION);
-
-    item_data = map(item_data, function(mixed key, mixed value) {
-        return stringp(value)
-            ? replace_string(value, "\\n", "\n")
-            : value;
-    });
-
-    LOOT_D->setup_loot(ob, item_data);
-
-    return ob;
+```lpml
+{
+  id: ["potion", "vial"],
+  adj: ["healing"],
+  name: "healing potion",
+  short: "a vial of {{CC0000}}healing potion{{res}}",
+  long: "A small glass vial filled with a glowing red liquid.",
+  mass: 5,
+  value: 50,
+  properties: {
+    hp restore: 25,
+  },
 }
 ```
 
-The module name (`potion.c`) matches the extension (`.potion`). The virtual daemon finds it automatically — just create the module and start writing `.potion` data files.
+### 4. Use it
 
-**Option B is preferred for new types.** It's cleaner, self-contained, and doesn't modify shared code.
+```lpc
+object potion = new("/obj/potion/healing.potion");
+```
+
+## Routing Fallbacks
+
+If no extension module matches, VIRTUAL_D tries:
+
+1. **Directory name concatenation**: `/player/gesslar` → `modules/virtual/player.c`
+2. **Top-level directory**: `/d/forest/5,10,0` → `modules/virtual/d.c`
+
+This is how non-extension-based virtual objects (players, ghosts, zones) are routed.
 
 ## Common Pitfalls
 
-- **Missing `([` and `])` delimiters**: the data file must be a valid LPC mapping.
-- **Unquoted keys**: all keys must be strings in `"double quotes"`.
-- **Array syntax**: use `({ })` not `[ ]` — this is LPC, not JSON.
-- **Multi-line strings**: use LPC string concatenation (adjacent strings auto-concat), not `+`.
-- **Value format**: `value` must be `({ amount, "currency_type" })`, not just a number.
-- **`id` format**: slash-separated string, first element is primary: `"/sword/weapon/loot"`.
-- **Color codes in `short`**: always pair with `no_ansi_short` for clean sorting/logging.
-- **Color reset**: always end colored `short` with `` `<res>` ``.
-
-## Validation Checklist
-
-- [ ] File has correct extension (`.loot`, `.food`, `.gem`, `.geode`, or custom)
-- [ ] Content is a valid LPC mapping (`([` ... `])`)
-- [ ] `id`, `name`, `short`, and `long` are present
-- [ ] `long` description is properly formatted with leading spaces for indent
-- [ ] Value mechanism is present: `value`, `loot_value`, or `autovalue`+`autotype`
-- [ ] If colored `short`: includes `` `<res>` `` reset and `no_ansi_short`
-- [ ] If stackable: `stack_id` is present
-- [ ] If food: `filling` is set (core stat that derives others)
-- [ ] If gem/geode: `color` property matches the color code in `short`
-- [ ] File path is logical for the item type
+- **File extension mismatch**: the `.food` extension routes to `food.c` module, which reads `.lpml` files. The extension in the path (`cheese.food`) is different from the data file (`cheese.lpml`).
+- **LPML not LPC**: data files use LPML syntax (`{}`, `[]`, unquoted keys, spacey keys) not raw LPC mapping syntax (`([`, `({`).
+- **Mob type field**: the `type` property must match a file in `std/mobs/` (e.g., `"mammal"` → `std/mobs/mammal.c`).
+- **virtual_setup not setup**: data processing happens in `virtual_setup()`, which runs after the normal setup chain.
+- **New module inherits ob.c**: for standard item types, just `inherit __DIR__ "ob"` — the base module handles LPML reading, path construction, and object creation.

@@ -7,6 +7,24 @@ description: LPC coding style and formatting conventions for this project. Consu
 
 This document prepares an LLM for how code should be written in LPC for this project.
 
+## Language and Spelling
+
+Use **Canadian English** spelling throughout all code, comments, documentation, strings, and file names. Key examples:
+
+- colour (not color)
+- behaviour (not behavior)
+- honour (not honor)
+- favourite (not favorite)
+- centre (not center)
+- defence (not defense)
+- analyse (not analyze)
+- catalogue (not catalog)
+- modelling (not modeling)
+- travelling (not traveling)
+- initialise/initialisation are acceptable but initialize/initialization is also fine (both are used in Canadian English)
+
+This applies to identifiers (variable names, function names, file names), comments, strings, and documentation.
+
 ## Spacing
 
 - Use 2 spaces for indentation.
@@ -18,7 +36,7 @@ This document prepares an LLM for how code should be written in LPC for this pro
 - Use a single space before and after `=` for assignments.
 - Use a single space after `,` for function arguments and parameter lists.
 - NO space before or after `;` for statement terminators.
-- NO space space after `(` and before `)` for function calls and definitions.
+- NO space after `(` and before `)` for function calls and definitions.
 - NO space after `{` and before `}` for blocks.
 - NO space after `[` and before `]` for array indexing.
 - NO space after `.` for member access.
@@ -53,21 +71,46 @@ Prefer declaring locals near their first use inside the narrowest scope that mak
 
 Forward declarations at the top of the file are recommended when functions are referenced before their definitions. They are no longer strictly required by the driver but can improve clarity in larger files.
 
-## Variable Naming
+## Naming Conventions
 
-- Use descriptive names that indicate the purpose of the variable.
-- Local variables use `snake_case` (all lowercase, words separated by underscores).
-- Global variables follow the same style as local variables.
-- Constants (using #define) use `ALL_CAPS_WITH_UNDERSCORES`.
-- Class member variables follow the same style as local variables.
+### camelCase (Primary Convention)
 
-## Function Naming
+All identifiers use **camelCase** (lowercase first letter, uppercase on subsequent word boundaries):
 
-- Function names predominantly use `snake_case` (e.g., `query_name`, `set_value`, `calculate_damage`).
-- Only class names use `CamelCase` (e.g., `ClassEvent`, `GameState`).
-- Function names should be descriptive verbs or verb phrases that indicate what the function does.
-- Accessor functions commonly use the prefix `query_` rather than `get_` (e.g., `query_level`, `query_name`).
-- Mutator functions commonly use the prefix `set_` (e.g., `set_level`, `set_name`).
+- **Function names:** `queryName()`, `setValue()`, `findTarget()`, `calculateDamage()`
+- **Variable names:** `maxHealth`, `currentEnemy`, `regenInterval`, `attackSpeed`
+- **Function parameters:** `object targetObject`, `string playerName`, `int damageAmount`
+
+Accessor functions use the prefix `query` rather than `get`:
+- `queryLevel()`, `queryName()`, `queryMaxHp()`
+
+Mutator functions use the prefix `set`:
+- `setLevel()`, `setName()`, `setMaxHp()`
+
+### Exceptions
+
+- **Constants** (`#define`) use `ALL_CAPS_WITH_UNDERSCORES`: `MAX_LEVEL`, `COLOUR_D`
+- **Class names** use PascalCase (uppercase first letter): `ClassGMCP`, `ClassEvent`
+- **GMCP handler functions** use PascalCase to match protocol convention: `Hello()`, `Supports()`, `Items()`
+
+### Examples
+
+```lpc
+// Function names
+mixed queryEffectiveBoon(string cl, string type) { ... }
+void processExpiredBuffs() { ... }
+object findNearestEnemy(object tp) { ... }
+
+// Variable names
+int regenInterval;
+string targetName;
+mapping currentEnemies = ([]);
+float attackSpeed = 2.0;
+
+// Constants
+#define MAX_CAPACITY 100
+#define COMBAT_TICK_RATE 2
+```
 
 ## Control Structures
 
@@ -113,7 +156,7 @@ Forward declarations at the top of the file are recommended when functions are r
 - Remember that null/undefined values are ints and are 0, but they are not the same as 0, and can be tested with `nullp()`.
 - After testing for null, you can then use `intp()` to check if the value is an int, particularly when validating call_other function arguments.
 
-## File Organization
+## File Organisation
 
 - Each file should have a header comment describing its purpose and author.
 - Header includes come first.
@@ -123,14 +166,14 @@ Forward declarations at the top of the file are recommended when functions are r
 - Helper/utility functions placed at the bottom of the file.
 - Primary functions should be at the top of the file.
 - Related functions should be grouped together.
-- Keep file length manageable - consider splitting very large files (>1000 lines) into modules.
+- Keep file length manageable — consider splitting very large files (>1000 lines) into modules.
 
 ## Special LPC Features
 
 ### Efuns and Apply Functions
 
 - Driver efuns (built-in functions) are called directly without a namespace.
-- Apply functions (like `init()`, `heart_beat()`) are special methods called by the driver - don't rename these.
+- Apply functions (like `init()`, `heart_beat()`) are special methods called by the driver — don't rename these.
 - Simulated efuns may be provided by the mudlib and called as global functions.
 
 ### Inheritance and Object References
@@ -157,7 +200,7 @@ Forward declarations at the top of the file are recommended when functions are r
 - Validate all inputs, especially those from user input or network sources.
 - Check for null with `nullp()` before operations that might fail on null values.
 - For user-provided objects, verify they exist with `objectp()` before use.
-- When dealing with user input, never trust it - sanitize it first.
+- When dealing with user input, never trust it — sanitise it first.
 
 ## Line Width
 

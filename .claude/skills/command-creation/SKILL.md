@@ -1,513 +1,362 @@
 ---
 name: command-creation
-description: Create and modify standard commands for Threshold RPG. Covers file naming, inheritance, entry points (main/cmd_verb/perform), return value handling, check functions, delayed actions, help text, and command directory structure.
+description: Create and modify commands for Oxidus. Covers file naming, inheritance hierarchy (STD_CMD, STD_ACT, STD_ABILITY, STD_SPELL), entry points, return value handling, help text, verb rules, and command directory structure.
 ---
 
 # Command Creation Skill
 
-You are helping create or modify commands for Threshold RPG. Commands are LPC files that players invoke by typing a verb. Follow the `lpc-coding-style` skill for all formatting.
+You are helping create or modify commands for Oxidus. Commands are LPC files that players invoke by typing a verb. Follow the `lpc-coding-style` skill for all formatting.
 
 ## How Commands Work
 
-1. Player types a verb (e.g. `attack goblin`)
-2. `user.c::cmd_hook()` searches for a matching command file via `CMD_D->find_cmd()`
-3. CMD_D looks through the player's PATH directories for `_<verb>.c`
-4. The command object is loaded and one of its entry point functions is called
-5. The return value is evaluated by `evaluate_result()` to determine success/failure
+1. Player types a verb (e.g., `eat cheese`)
+2. `command_hook()` in `std/object/command.c` processes the input
+3. First checks `evaluate_command()` on inventory, environment, and room contents (for `add_command()`-based commands)
+4. Then checks soul emotes and channels
+5. Then searches the player's PATH directories for `<verb>.c`
+6. The command object is loaded and `main()` (or `process_verb_rules()` for verb commands) is called
+7. The return value is evaluated by `evaluate_result()`
 
 ## File Naming and Location
 
-- Commands are named `_<verb>.c` (underscore prefix, lowercase)
-- Standard player commands go in `cmds/std/`
-- Other directories: `cmds/wiz/` (wizard), `cmds/adm/` (admin), `cmds/xtra/`, `cmds/stea/`, `cmds/ghost/`, `cmds/clan/`, `cmds/religion/`, `cmds/race/`, `cmds/mount/`, `cmds/spells/`, and others
+- Commands are named `<verb>.c` (lowercase, no underscore prefix)
+- Path directories are configured in `/adm/etc/` files
 
-Path defines in `include/config.h`:
+| Directory | Purpose | Config File |
+|---|---|---|
+| `cmds/std/` | Standard player commands | `adm/etc/standard_paths` |
+| `cmds/wiz/` | Wizard/developer commands | `adm/etc/wizard_paths` |
+| `cmds/adm/` | Admin commands | `adm/etc/wizard_paths` |
+| `cmds/file/` | File-related commands | `adm/etc/wizard_paths` |
+| `cmds/object/` | Object manipulation commands | `adm/etc/wizard_paths` |
+| `cmds/ability/` | Ability-based commands | |
+| `cmds/spell/` | Spell commands | |
+| `cmds/ghost/` | Ghost/unregistered user commands | `adm/etc/ghost_paths` |
 
-```lpc
-#define USER_CMDS "/cmds/std"
-#define WIZ_CMDS  "/cmds/wiz"
-#define ADM_CMDS  "/cmds/adm"
+## Inheritance Hierarchy
+
+```
+STD_OBJECT
+  └── STD_CMD (std/cmd/cmd.c) — base command class
+        └── STD_ACT (std/cmd/act.c) — action commands, includes M_CHECKS
+              └── STD_ABILITY (std/cmd/ability.c) — abilities with cost/cooldown
+                    └── STD_SPELL (std/cmd/spell.c) — spell commands
 ```
 
-## Inheritance
+Also: `STD_REPORTER` (`std/cmd/reporter.c`) — for bug/idea/typo reports, inherits `STD_CMD`.
 
-All commands inherit `STD_CMD` (defined as `std/cmd` in `include/mudlib.h`):
+### When to use which
 
-```lpc
-inherit STD_CMD;
-```
+| Inherit | When |
+|---|---|
+| `STD_CMD` | General commands, info display, wizard tools — no action checks needed |
+| `STD_ACT` | Player actions (drop, eat, close) — includes `M_CHECKS` for validation |
+| `STD_ABILITY` | Abilities with HP/SP/MP costs, cooldowns, and condition checks |
+| `STD_SPELL` | Spells (extends ability with spell-specific features) |
 
-`STD_CMD` provides:
-- **M_CHECKS** - validation check functions (see below)
-- **M_CASTING** - delayed action system (`delay_cast()`, `set_cooldown()`)
-- **M_SUBSTITUTION** - text substitution helpers
-- **M_COLOR** - color utilities
-- **STD_PROPERTIES** - property get/set system
-- Setup chain: `mudlib_setup()` -> `base_setup()` -> `pre_setup()` -> `setup()` -> `post_setup()`
-- `query_help(object tp)` stub for help text
+## Entry Point
 
-Some commands inherit additional modules as needed:
+The standard entry point is `main()`:
 
 ```lpc
-inherit STD_CMD;
-inherit M_WIDGETS;  // for UI widgets
-```
-
-## Entry Point Functions
-
-`cmd_hook()` tries these entry points in order on the command object:
-
-1. `perform(object caller, string arg)` - dispatcher-style commands with sub-commands
-2. `execute(object caller, object env, string arg)` - includes environment
-3. `main(object tp, string str)` - modern standard entry point
-4. `cmd_<verb>(string arg)` - legacy style, uses `this_player()` internally
-
-### Preferred: `main()` (modern style)
-
-```lpc
-inherit STD_CMD;
-
-mixed main(object tp, string str) {
-  if(!str)
-    return notify_fail("Do what?\n");
-
-  // ... command logic ...
-
-  return 1;
+mixed main(object tp, string arg) {
+    // tp = the user/caller
+    // arg = everything after the verb (null if nothing)
+    // return mixed — see Return Values below
 }
 ```
 
-### Alternative: `cmd_<verb>()` (legacy style)
+For ability commands, override `use()` instead — `STD_ABILITY` handles `main()` itself, running `condition_check()` before calling `use()`:
 
 ```lpc
-inherit STD_CMD;
+inherit STD_ABILITY;
 
-int cmd_drop(string str) {
-  object tp = this_player();
-
-  if(!str)
-    return notify_fail("Drop what?\n");
-
-  // ... command logic ...
-
-  return 1;
-}
-```
-
-### Alternative: `perform()` (dispatcher style)
-
-Best for commands with multiple sub-commands (e.g. `settings`, `account`):
-
-```lpc
-inherit STD_CMD;
-
-int perform(object caller, string arg) {
-  string type, args;
-
-  if(!arg) {
-    show_usage(caller);
+mixed use(object tp, string arg) {
+    // Conditions already checked by the time this runs
+    apply_cost(tp, arg);
+    // ... ability logic ...
     return 1;
-  }
-
-  if(sscanf(arg, "%s %s", type, args) != 2)
-    type = arg;
-
-  switch(type) {
-    case "option1": return handle_option1(caller, args);
-    case "option2": return handle_option2(caller, args);
-    default: show_usage(caller); return 1;
-  }
 }
 ```
 
 ## Return Value Handling
 
-The return value from a command entry point is processed by `evaluate_result()`:
+Return values are processed by `evaluate_result()`:
 
 | Return Value | Effect |
 |---|---|
-| `1` | Command succeeded, stop processing |
-| `0` | Command failed, continue searching other handlers |
-| `string` (non-empty) | Display message to player (newline appended if missing), treat as success |
+| `1` | Success, stop processing |
+| `0` | Failure, continue searching other handlers |
+| `string` (non-empty) | Display to player (newline appended if missing), treat as success |
 | `string` (empty `""`) | Treat as failure |
-| `string *` (non-empty array) | Display via `more()` pager, treat as success |
+| `string *` (non-empty array) | Display via pager, treat as success |
 | `string *` (empty array) | Treat as failure |
-
-### Using return values effectively
 
 ```lpc
 // Return a string for simple feedback (auto-displayed, auto-newlined)
-return "You can't do that while sleeping.\n";
+return "You can't do that.";
 
 // Return 1 after manually handling output
-tp->tell("You swing the sword.\n");
+tell(tp, "You swing the sword.\n");
 return 1;
 
-// Use notify_fail for "soft" failures that let other handlers try
-return notify_fail("There is nothing to swing here.\n");
-```
-
-**Key distinction**: returning a string = success (message shown, processing stops). Using `notify_fail()` + returning 0 = failure (message shown only if no other handler succeeds).
-
-## Check Functions (M_CHECKS)
-
-All check functions return `TRUE` on pass, `FALSE` on fail (with automatic error message to player). Use them as guards at the top of your command:
-
-```lpc
-if(!ep_check(tp, 10)) return 1;
-if(!casting_check(tp)) return 1;
-if(!attacking_check(tp)) return 1;
-```
-
-### Available checks
-
-| Function | Purpose |
-|---|---|
-| `player_check(tp)` | Is `tp` a real user (not NPC)? |
-| `level_check(tp, level)` | Player level >= `level`? |
-| `glevel_check(tp, glevel)` | Guild level >= `glevel`? |
-| `hp_check(tp, amount, args)` | Has enough hit points? |
-| `sp_check(tp, amount, args)` | Has enough spell points? |
-| `ep_check(tp, amount, args)` | Has enough endurance points? |
-| `cooldown_check(tp, label, args)` | Cooldown expired? Label auto-prefixed with `cooldown/` |
-| `casting_check(tp, args)` | Not currently casting/busy? |
-| `attacking_check(tp, args)` | Not currently in combat? |
-| `attacking_required_check(tp, args)` | Must be in combat? |
-| `bank_balance_check(tp, amount, args)` | Enough coins in bank? |
-| `services_check(tp, args)` | Room allows services? |
-| `no_mounted_check(tp, args)` | Not mounted? |
-| `handicap_check(tp, handicaps)` | Not affected by named handicap(s)? |
-| `guild_check(tp, guilds)` | Member of specified guild(s)? Accepts string, array, or mapping (with glevel) |
-| `race_check(tp, races)` | Is specified race? Accepts string, array, or mapping (with glevel) |
-| `lodge_check(tp, lodges)` | Member of specified lodge? |
-| `religion_check(tp, religions)` | Follows specified religion? |
-| `kingdom_check(tp, kingdoms)` | Member of specified kingdom? |
-| `same_room_check(one, two)` | Two objects in same room? |
-| `no_teleport_check(tp)` | Room allows teleportation? |
-| `absolutely_no_teleport_check(tp)` | Room allows any teleportation? |
-| `register_check(tp, number)` | Player citizenship/registration level? |
-
-The `args` parameter on many checks controls the failure message:
-- Omitted or positive int: show default message
-- String: show custom message
-- `0`: suppress message
-
-## Delayed Actions (M_CASTING)
-
-For commands that take time (digging, crafting, attack stop):
-
-```lpc
-// Start a delayed action
-// delay_cast(label, callback_func, delay_seconds, args...)
-delay_cast("digging", "finish_dig", 15, tp, room, tool);
-return 1;
-
-// The callback receives the args plus a serial ID
-void finish_dig(object tp, object room, object tool, int serial) {
-  // Perform the delayed action
-  tp->tell("You finish digging.\n");
-}
-```
-
-Set cooldowns:
-
-```lpc
-// set_cooldown(tp, label, duration_seconds)
-set_cooldown(tp, "dig", 30);
+// Return 0 to indicate failure (other handlers may try)
+return 0;
 ```
 
 ## Help Text
 
-Implement `query_help()` to provide in-game help when a player types `help <command>`:
+Two approaches:
+
+### Via setup() variables
+
+```lpc
+void setup() {
+    usage_text = "eat <item>\n";
+    help_text = "Eat an item you are holding.\n\nSee also: drink\n";
+}
+```
+
+### Via query_help()
 
 ```lpc
 string query_help(object tp) {
-  return @text
-USAGE: commandname <argument>
-
-Description of what the command does and how to use it.
-text
-;
+    return
+"SYNTAX: force <living> to <cmd>\n\n"
+"Force a living object to execute a command.";
 }
 ```
 
-For dynamic help text based on player state:
+## Messaging Functions
+
+| Function | Purpose |
+|---|---|
+| `tell(ob, msg)` | Send message to an object |
+| `tell_me(msg)` | Send message to self (the command caller) |
+| `_info(tp, fmt, ...)` | Info-level formatted message |
+| `_error(fmt, ...)` | Error-level formatted message |
+| `_ok(tp, fmt, ...)` | Success-level formatted message |
+
+### Action Messages
 
 ```lpc
-string query_help(object tp) {
-  string mess = @text
-USAGE: dig <location> with <tool>
-       dig here with hands
-
-Dig in the ground to find buried items.
-text
-;
-
-  if(tp->query("race") == "canis") {
-    mess += @text
-
-As a canis, you dig faster than other races.
-text
-;
-  }
-
-  return mess;
-}
-```
-
-You can also forward-declare `query_help` and call it within the command for invalid input:
-
-```lpc
-string query_help(object tp);
-
-mixed main(object tp, string str) {
-  if(!str) {
-    tp->tell(query_help(tp));
-    return 1;
-  }
-  // ...
-}
-```
-
-Or redirect to the help system:
-
-```lpc
-if(!str) {
-  tp->force_me("help attack");
-  return 1;
-}
-```
-
-## Common Patterns
-
-### Pet prevention
-
-```lpc
-if(tp->prevent_pet())
-  return 1;
-```
-
-### Resource cost with check
-
-```lpc
-if(!ep_check(tp, 10))
-  return 1;
-// ... later, on success:
-tp->delta_ep(-10);
-```
-
-### Finding objects in inventory or room
-
-```lpc
-// In player's inventory
-object ob = present(str, tp);
-if(!ob)
-  return "You don't have that.\n";
-
-// In the room
-object ob = present(str, environment(tp));
-if(!ob)
-  return "You don't see that here.\n";
-```
-
-### Parsing "X with Y" or "X from Y" syntax
-
-```lpc
-string target, tool;
-if(sscanf(str, "%s with %s", target, tool) != 2)
-  return notify_fail("Syntax: use <item> with <tool>\n");
-```
-
-### Action messages
-
-```lpc
-// Message to the player
-tp->tell("You do something.\n");
-
-// Message to the room (excluding the player)
-environment(tp)->tell("Someone does something.\n", tp);
-
-// Using action message system with verb conjugation
+// Message to player and room with verb conjugation
 tp->my_action("$N $vswing the sword.");
+tp->simple_action("$N $vdrop $p $o.", ob);
 tp->targetted_action("$N $vattack $t.", victim);
 ```
 
-### Text wrapping
+## Finding Objects
 
 ```lpc
-// iwrap() for intelligent word-wrapping (adds newline)
-return iwrap("This is a long message that will be wrapped.");
+// Find single object by name in a location
+object ob = find_target(tp, arg, tp);         // in player inventory
+object ob = find_target(tp, arg, environment(tp));  // in the room
 
-// no_ansi() to strip color codes for length calculations
-return iwrap(no_ansi(ob->query("short")) + " cannot be assembled.");
+// Find multiple objects
+object *obs = find_targets(tp, arg, tp);
+
+// Find player by name
+object ob = find_player(name);
+
+// Lower-level
+object ob = present(name, location);
 ```
 
-## Complete Example: Simple Command
+## Verb Rules
+
+Commands can define verb grammar rules for structured argument parsing:
 
 ```lpc
-// /cmds/std/_taste.c
-// Taste an item in your inventory
-//
-// Created:     2026/03/22: Gesslar
-// Last Change: 2026/03/22: Gesslar
-//
-// 2026/03/22: Gesslar - Created
+void setup() {
+    add_verb_rule("");        // No arguments
+    add_verb_rule("WRD");    // Single word argument
+}
+```
 
-inherit STD_CMD;
+When `is_verb()` returns true (i.e., verb rules are defined), `command_hook()` calls `process_verb_rules()` instead of `main()`.
+
+## STD_ABILITY Features
+
+Abilities provide built-in cost and cooldown management:
+
+### Costs
+
+Set cost variables in `setup()`:
+
+```lpc
+void setup() {
+    hp_cost = 10.0;
+    sp_cost = 5.0;
+    mp_cost = 0.0;
+}
+```
+
+`condition_check()` verifies the player can afford the cost. Call `apply_cost()` to deduct after success.
+
+### Cooldowns
+
+```lpc
+void setup() {
+    cooldowns = ([
+        "ability_name" : ({ "", 30 }),  // 30-second cooldown
+    ]);
+}
+```
+
+`condition_check()` checks cooldowns automatically. Call `apply_cooldown()` after success.
+
+### Condition Check Return Values
+
+For `STD_ABILITY`, `condition_check()` returns:
+- `0` — failure, return 0 to caller
+- `1` — conditions met, proceed to `use()`
+- `2` — failure, but message already sent (return 1 to stop processing)
+
+### Targeting
+
+```lpc
+void setup() {
+    aggressive = 1;     // Marks as aggressive (checks prevent_combat)
+    target_current = 1; // Allow targeting current combat target if no arg given
+}
+
+mixed use(object tp, string arg) {
+    object target = local_target(tp, arg);
+    if(!target) return 1;
+    // ...
+}
+```
+
+## add_command() — Object-Based Commands
+
+Objects (rooms, items, NPCs) can register commands that only work when the object is present:
+
+```lpc
+void setup() {
+    add_command("push", "do_push");
+    add_command(({"pull", "yank"}), "do_pull");
+}
+
+mixed do_push(object tp, string arg) {
+    // ...
+    return 1;
+}
+```
+
+These are checked before PATH-based commands.
+
+## Complete Example: Simple Action Command
+
+```lpc
+// /cmds/std/eat.c
+
+inherit STD_ACT;
 
 mixed main(object tp, string str) {
-  object ob;
+    object ob;
+    int uses;
 
-  if(tp->prevent_pet())
+    if(!ob = find_target(tp, str, tp))
+        return "You don't have that.";
+
+    if(!ob->is_edible())
+        return "You can't eat that.";
+
+    uses = ob->query_uses();
+    if(uses < 1)
+        return "There is nothing left to eat.";
+
+    if(!ob->consume(tp))
+        return "You couldn't eat that.";
+
     return 1;
-  if(!ep_check(tp, 5))
-    return 1;
-  if(!casting_check(tp))
-    return 1;
-
-  if(!str)
-    return notify_fail("Taste what?\n");
-
-  ob = present(str, tp);
-  if(!ob)
-    return "You don't have any " + str + ".\n";
-
-  if(!ob->query("tasteable"))
-    return iwrap("You can't taste " + no_ansi(ob->query("short")) + ".");
-
-  tp->delta_ep(-5);
-  tp->my_action("$N $vtaste $o.", ob);
-
-  return ob->query("taste_message") ||
-    iwrap("You taste " + no_ansi(ob->query("short")) + ". It tastes unremarkable.");
-}
-
-string query_help(object tp) {
-  return @text
-USAGE: taste <item>
-
-Taste an item you are holding to determine its flavour.
-text
-;
 }
 ```
 
-## Complete Example: Delayed Action Command
+## Complete Example: Multi-Option Command with Help
 
 ```lpc
-// /cmds/std/_meditate.c
-// Meditate to recover spell points
-//
-// Created:     2026/03/22: Gesslar
-// Last Change: 2026/03/22: Gesslar
-//
-// 2026/03/22: Gesslar - Created
+// /cmds/std/drop.c
 
-inherit STD_CMD;
+inherit STD_ACT;
 
-#define DELAY 20
-#define SP_GAIN 50
-#define EP_COST 15
-
-mixed main(object tp, string str) {
-  if(tp->prevent_pet())
-    return 1;
-  if(!ep_check(tp, EP_COST))
-    return 1;
-  if(!casting_check(tp))
-    return 1;
-  if(!attacking_check(tp))
-    return 1;
-  if(!cooldown_check(tp, "meditate"))
-    return 1;
-
-  tp->delta_ep(-EP_COST);
-  tp->my_action("$N $vsit down and $vbegin to meditate.");
-  delay_cast("meditating", "finish_meditate", DELAY, tp);
-
-  return 1;
+void setup() {
+    usage_text =
+"drop <object>\n"
+"drop all\n"
+"drop all <object>\n";
+    help_text =
+"This command will allow you to drop an object you are currently holding onto "
+"the ground.\n\nSee also: get, put\n";
 }
 
-void finish_meditate(object tp) {
-  if(!tp) return;
+mixed main(object tp, string arg) {
+    object room = environment(tp);
 
-  tp->delta_sp(SP_GAIN);
-  set_cooldown(tp, "meditate", 120);
-  tp->my_action("$N $vfinish meditating, looking refreshed.");
-}
+    if(!arg)
+        return "Drop what?";
 
-string query_help(object tp) {
-  return @text
-USAGE: meditate
+    if(arg == "all") {
+        object *inv = find_targets(tp, 0, tp);
 
-Sit and meditate to recover spell points. Requires endurance and
-cannot be done while in combat or performing another action.
-text
-;
+        if(!sizeof(inv))
+            return "You don't have anything in your inventory.\n";
+
+        foreach(object item in inv) {
+            if(item->prevent_drop())
+                tp->my_action("$N $vcannot drop $p $o.", item);
+            else if(item->move(room))
+                tp->my_action("$N could not drop $p $o.", item);
+            else
+                tp->my_action("$N $vdrop $p $o.", item);
+        }
+    } else {
+        object ob = find_target(tp, arg, tp);
+
+        if(!ob)
+            return "You don't have a '" + arg + "' in your inventory.\n";
+
+        if(ob->prevent_drop())
+            return "You cannot drop " + ob->query_real_name() + ".\n";
+
+        if(ob->move(room))
+            return "You could not drop " + ob->query_real_name() + ".\n";
+
+        tp->simple_action("$N $vdrop $p $o.", ob);
+    }
+
+    return 1;
 }
 ```
 
-## Complete Example: Dispatcher Command
+## Complete Example: Wizard Command with _error/_ok
 
 ```lpc
-// /cmds/std/_toolkit.c
-// Manage your toolkit
-//
-// Created:     2026/03/22: Gesslar
-// Last Change: 2026/03/22: Gesslar
-//
-// 2026/03/22: Gesslar - Created
+// /cmds/wiz/force.c
 
 inherit STD_CMD;
 
-int perform(object caller, string arg) {
-  string sub, args;
+mixed main(object tp, string args) {
+    string target, cmd;
+    object ob;
 
-  if(!arg) {
-    caller->tell(query_help(caller));
+    if(!stringp(args) || sscanf(args, "%s to %s", target, cmd) != 2)
+        return _error("Syntax: force <living> to <cmd>");
+
+    ob = present(lower_case(target), environment(tp));
+    if(!ob)
+        return _error("%s not found.", target);
+
+    if(!living(ob))
+        return _error("%s is not a living object.", target);
+
+    int result = ob->force_me(cmd);
+    if(result == false)
+        _info(tp, "Unable to force %s to %s", ob->query_name(), cmd);
+    else
+        _ok(tp, "Forced %s to %s", ob->query_name(), cmd);
+
     return 1;
-  }
-
-  if(sscanf(arg, "%s %s", sub, args) != 2)
-    sub = arg;
-
-  switch(sub) {
-    case "list": return list_tools(caller);
-    case "add": return add_tool(caller, args);
-    case "remove": return remove_tool(caller, args);
-    default:
-      caller->tell(query_help(caller));
-      return 1;
-  }
-}
-
-private int list_tools(object caller) {
-  // ... implementation ...
-  return 1;
-}
-
-private int add_tool(object caller, string args) {
-  if(!args)
-    return notify_fail("Add which tool?\n");
-  // ... implementation ...
-  return 1;
-}
-
-private int remove_tool(object caller, string args) {
-  if(!args)
-    return notify_fail("Remove which tool?\n");
-  // ... implementation ...
-  return 1;
-}
-
-string query_help(object tp) {
-  return @text
-USAGE: toolkit list
-       toolkit add <item>
-       toolkit remove <item>
-
-Manage the tools in your toolkit.
-text
-;
 }
 ```
