@@ -67,7 +67,8 @@ object add_inventory(mixed file, mixed args...) {
       }
     }
 
-    log_file("OBJECT", e);
+    log_file("OBJECT", "%s %s add_inventory clone error: %s\n  file: %s\n",
+      ctime(), file_name(), e, stringp(file) ? file : file_name(file));
   }
 
   if(!ob)
@@ -81,7 +82,8 @@ object add_inventory(mixed file, mixed args...) {
 
   e = catch(ob->move(this_object()));
   if(e) {
-    log_file("OBJECT", e);
+    log_file("OBJECT", "%s %s add_inventory move error: %s\n  ob: %s\n",
+      ctime(), file_name(), e, file_name(ob));
     ob->remove();
     return 0;
   }

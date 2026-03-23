@@ -55,7 +55,7 @@ All keys live in the top-level mapping of the LPML files. Keys are uppercase by 
 
 ### System paths and logging
 - `ADMIN_EMAIL` — admin contact
-- `LOG_DIR`, `LOG_CATCH`, `LOG_RUNTIME` — log paths
+- `LOG_CATCH`, `LOG_RUNTIME` — log paths
 - `TMP_DIR` — temporary file directory
 - `DB_PATH`, `DB_SUFFIX`, `DB_TABLE_SUFFIX`, `DB_CHUNK_SIZE` — database settings
 - `OBJECT_DATA_DIR` — persistent object data directory
@@ -180,7 +180,7 @@ string *combat_melee = skills["combat"]["melee"];
 
 ### Config in simul_efuns
 Several simul_efuns in `/adm/simul_efun/system.c` wrap specific config keys for convenience:
-- `log_dir()` — returns `mudConfig("LOG_DIR")`
+- `log_dir()` — returns driver `__LOG_DIR__` (not configurable via CONFIG_D)
 - `tmp_dir()` — returns `mudConfig("TMP_DIR")`
 - `lib_name()` — returns `mudConfig("LIB_NAME")`
 - `lib_version()` — returns `mudConfig("LIB_VERSION")`
