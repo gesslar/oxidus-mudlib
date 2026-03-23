@@ -50,3 +50,6 @@ adm/etc/alarms/*.txt
 
 lpc-language-server
 node_modules
+
+# AI
+.code/
