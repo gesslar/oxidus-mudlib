@@ -12,7 +12,7 @@
 inherit STD_CMD;
 inherit CLASS_ALARM;
 
-mixed main(string arg) {
+mixed main(object _tp, string arg) {
     class Alarm *alarms = ALARM_D->query_alarms();
     class Alarm *boots;
     string *out;
