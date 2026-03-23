@@ -1,338 +1,342 @@
 ---
 name: room-creation
-description: Create rooms for Threshold RPG using the modern function-based API. Covers the setup chain, exits, descriptions, items, senses, territory, terrain, outside/indoor, monsters, and inventory.
+description: Create rooms for Oxidus. Covers the setup chain, exits, descriptions, items, doors, terrain, zones, room metadata, and monster spawning.
 ---
 
 # Room Creation Skill
 
-You are creating rooms for Threshold RPG. Rooms use a modern function-based API — prefer calling functions (`set_long()`, `set_exit()`, `set_items()`, `add_sense()`) over raw `set()` property calls wherever functions exist.
+You are creating rooms for Oxidus. Rooms use a function-based API — prefer calling functions (`set_long()`, `set_exits()`, `set_items()`, `add_exit()`) over raw `set()` property calls wherever functions exist.
 
 ## Inheritance Pattern
 
-Rooms use a layered inheritance chain for area organization:
+Rooms use a layered inheritance chain for area organisation:
 
 ```
-STD_ROOM                          ← Base room class
-  └─ d/{domain}/{zone}/{zone}.c   ← Area base (sets territory)
-       └─ d/{domain}/{zone}/sub.c ← Sub-area (sets sub-territory, terrain)
-            └─ d/{domain}/{zone}/room.c  ← Individual room (exits, descriptions)
+STD_ROOM                            <- Base room class
+  +-- d/{area}/{area_base}.c        <- Area base (sets zone, terrain)
+       +-- d/{area}/{room}.c        <- Individual room (exits, descriptions)
 ```
 
 Each layer uses a different setup function to avoid overriding parent setup.
 
 ## Setup Chain
 
-The room class calls these functions in order during initialization:
+The room class calls these functions in order during initialisation:
 
 ```c
-mudlib_setup()   → Internal library setup (don't override)
-base_setup()     → Rare — foundational defaults
-area_setup()     → Area-wide: territory, terrain, outside
-sub_setup()      → Sub-zone overrides
-pre_setup()      → Before main setup
-setup()          → Main room setup: exits, descriptions, items, senses
-post_setup()     → After everything else
+mudlib_setup()       -> Internal library setup (don't override)
+base_setup()         -> Rare — foundational defaults
+pre_setup_0..4()     -> Pre-setup hooks (area bases use these)
+setup()              -> Main room setup: exits, descriptions, items
+post_setup_0..4()    -> Post-setup hooks
 ```
 
 **Convention:**
-- Area base inherits use `area_setup()` for territory/terrain/outside
-- Sub-zone inherits use `sub_setup()` for overrides
-- Individual rooms use `setup()` for exits, descriptions, items, senses
+- Area bases use `pre_setup_1()` (or similar) for zone/terrain shared by all rooms
+- Individual rooms use `setup()` for exits, descriptions, items
 
-## Modern API Reference
+## Room Base Class
+
+`STD_ROOM` (`std/room/room.c`) inherits from:
+- `STD_OBJECT` — descriptions, IDs, setup chain
+- `STD_CONTAINER` — inventory (ignores capacity/mass by default)
+- `exits.c` — exit management
+- `items.c` — examinable room details
+- `light.c` — light levels
+- `terrain.c` — terrain type
+- `zone.c` — zone membership
+- `door.c` — door state management
+
+## API Reference
 
 ### Descriptions
 
-```c
+```lpc
 // Short description (one-line, shown in room lists and movement)
-set_short("Winding Path");
-// Supports color: set_short("`<adb>`Gallery of Flora`<res>`");
+set_short("Village Square of Olum");
 
-// Long description (auto-formatted: trimmed, indented, wrapped)
-set_long("This wide outdoor space is bordered by tall hedges. "
-"The ground is covered in soft green grass.");
-// Pass multi-paragraph as separate \n-delimited strings
-// The function handles wrapping and indentation automatically
+// Long description
+set_long("At the village centre lies a bustling square, surrounded by "
+"ancient, timber-framed buildings. Cobblestone paths lead to a "
+"moss-covered stone well.");
 ```
 
-### Items (Lookable Things in the Room)
+### Items (Examinable Details)
 
-```c
+```lpc
 // Set all items at once (replaces existing)
 set_items(([
-    "plants" : "A wide variety of plants and flowers grow here.",
-    "flowers" : ">plants",       // Forward — "look flowers" shows plants desc
-    "pond" : "A large circular pond filled with water lilies.",
-    "grass" : "Soft, green grass covers the ground.",
-    "ground" : ">grass",
+    "mirrors" :
+    "The gold-framed mirrors reflect the light beautifully.",
+    "chandelier" :
+    "The massive crystal chandelier casts prismatic colours.",
+    ({ "cobblestone paths", "paths", "cobblestones" }) :
+    "Worn smooth by countless footsteps, the cobblestone paths "
+    "weave through the square.",
 ]));
 
 // Add individual items
 add_item("statue", "A weathered stone statue of a forgotten king.");
-add_item(({"tree", "trees", "oak"}), "Tall oaks line the path.");
-// Array form: first element gets description, rest forward to it
+
+// Remove an item
+remove_item("statue");
 ```
 
-### Senses
-
-```c
-// Room-level senses (what the room smells/sounds like)
-add_sense("smell", "The air is filled with the sweet scent of flowers.");
-add_sense("sound", "A gentle breeze rustles through the leaves.");
-
-// Item-level senses (smelling/touching specific things)
-add_sense("smell", "flowers", "The flowers smell sweet and fragrant.");
-add_sense("touch", "grass", "The grass is soft and cool to the touch.");
-add_sense("sound", "pond", "You hear the gentle lapping of water.");
-
-// Valid senses: "smell", "sound", "touch", "taste"
-
-// Array form (aliases forward to first):
-add_sense("smell", ({"flowers", "plants"}), "Sweet fragrance.");
-```
+Items can use arrays for aliases — all elements in the array share the same description. Descriptions can be strings, function pointers, or `"@@func_name"` to call a function on the room.
 
 ### Exits
 
-```c
+```lpc
 // Set all exits at once
-set("exits", ([
-    "north" : __DIR__ "path2",
-    "south" : __DIR__ "path1",
-    "east"  : "/d/sable/sable/rooms/market",
+set_exits(([
+    "north": "village_path1",
+    "south": "village_path2",
+    "down" : "../tunnels/0,0,-1",
 ]));
 
-// Individual exits
-set_exit("north", __DIR__ "room2");
-set_exit("west", "/d/sable/sable/rooms/gate");
-
-// Use __DIR__ for relative paths within the same directory
+// Add/remove individual exits
+add_exit("east", "market");
+remove_exit("east");
 ```
 
-### Territory
+Exit paths are resolved relative to the room's directory — no need for `__DIR__` or absolute paths (though both work).
 
-```c
-// Set in area_setup() — shared by all rooms in the area
-set_territory("Village of Loxos");
-```
+### Pre/Post Exit Functions
 
-Territory names are used by the task system, AGEC discovery, and player location display.
+```lpc
+// Gate movement in a specific direction
+add_pre_exit_func("north", "checkNorth");
 
-### Terrain
-
-```c
-// Sets terrain type AND automatically applies movement cost
-set_terrain("forest");    // Also calls set_movement_cost() from DICT_TERRAIN
-
-// Override movement cost manually if needed
-set_movement_cost(5);     // All directions
-set_movement_cost("north", 10);  // Specific direction
-```
-
-Common terrain types: `"forest"`, `"swamp"`, `"sand"`, `"savannah"`, `"road"`, `"mountain"`, `"water"`
-
-### Indoor/Outdoor
-
-```c
-// Outdoor room — enables weather, dynamic lighting, and ambient light
-set_outside("sable");         // Zone name for weather system
-set_outside("thrace", 1);     // Second arg = 1 disables weather messages
-
-// Indoor rooms don't call set_outside() — they're indoor by default
-// Set light manually for indoor rooms:
-set("light", 1);
-```
-
-### Resource Zone
-
-```c
-// Enable resource gathering (ore, herb, lumber, skin spawns)
-set_resource_zone("sable_everwoods");
-```
-
-### Monsters and NPCs
-
-```c
-// Spawn on reset — use event_reset() callback
-void event_reset(object prev) {
-    if(present("spawn")) return;  // Don't double-spawn
-
-    if(random(100) > 25) return;  // 25% spawn chance
-
-    object *mons = ({});
-
-    switch(random(100)) {
-        case 0..39:
-            mons += ({ add_monster(__DIR__ "mon/villager") });
-            break;
-        case 40..59:
-            mons += ({ add_monster("/d/thrace/banyee/mon/gull") });
-            break;
-        case 60..99:
-            mons += ({ add_monster(__DIR__ "mon/guard") });
-            break;
-    }
-
-    // Tag spawned monsters for cleanup detection
-    mons->add("id", ({ "spawn" }));
-}
-```
-
-### Objects/Inventory
-
-```c
-// Add objects to the room
-add_inventory("/obj/general/torch");
-add_inventory("/std/coins", "danar", 10);  // With arguments
-```
-
-### Extra Descriptions
-
-```c
-// Append to long description dynamically
-add_extra_long("warning", "A sign warns of danger ahead.");
-remove_extra_long("warning");
-
-// Append to short description
-add_extra_short("weather", " (raining)");
-```
-
-### Pre-Exit Functions
-
-```c
-// Gate or modify movement in specific directions
-set("pre_exit_func/north", "@@check_north");
-
-int check_north(object tp, string dir) {
-    if(!tp->query("has_key")) {
-        tp->tell("The gate is locked.\n");
+int checkNorth(object who) {
+    if(!who->query("has_key")) {
+        tell(who, "The gate is locked.\n");
         return 1;  // Block movement
     }
     return 0;  // Allow movement
 }
+
+// Run something after a player uses an exit
+add_post_exit_func("south", "afterSouth");
 ```
 
-### Room Flags
+### Doors
 
-```c
-set("no_attack", 1);       // No combat allowed
-set("no_teleport", 1);     // Cannot teleport here
-set("no_peek", 1);         // Cannot peek into adjacent rooms
-set("no_discovery", 1);    // No territory discovery trigger
-set("no_mount", 1);        // Cannot ride mounts
+Doors use the `class Door` system:
+
+```lpc
+#include <classes.h>
+inherit CLASS_DOOR;
+
+void setup() {
+    set_exits(([
+        "north": "porch",
+        "east" : "salon",
+    ]));
+
+    add_door(new(class Door,
+        id: "foyer door",
+        direction: "north",
+        short: "A grand door",
+        long: "A grand door that leads to the porch."
+    ));
+}
+```
+
+Door functions:
+- `add_door(door)` / `remove_door(direction)`
+- `set_door_open(dir, bool)` / `set_door_locked(dir, bool)`
+- `is_door_open(dir)` / `is_door_locked(dir)`
+- `query_door_status(dir, asNumber)` — string or `1`=open, `2`=closed, `3`=locked
+- `reset_doors()` — syncs door states with connected rooms (called automatically on reset)
+
+### Zone
+
+```lpc
+// Set in area base — shared by all rooms in the area
+set_zone(__DIR__ "olum");    // Path to the zone object
+
+// Query
+query_zone_name();
+query_zone();
+```
+
+### Terrain
+
+```lpc
+set_terrain("forest");
+```
+
+Valid terrain types: `"city"`, `"road"`, `"indoor"`, `"outdoor"`, `"forest"`, `"grass"`, `"ocean"`, `"plains"`, `"swamp"`, `"tunnels"`, `"wastes"`
+
+### Room Metadata
+
+```lpc
+// Classification
+set_room_type("shop");           // Primary type
+set_room_subtype("armourer");    // Secondary classification
+set_room_icon("shield");         // Icon for maps/displays
+
+// Display
+set_room_colour(42);             // Colour for map display
+set_room_size(({2, 2, 1}));      // Width, length, height (default {1,1,1})
+                                  // Affects movement cost calculations
+
+// Environment
+set_room_environment("underground"); // Affects gameplay mechanics
+
+// Light
+set_light(1);                    // 1 = lit, 0 = dark
+
+// GMCP
+add_custom_gmcp("special", "data");  // Custom GMCP data for clients
+set_no_gmcp_room_info(1);           // Disable GMCP room info broadcasting
+```
+
+### Movement Cost
+
+Movement cost is calculated automatically from room size:
+- Cardinal directions (north/south) use width, (east/west) use length
+- Diagonal directions average the relevant dimensions
+- Up/down use height
+- Cost = dimension * base cost (2.0)
+
+### Monster/NPC Spawning
+
+```lpc
+// Use add_reset() for respawning on room reset
+private nosave object *mobs = ({});
+
+void base_setup() {
+    add_reset((: repopulate :));
+}
+
+void repopulate() {
+    mobs -= ({ 0 });  // Remove dead/destructed
+
+    if(random_float(100.0) < 30.0) {
+        mobs += ({ add_inventory("/d/forest/mob/wolf") });
+    }
+}
+```
+
+### Room Inventory
+
+```lpc
+add_inventory("/obj/torch");     // Clone and add object to room
 ```
 
 ## Complete Room Example
 
-```c
-// /d/akanee/kiyl/loxos/shrine1.c
-inherit __DIR__ "shrine";
+```lpc
+// /d/village/square.c
+
+inherit __DIR__ "village_base";
 
 void setup() {
-    set_short("`<adb>`Gallery of Flora`<res>`");
-    set_long("This wide, outdoor space, bordered to the east and west by "
-    "tall hedges, is filled with a variety of plants and flowers. The "
-    "ground is covered in a thick layer of soft, green grass.");
+    set_short("Village Square of Olum");
+    set_long(
+    "At the village centre lies a bustling square, surrounded by ancient, "
+    "timber-framed buildings. Cobblestone paths lead to a moss-covered stone "
+    "well, the communal heart where market stalls flaunt local produce.");
 
-    set_items(([
-        "plants"  : "A wide variety of plants and flowers grow here.",
-        "flowers" : ">plants",
-        "grass"   : "The ground is covered in soft, green grass.",
-        "ground"  : ">grass",
-        "pond"    : "A large circular pond filled with water lilies.",
+    set_exits(([
+        "north": "village_path1",
+        "west" : "village_path2",
+        "east" : "village_path3",
+        "south": "village_path4",
+        "down" : "../tunnels/0,0,-1",
     ]));
 
-    add_sense("smell", "The air is filled with the sweet scent of flowers.");
-    add_sense("smell", "flowers", "The flowers smell sweet and fragrant.");
-    add_sense("sound", "Very little sound here, other than rustling leaves.");
-    add_sense("touch", "grass", "The grass is soft and cool to the touch.");
+    set_room_size(({2, 2, 1}));
 
-    set("exits", ([
-        "north" : __DIR__ "shrine2",
-        "south" : __DIR__ "path21",
+    set_items(([
+        ({ "timber-framed buildings", "buildings" }) :
+        "The buildings surrounding the square are a testament to the "
+        "village's history.",
+        ({ "moss-covered stone well", "well", "stone well" }) :
+        "At the heart of the square stands the village well, its stones "
+        "partially covered in a soft blanket of moss.",
+        ({ "market stalls", "stalls" }) :
+        "Colourful awnings and wooden counters mark the market stalls.",
     ]));
 }
 ```
 
-## Inheritance Templates
+## Complete Door Example
 
-### Area Base (shared by all rooms in a zone)
+```lpc
+// /d/village/manor/foyer.c
 
-```c
-// /d/{domain}/{zone}/{zone}.c
+#include <classes.h>
+
+inherit __DIR__ "manor";
+inherit CLASS_DOOR;
+
+void setup() {
+    set_short("The Foyer");
+    set_long("You step into a grand foyer that is both overwhelming and "
+    "extravagant. The walls are lined with gold-framed mirrors that reflect "
+    "the light from a massive crystal chandelier.");
+
+    set_exits(([
+        "north": "porch",
+        "south": "hall1",
+        "east" : "salon",
+    ]));
+
+    set_items(([
+        "mirrors" :
+        "The gold-framed mirrors reflect the light beautifully.",
+        "chandelier" :
+        "The massive crystal chandelier casts prismatic colours.",
+    ]));
+
+    add_door(new(class Door,
+        id: "foyer door",
+        direction: "north",
+        short: "A grand door",
+        long: "A grand door that leads to the porch."
+    ));
+
+    add_door(new(class Door,
+        id: "salon door",
+        direction: "east",
+        short: "A grand door",
+        long: "A grand door that leads to the salon."
+    ));
+}
+```
+
+## Area Base Template
+
+```lpc
+// /d/{area}/{area}_base.c
+
 inherit STD_ROOM;
 
-void area_setup() {
-    set_territory("TERRITORY_NAME");
-}
-```
-
-### Sub-Zone Override
-
-```c
-// /d/{domain}/{zone}/sub.c
-inherit __DIR__ "ZONE";
-
-void sub_setup() {
-    set_territory("SUB_TERRITORY");
-    set_terrain("TERRAIN_TYPE");
-    set_outside("WEATHER_ZONE");
-}
-```
-
-### Simple Room (Exits Only)
-
-```c
-inherit __DIR__ "ZONE_OR_SUB";
-
-void setup() {
-    set("exits", ([
-        "north" : __DIR__ "room2",
-        "south" : __DIR__ "room1",
-    ]));
-}
-```
-
-### Full Room
-
-```c
-inherit __DIR__ "ZONE_OR_SUB";
-
-void setup() {
-    set_short("ROOM_NAME");
-    set_long("ROOM_DESCRIPTION");
-
-    set_items(([
-        "KEY" : "DESCRIPTION",
-    ]));
-
-    add_sense("smell", "ROOM_SMELL");
-
-    set("exits", ([
-        "DIRECTION" : __DIR__ "TARGET",
-    ]));
+void pre_setup_1() {
+    set_zone(__DIR__ "zone_name");
+    set_terrain("road");
 }
 ```
 
 ## Key Files
 
-```
-std/room.c                      — Base room class
-std/room/*.c                    — Room modules (exits, terrain, territory, etc.)
-std/modules/description.c       — set_long, set_items, add_sense, add_item
-std/room/exits.c                — set_exit, set_exits, add_exit
-std/room/terrain.c              — set_terrain, set_movement_cost
-std/room/territory.c            — set_territory
-std/room/indoor_outdoor.c       — set_outside
-std/room/resource.c             — set_resource_zone
-std/room/dynamic_desc.c         — set_dynamic_room_descs
-```
+| File | Purpose |
+|---|---|
+| `std/room/room.c` | Base room class |
+| `std/room/exits.c` | Exit management (`set_exits`, `add_exit`, pre/post functions) |
+| `std/room/items.c` | Examinable details (`set_items`, `add_item`) |
+| `std/room/door.c` | Door state management |
+| `std/room/terrain.c` | Terrain types |
+| `std/room/zone.c` | Zone assignment |
+| `std/room/light.c` | Light levels |
+| `std/classes/door.c` | `class Door` definition |
+| `std/zones/zone.c` | Zone daemon |
 
 ## Common Pitfalls
 
-- **Using `set("long", ...)` instead of `set_long()`**: the function auto-formats with indentation and wrapping. Raw `set()` doesn't.
-- **Using `set("item_desc", ...)` instead of `set_items()`**: the function auto-formats descriptions. Use `set_items()` or `add_item()`.
-- **Forgetting `__DIR__`**: use `__DIR__ "filename"` for relative paths within the same directory. Avoids hardcoding full paths.
-- **Overriding `setup()` in an inherit**: use `area_setup()` for area bases, `sub_setup()` for sub-zones. Individual rooms use `setup()`.
-- **Double-spawning monsters**: always check `if(present("spawn")) return;` at the top of `event_reset()` and tag spawns with a zone-specific ID.
-- **Item forwarding**: use `">key"` to forward one item's description to another (e.g. `"flowers" : ">plants"`). The `>` prefix is the forwarding syntax.
-- **Indoor rooms**: don't call `set_outside()`. Set `set("light", 1)` for lit indoor rooms.
+- **Using raw `set()` instead of functions**: prefer `set_exits()`, `set_items()`, `set_long()` etc.
+- **Overriding `setup()` in an area base**: use `pre_setup_1()` or similar for shared area config. Individual rooms use `setup()`.
+- **Absolute exit paths**: exit paths are resolved relative to the room's directory. Use relative paths like `"village_path1"` or `"../tunnels/room"`.
+- **Missing `CLASS_DOOR` inherit**: rooms with doors must `inherit CLASS_DOOR` and `#include <classes.h>`.

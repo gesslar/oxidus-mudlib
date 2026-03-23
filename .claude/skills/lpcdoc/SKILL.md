@@ -3,11 +3,25 @@ name: lpcdoc
 description: LPCDoc comment block generation guide. Consult when writing or updating documentation headers for LPC functions, classes, and modules.
 ---
 
-# LPCDoc Generation Guide for LLMs
+# LPCDoc Generation Guide
 
 This document provides instructions for generating LPCDoc comment blocks for
 LPC source code. Follow these guidelines to create accurate, consistent, and
 useful documentation.
+
+## Updating Existing Code
+
+When working on a file, **update any existing comments and headers that do not
+match these conventions**. This includes:
+
+- File headers that use old formats (convert to the standard `@file` format)
+- Function docs that use snake_case names (update to camelCase)
+- Comments with American spelling (update to Canadian English)
+- Missing or incomplete documentation on functions you are modifying
+- Malformed or unclear comment blocks
+
+Do not go out of your way to document the entire file — but if you encounter
+non-conforming documentation while working, fix it.
 
 ## Comment Block Structure
 
@@ -35,7 +49,7 @@ Key points:
 
 For functions, document:
 
-1. Purpose/behavior of the function
+1. Purpose/behaviour of the function
 2. Each parameter
 3. Return value
 4. Any errors/exceptions
@@ -44,14 +58,14 @@ Example:
 
 ```c
 /**
- * Calculates the total damage based on attack power and defense.
+ * Calculates the total damage based on attack power and defence.
  *
  * @param {int} attack - The attack power value
- * @param {int} defense - The defense value
+ * @param {int} defence - The defence value
  * @returns {int} The calculated damage amount
  * @throws If either value is negative
  */
-int calculate_damage(int attack, int defense) {
+int calculateDamage(int attack, int defence) {
     // Implementation
 }
 ```
@@ -128,7 +142,7 @@ Provides example usage.
 
 ```c
 @example
-code_example_here
+codeExampleHere
 ```
 
 ## Types Reference
@@ -153,7 +167,7 @@ For objects of specific types:
 {"/path/to/object.c"}
 ```
 
-Example: `{"/std/player.c"}`
+Example: `{"/std/living/player.c"}`
 
 ### Arrays
 
@@ -171,7 +185,6 @@ For mappings with specific key/value types:
 
 ```c
 {([ keytype: valuetype ])}
-
 ```
 
 Example: `{([ string: int ])}` for string->int mapping
@@ -195,8 +208,6 @@ For function references with signature:
 ```
 
 Example: `{function(int, int): int}`
-
-### Special Notations
 
 ### Optional Parameters
 
@@ -257,15 +268,15 @@ Tuples are represented as arrays with the member types within:
  *
  * @param {"/std/container.c"} source - The source container
  * @param {"/std/container.c"} target - The target container
- * @param {string} item_id - The identifier of the item to transfer
+ * @param {string} itemId - The identifier of the item to transfer
  * @param {int} [count=1] - The number of items to transfer
  * @returns {int} The number of items successfully transferred
  * @throws If either container does not exist
  * @errors If the item cannot be found in the source
  * @errors If the target is full or over weight limit
  * @example
- * int moved = transfer_items(player, chest, "gold_coin", 100);
- * if (moved < 100) {
+ * int moved = transferItems(player, chest, "gold_coin", 100);
+ * if(moved < 100) {
  *     write("Could only move " + moved + " coins.");
  * }
  */
@@ -273,17 +284,19 @@ Tuples are represented as arrays with the member types within:
 
 ### Classes
 
-Classes should be documented using to describe its properties:
+Classes should be documented to describe their properties:
 
 ```c
 /**
- * Class-level details or usage notes can go here if needed.
+ * Represents a parsed GMCP message with its components.
  *
- * @property {type} propertyName - Description of this property
- * @property {type} anotherProp - Description of this property
- *
+ * @property {string} name - Full message string
+ * @property {string} package - First component of the message
+ * @property {string} module - Second component of the message
+ * @property {string} submodule - Third component, if present
+ * @property {mixed} payload - Decoded payload data
  */
-class ClassName {
+class ClassGMCP {
     // Implementation
 }
 ```
@@ -295,9 +308,7 @@ Key points for class documentation:
 - Add descriptions for both class and properties
 - Optional additional paragraph for implementation details at the top
 
-## Additional Considerations
-
-### Documentation Order
+## Documentation Order
 
 1. Visibility tags (@public, @protected, @private) should always come first
 2. Other tags should follow in this order:
@@ -310,64 +321,63 @@ Key points for class documentation:
    - @example
    - Any other tags
 
-### Line Length
+## Line Length
 
 - All documentation lines should wrap at 79 characters
 - Maintain proper indentation when wrapping
 - Use complete sentences even when wrapping
 
-### What Not to Document
+## What Not to Document
 
 Unless specifically instructed, do not document:
 
 1. Forward declarations
 2. Standard setup functions:
-   - void setup()
-   - void base_setup()
-   - void area_setup()
-   - void sub_setup()
-   - void pre_setup()
-   - void post_setup()
-3. Preprocessor directives (#include, #define, etc)
-4. inherit statements
+   - `void setup()`
+   - `void mudlib_setup()`
+   - `void base_setup()`
+   - `void pre_setup_0()` through `void pre_setup_4()`
+   - `void post_setup_0()` through `void post_setup_4()`
+3. Preprocessor directives (#include, #define, etc.)
+4. Inherit statements
 5. Global variables (unless specifically required)
 
-### Additional Information
+## Header Documentation
 
-- Overridden lfuns may be documented with an @override tag
-- Driver applies may use the tag @apply before its params
-- Nested data structures should document the expected structure as precisely as
-  possible. For complex structures, use nested type annotations
-- If you see assert() or assert_arg() these are @errors, and not @throws
-
-### Header Documentation
-
-Header documentation should be converted to this format:
+File headers should use this format:
 
 ```c
 /**
-* @file /d/clan/abode/warroom_inherit.c
-*
-* Description of this file and its purpose.
-*
-* @created YYYY-MM-DD - Name
-* @last_modified YYYY-MM-DD - Name
-*
-* @history
-* 2025-03-02 - Name - Created
-*/
+ * @file /std/living/boon.c
+ * @description Buffs/debuffs and other boons for living objects.
+ *
+ * @created 2024-07-30 - Gesslar
+ * @last_modified 2024-07-30 - Gesslar
+ *
+ * @history
+ * 2024-07-30 - Gesslar - Created
+ */
 ```
 
-- Any existing comments that do not look like they fit the model for comment
-  blocks should be updated and clarified. Any existing comments that do follow
-  the current model but maybe could be clarified, should be made to.
-- If you see assert() or assert_arg() these are @errors, and not @throws.
+When encountering file headers that do not follow this format, update them.
+Preserve the existing information (author, dates, history) but restructure
+into the standard format. Clarify any vague or unclear descriptions.
+
+## Additional Notes
+
+- Overridden lfuns may be documented with an @override tag
+- Driver applies may use the tag @apply before its params
+- Nested data structures should document the expected structure as precisely
+  as possible. For complex structures, use nested type annotations
+- If you see assert() or assert_arg() these are @errors, and not @throws
+- Use Canadian English spelling in all documentation (colour, behaviour,
+  defence, initialise, etc.)
 
 Otherwise, if unsure, ask.
 
-### Imperative Information
+## Imperative Information
 
-Do not touch the code. For documentation purposes, we only need comments. There
-will be no reason to opine on things like parens placement, semicolon changes,
-etc., by updating the code sections of a file. Restrict activities to only
-documentation.
+Do not touch the code. For documentation purposes, we only need comments.
+There will be no reason to opine on things like parens placement, semicolon
+changes, etc., by updating the code sections of a file. Restrict activities
+to only documentation.

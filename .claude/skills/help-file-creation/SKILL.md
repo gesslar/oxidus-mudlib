@@ -1,168 +1,151 @@
 ---
 name: help-file-creation
-description: Create new help files for Threshold RPG using the autohelp .help format. Covers file structure, markup syntax, categories, cross-referencing, and testing.
+description: Create new help files for Oxidus. Covers file location, plain text format, search paths, command-based help via query_help(), and the autodoc system.
 ---
 
 # Help File Creation
 
-You are creating help files for Threshold RPG's autohelp system. Help files use a custom `.help` format processed by the autohelp daemon (`adm/daemons/autohelp.c`).
+You are creating help files for Oxidus. The help system has two sources: static help files in the `doc/` directory and dynamic help from command objects via `query_help()`.
 
-## File Location and Naming
+## Static Help Files
 
-- Help files live in `doc/help/` with the `.help` extension.
-- Filenames use underscores for multi-word topics: `skill_ranks.help`
-- Underscores convert to spaces for the topic name automatically (so `skill_ranks.help` becomes topic "skill ranks").
-- The topic name is auto-generated from the filename — there is no `topic` field.
+### Location and Naming
 
-## File Structure
+Help files are plain text files stored without extension in `doc/` subdirectories:
 
-Help files use `###` as section delimiters:
-
-```
-###cat
-<category>
-###alt
-({alternate,names,for,searching})
-###related
-({related,topic,names})
-###wiki
-<optional wiki URL>
-###text
-<main help content with markup>
-###wizard
-<admin-only content, only shown to wizards>
-```
-
-**Not all sections are required.** Only include what's needed. At minimum, a help file needs `###cat` and `###text`.
-
-### Section Reference
-
-| Section | Required | Format | Purpose |
-|---|---|---|---|
-| `###cat` | Yes | Single word/phrase | Category for grouping (see categories below) |
-| `###alt` | No | `({name1,name2,name3})` | Alternate names/typos players might search for |
-| `###related` | No | `({topic1,topic2})` | Cross-references to other help topics |
-| `###wiki` | No | URL | Link to wiki page |
-| `###text` | Yes | Free text with markup | Main content shown to all players |
-| `###wizard` | No | Free text with markup | Additional content only shown to admin |
-
-### Array Format
-
-Arrays use LPC-style syntax: `({item1,item2,item3})` — no spaces after commas.
-
-## Text Markup
-
-| Markup | Color/Style | Use For |
+| Directory | Audience | Searched When |
 |---|---|---|
-| `{{text}}` | Cyan/italic (z06/it1) | Commands, keywords, things the player types |
-| `[[text]]` | Pale teal (cee) | Emphasis, section headers within text |
-| `((text))` | Dark cherry red (eaa) | Important warnings or notes |
-| `` `<code>` `` | Standard color codes | Any color from the 256-color system |
-| `` `<res>` `` | Reset | Reset formatting back to default |
+| `doc/general/` | All players | Always |
+| `doc/game/` | All players | Always |
+| `doc/wiz/` | Developers | `devp(tp)` is true |
+| `doc/driver/efun/` | Developers | `devp(tp)` is true |
+| `doc/driver/apply/` | Developers | `devp(tp)` is true |
+| `doc/admin/` | Admins | `adminp(tp)` is true |
 
-### Special Line Syntax
+- Filenames are the topic name exactly as the player types it: `help preferences` reads `doc/general/preferences`
+- Multi-word topics use spaces in the filename: `environmental variables`
+- No file extension
 
-- Lines starting with `!` call external functions: `!file:function:args`
-- Standard color codes like `` `<faa>` `` work throughout the text body.
+### Format
 
-## Common Categories
-
-| Category | Use For |
-|---|---|
-| `command` | Player commands (task, look, say, etc.) |
-| `general` | General game information |
-| `newbie` | New player content |
-| `event` | Game events |
-| `accessibility` | Accessibility features |
-
-## Cross-Referencing Rules
-
-- **Bidirectional links are mandatory.** When adding topic B to file A's `###related`, you must also add topic A to file B's `###related`.
-- Include common misspellings or shorthand in `###alt` (e.g., `({transmog})` for transmogrification).
-- Check existing related topics to ensure consistency.
-
-## Examples
-
-### Command Help File
+Help files are **plain text**. No structured markup system — just write readable content.
 
 ```
-###cat
-command
-###alt
-({tasks})
-###related
-({overachieving,lodges})
-###wiki
-https://wiki.thresholdrpg.com/w/Tasks
-###text
-[[At a taskmaster:]]
-{{task list}} - See if this NPC has any tasks available to you.
-{{task info}} <{{id}}> - Ask this NPC for more information about a task.
-{{task accept}} <{{id}}> - Accept a named task from this NPC.
-{{task accept all}} - Accept all available tasks
+The following preferences are available to be configured via the 'set' command:
 
-[[Anywhere:]]
-{{task}} - Check what tasks you are presently on.
-{{task drop}} <{{id}}> - Abandon a task.
+auto_tune - what channels, if any, to auto-tune upon login
+Default: all
 
-((Note:)) Tasks are lost on death.
+colour - whether to use colour in the game.
+Default: off
+Options: on/off
 ```
 
-### General Help File
+Colour codes using the `{{hex}}` syntax can be used in help files (see the colour-coding skill).
 
-```
-###cat
-general
-###related
-({task,overachieving,lodges})
-###wiki
-https://wiki.thresholdrpg.com/w/Tasks
-###text
-Tasks are assigned by NPCs to players. They can range from the incredibly simple
-to the more complex.
+### How Help Search Works
 
-[[Overachieving]]
+The help command (`cmds/std/help.c`) searches in this order:
 
-Some tasks allow progress beyond 100%, up to 200%, at a reduced rate.
-```
+1. **Command path** — checks if `<verb>.c` exists in the player's PATH and has `query_help()`
+2. **Help directories** — searches `HELP_PATH` (`doc/general/`, `doc/game/`) for a matching file
+3. **Dev directories** — if player is a developer, also checks `doc/wiz/`, `doc/driver/efun/`, `doc/driver/apply/`
+4. **Admin directory** — if player is admin, also checks `doc/admin/`
 
-### Help File with Wizard Section
+If nothing is found, the failed search is logged to `log/help.log`.
 
-```
-###cat
-command
-###related
-({combat,weapons})
-###text
-{{attack}} <{{target}}> - Attack a target in combat.
+Output is wrapped in a decorative border and paged to the player.
 
-This is the basic combat command available to all players.
-###wizard
-Admin notes: Attack formula defined in adm/daemons/combat.c
-Damage scaling uses query("level") * base_multiplier.
+## Command-Based Help
+
+Commands provide help via two mechanisms:
+
+### query_help() Function
+
+```lpc
+string query_help(object tp) {
+    return
+"SYNTAX: force <living> to <cmd>\n\n"
+"Force a living object to execute a command.";
+}
 ```
 
-## Testing
+Or using `@text` heredoc syntax:
 
-After creating a help file:
+```lpc
+string query_help(object tp) {
+    return @text
+Syntax: do cmd,cmd,cmd,...
 
-1. In-game, run `help rebuild` to reload all help files.
-2. Test with `help <topic>` to verify content displays correctly.
-3. Test alternate names with `help <alt>` to verify they resolve.
-4. Check related topics link back bidirectionally.
+Executes a list of commands separated by commas.
+text;
+}
+```
 
-## Validation Checklist
+### help_text / usage_text Variables
 
-Before finalizing a help file:
+Set in `setup()` — available on commands inheriting `STD_CMD`:
 
-- Filename uses underscores, has `.help` extension
-- `###cat` is present with a valid category
-- `###text` is present with content
-- Commands and keywords are wrapped in `{{}}` markup
-- Section headers within text use `[[]]` markup
-- Important warnings use `(())` markup
-- `###related` topics exist as actual help files
-- Related links are bidirectional — every file you reference also references you back
-- `###alt` includes common abbreviations, misspellings, or shorthand
-- Array syntax is correct: `({item1,item2})` with no spaces after commas
-- No trailing whitespace or blank lines at end of file
+```lpc
+void setup() {
+    usage_text =
+"drop <object>\n"
+"drop all\n"
+"drop all <object>\n";
+    help_text =
+"This command will allow you to drop an object you are currently holding onto "
+"the ground.\n\nSee also: get, put\n";
+}
+```
+
+Command-based help takes priority over file-based help (the command path is searched first).
+
+## Autodoc System
+
+The autodoc daemon (`adm/daemons/autodoc.c`) parses JSDoc-style comments from LPC source files and generates documentation automatically.
+
+Supported tags: `@description`, `@def`, `@param`, `@returns`, `@example`
+
+Run via the `autodoc scan` wizard command.
+
+## Creating a New Help File
+
+1. Choose the appropriate directory based on audience
+2. Create a plain text file named exactly as the topic
+3. Write clear, readable content
+4. Use "See also:" at the end to reference related topics
+5. Test in-game with `help <topic>`
+
+### Example: Player Help File
+
+File: `doc/general/combat`
+```
+Combat in the game is initiated by using the 'attack' command on a target.
+
+Once in combat, your character will automatically attack each round. You can
+use abilities and spells during combat for additional effects.
+
+Useful commands:
+  attack <target>  - Begin combat with a target
+  flee             - Attempt to escape combat
+  consider <target> - Evaluate a target's strength
+
+See also: commands
+```
+
+### Example: Developer Help File
+
+File: `doc/wiz/virtual_objects`
+```
+Virtual objects are data-driven objects loaded from definition files rather
+than compiled LPC source.
+
+The virtual object system uses compile servers that intercept file loads
+and generate objects from data files (e.g., .lpml files).
+
+Key files:
+  std/virtual/server.c     - Base virtual compile server
+  adm/daemons/virtual.c    - Virtual object daemon
+
+See also: getting_started
+```
