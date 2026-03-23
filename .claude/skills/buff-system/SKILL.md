@@ -30,7 +30,7 @@ boon = ([
 
 - **class** — the category of bonus (e.g., `"attribute"`, `"vital"`, `"skill"`)
 - **type** — the specific thing being modified (e.g., `"strength"`, `"max_hp"`, `"attack"`)
-- **tag** — unique identifier generated via `time_ns()`
+- **tag** — unique identifier generated via `time_ns()` (with collision avoidance)
 
 ## API
 
@@ -67,9 +67,29 @@ mapping all_curses = tp->query_curse_data();
 
 `init_boon()` is called during living object setup to ensure the mappings exist.
 
+### Removing
+
+```lpc
+// Remove a specific boon by tag (returned from boon())
+int success = tp->remove_boon("attribute", "strength", tag);
+
+// Remove a specific curse by tag
+int success = tp->remove_curse("attribute", "dexterity", tag);
+
+// Remove all boons matching a name for a class/type
+int count = tp->remove_boon_by_name(
+  "attribute", "constitution", "Iron Will"
+);
+
+// Remove all curses matching a name for a class/type
+int count = tp->remove_curse_by_name(
+  "attribute", "dexterity", "Chill"
+);
+```
+
 ### Expiration
 
-`process_boon()` runs on every heartbeat (both players and NPCs). It removes expired entries and sends a wear-off message via `tell()`: `"Your <name> has worn off.\n"`
+`process_boon()` runs on every heartbeat (both players and NPCs). It collects expired entries, removes them, prunes empty inner mappings, and sends a wear-off message via `tell()`: `"Your <name> has worn off.\n"`
 
 ## Currently Used Classes
 
@@ -95,5 +115,5 @@ The `boon` and `curse` mappings are `private nomask` but **not** `nosave`, so th
 ## Notes
 
 - Both players (`std/living/player.c`) and NPCs (`std/living/npc.c`) process boons on heartbeat
-- There is currently no mechanism to remove a specific boon/curse by tag or name before expiration
+- Boons/curses can be removed early by tag (`remove_boon`/`remove_curse`) or by name (`remove_boon_by_name`/`remove_curse_by_name`)
 - There are no gear-based buffs, room buffs, or special category buffs — all effects go through `boon()` / `curse()`
