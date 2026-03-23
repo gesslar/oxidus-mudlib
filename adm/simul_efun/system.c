@@ -127,12 +127,12 @@ mixed mudConfig(string str) {
 
 /**
  * Returns the directory where log files are stored as configured
- * in the MUD configuration.
+ * by the driver runtime configuration.
  *
  * @returns {string} The log directory.
  */
 string log_dir() {
-  return mudConfig("LOG_DIR");
+  return get_config(__LOG_DIR__);
 }
 
 /**

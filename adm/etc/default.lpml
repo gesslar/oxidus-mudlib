@@ -3,7 +3,6 @@
   LIB_NAME: "gLPU",
   OPEN_STATUS: "Mudlib Development",
   ADMIN_EMAIL: "gesslar@gmail.com",
-  LOG_DIR: "/log/",
   LOG_CATCH: "/log/catch",
   LOG_RUNTIME: "/log/runtime",
   TMP_DIR: "/tmp/",
