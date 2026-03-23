@@ -11,7 +11,7 @@
 
 inherit STD_CMD;
 
-mixed main(object _tp, string _args) {
+mixed main(object tp, string arg) {
   mapping config = CONFIG_D->get_all_config();
   string temp = pretty_map(config);
 

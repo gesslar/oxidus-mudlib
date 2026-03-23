@@ -14,29 +14,32 @@
 inherit STD_CMD;
 
 mixed main(object tp, string str) {
-    string cmd, arg;
-    mixed result;
+  string cmd, arg;
+  mixed result;
 
-    if(!str)
-        return query_help(tp);
+  if(!str) {
+    return query_help(tp);
+  }
 
-    if(sscanf(str, "%s %s", cmd, arg) != 2)
-        cmd = str;
+  if(sscanf(str, "%s %s", cmd, arg) != 2) {
+    cmd = str;
+  }
 
-    switch(cmd) {
-        case "scan":
-            result = AUTODOC_D->autodoc_scan();
-            if(stringp(result))
-                return _error(result);
-            else
-                return 1;
-        default:
-            return _error("Invalid command to autodoc.");
-    }
+  switch(cmd) {
+    case "scan":
+      result = AUTODOC_D->autodoc_scan();
+      if(stringp(result)) {
+        return _error(result);
+      } else {
+        return 1;
+      }
+    default:
+      return _error("Invalid command to autodoc.");
+  }
 }
 
 string query_help(object tp) {
-    return
+  return
 "Syntax: autodoc scan\n\n"
 "Scans the mudlib for all objects in the {{bl1}}AUTODOC_SOURCE_DIRS{{bl0}} mud_config "
 "and generates documentation for them.\n"

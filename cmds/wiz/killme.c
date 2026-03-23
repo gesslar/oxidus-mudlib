@@ -24,13 +24,15 @@ mixed main(object caller, string args) {
   object *npcs;
 
   npcs = present_npcs(environment(caller));
-  foreach(object npc in npcs)
+  foreach(object npc in npcs) {
     if(npc->is_npc() && !npc->query_invis()) {
-      if(npc->start_attack(caller))
+      if(npc->start_attack(caller)) {
         caller->targetted_action("$N $vcommand $t to attack $n.", npc);
-      else
+      } else {
         tell(caller, sprintf("You cannot command %s to attack you.\n", npc->query_name()));
+      }
     }
+  }
 
   return 1;
 }

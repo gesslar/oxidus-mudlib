@@ -12,19 +12,20 @@
 inherit STD_CMD;
 
 mixed main(object caller, string str) {
-    object room = environment(caller);
+  object room = environment(caller);
 
-    if(!str)
-        return "Syntax: echo <argument>";
+  if(!str) {
+    return "Syntax: echo <argument>";
+  }
 
-    tell(caller, "You echoed to the room: " + str);
-    tell_down(room, str, 0, caller);
+  tell(caller, "You echoed to the room: " + str);
+  tell_down(room, str, 0, caller);
 
-    return 1;
+  return 1;
 }
 
 string help(object caller) {
-    return
+  return
 "SYNTAX: echo <string>\n\n"
 "This command allows you to echo a string of text to the room you are "
 "currently in. Other individuals in the room will see the argument that you "
