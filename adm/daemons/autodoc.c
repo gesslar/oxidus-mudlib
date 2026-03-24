@@ -17,12 +17,18 @@ inherit STD_DAEMON;
 inherit M_LOG;
 
 // Function prototypes
-private nomask int check_running();
+public nomask int check_running();
 public nomask mixed autodoc_scan();
+private nomask void check_dir();
+private nomask void check_file();
 private nomask void finish_scan();
 private nomask void parse_file(string file);
 private nomask mixed *consolidate_function(string function_name, mapping func);
+private nomask string generate_doc_content(string function_name, mapping func);
 private nomask string generate_function_markdown(string function_name, mapping func);
+private nomask string generate_index_markdown(string source_file, mapping funcs);
+private nomask void generate_mud_docs();
+private nomask void generate_wiki();
 
 // Variables
 private nosave nomask float dir_delay = 0.02;
@@ -44,7 +50,7 @@ private nosave nomask string jsdoc_function_regex,
                              blank_line_regex,
                              function_detect_regex,
                              jsdoc_array_regex,
-                             * multi_line_tags;
+                             *multi_line_tags;
 
 private nosave nomask mapping docs = ([]);
 private nosave int ci = false;
@@ -66,11 +72,10 @@ void setup() {
   continue_regex = "^\\s\\*\\s+(.*)$";
 
   function_detect_regex =
-  "^(?:public|protected|private)?\\s*"
-  "(?:nomask|varargs)?\\s*(?:nomask|varargs)?\\s*"
-  "(?:int|float|void|string|object|mixed|mapping|array|buffer|function)\\s*"
-  "\\*?\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\("
-;
+    "^(?:public|protected|private)?\\s*"
+    "(?:nomask|varargs)?\\s*(?:nomask|varargs)?\\s*"
+    "(?:int|float|void|string|object|mixed|mapping|array|buffer|function)\\s*"
+    "\\*?\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(";
 }
 
 /**
@@ -91,12 +96,14 @@ void setup() {
  *                    if the scan is already running.
  */
 public nomask mixed autodoc_scan() {
-  if(check_running() == true)
-      return "Autodoc is already running.";
+  if(check_running() == true) {
+    return "Autodoc is already running.";
+  }
 
   _log(1, "Starting autodoc scan");
-  if(this_body() && devp(this_body()))
-      _ok("Starting autodoc scan");
+  if(this_body() && devp(this_body())) {
+    _ok("Starting autodoc scan");
+  }
 
   writing = false;
   doc_root = mudConfig("AUTODOC_ROOT");
@@ -108,7 +115,7 @@ public nomask mixed autodoc_scan() {
   total_files_scanned = 0;
 
   RECURSE_RMDIR_D->recurse_rmdir(doc_root);
-  // RECURD_RMDIR_D->recurse_rmdir(wiki_doc_root);
+  // RECURSE_RMDIR_D->recurse_rmdir(wiki_doc_root);
 
   docs = ([]);
   files_to_check = ({});
@@ -134,12 +141,13 @@ private nomask void check_dir() {
 
   dirs_to_check = dirs_to_check[1..];
 
-  if(sizeof(dirs_to_check))
+  if(sizeof(dirs_to_check)) {
     // Keep checking dirs
     call_out_walltime("check_dir", dir_delay);
-  else
+  } else {
     // No more dirs, let's start checking files
     call_out_walltime("check_file", file_delay);
+  }
 }
 
 private nomask void check_file() {
@@ -151,13 +159,15 @@ private nomask void check_file() {
   files_to_check = files_to_check[1..];
 
   err = catch(parse_file(file));
-  if(err)
+  if(err) {
     log_file("system/autodoc", "Error parsing file: " + err + "\n");
-  else
+  } else {
     total_files_scanned += 1;
+  }
 
-  if(!sizeof(files_to_check))
+  if(!sizeof(files_to_check)) {
     return finish_scan();
+  }
 
   call_out_walltime("check_file", file_delay);
 }
@@ -169,8 +179,9 @@ private nomask void parse_file(string file) {
   string doc_type, function_tag, line;
   int j;
 
-  if(!file_exists(file))
+  if(!file_exists(file)) {
     return;
+  }
 
   lines = explode(read_file(file), "\n");
 
@@ -203,8 +214,9 @@ private nomask void parse_file(string file) {
         current_tag = null;
         tag_data = null;
         curr = ([]); // Reset output buffer for new comment block
-      } else
+      } else {
         continue;
+      }
     }
 
     // Process lines within the JSDoc comment block
@@ -215,11 +227,12 @@ private nomask void parse_file(string file) {
       if(new_tag_found == 1) {
         curr = curr || ([]);
         tag_data = tag_data || ({});
-        if(!of(current_tag, curr))
+        if(!of(current_tag, curr)) {
           curr[current_tag] = ({ tag_data });
-        else
-          // Append the new tag data to the existing tag data (if any
+        } else {
+          // Append the new tag data to the existing tag data (if any)
           curr[current_tag] += ({ tag_data });
+        }
 
         new_tag_found = 0;
         current_tag = null;
@@ -234,13 +247,15 @@ private nomask void parse_file(string file) {
         // Record the last tag data
         if(current_tag != null) {
           curr = curr || ([]);
-          if(nullp(tag_data))
+          if(nullp(tag_data)) {
             tag_data = ({}); // Ensure we have an array to append to
-          if(!of(current_tag, curr))
+          }
+          if(!of(current_tag, curr)) {
             curr[current_tag] = ({ tag_data });
-          else
-            // Append the new tag data to the existing tag data (if any
+          } else {
+            // Append the new tag data to the existing tag data (if any)
             curr[current_tag] += ({ tag_data });
+          }
         }
 
         /* ********************************************************* */
@@ -253,6 +268,7 @@ private nomask void parse_file(string file) {
         /* ********************************************************* */
         if(!of("def", curr)) {
           string function_def;
+
           // We need to find the function definition
           // We can start looking for the function definition
           // after the current line
@@ -280,12 +296,14 @@ private nomask void parse_file(string file) {
             continue;
           }
         }
+
         /* ********************************************************* */
         /* NOW THAT WE HAVE THE FUNCTION DEFINITION, WE CAN ADD THE  */
         /* DOCUMENTATION TO THE APPROPRIATE LOCATION IN THE docs([]) */
         /* ********************************************************* */
-        if(!of(doc_type, docs))
+        if(!of(doc_type, docs)) {
           docs[doc_type] = ([]);
+        }
 
         curr["source_file"] = file;
         docs[doc_type][function_tag] = curr;
@@ -299,87 +317,91 @@ private nomask void parse_file(string file) {
         // Check for the first tag to determine the document type and
         if(!pcre_match(line, tag_regex) &&
             pcre_match(line, jsdoc_function_regex)) {
-            matches = pcre_extract(line, jsdoc_function_regex);
-            if(sizeof(matches) > 0) {
-              /* ************************************************* */
-              /* DOC_TYPE WILL BE THE CURRENT CATEGORY UNDER       */
-              /* docs([]) UNLESS IT'S IN THE IGNORE LIST, THEN,    */
-              /* NEVERMIND.                                        */
-              /* ************************************************* */
-              if(of(matches[0], jsdoc_function_ignore_tags)) {
-                in_jsdoc = 0;
-                continue;
-              }
-
-              doc_type = matches[0];
-              function_tag = matches[1];
-              // we can continue now and parse the rest in the next
-              // iteration
+          matches = pcre_extract(line, jsdoc_function_regex);
+          if(sizeof(matches) > 0) {
+            /* ************************************************* */
+            /* DOC_TYPE WILL BE THE CURRENT CATEGORY UNDER       */
+            /* docs([]) UNLESS IT'S IN THE IGNORE LIST, THEN,    */
+            /* NEVERMIND.                                        */
+            /* ************************************************* */
+            if(of(matches[0], jsdoc_function_ignore_tags)) {
+              in_jsdoc = 0;
               continue;
             }
+
+            doc_type = matches[0];
+            function_tag = matches[1];
+            // we can continue now and parse the rest in the next
+            // iteration
+            continue;
           }
+        }
 
-          /* ********************************************************* */
-          /* THIS IS THE MIDDLE OF THE JSDOC COMMENT BLOCK             */
-          /* WE ARE NOW LOOKING FOR A TAG                              */
-          /* Format: @tag_name tag_info                                */
-          /* WHERE tag_name IS ONE OF THE TAGS IN tags({})             */
-          /* ********************************************************* */
-          if(stringp(function_tag)) {
-            // If no current tag is found, try to match a tag
-            if(current_tag == null) {
-              if(pcre_match(line, tag_regex)) {
-                matches = pcre_extract(line, tag_regex);
-                if(sizeof(matches) > 0) {
-                  current_tag = matches[0];
-                  tag_data = ({ matches[1] });
-                }
+        /* ********************************************************* */
+        /* THIS IS THE MIDDLE OF THE JSDOC COMMENT BLOCK             */
+        /* WE ARE NOW LOOKING FOR A TAG                              */
+        /* Format: @tag_name tag_info                                */
+        /* WHERE tag_name IS ONE OF THE TAGS IN tags({})             */
+        /* ********************************************************* */
+        if(stringp(function_tag)) {
+          // If no current tag is found, try to match a tag
+          if(current_tag == null) {
+            if(pcre_match(line, tag_regex)) {
+              matches = pcre_extract(line, tag_regex);
+              if(sizeof(matches) > 0) {
+                current_tag = matches[0];
+                tag_data = ({ matches[1] });
               }
-            /* ***************************************************** */
-            /* WE HAVE A TAG! NOW WE NEED TO GET THE INFO PERTAINING */
-            /* TO THAT TAG.                                          */
-            /* ***************************************************** */
-            } else {
-              // It looks like we have encountered a new tag.
-              // If so, we need to reset so we can get the new tag's
-              // information.
-              if(pcre_match(line, "^\\s*\\*\\s+@") == true) {
-                // Reset the current tag and tag data
-                new_tag_found = 1;
-                num--;
-                continue;
-              }
+            }
+          /* ***************************************************** */
+          /* WE HAVE A TAG! NOW WE NEED TO GET THE INFO PERTAINING */
+          /* TO THAT TAG.                                          */
+          /* ***************************************************** */
+          } else {
+            // It looks like we have encountered a new tag.
+            // If so, we need to reset so we can get the new tag's
+            // information.
+            if(pcre_match(line, "^\\s*\\*\\s+@") == true) {
+              // Reset the current tag and tag data
+              new_tag_found = 1;
+              num--;
+              continue;
+            }
 
-              // If we have a blank line, we can reset the current
-              // tag, we may have unexpectedly reached the end of the
-              // JSDoc comment block.
-              if(pcre_match(line, "^\\s*$") == true) {
-                current_tag = null;
-                tag_data = null;
-                continue;
-              }
+            // If we have a blank line, we can reset the current
+            // tag, we may have unexpectedly reached the end of the
+            // JSDoc comment block.
+            if(pcre_match(line, "^\\s*$") == true) {
+              current_tag = null;
+              tag_data = null;
+              continue;
+            }
 
-              // If we haven't reached a new tag and we haven't
-              // reached the end of the JSDoc comment block, we can
-              // assume we are still parsing additional information
-              // for the current tag. We can append the current line
-              // to the current tag's information.
-              if(pcre_match(rtrim(line), continue_regex)) {
-                matches = pcre_extract(line, continue_regex);
-                if(sizeof(matches) > 0)
-                  tag_data += ({ matches[0] });
-              } else if(of(current_tag, multi_line_tags)) {
-                if(pcre_match(rtrim(line), blank_line_regex))
-                  tag_data += ({ "" });
-                else
-                  tag_data += ({ trim(line) });
-              } else
+            // If we haven't reached a new tag and we haven't
+            // reached the end of the JSDoc comment block, we can
+            // assume we are still parsing additional information
+            // for the current tag. We can append the current line
+            // to the current tag's information.
+            if(pcre_match(rtrim(line), continue_regex)) {
+              matches = pcre_extract(line, continue_regex);
+              if(sizeof(matches) > 0) {
+                tag_data += ({ matches[0] });
+              }
+            } else if(of(current_tag, multi_line_tags)) {
+              if(pcre_match(rtrim(line), blank_line_regex)) {
+                tag_data += ({ "" });
+              } else {
                 tag_data += ({ trim(line) });
+              }
+            } else {
+              tag_data += ({ trim(line) });
             }
           }
         }
-    } else
+      }
+    } else {
       continue;
+    }
   }
 }
 
@@ -395,8 +417,9 @@ private nomask mixed *consolidate_function(string function_name, mapping func) {
   err = catch {
     // We need a description and a function definition to continue,
     // otherwise we can skip this function.
-    if(!of("def", func) || !of("description", func))
+    if(!of("def", func) || !of("description", func)) {
       return result;
+    }
 
     // Add the function name [0]
     result[0] = function_name;
@@ -421,11 +444,13 @@ private nomask mixed *consolidate_function(string function_name, mapping func) {
 
         line = implode(currs[sz], " ");
         if(sscanf(line, "{%s} %s - %s", type, var, desc) == 3) {
-          while(pcre_match(type, jsdoc_array_regex))
+          while(pcre_match(type, jsdoc_array_regex)) {
             type = pcre_replace(type, jsdoc_array_regex, ({ "*" }));
+          }
           result[2][sz] = sprintf("* `%s %s` - %s", type, var, desc);
-        } else
+        } else {
           result[2][sz] = line;
+        }
       }
     }
 
@@ -438,11 +463,13 @@ private nomask mixed *consolidate_function(string function_name, mapping func) {
       line = implode(curr, " ");
 
       if(sizeof(parts = pcre_extract(line, "^\\{(.*)\\} - (.*)$")) == 2) {
-        if(pcre_match(parts[0], jsdoc_array_regex))
+        if(pcre_match(parts[0], jsdoc_array_regex)) {
           parts[0] = pcre_replace(parts[0], jsdoc_array_regex, ({ "*" }));
+        }
         result[3] = sprintf("`%s` - %s", parts[0], parts[1]);
-      } else
-      result[3] = line;
+      } else {
+        result[3] = line;
+      }
     }
 
     // Add the description
@@ -454,7 +481,7 @@ private nomask mixed *consolidate_function(string function_name, mapping func) {
 
   if(err) {
     log_file("system/autodoc", "Error consolidating function: " + err + "\n");
-    return ({ });
+    return ({});
   }
 
   return result;
@@ -472,8 +499,9 @@ private nomask string generate_doc_content(string function_name, mapping func) {
     return null;
   }
 
-  if(!sizeof(parts))
+  if(!sizeof(parts)) {
     return null;
+  }
 
   // ({ function_name, *synopsis, *params, returns, description, *example })
 
@@ -488,8 +516,9 @@ private nomask string generate_doc_content(string function_name, mapping func) {
   }
 
   // Add the returns
-  if(sizeof(parts[3]))
+  if(sizeof(parts[3])) {
     out += "\nReturns\n\n" + parts[3] + "\n";
+  }
 
   // Add the description
   out += "\n" + parts[4] + "\n";
@@ -508,7 +537,6 @@ private nomask void generate_mud_docs() {
     string *function_names, function_name;
     string dest_dir;
     mapping funcs;
-    string *source_files, source_file;
 
     funcs = docs[function_type];
     function_names = sort_array(keys(funcs), 1);
@@ -522,8 +550,9 @@ private nomask void generate_mud_docs() {
       func = funcs[function_name];
       doc_content = generate_doc_content(function_name, func);
 
-      if(!doc_content)
+      if(!doc_content) {
         continue;
+      }
 
       assure_file(dest_file);
       write_file(dest_file, doc_content, 1);
@@ -543,8 +572,9 @@ private nomask string generate_function_markdown(string function_name, mapping f
     return null;
   }
 
-  if(!sizeof(parts))
+  if(!sizeof(parts)) {
     return null;
+  }
 
   // ({ function_name, *synopsis, *params, returns, description, *example })
 
@@ -610,8 +640,9 @@ private nomask string generate_index_markdown(string source_file, mapping funcs)
     return out;
   };
 
-  if(err)
+  if(err) {
     log_file("system/autodoc", "Error generating markdown: " + err + "\n");
+  }
 
   return null;
 }
@@ -626,7 +657,6 @@ private nomask void generate_wiki() {
   foreach(function_type in function_types) {
     string *function_names;
     string index_file;
-    string current_source_file;
     string dest_dir;
     mapping funcs;
     string *source_files, source_file;
@@ -649,10 +679,11 @@ private nomask void generate_wiki() {
     source_files = sort_array(source_files, 1);
 
     index_file = append(wiki_doc_root, function_type + "/index.md");
-    if(file_exists(index_file))
+    if(file_exists(index_file)) {
       rm(index_file);
-    else
+    } else {
       assure_file(index_file);
+    }
 
     foreach(source_file in source_files) {
       string *parts, source_file_name;
@@ -700,7 +731,7 @@ private nomask void generate_wiki() {
       doc_content = "";
     }
 
-    assure_file(append(wiki_doc_root, function_type+".md"));
+    assure_file(append(wiki_doc_root, function_type + ".md"));
     write_file(index_file, index_content, 1);
     index_content = "";
   }
@@ -712,8 +743,9 @@ private nomask void finish_scan() {
   float end_time;
   string time_log, file_log, dir_log;
 
-  if(check_running() == true)
+  if(check_running() == true) {
     return;
+  }
 
   end_time = time_frac();
 

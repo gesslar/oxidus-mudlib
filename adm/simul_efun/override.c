@@ -11,6 +11,17 @@
 
 //Last edited on December 21st, 2005 by Tacitus
 
+/**
+ * @efun_override exec
+ *
+ * Security-wrapped override of the exec() efun. Only permits execution
+ * transfers when called by an admin, a ghost object, a user object,
+ * the su command, or a linked object.
+ *
+ * @param {object} to - The object to transfer execution to
+ * @param {object} from - The object to transfer execution from
+ * @returns {int} 1 on success, 0 if the caller lacks permission
+ */
 int exec(object to, object from) {
   if(is_member(query_privs(previous_object()), "admin") ||
      base_name(previous_object()) == STD_GHOST ||
@@ -22,6 +33,15 @@ int exec(object to, object from) {
     return 0;
 }
 
+/**
+ * @efun_override shutdown
+ *
+ * Security-wrapped override of the shutdown() efun. Only the master
+ * object or SHUTDOWN_D may invoke it. Emits SIG_SYS_SHUTDOWN and
+ * persists all objects before shutting down the driver.
+ *
+ * @param {int} how - The shutdown mode passed to the driver
+ */
 void shutdown(int how) {
   object po = previous_object();
 
@@ -33,10 +53,17 @@ void shutdown(int how) {
   efun::shutdown(how);
 }
 
-object shutdown_d() {
-  return load_object(SHUTDOWN_D);
-}
-
+/**
+ * @efun_override set_privs
+ *
+ * Security-wrapped override of the set_privs() efun. Permits setting
+ * privileges when the caller is an admin or the master object, or when
+ * the object resides in a player's home directory and the privilege
+ * string matches the player name.
+ *
+ * @param {object} ob - The object to set privileges on
+ * @param {string} privs - The privilege string to assign
+ */
 void set_privs(object ob, string privs) {
   string name;
 
@@ -130,6 +157,17 @@ varargs string query_num(int x, int many) {
   return sign + efun::query_num(x, many);
 }
 
+/**
+ * @efun_override ctime
+ *
+ * Override of the ctime() efun that returns a formatted date-time
+ * string in `YYYY-MM-DD HH:MM:SS` format instead of the default
+ * ctime format. Defaults to the current time if no argument is
+ * provided.
+ *
+ * @param {int} [x] - The Unix timestamp to format; defaults to now
+ * @returns {string} The formatted date-time string
+ */
 varargs string ctime(int x) {
   string fmt;
 
@@ -141,6 +179,18 @@ varargs string ctime(int x) {
   return strftime(fmt, x);
 }
 
+/**
+ * @efun_override element_of
+ *
+ * Override of the element_of() efun that optionally uses a
+ * cryptographically secure random number generator for selection.
+ *
+ * @param {mixed*} arr - The array to select a random element from
+ * @param {int} [secure] - If true, uses secure_random() instead of
+ *                          the standard PRNG
+ * @returns {mixed} A randomly selected element from the array
+ * @errors If a non-array value is passed
+ */
 varargs mixed element_of(mixed *arr, int secure) {
   if(!secure)
     return efun::element_of(arr);
@@ -157,6 +207,15 @@ varargs mixed element_of(mixed *arr, int secure) {
   error("Invalid array passed to element_of()");
 }
 
+/**
+ * @efun_override debug_message
+ *
+ * Override of the debug_message() efun that prepends a timestamp
+ * in `YYYY/MM/DD HH:MM:SS` format and also logs the message to
+ * the debug.log file.
+ *
+ * @param {string} str - The debug message to output
+ */
 void debug_message(string str) {
   string timestamp;
 

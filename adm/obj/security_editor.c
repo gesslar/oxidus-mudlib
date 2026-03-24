@@ -1,389 +1,414 @@
-/* security_editor.c
+/**
+ * @file /adm/obj/security_editor.c
+ *
+ * Security editor object for managing group memberships and access
+ * control lists. Must be cloned to be used.
+ *
+ * @created 2006-01-14 - Tacitus @ LPUniversity
+ * @last_modified 2026-03-23 - Gesslar
+ *
+ * @history
+ * 2006-01-14 - Tacitus @ LPUniversity - Created
+ * 2026-03-23 - Gesslar - Modernised to current coding standards
+ */
 
- Tacitus @ LPUniversity
- 14-JAN-06
- Security Editor Object
+#include <simul_efun.h>
 
-*/
+inherit STD_OBJECT;
 
-/* Preproccessor Statements */
-
-#define FILE_GROUPDATA "/adm/etc/groups"
+#define FILE_GROUPDATA  "/adm/etc/groups"
 #define FILE_ACCESSDATA "/adm/etc/access"
 
-/* Prototype */
+// Forward declarations
+private void parseFiles();
+private void parseGroup();
+private void parseAccess();
+public void writeState(int flag);
+private void writeGroupFile(int flag);
+private void writeAccessFile(int flag);
+private void integrityCheck();
 
-int create_group(string group, string *members);
-int delete_group(string group);
-int toggle_membership(string user, string group);
-int enable_membership(string user, string group);
-int disable_membership(string user, string group);
-int set_access(string dir, string id, string *akeys);
-string *list_groups();
-string *parse(string str);
-void parse_files();
-void parse_group();
-void parse_access();
-void write_state(int flag);
-void write_gFile(int flag);
-void write_aFile(int flag);
+// Global variables
+private mapping access = ([]);
+private mapping groups = ([]);
 
-void integrity_check();
-
-/* Global Variables */
-
-mapping access = ([]);
-mapping groups = ([]);
-
-/* Functions */
-
-void create() {
-    if(clonep())
-        parse_files();
+void setup() {
+  if(clonep())
+    parseFiles();
 }
 
-string *parse(string str) {
-    string *arr;
-    int i;
+/**
+ * @description Parses a raw file string into an array of non-comment,
+ *              whitespace-stripped lines. Null entries replace comment
+ *              lines.
+ * @param {string} str - The raw file contents.
+ * @returns {string *} - Array of parsed lines (with nulls for
+ *                        comments).
+ */
+private string *parse(string str) {
+  integrityCheck();
 
-    integrity_check();
+  if(!str)
+    return ({});
 
-    if(!str) {
-        return ({});
+  string *arr = explode(str, "\n");
+  int sz = sizeof(arr);
+
+  for(int i = 0; i < sz; i++) {
+    if(arr[i][0] == '#') {
+      arr[i] = 0;
+      continue;
+    }
+    arr[i] = replace_string(arr[i], " ", "");
+    arr[i] = replace_string(arr[i], "\t", "");
+  }
+
+  return arr;
+}
+
+private void parseFiles() {
+  integrityCheck();
+  parseGroup();
+  parseAccess();
+}
+
+private void parseGroup() {
+  integrityCheck();
+
+  string *arr = parse(read_file(FILE_GROUPDATA));
+  int sz = sizeof(arr);
+
+  groups = ([]);
+
+  for(int i = 0; i < sz; i++) {
+    if(!arr[i])
+      continue;
+
+    string group, str;
+    if(sscanf(arr[i], "(%s)%s", group, str) != 2) {
+      tell_me("Error [security]: Invalid format of data in "
+        "group data.");
+      tell_me("Security alert: Ignoring group on line "
+        + (i + 1));
+      continue;
     }
 
-    arr = explode(str, "\n");
+    string *members = explode(str, ":");
+    int msz = sizeof(members);
 
-    for(i = 0; i < sizeof(arr); i++) {
-        if(arr[i][0] == '#') {
-            arr[i] = 0;
-            continue;
-        }
-        arr[i] = replace_string(arr[i], " ", "");
-        arr[i] = replace_string(arr[i], "\t", "");
+    for(int n = 0; n < msz; n++) {
+      if(!file_size(user_data_file(members[n]))
+      && !sscanf(members[n], "[%*s]")) {
+        tell_me("Error [security]: Unknown user detected.");
+        tell_me("Security alert: User '" + members[n]
+          + "' ignored for group '" + group + "'.");
+        members -= ({ members[n] });
+        msz--;
+        continue;
+      }
     }
-    return arr;
+
+    groups[group] = members;
+  }
 }
 
-void parse_files() {
-    integrity_check();
-    parse_group();
-    parse_access();
-}
+private void parseAccess() {
+  integrityCheck();
 
-void parse_group() {
-    int i, n;
-    string *arr;
+  string *arr = parse(read_file(FILE_ACCESSDATA));
+  int sz = sizeof(arr);
 
-    integrity_check();
+  access = ([]);
 
-    arr = parse(read_file(FILE_GROUPDATA));
+  for(int i = 0; i < sz; i++) {
+    if(!arr[i])
+      continue;
 
-#ifdef DEBUG
-
-    write_file("/log/security", "\tDebug [security]: Parsing group data file...\n");
-
-#endif
-
-    groups = ([]);
-
-    for(i = 0; i < sizeof(arr); i++) {
-        string group, str, *members;
-
-        if(!arr[i]) continue;
-
-        if(sscanf(arr[i], "(%s)%s", group, str) != 2) {
-            tell_me("Error [security]: Invalid format of data in group data.\n");
-            tell_me("Security alert: Ignoring group on line " + (i + 1) + "\n");
-            continue;
-        }
-
-        members = explode(str, ":");
-
-#ifdef DEBUG
-
-        write_file("/log/security", "Debug [security]: Adding group '" + group + "' with " + sizeof(members) + " members.\n");
-
-#endif
-
-        for(n = 0; n < sizeof(members); n++) {
-            if(!file_size(user_data_file(members[n])) && !sscanf(members[n], "[%*s]")) {
-                tell_me("Error [security]: Unknown user detected.\n");
-                tell_me("Security alert: User '" + members[n] + "' ignored for group '" + group + "'.\n");
-                members -= ({ members[n] });
-                continue;
-            }
-#ifdef DEBUG
-
-            write_file("/log/security", "Debug [security]: Adding user '" + members[n] + "' to group '" + group + "'.\n");
-
-#endif
-        }
-
-        groups += ([group : members]);
+    string directory, str;
+    if(sscanf(arr[i], "(%s)%s", directory, str) != 2) {
+      tell_me("Error [security]: Invalid format of data in "
+        "access data.");
+      error("Security alert: Fatal error parsing access data "
+        "on line " + (i + 1));
     }
-}
 
-void parse_access() {
-    int i, n;
-    string *arr;
-
-    integrity_check();
-
-    arr = parse(read_file(FILE_ACCESSDATA));
-
-#ifdef DEBUG
-
-    write_file("/log/security", "\tDebug [security]: Parsing access data file...\n");
-
-#endif
-
-    access = ([]);
-
-    for(i = 0; i < sizeof(arr); i++) {
-        string directory, str, *entries;
-        mapping data;
-
-        data = ([]);
-
-        if(!arr[i]) continue;
-
-        if(sscanf(arr[i], "(%s)%s", directory, str) != 2) {
-            tell_me("Error [security]: Invalid format of data in access data.\n");
-            error("Security alert: Fatal error parsing access data on line " + (i + 1) + "\n");
-        }
-
-        if(str[<1..< 1] == ":") {
-            tell_me("Error [security]: Incomplete data in access data (trailing ':').\n");
-            error("Security alert: Fatal error parsing access data on line " + (i + 1) + "\n");
-        }
-
-        entries = explode(str, ":");
-
-#ifdef DEBUG
-
-        write_file("/log/security", "Debug [security]: Parsing data for directory '" + directory + "'.\n");
-
-#endif
-
-        for(n = 0; n < sizeof(entries); n++) {
-            string identity, permissions, *perm_array = allocate(8);
-
-            if(sscanf(entries[n], "%s[%s]", identity, permissions) != 2) {
-                tell_me("Error [security]: Invalid entry(" + n + ") data format in access data.\n");
-                error("Security alert: Fatal error parsing access data on line " + (i + 1) + "\n");
-            }
-
-#ifdef DEBUG
-
-            write_file("/log/security", "Debug [security]: Adding identity '" + identity + "' with permission string of '" + permissions + "'.\n");
-
-#endif
-
-            //read, write, network, shadow, link, execute, bind, ownership
-            if(strsrch(permissions, "r") != -1) perm_array[0] = "r";
-            if(strsrch(permissions, "w") != -1) perm_array[1] = "w";
-            if(strsrch(permissions, "n") != -1) perm_array[2] = "n";
-            if(strsrch(permissions, "s") != -1) perm_array[3] = "s";
-            if(strsrch(permissions, "l") != -1) perm_array[4] = "l";
-            if(strsrch(permissions, "e") != -1) perm_array[5] = "e";
-            if(strsrch(permissions, "b") != -1) perm_array[6] = "b";
-            if(strsrch(permissions, "o") != -1) perm_array[7] = "o";
-
-            data += ([ identity : perm_array ]);
-
-        }
-
-        access += ([directory : data]);
+    if(str[<1..<1] == ":") {
+      tell_me("Error [security]: Incomplete data in access "
+        "data (trailing ':').");
+      error("Security alert: Fatal error parsing access data "
+        "on line " + (i + 1));
     }
+
+    string *entries = explode(str, ":");
+    int esz = sizeof(entries);
+    mapping data = ([]);
+
+    for(int n = 0; n < esz; n++) {
+      string identity, permissions;
+      if(sscanf(entries[n], "%s[%s]", identity, permissions)
+      != 2) {
+        tell_me("Error [security]: Invalid entry(" + n
+          + ") data format in access data.");
+        error("Security alert: Fatal error parsing access "
+          "data on line " + (i + 1));
+      }
+
+      // read, write, network, shadow, link, execute, bind,
+      // ownership
+      string *permArr = allocate(8);
+      if(strsrch(permissions, "r") != -1) permArr[0] = "r";
+      if(strsrch(permissions, "w") != -1) permArr[1] = "w";
+      if(strsrch(permissions, "n") != -1) permArr[2] = "n";
+      if(strsrch(permissions, "s") != -1) permArr[3] = "s";
+      if(strsrch(permissions, "l") != -1) permArr[4] = "l";
+      if(strsrch(permissions, "e") != -1) permArr[5] = "e";
+      if(strsrch(permissions, "b") != -1) permArr[6] = "b";
+      if(strsrch(permissions, "o") != -1) permArr[7] = "o";
+
+      data[identity] = permArr;
+    }
+
+    access[directory] = data;
+  }
 }
 
-int create_group(string group, string *members) {
-integrity_check();
+/**
+ * @description Creates a new group with the given members.
+ * @param {string} group - The group name.
+ * @param {string *} members - Array of member names.
+ * @returns {int} - 1 on success, 0 on failure.
+ */
+public int createGroup(string group, string *members) {
+  integrityCheck();
 
-    if(groups[group])
-        return 0;
+  if(groups[group])
+    return 0;
 
-    if(!sizeof(members))
-        return 0;
+  if(!sizeof(members))
+    return 0;
 
-    groups += ([group : members]);
+  groups[group] = members;
 
-    return 1;
+  return 1;
 }
 
-int delete_group(string group) {
-integrity_check();
+/**
+ * @description Deletes a group.
+ * @param {string} group - The group name.
+ * @returns {int} - 1 on success, 0 if group does not exist.
+ */
+public int deleteGroup(string group) {
+  integrityCheck();
 
-    if(!groups[group]) return 0;
-    map_delete(groups, group);
-    return 1;
+  if(!groups[group])
+    return 0;
+
+  map_delete(groups, group);
+
+  return 1;
 }
 
-int enable_membership(string user, string group) {
-    string *user_list;
+/**
+ * @description Adds a user to a group.
+ * @param {string} user - The user name.
+ * @param {string} group - The group name.
+ * @returns {int} - 1 on success, 0 if group does not exist or
+ *                  user is already a member.
+ */
+public int enableMembership(string user, string group) {
+  integrityCheck();
 
-    integrity_check();
+  if(!groups[group])
+    return 0;
 
-    if(!groups[group])
-        return 0;
+  if(member_array(user, groups[group]) != -1)
+    return 0;
 
-    user_list = groups[group];
+  groups[group] += ({ user });
 
-    if(member_array(user, user_list) == -1)
-        groups[group] += ({user});
+  return 1;
+}
+
+/**
+ * @description Removes a user from a group.
+ * @param {string} user - The user name.
+ * @param {string} group - The group name.
+ * @returns {int} - 1 on success, 0 if group does not exist or
+ *                  user is not a member.
+ */
+public int disableMembership(string user, string group) {
+  integrityCheck();
+
+  if(!groups[group])
+    return 0;
+
+  if(member_array(user, groups[group]) == -1)
+    return 0;
+
+  groups[group] -= ({ user });
+
+  return 1;
+}
+
+/**
+ * @description Toggles a user's membership in a group.
+ * @param {string} user - The user name.
+ * @param {string} group - The group name.
+ * @returns {int} - 1 on success, 0 if group does not exist.
+ */
+public int toggleMembership(string user, string group) {
+  integrityCheck();
+
+  if(!groups[group])
+    return 0;
+
+  if(member_array(user, groups[group]) == -1)
+    groups[group] += ({ user });
+  else
+    groups[group] -= ({ user });
+
+  return 1;
+}
+
+/**
+ * @description Sets access permissions for an identity on a
+ *              directory.
+ * @param {string} dir - The directory path.
+ * @param {string} id - The identity (user or group).
+ * @param {string *} akeys - Array of permission keys.
+ * @returns {int} - 1 on success, 0 if no keys provided.
+ */
+public int setAccess(string dir, string id, string *akeys) {
+  integrityCheck();
+
+  if(!sizeof(akeys))
+    return 0;
+
+  if(!access[dir])
+    access[dir] = ([ id : akeys ]);
+  else
+    access[dir][id] = akeys;
+
+  return 1;
+}
+
+/**
+ * @description Returns the list of all group names.
+ * @returns {string *} - Array of group names.
+ */
+public string *listGroups() {
+  integrityCheck();
+
+  return keys(groups);
+}
+
+public void writeState(int flag) {
+  integrityCheck();
+
+  if(!adminp(previous_object()) && !adminp(this_body()))
+    return;
+
+  writeGroupFile(flag);
+  writeAccessFile(flag);
+}
+
+private void writeGroupFile(int flag) {
+  integrityCheck();
+
+  if(!adminp(previous_object()) && !adminp(this_body()))
+    return;
+
+  string *groupList = keys(groups);
+  int sz = sizeof(groupList);
+  string file = "";
+
+  for(int i = 0; i < sz; i++) {
+    string *groupData = groups[groupList[i]];
+    int gsz = sizeof(groupData);
+
+    file += "(" + groupList[i] + ")";
+
+    if(gsz > 1)
+      file += implode(groupData, ":") + "\n";
+    else if(gsz == 1)
+      file += groupData[0] + "\n";
     else
-        return 0;
+      error("ERROR: Group '" + groupList[i]
+        + "' has no members!");
+  }
 
-    return 1;
-}
+  if(flag) {
+    tell_me(file);
+  } else {
+    write_file(FILE_GROUPDATA, file, 1);
+    parseFiles();
 
-int disable_membership(string user, string group) {
-    string *user_list;
-
-    integrity_check();
-
-    if(!groups[group]) return 0;
-    user_list = groups[group];
-
-    if(member_array(user, user_list) != -1)
-        groups[group] -= ({user});
-    else
-        return 0;
-
-    return 1;
-}
-
-int toggle_membership(string user, string group) {
-    string *user_list;
-
-    integrity_check();
-
-    if(!groups[group]) return 0;
-    user_list = groups[group];
-
-    if(member_array(user, user_list) == -1)
-        groups[group] += ({user});
-    else
-        groups[group] -= ({user});
-
-    return 1;
-}
-
-int set_access(string dir, string id, string *akeys) {
-    integrity_check();
-
-    if(!sizeof(akeys)) return 0;
-
-    if(!access[dir]) access += ([dir : ([id : akeys]) ]);
-    else access[dir] += ([ id : akeys]);
-    return 1;
-}
-
-string *list_groups() {
-    string *keys;
-
-    integrity_check();
-
-    keys = keys(groups);
-    return keys;
-}
-
-void write_state(int flag) {
-    integrity_check();
-
-    if(!adminp(previous_object()) && !adminp(this_body()))
-        return;
-
-    write_gFile(flag);
-    write_aFile(flag);
-}
-
-void write_gFile(int flag) {
-    string file = "";
-    string *group_list = keys(groups), *group_data;
-    int i;
     string err = "";
+    err += catch(destruct(master()));
+    err += catch(
+      destruct(find_object("/adm/obj/master/valid"))
+    );
+    err += catch(load_object("/adm/obj/master/valid"));
+    err += catch(load_object("/adm/obj/master"));
+    err += catch(CONFIG_D->rehash_config());
 
-    integrity_check();
-
-    if(!adminp(previous_object()) && !adminp(this_body()))
-        return;
-
-    i = 0;
-    group_list = keys(groups);
-    group_data = ({});
-    file = "";
-
-
-    for(i = 0; i < sizeof(group_list); i ++) {
-        group_data = groups[group_list[i]];
-        file += "(" + group_list[i] + ")";
-        if(sizeof(group_data) > 1) file += sprintf("%s%s\n",implode(group_data[0..(sizeof(group_data)-2)], ":"), ":" + group_data[sizeof(group_data)-1]);
-        else if(sizeof(group_data) == 1) file += group_data[0] + "\n";
-        else error("ERROR: Group '" + group_list[i] + "' has no members!");
-    }
-
-    if(flag)
-        tell_me(file + "\n");
-    else {
-        write_file("/adm/etc/groups", file, 1);
-        parse_files();
-        err += catch(destruct(master()));
-        err += catch(destruct(find_object("/adm/obj/master/valid")));
-        err += catch(load_object("/adm/obj/master/valid"));
-        err += catch(load_object("/adm/obj/master"));
-        err += catch(CONFIG_D->rehash_config());
-        if(err != "00000") tell_me(err);
-    }
+    if(err != "00000")
+      tell_me(err);
+  }
 }
 
-void write_aFile(int flag) {
-    string file = "";
-    string *access_list = keys(access), *keys, *arr = ({});
-    mapping access_data;
-    int i, j;
+private void writeAccessFile(int flag) {
+  integrityCheck();
+
+  if(!adminp(previous_object()) && !adminp(this_body()))
+    return;
+
+  string *accessList = keys(access);
+  int sz = sizeof(accessList);
+  string file = "";
+
+  for(int i = 0; i < sz; i++) {
+    mapping accessData = access[accessList[i]];
+    string *accessKeys = keys(accessData);
+    int ksz = sizeof(accessKeys);
+    string *arr = ({});
+
+    file += "(" + accessList[i] + ") ";
+
+    for(int j = 0; j < ksz; j++)
+      arr += ({
+        sprintf("%s[%s]", accessKeys[j],
+          implode(accessData[accessKeys[j]], ""))
+      });
+
+    if(sizeof(arr) > 1)
+      file += implode(arr, ":") + "\n";
+    else
+      file += arr[0] + "\n";
+  }
+
+  if(flag) {
+    tell_me(file);
+  } else {
+    write_file(FILE_ACCESSDATA, file, 1);
+    parseFiles();
+
     string err = "";
+    err += catch(destruct(master()));
+    err += catch(
+      destruct(find_object("/adm/obj/master/valid"))
+    );
+    err += catch(load_object("/adm/obj/master/valid"));
+    err += catch(load_object("/adm/obj/master"));
+    err += catch(CONFIG_D->rehash_config());
 
-    integrity_check();
-
-    if(!adminp(previous_object()) && !adminp(this_body()))
-        return;
-
-    i = 0;
-    j = 0;
-    access_data = ([]);
-    access_list = keys(access);
-    keys = ({});
-    arr = ({});
-    file = "";
-
-    for(i = 0; i < sizeof(access_list); i++) {
-        access_data = access[access_list[i]];
-        file += "(" + access_list[i] + ") ";
-        keys = keys(access_data);
-        arr = ({});
-        for(j = 0; j < sizeof(keys); j ++)
-        arr += ({(sprintf("%s[%s]", keys[j], implode(access_data[keys[j]], "")))});
-        if(sizeof(arr) > 1) file += sprintf("%s%s\n",implode(arr[0..(sizeof(arr)-2)], ":"), ":" + arr[sizeof(arr)-1]);
-        else file += arr[0] + "\n";
-    }
-
-    if(flag)
-        tell_me(file + "\n");
-    else {
-        write_file("/adm/etc/access", file, 1);
-        parse_files();
-        err += catch(destruct(master()));
-        err += catch(destruct(find_object("/adm/obj/master/valid")));
-        err += catch(load_object("/adm/obj/master/valid"));
-        err += catch(load_object("/adm/obj/master"));
-        err += catch(CONFIG_D->rehash_config());
-        if(err != "00000") tell_me(err);
-    }
+    if(err != "00000")
+      tell_me(err);
+  }
 }
 
-void integrity_check() {
-    if(!clonep())
-        error("Error [security_editor]: This object must be cloned to be used.\n");
+private void integrityCheck() {
+  if(!clonep())
+    error("Error [security_editor]: This object must be "
+      "cloned to be used.");
 }

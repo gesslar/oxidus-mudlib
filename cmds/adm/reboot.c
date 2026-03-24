@@ -12,43 +12,63 @@
 
 inherit STD_CMD;
 
-mixed main(object caller, string arg) {
-     string status;
-     int time;
-     status = SHUTDOWN_D->get_status();
+mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
+  string status;
+  int delay;
 
-     if(!adminp(previous_object())) return notify_fail("Error [reboot]: Access denied.\n");
+  status = shutdown_d()->get_status();
 
-     if(!arg) {
-          if(status) tell_me("Shutdown: " + status);
-          else tell_me("There is no shutdown or reboot currently in progress.\n");
-          return 1;
-     }
+  if(!adminp(previous_object()))
+    return _error("Access denied.");
 
-     if(arg == "stop") {
-          if(!status) return notify_fail("Error: There is no shutdown or reboot currently in progress.\n");
-          else SHUTDOWN_D->stop();
-          log_file(LOG_SHUTDOWN, capitalize(caller->query_real_name()) + " canceled the sequence (" + time + "m) on " + ctime(time()) + "\n");
-          return 1;
-     } else {
-          if(arg == "now") time = 0;
-          else time = to_int(arg);
-          if(time == 0 && arg != "now" && arg != "0") return notify_fail("SYNTAX: shutdown [<stop>||<time>/now]\n");
-          log_file(LOG_SHUTDOWN, capitalize(caller->query_real_name()) + " started reboot sequence (" + time + "m) on " + ctime(time()) + "\n");
-          SHUTDOWN_D->start(time, SYS_REBOOT);
-          return 1;
-     }
+  if(!arg) {
+    if(status)
+      _info("Shutdown: " + status);
+    else
+      _info("There is no shutdown or reboot "
+        "currently in progress.");
+    return 1;
+  }
+
+  if(arg == "stop") {
+    if(!status)
+      return _error("There is no shutdown or reboot "
+        "currently in progress.");
+
+    shutdown_d()->stop();
+    log_file(LOG_SHUTDOWN,
+      capitalize(caller->query_real_name()) +
+      " canceled the sequence (" + delay + "m) on " +
+      ctime(time()) + "\n");
+    return 1;
+  } else {
+    if(arg == "now")
+      delay = 0;
+    else
+      delay = to_int(arg);
+
+    if(delay == 0 && arg != "now" && arg != "0")
+      return _error("SYNTAX: reboot [<stop>||<time>/now]");
+
+    log_file(LOG_SHUTDOWN,
+      capitalize(caller->query_real_name()) +
+      " started reboot sequence (" + delay + "m) on " +
+      ctime(time()) + "\n");
+    shutdown_d()->start(delay, SYS_REBOOT);
+    return 1;
+  }
 }
 
-string help(object caller) {
-    return (" SYNTAX: reboot [<stop>||<time>/now]\n\n" +
+string query_help(object _caller) {
+  return
+    " SYNTAX: reboot [<stop>||<time>/now]\n\n"
     "This command allows you to start a reboot of the mud. You\n"
     "can either supply the ammount of time intill you the reboot\n"
     "is to occur or stop the current shutdown/reboot by giving the\n"
     "argument stop. You may also give the argument now to reboot\n"
     "the mud as soon as the command is given.\n\n"
-    "It is important to remember that this command will rebppt the\n"
+    "It is important to remember that this command will reboot the\n"
     "the mud and will come back up. If you wish for the mud to not\n"
-    "restart afterwards, then look at the shutdown command.\n\n" +
-    "See also: shutdown\n");
+    "restart afterwards, then look at the shutdown command.\n\n"
+    "See also: shutdown\n";
 }

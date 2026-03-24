@@ -2,15 +2,15 @@
 
 This document provides guidance for LLMs (Language Learning Models) when working with the gLPU (Gesslar's LPUniversity) mudlib codebase.
 
-## IMPORTANT: Required Reading
+## IMPORTANT: Required Skills
 
-Before working on this codebase, you MUST review these essential documentation files:
+Before working on this codebase, you MUST consult the following skills (via the Skill tool) as needed:
 
-1. **[LLM LPC Coding Style.md](LLM LPC Coding Style.md)** - Coding style guidelines (spacing, bracing, naming conventions)
-2. **[LLM LPCDoc Documentation Guide.md](LLM LPCDoc Documentation Guide.md)** - Documentation standards for LPCDoc comments
-3. **[LLM Colour Coding Guide.md](LLM Colour Coding Guide.md)** - Extended color code reference for the MUD
+1. **`/lpc-coding-style`** - Coding style guidelines (spacing, bracing, naming conventions)
+2. **`/lpcdoc`** - Documentation standards for LPCDoc comments
+3. **`/colour-coding`** - Extended color code reference for the MUD
 
-These files contain critical information about code formatting, documentation standards, and project-specific conventions that you must follow.
+These skills contain critical information about code formatting, documentation standards, and project-specific conventions that you must follow. Invoke them with the Skill tool when performing relevant work.
 
 ## Project Overview
 

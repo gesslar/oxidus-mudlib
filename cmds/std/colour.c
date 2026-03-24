@@ -11,62 +11,60 @@
  * 2025-03-10 - Gesslar - Created
  */
 
-mixed main(object caller, string str) {
+mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   string cmd, arg;
 
   if(stringp(str)) {
-    if(sscanf(str, "%s %s", cmd, arg) != 2) {
+    if(sscanf(str, "%s %s", cmd, arg) != 2)
       cmd = str;
-    }
   } else {
     cmd = str;
   }
 
   switch(cmd) {
-    case "on" :
-      str = "on";
-      caller->set_env("colour", str);
-      return _ok(caller, "Colour " + str + ".");
-    case "off" :
-      str = "off";
-      caller->set_env("colour", str);
-      return _ok(caller, "Colour " + str + ".");
-    case "list" :
-      return _info(caller, "Colour List:\n\n" + COLOUR_D->get_colour_list());
-    case "show" : {
-      int num;
-      string code;
-      string fg, bg;
-
+    case "on":
+      caller->set_env("colour", "on");
+      return _ok(caller, "Colour on.");
+    case "off":
+      caller->set_env("colour", "off");
+      return _ok(caller, "Colour off.");
+    case "list":
+      return _info(caller,
+        "Colour List:\n\n" + COLOUR_D->get_colour_list());
+    case "show": {
       if(!arg)
         return _error(caller, "Invalid colour code.");
 
       if(caller->query_pref("colour") != "on")
         return _error(caller, "Colour is currently disabled.");
 
+      int num;
+
       if(sscanf(arg, "%d", num) != 1)
         return _error(caller, "Invalid colour code.");
-      if(num < 0 || num > 255) {
-        _error(caller, "Invalid colour code.");
-        return 1;
-      }
 
-      fg = "{{"+sprintf("0%'0'3d", num)+"}}";
+      if(num < 0 || num > 255)
+        return _error(caller, "Invalid colour code.");
 
-    return _info(caller, "\n"
-      "%s\'%'0'3d\' will appear like this in the foreground.{{res}}\n"
-      "{{re1}}%s\'%'0'3d\' will appear like this in the background.{{res}}",
-      fg, num, fg, num);
+      string fg = "{{" + sprintf("0%'0'3d", num) + "}}";
+
+      return _info(caller, "\n"
+        "%s\'%'0'3d\' will appear like this in the "
+        "foreground.{{res}}\n"
+        "{{re1}}%s\'%'0'3d\' will appear like this in the "
+        "background.{{res}}",
+        fg, num, fg, num);
     }
-    default :
+    default:
       if(caller->query_pref("colour") == "on")
         return _info(caller, "Colour is currently enabled.");
       else
-        return _info(caller, "Colour is currently disabled.");
+        return _info(caller,
+          "Colour is currently disabled.");
   }
 }
 
-string query_help(object caller) {
+string query_help(object _caller) {
   return
 "SYNTAX: colour [<on>|<off>|list|show [#]]\n\n"
 "With no arguments, this command will tell you if you currently have "

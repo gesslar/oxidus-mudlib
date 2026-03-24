@@ -42,7 +42,8 @@ Key points:
 
 - Start with `/**` and end with `*/`
 - Each line within the comment begins with ` * ` (space, asterisk, space)
-- Leave an empty line (with just ` * `) between the description and tags
+- **Always** leave a blank doc line (` *`) between the description and
+  the first tag. This is mandatory even for short one-line descriptions.
 - Place tags after the description
 
 ## Function Documentation
@@ -136,6 +137,57 @@ Documents a variable's type.
 @type {type}
 ```
 
+#### Inline Parameter Type Narrowing
+
+The `@type` tag can also be used inline in a function signature to
+narrow an `object` parameter for the LSP. Place it as a comment
+immediately before the parameter:
+
+```c
+mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
+```
+
+This lets the LSP resolve `call_other` methods (e.g.,
+`caller->set_env(...)`) that exist on the typed object. Use the
+most specific `STD_*` macro whose interface matches the methods
+called on that parameter. See the **lpc-coding-style** skill for
+full guidance.
+
+### `@overload`
+
+Documents multiple calling signatures for a single `varargs` function
+that accepts `mixed *args...`. Each `@overload` block describes one
+valid way to call the function, with its own `@param` and `@returns`
+tags.
+
+Place the description before the first `@overload`. Each `@overload`
+starts a new signature — the `@param` and `@returns` tags that follow
+it belong to that overload until the next `@overload` or the end of
+the comment.
+
+```c
+/**
+ * Sends a direct message to the specified object.
+ *
+ * @overload
+ * @param {string} str - The message string (sent to
+ *                       previous_object()).
+ *
+ * @overload
+ * @param {object} ob - The target object.
+ * @param {string} str - The message string.
+ * @param {int} [msg_type] - The message type.
+ *
+ * @errors If insufficient arguments are provided.
+ */
+varargs void tell(mixed *args...) {
+    // Implementation
+}
+```
+
+Tags that apply to all overloads (such as `@errors`, `@throws`, or
+`@example`) should be placed after the last `@overload` block.
+
 ### `@example`
 
 Provides example usage.
@@ -161,13 +213,35 @@ codeExampleHere
 
 ### Named Objects
 
-For objects of specific types:
+For objects of specific types, use the closest matching `STD_*` macro rather
+than a raw file path:
+
+```c
+{STD_MACRO}
+```
+
+If no macro exists, fall back to a full path:
 
 ```c
 {"/path/to/object.c"}
 ```
 
-Example: `{"/std/living/player.c"}`
+**Choosing the right macro:** Pick the most specific macro whose interface
+matches how the object is actually used within the function — not what the
+object might be at runtime. Look at which methods the function calls on the
+object, and choose the macro that defines those methods.
+
+- If the function calls methods specific to players (e.g. account operations),
+  use `{STD_PLAYER}`.
+- If it calls methods shared by players and NPCs (e.g. combat, vitals), use
+  `{STD_BODY}`.
+- If it only uses container operations (capacity, inventory) and the object
+  could be a bag, a room, or a body, use `{STD_CONTAINER}`.
+- If it only calls base object methods (e.g. query_id, move), use
+  `{STD_OBJECT}`.
+
+In short: the type should reflect the **interface the function depends on**,
+not the concrete type the caller is likely to pass.
 
 ### Arrays
 
@@ -314,8 +388,10 @@ Key points for class documentation:
 2. Other tags should follow in this order:
    - @override (if applicable)
    - @apply (if applicable)
-   - @param
-   - @returns
+   - @overload (if applicable — each followed by its own @param
+     and @returns)
+   - @param (when not using @overload)
+   - @returns (when not using @overload)
    - @errors (only if error() is called)
    - @throws (only if throw() is called)
    - @example
@@ -332,7 +408,10 @@ Key points for class documentation:
 Unless specifically instructed, do not document:
 
 1. Forward declarations
-2. Standard setup functions:
+2. Ubiquitous entry points and lifecycle functions — these are
+   required infrastructure repeated in every file of their kind
+   and are not notable enough to warrant documentation:
+   - `mixed main()` in commands
    - `void setup()`
    - `void mudlib_setup()`
    - `void base_setup()`
@@ -374,6 +453,16 @@ into the standard format. Clarify any vague or unclear descriptions.
   defence, initialise, etc.)
 
 Otherwise, if unsure, ask.
+
+## Unsupported Tags
+
+The following tags are **not supported** and should be removed on sight
+when encountered in existing documentation. Do not introduce them in
+new documentation.
+
+- `@description` — Remove the tag and keep the text as the leading
+  description paragraph (the description is always the first thing in
+  the comment block; it does not need a tag).
 
 ## Imperative Information
 
