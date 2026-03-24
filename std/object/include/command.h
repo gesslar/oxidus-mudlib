@@ -18,7 +18,6 @@ void rem_path(string str);
 nomask varargs string *query_command_history(int index, int range);
 int command_hook(string arg);
 private nomask int evaluate_result(mixed result);
-mixed* query_commands();
 int force_me(string cmd);
 void add_wizard_paths();
 void remove_wizard_paths();

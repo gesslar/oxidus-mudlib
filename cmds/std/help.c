@@ -17,7 +17,7 @@ inherit STD_CMD;
 
 #include <logs.h>
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_PLAYER} */ object tp, string str) {
     string file, *path, err, output = "";
     object cmd;
     int i;

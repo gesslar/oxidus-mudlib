@@ -2,36 +2,41 @@
 
  Tacitus @ LPUniversity
  12-AUG-06
- Displays acitivity info about users
+ Displays activity info about users
 
 */
 
 inherit STD_CMD;
 
-mixed main(object tp, string arg) {
-    if(!adminp(tp)) return 0;
-    tell(tp, "=----------------------------------------------=\n");
-    tell(tp, sprintf(" %-15s %-s \n", "Username", "Last Command"));
-    tell(tp, "=----------------------------------------------=\n");
+mixed main(/** @type {STD_PLAYER} */ object caller, string _arg) {
+  if(!adminp(caller))
+    return 0;
 
-    foreach(object user in users()) {
-        string *command_history = user->query_command_history();
-        if(!living(user)) continue;
+  tell(caller, "=----------------------------------------------=\n");
+  tell(caller, sprintf(" %-15s %-s \n", "Username", "Last Command"));
+  tell(caller, "=----------------------------------------------=\n");
 
-        if(sizeof(command_history) <= 0)
-            tell(tp, sprintf("  %-15s %s\n", user->query_name(), "<none>"));
-        else
-            tell(tp, sprintf("  %-15s %s\n", user->query_name(), command_history[sizeof(command_history)-1]));
-    }
+  foreach(/** @type {STD_PLAYER} */ object user in users()) {
+    string *commandHistory = user->query_command_history();
+    if(!living(user)) continue;
 
-    tell(tp, "=----------------------------------------------=\n");
+    if(sizeof(commandHistory) <= 0)
+      tell(caller, sprintf("  %-15s %s\n",
+        user->query_name(), "<none>"));
+    else
+      tell(caller, sprintf("  %-15s %s\n",
+        user->query_name(),
+        commandHistory[sizeof(commandHistory) - 1]));
+  }
 
-    return 1;
+  tell(caller, "=----------------------------------------------=\n");
+
+  return 1;
 }
 
-string help(object caller) {
-    return(" SYNTAX: what\n\n"
-      "This command allows you to view the last command executed by\n"
-      "all users logged in. It is recommended that you review any\n"
-      "privacy policy that your mud might have before using this tool.\n");
+string query_help(object _caller) {
+  return " SYNTAX: what\n\n"
+    "This command allows you to view the last command executed by\n"
+    "all users logged in. It is recommended that you review any\n"
+    "privacy policy that your mud might have before using this tool.\n";
 }

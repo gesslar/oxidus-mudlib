@@ -55,14 +55,17 @@ varargs void tell_direct(object ob, string str, int msg_type) {
  * Sends a direct message to the specified object without considering
  * containment hierarchy.
  *
- * @param {string|object} [args] - If one argument, it's the message string (previous_object() is assumed).
- * @param {object} [args.0] - The object to send the message to (required if two+ arguments).
- * @param {string} [args.1] - The message string to send.
- * @param {int} [args.2] - The message type.
+ * @overload
+ * @param {string} str - The message string to send (sent to previous_object()).
+ *
+ * @overload
+ * @param {object} ob - The object to send the message to.
+ * @param {string} str - The message string to send.
+ * @param {int} [msg_type] - The message type.
  *
  * @errors If insufficient arguments are provided.
  */
-varargs void tell(mixed args...) {
+varargs void tell(mixed *args...) {
   int sz;
   object ob;
   string str;
@@ -86,6 +89,12 @@ varargs void tell(mixed args...) {
   tell_direct(ob, str, msg_type);
 }
 
+/**
+ * Sends a direct message to the current player (this_body()).
+ *
+ * @param {string} str - The message string to send
+ * @param {int} [message_type] - The message type flag
+ */
 varargs void tell_me(string str, int message_type) {
   if(!this_body())
     return;
@@ -93,6 +102,15 @@ varargs void tell_me(string str, int message_type) {
   tell(this_body(), str, message_type);
 }
 
+/**
+ * Sends a message to all objects in the current player's environment,
+ * excluding the current player and any additional specified objects.
+ *
+ * @param {string} str - The message string to send
+ * @param {object*} [exclude] - Additional objects to exclude from receiving
+ *                               the message, beyond the current player
+ * @param {int} [message_type] - The message type flag
+ */
 varargs void tell_them(string str, object *exclude, int message_type) {
   if(!this_body())
     return;

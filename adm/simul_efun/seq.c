@@ -260,44 +260,118 @@ mapping seq_to_mapping(mixed *map) {
 }
 
 /**
- * Legacy smap_* wrappers maintained for compatibility.
+ * @deprecated Use valid_seq() instead.
+ * Legacy wrapper for valid_seq().
+ *
+ * @param {mixed} map - The array to validate
+ * @param {int} [non_empty] - If true, requires all elements to be
+ *                             key-value pairs
+ * @returns {int} 1 if valid, 0 otherwise
  */
 varargs int valid_smap(mixed map, int non_empty) {
   return valid_seq(map, non_empty);
 }
 
+/**
+ * @deprecated Use seq_set() instead.
+ * Legacy wrapper for seq_set().
+ *
+ * @param {mixed ref*} map - The sequential map to modify
+ * @param {mixed} key - The key to set
+ * @param {mixed} value - The value to associate with the key
+ * @returns {int} The size of the sequential map after the operation
+ */
 int smap_set(mixed ref *map, mixed key, mixed value) {
   return seq_set(map, key, value);
 }
 
+/**
+ * @deprecated Use seq_get() instead.
+ * Legacy wrapper for seq_get().
+ *
+ * @param {mixed*} map - The sequential map to search
+ * @param {mixed} key - The key to look for
+ * @returns {mixed} The value associated with the key, or null if not
+ *                   found
+ */
 mixed smap_get(mixed *map, mixed key) {
   return seq_get(map, key);
 }
 
+/**
+ * @deprecated Use seq_has() instead.
+ * Legacy wrapper for seq_has().
+ *
+ * @param {mixed*} map - The sequential map to search
+ * @param {mixed} key - The key to look for
+ * @returns {int} 1 if key exists, 0 otherwise
+ */
 int smap_has(mixed *map, mixed key) {
   return seq_has(map, key);
 }
 
+/**
+ * @deprecated Use seq_delete() instead.
+ * Legacy wrapper for seq_delete().
+ *
+ * @param {mixed ref*} map - The sequential map to modify
+ * @param {mixed} key - The key to remove
+ * @returns {int} 1 if key was found and removed, 0 if not
+ */
 int smap_delete(mixed ref *map, mixed key) {
   return seq_delete(map, key);
 }
 
+/**
+ * @deprecated Use seq_clear() instead.
+ * Legacy wrapper for seq_clear().
+ *
+ * @param {mixed ref*} map - The sequential map to clear
+ */
 void smap_clear(mixed ref *map) {
   seq_clear(map);
 }
 
+/**
+ * @deprecated Use seq_keys() instead.
+ * Legacy wrapper for seq_keys().
+ *
+ * @param {mixed*} map - The sequential map to extract keys from
+ * @returns {mixed*} Array of all keys
+ */
 mixed *smap_keys(mixed *map) {
   return seq_keys(map);
 }
 
+/**
+ * @deprecated Use seq_values() instead.
+ * Legacy wrapper for seq_values().
+ *
+ * @param {mixed*} map - The sequential map to extract values from
+ * @returns {mixed*} Array of all values
+ */
 mixed *smap_values(mixed *map) {
   return seq_values(map);
 }
 
+/**
+ * @deprecated Use seq_from_mapping() instead.
+ * Legacy wrapper for seq_from_mapping().
+ *
+ * @param {mapping} m - The mapping to convert
+ * @returns {mixed*} A sequential map of key-value pairs
+ */
 mixed *smap_from_mapping(mapping m) {
   return seq_from_mapping(m);
 }
 
+/**
+ * @deprecated Use seq_to_mapping() instead.
+ * Legacy wrapper for seq_to_mapping().
+ *
+ * @param {mixed*} map - The sequential map to convert
+ * @returns {mapping} A mapping of all key-value pairs
+ */
 mapping smap_to_mapping(mixed *map) {
   return seq_to_mapping(map);
 }

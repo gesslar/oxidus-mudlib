@@ -11,7 +11,7 @@
 
 inherit STD_CMD;
 
-private nosave nomask function *actions;
+private nosave nomask mixed *actions;
 
 void setup() {
   actions = ({
@@ -25,14 +25,13 @@ void setup() {
   });
 }
 
-mixed main(object caller, string arguments) {
-  mixed *action;
+mixed main(/** @type {STD_PLAYER} */ object _caller, string _arguments) {
   string err = "";
 
   if(!adminp(previous_object()))
-    return _error("Access denied.\n");
+    return _error("Access denied.");
 
-  foreach(action in actions) {
+  foreach(mixed *action in actions) {
     mixed result;
 
     _info(action[0]);
@@ -53,7 +52,7 @@ mixed main(object caller, string arguments) {
     return _ok("System objects updated successfully.");
 }
 
-string query_help(object caller) {
+string query_help(object _caller) {
   return
 " SYNTAX: master\n\n"
 "This command reloads core system files. No argument is taken.\n";

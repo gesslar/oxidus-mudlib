@@ -166,7 +166,7 @@ varargs void tell_all(object ob, string str, int msg_type, mixed exclude);
 varargs void tell_direct(object ob, string str, int msg_type, mixed exclude);
 varargs void tell(object ob, string str, int msg_type, mixed exclude);
 varargs void tell_me(string str, int message_type);
-varargs void tell_them(string str, int message_type);
+varargs void tell_them(string str, object *exclude, int message_type);
 
 // File: number.c
 float percent_of(float a, float b);
@@ -200,6 +200,7 @@ varargs object find_target(object tp, string str, object env, function f);
 varargs object *clones(mixed file, int env_only);
 varargs mixed *accessible_objects(object container, object pov);
 varargs object *accessible_objects_flat(object container, object pov);
+object shutdown_d();
 
 // File: prompt.c
 varargs void prompt_colour(object body, mixed *cb, string prompt);

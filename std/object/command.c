@@ -257,7 +257,7 @@ int command_hook(string arg) {
   /** @type {STD_BODY}    */  caller,
   /** @type {STD_CMD}     */  cmd,
   /** @type {STD_ITEM}    */  ob,
-  /** @type {STD_ITEM}*   */ *obs;
+  /** @type {STD_ITEM*}   */ *obs;
   int sz;
   mixed result;
   string complete;
@@ -323,7 +323,9 @@ int command_hook(string arg) {
       return 1;
     }
 
-    if(environment() && environment()->valid_exit(verb)) {
+    /** @type {STD_ROOM} */ object room = environment();
+
+    if(room && room->valid_exit(verb)) {
       arg = verb;
       verb = "go";
     }

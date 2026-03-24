@@ -12,50 +12,50 @@
 
 inherit STD_CMD;
 
-mixed main(object caller, string args) {
-    object body;
-    object security_editor;
+mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
+  if(!adminp(previous_object()))
+    return _error("Access denied.");
+  if(!args)
+    return _error("revdev <user>");
 
-    if(!adminp(previous_object()))
-        return _error("Access denied.");
-     if(!args)
-        return(_error("revdev <user>"));
+  args = lower_case(args);
 
-    args = lower_case(args);
-    body = find_player(args);
+  /** @type {STD_PLAYER} */ object body = find_player(args);
 
-    if(!body)
-        return _error("User '%s' not online.", args);
+  if(!body)
+    return _error("User '%s' not online.", args);
 
-    if(!devp(query_privs(body)))
-        return _error("That user is not a developer.");
+  if(!devp(query_privs(body)))
+    return _error("That user is not a developer.");
 
-    _info("Revoking developer access for '%s'.", capitalize(body->query_real_name()));
+  _info("Revoking developer access for '%s'.", capitalize(body->query_real_name()));
 
-    _ok(body, "Developer Access Revoked.");
-    body->rem_path("/cmds/wiz/");
-    body->rem_path("/cmds/object/");
-    body->rem_path("/cmds/file/");
-    body->rem_path("/cmds/adm/");
-    security_editor = new(OBJ_SECURITY_EDITOR);
-    security_editor->disable_membership(query_privs(body), "developer");
-    security_editor->write_state(0);
-    security_editor->remove();
-    body->save_body();
+  _ok(body, "Developer Access Revoked.");
+  body->rem_path("/cmds/wiz/");
+  body->rem_path("/cmds/object/");
+  body->rem_path("/cmds/file/");
+  body->rem_path("/cmds/adm/");
 
-    _ok("User '%s' is no longer a developer.", capitalize(body->query_real_name()));
+  /** @type {OBJ_SECURITY_EDITOR} */ object security_editor = new(OBJ_SECURITY_EDITOR);
+  security_editor->disableMembership(query_privs(body), "developer");
+  security_editor->writeState(0);
+  security_editor->remove();
+  body->save_body();
 
-    log_file(LOG_PROMOTE, capitalize(query_privs(caller)) + " revoked "
-        + body->query_real_name() + "'s developer status on " + ctime(time())
-        + "\n");
-    return 1;
+  _ok("User '%s' is no longer a developer.", capitalize(body->query_real_name()));
+
+  log_file(LOG_PROMOTE, capitalize(query_privs(caller)) + " revoked "
+    + body->query_real_name() + "'s developer status on " + ctime(time())
+    + "\n");
+  return 1;
 }
 
-string help(object caller) {
-    return(" SYNTAX: revdev <user>\n\n"
+string query_help(object _caller) {
+  return
+    " SYNTAX: revdev <user>\n\n"
     "This command will revoke a user's developer access to\n"
     "the mud by removing them from the group 'developer' and\n"
     "by removing the directories '/cmds/wiz/', '/cmds/object/'\n"
     "and '/cmds/file/' from the user's command path.\n\n"
-    "See also: makedev\n");
+    "See also: makedev\n";
 }

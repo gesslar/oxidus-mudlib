@@ -113,9 +113,19 @@ FluffOS LPC now supports C-style mixed declarations. Declare things close to whe
 
 Prefer declaring locals near their first use inside the narrowest scope that makes sense. Group related locals together when it improves readability. Global variables may be declared anywhere before use; placing them together near the top of the file is still helpful for discoverability.
 
+Global variables should be `private` by default. Only omit `private` when external objects genuinely need direct access to the variable (which is rare — prefer accessor functions).
+
 ### Functions
 
 Forward declarations at the top of the file are recommended when functions are referenced before their definitions. They are no longer strictly required by the driver but can improve clarity in larger files.
+
+Always use an explicit visibility modifier (`private`, `protected`, or `public`) on both forward declarations and function definitions. The modifiers mean:
+
+- **`private`** — only callable within the defining object. Use by default for internal helpers, parsing routines, and implementation details.
+- **`protected`** — callable by the defining object and any object that inherits it, but not by external callers. Use for functions that inheritors need to call or override.
+- **`public`** — callable by any object. Use for the object's external API — functions meant to be called via `call_other` / `->`.
+
+Default to `private`. Widen to `protected` or `public` only when there is a concrete need.
 
 ## Naming Conventions
 
@@ -140,6 +150,20 @@ Do **not** use an underscore `_` prefix to denote private functions — the `pri
 ### Local Variable Names
 
 Do **not** name a local variable the same as any function in scope. This avoids shadowing and potential confusion. Choose a distinct name instead.
+
+### Unused Parameters
+
+When a function signature requires a parameter that the body does
+not use (e.g., `caller` in `query_help`), prefix the name with `_`
+to suppress the LSP "declared but never read" diagnostic:
+
+```lpc
+string query_help(object _caller) {
+```
+
+This convention applies only to **parameters** that must exist for
+signature compatibility. Do not use `_` prefixed local variables
+elsewhere.
 
 ### Exceptions
 
@@ -195,6 +219,35 @@ float attackSpeed = 2.0;
 - When working with potentially missing or undefined values, check with `nullp()` before use.
 - Remember that null/undefined values are ints and are 0, but they are not the same as 0, and can be tested with `nullp()`.
 - After testing for null, you can then use `intp()` to check if the value is an int, particularly when validating call_other function arguments.
+
+### Inline Type Annotations for Object Parameters
+
+When a function parameter is typed as `object` but you call methods
+specific to a particular class (e.g., `set_env`, `query_pref`), the
+LSP cannot resolve those methods. Use an inline `/** @type */`
+comment to narrow the type for the LSP:
+
+```lpc
+mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
+  caller->set_env("colour", "on");   // LSP can resolve this now
+}
+```
+
+Use the most specific `STD_*` macro whose interface matches the
+methods actually called on that parameter — the same principle as
+LPCDoc `@param` type selection (see the lpcdoc skill). Common
+macros: `STD_PLAYER`, `STD_BODY`, `STD_NPC`, `STD_OBJECT`,
+`STD_ROOM`, `STD_CONTAINER`.
+
+This annotation is a comment and has no effect on compilation — it
+exists solely to give the LSP enough information to validate
+`call_other` calls on the parameter.
+
+This is especially useful for ubiquitous functions like `main()` in
+commands — `main()` is the only possible entry point and exists in
+every command file, so writing an LPCDoc block for it is pointless
+boilerplate. The inline `@type` annotation gives the LSP what it
+needs without adding a redundant doc comment.
 
 ## File Organisation
 

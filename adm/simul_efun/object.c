@@ -792,3 +792,10 @@ varargs mixed *accessible_objects(object container, object pov) {
 varargs object *accessible_objects_flat(object container, object pov) {
   return flatten(accessible_objects(container, pov));
 }
+
+/**
+ * @returns {SHUTDOWN_D} The shutdown daemon object.
+ */
+object shutdown_d() {
+  return load_object(SHUTDOWN_D);
+}
