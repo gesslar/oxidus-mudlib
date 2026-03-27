@@ -415,7 +415,6 @@ float getAccessibleLuminanceMultiplier(int *rgb) {
  */
 string substituteTooDark(string hex) {
   int *rgb;
-  int max_distance;
   float scale;
 
   if(find_index(base_colours(), (: $1[0] == $(hex) :)) > -1)
@@ -494,7 +493,6 @@ int colourToGreyscale(int colour_code) {
  * @returns {string} Text with applied colour preferences
  */
 public string bodyColourReplace(object body, string text, int message_type) {
-  int col;
   string pref, colour;
 
   if(!objectp(body) || !stringp(text) || !strlen(text) || !message_type)
@@ -607,7 +605,6 @@ public string rgbToSequence(int *rgb, int mode) {
 
 int *hexToRgb(string hex) {
   int r, g, b;
-  string *match;
 
   normalizeHex(ref hex);
 

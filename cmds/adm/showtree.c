@@ -82,7 +82,9 @@ string dig(string file, string func, int indent) {
     return 0;
   }
 
-  str = sprintf("%*-' 's%s", indent * 4, "", file);
+  int width = indent * 3;
+
+  str = sprintf("%*-' 's↳ %s", width-1, "", file);
   if(func && (function_exists(func, ob) == file))
     str += " ({{FFCC00}}" + func + "{{res}} defined)\n";
   else
@@ -90,7 +92,9 @@ string dig(string file, string func, int indent) {
 
   if(!func || function_exists(func, ob))
     found = 1;
+
   indent++;
+
   foreach(file in sort_array(inherit_list(ob), 1)) {
     string tmp;
     tmp = dig(file, func, indent);
