@@ -261,17 +261,19 @@ int request_clean_up() {
  * In addition to normal ID checks, also returns true if the ID matches
  * the storage_id.
  *
- * @param {string} id - The ID to check
+ * @param {string} toCheck - The ID to check
  * @returns {int} 1 if ID matches, 0 if not
  */
-int id(string id) {
-    if(classp(storage_options)) {
-        if(storage_options.storage_id)
-            if(storage_options.storage_id == id)
-                return 1;
+int id(string toCheck) {
+  if(classp(storage_options)) {
+    if(storage_options.storage_id) {
+      if(storage_options.storage_id == toCheck) {
+        return 1;
+      }
     }
+  }
 
-    return ::id(id);
+  return ::id(toCheck);
 }
 
 /**

@@ -10,14 +10,11 @@
 
 inherit STD_EQUIP;
 
-void mudlib_setup(mixed arg...) {
-
-}
-
 void set_id(mixed ids) {
-    ::set_id(ids);
-    if(!function_exists("is_armour"))
-        add_id(({ "clothing" }));
+  ::set_id(ids);
+
+  if(!function_exists("is_armour"))
+    add_id(({ "clothing" }));
 }
 
 int is_clothing() { return 1; }
