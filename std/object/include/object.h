@@ -1,7 +1,7 @@
 #ifndef __OBJECT_H__
 #define __OBJECT_H__
 
-int set_name(string str);
+string set_name(string str);
 string query_name();
 string query_real_name();
 void set_real_name(string str);

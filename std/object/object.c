@@ -94,15 +94,15 @@ varargs void reset() {
  * @returns {int} Always returns 1
  */
 int remove() {
-  object *obs, ob, next, env = environment();
+  object *obs, ob, env = environment();
 
   catch(call_if(this_object(), "removing", env));
 
-  ob = first_inventory(this_object());
+  /** @type {STD_ITEM} */ ob = first_inventory();
   while(ob) {
     int result;
 
-    next = next_inventory(ob);
+    /** @type {STD_ITEM} */ object next = next_inventory(ob);
 
     if(env) {
       result = ob->move(env);
@@ -247,7 +247,7 @@ string query_virtual_master() {
  * and runs the destruct chain and functions.
  */
 void on_destruct() {
-  object env = environment();
+  /** @type {STD_ITEM} */ object env = environment();
 
   if(env) {
     if(!env->ignore_capacity())

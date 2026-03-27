@@ -40,9 +40,9 @@ void flag(string str) {
   }
 }
 
-protected object connect(int port) {
+protected object connect(int _port) {
   object login_ob;
-  mixed err;
+  string err;
 
   // For some reason, we keep losing privs, so we'll set them again
   set_privs(this_object(), "[master]");
@@ -58,8 +58,8 @@ protected object connect(int port) {
   return login_ob;
 }
 
-protected void epilog(int load_empty) {
-  string str, *lines, err;
+protected void epilog(int _load_empty) {
+  string *lines, err;
   int i;
   float time;
   string out = "";
@@ -89,7 +89,7 @@ void tune_into_error() {
   CHAN_D->tune("error", query_privs(), 1);
 }
 
-protected void log_error(string file, string message) {
+protected void log_error(string _file, string message) {
   string username;
 
   if(this_body())
@@ -171,8 +171,6 @@ private nosave string runtime_log = "/log/runtime";
 
 void error_handler(mapping mp, int caught) {
   string logfile = caught ? catch_log : runtime_log;
-  string what = mp["error"];
-  string userid;
   string ret;
 
   ret = "---\n" + standard_trace(mp, 1);
@@ -316,6 +314,10 @@ string privs_file(string filename) {
   else return "object";
 }
 
+/**
+ *
+ * @param {STD_OBJECT} ob - The object of which the real name is needed.
+ */
 string object_name(object ob) {
   if(ob->query_real_name())
     return ob->query_real_name();
@@ -380,12 +382,21 @@ varargs void log_file(string file, string msg, mixed arg...) {
   write_file(source, msg);
 }
 
+/**
+ *
+ * @param {STD_PLAYER} user
+ * @param {int} config
+ */
 int save_ed_setup(object user, int config) {
   user->set_ed_setup(config);
 
   return 1;
 }
 
+/**
+ *
+ * @param {STD_PLAYER} user
+ */
 int retrieve_ed_setup(object user) {
   return user->query_ed_setup();
 }
