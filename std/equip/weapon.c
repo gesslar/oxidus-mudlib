@@ -1,6 +1,10 @@
 /**
  * @file /std/equip/weapon.c
- * @description Standard weapong inherits
+ * Standard weapon object providing wield/unwield functionality.
+ *
+ * Manages hand requirements, damage coefficient, damage type,
+ * equip/unequip checks, and GMCP updates when weapon state
+ * changes.
  *
  * @created 2024-08-04 - Gesslar
  * @last_modified 2024-08-04 - Gesslar
@@ -14,69 +18,141 @@
 
 inherit STD_ITEM;
 
-private nosave int _hands = 1;
-private nosave int _equipped = 0;
-private nosave string _slot;
-private mixed _dc = 1.0;
-private string _damage_type = "bludgeoning";
+private nosave int __hands = 1;
+private nosave int __equipped = 0;
+private nosave string __slot;
+private nosave mixed __dc = 1.0;
+private nosave string __damage_type = "bludgeoning";
 
-void set_hands(int i) { _hands = i ; }
-int query_hands() { return _hands ; }
+/**
+ * Sets how many hands are required to wield this weapon.
+ *
+ * @param {int} i - The number of hands required
+ */
+void set_hands(int i) { __hands = i; }
 
+/**
+ * Returns how many hands are required to wield this weapon.
+ *
+ * @returns {int} The number of hands required
+ */
+int query_hands() { return __hands; }
+
+/**
+ * Sets the body slot this weapon occupies when wielded.
+ *
+ * @param {string} str - The slot identifier
+ */
 void set_slot(string str) {
-  _slot = str;
+  __slot = str;
 }
 
+/**
+ * Sets the identifiers for this object, automatically adding
+ * "weapon" as an additional ID.
+ *
+ * @override
+ * @param {mixed} ids - The identifier(s) to set
+ */
 void set_id(mixed ids) {
   ::set_id(ids);
   add_id(({ "weapon" }));
 }
 
+/**
+ * Sets the damage coefficient for this weapon.
+ *
+ * Accepts a numeric value (int or float) or a function that
+ * returns the coefficient dynamically.
+ *
+ * @param {float | int | function} x - The damage coefficient
+ *                                     value or callable
+ * @errors If the argument is null or an invalid type
+ */
 void set_dc(mixed x) {
   if(nullp(x))
     error("Bad argument 1 to set_dc().\n");
 
-  if(valid_function(x))
-    _dc = x;
-
-  if(!floatp(x) && !intp(x))
+  if(!valid_function(x) && !floatp(x) && !intp(x))
     error("Bad argument 1 to set_dc().\n");
 
-  _dc = to_float(x);
+  __dc = x;
 }
 
+/**
+ * Returns the current damage coefficient for this weapon.
+ *
+ * If the coefficient was set as a function, it is evaluated
+ * and the result returned.
+ *
+ * @returns {float} The damage coefficient
+ */
 float query_dc() {
-  function f = valid_function(_dc) ? _dc : null;
+  function f = valid_function(__dc) ? __dc : null;
 
-  return f ? f() : _dc;
+  return f ? f() : __dc;
 }
 
+/**
+ * Sets the damage type dealt by this weapon.
+ *
+ * @param {string} dt - The damage type (e.g. "bludgeoning",
+ *                      "slashing", "piercing")
+ */
 void set_damage_type(string dt) {
-  _damage_type = dt;
+  __damage_type = dt;
 }
 
+/**
+ * Returns the damage type dealt by this weapon.
+ *
+ * @returns {string} The damage type
+ */
 string query_damage_type() {
-  return _damage_type;
+  return __damage_type;
 }
 
+/**
+ * Returns the body slot this weapon occupies when wielded.
+ *
+ * @returns {string} The slot identifier
+ */
 string query_slot() {
-  return _slot;
+  return __slot;
 }
 
+/**
+ * Checks whether this weapon can be wielded by the specified
+ * living.
+ *
+ * Delegates to an optional equip_check() function on this object.
+ * If no such function exists, wielding is allowed by default.
+ *
+ * @param {STD_BODY} tp - The living attempting to wield
+ * @returns {mixed} 1 if wielding is allowed, or an error string
+ */
 mixed can_equip(object tp) {
   return call_if(this_object(), "equip_check", tp) || 1;
 }
 
-mixed equip(object tp, string slot) {
+/**
+ * Wields this weapon on the given living in the specified slot.
+ *
+ * Verifies the weapon is in the living's inventory, is not
+ * already wielded, and the slot is available. On success, marks
+ * the weapon as wielded and sends a GMCP update.
+ *
+ * @param {STD_BODY} tp - The living to wield on
+ * @param {string} slot - The body slot to wield in
+ * @returns {mixed} 1 on success, 0 or an error string on failure
+ */
+mixed equip(object tp: (: environment() :), string slot) {
   mixed result;
-  object env = environment();
 
-  if(env != tp) {
-    printf("Not in same environment: %O != %O\n", env, tp);
+  if(!living(tp))
     return 0;
-  }
 
-  if(_equipped) {
+  if(__equipped) {
     printf("Already equipped: %O\n", this_object());
     return 0;
   }
@@ -90,59 +166,98 @@ mixed equip(object tp, string slot) {
   if(result != 1)
     return result;
 
-  _equipped = 1;
+  __equipped = 1;
 
   GMCP_D->send_gmcp(tp, GMCP_PKG_CHAR_ITEMS_UPDATE, ({ this_object(), tp }));
 
   return 1;
 }
 
+/**
+ * Checks whether this weapon can be unwielded by the specified
+ * living.
+ *
+ * Delegates to an optional unequip_check() function on this
+ * object. If no such function exists, unwielding is allowed by
+ * default.
+ *
+ * @param {STD_BODY} tp - The living attempting to unwield
+ * @returns {mixed} 1 if unwielding is allowed, or an error string
+ */
 mixed can_unequip(object tp) {
   return call_if(this_object(), "unequip_check", tp) || 1;
 }
 
-varargs int unequip(object tp, int silent) {
-  mixed result;
-
-  if(!_equipped)
+/**
+ * Unwields this weapon from the given living.
+ *
+ * Verifies the weapon is currently wielded and that the living
+ * does not still have it equipped. On success, marks the weapon
+ * as unwielded, emits an action message (unless silent), and
+ * sends a GMCP update.
+ *
+ * @param {STD_BODY} tp - The living to unwield from; defaults
+ *                        to environment() if not provided
+ * @param {int} [silent] - If true, suppress the unwield action
+ *                         message
+ * @returns {int} 1 on success, 0 on failure
+ */
+varargs int unequip(object tp: (: environment() :), int silent) {
+  if(!__equipped)
     return 0;
 
-  if(!tp)
-    tp = environment();
+  __equipped = 0;
 
-  if(tp) {
-    if(tp->equipped(this_object()))
-      return 0;
+  if(!living(tp))
+    return 0;
 
-    if(!tp->unequip(this_object()))
-      return 0;
+  if(tp->equipped(this_object()))
+    return 0;
 
-    if(!silent)
-      tp->simple_action("$N $vunwield $o.", get_short());
-  }
+  if(!tp->unequip(this_object()))
+    return 0;
 
-  _equipped = 0;
+  if(!silent)
+    tp->simple_action("$N $vunwield $o.", get_short());
 
   GMCP_D->send_gmcp(tp, GMCP_PKG_CHAR_ITEMS_UPDATE, ({ this_object(), tp }));
 
   return 1;
 }
 
+/**
+ * Moves this object to a new destination, automatically
+ * unwielding it if it was wielded.
+ *
+ * @override
+ * @param {mixed} dest - The destination object or path
+ * @returns {int} The result of the move operation
+ */
 int move(mixed dest) {
   object env = environment();
   int ret = ::move(dest);
 
-  env && _equipped && !ret && unequip(env);
+  env && __equipped && !ret && unequip(env);
 
   return ret;
 }
 
+/**
+ * Returns whether this weapon is currently wielded.
+ *
+ * @returns {int} 1 if wielded, 0 if not
+ */
 int equipped() {
-  return _equipped;
+  return __equipped;
 }
 
 void unsetup() {
   unequip(environment());
 }
 
-int is_weapon() { return 1 ; }
+/**
+ * Identifies this object as a weapon.
+ *
+ * @returns {int} Always returns 1
+ */
+int is_weapon() { return 1; }

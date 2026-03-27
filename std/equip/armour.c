@@ -1,6 +1,9 @@
 /**
- * @file /std/area/equip/armour.c
- * @description More protective clothing!
+ * @file /std/equip/armour.c
+ *
+ * Standard armour object. Extends clothing with defence
+ * ratings and armour class (AC) for damage mitigation in
+ * combat.
  *
  * @created 2024-07-25 - Gesslar
  * @last_modified 2024-07-25 - Gesslar
@@ -17,24 +20,40 @@ private mapping _defense = ([ ]);
 private float _ac = 0.0;
 
 void mudlib_setup() {
-    ::mudlib_setup();
-    set_name("armour");
-    set_short("armour");
-    set_long("This is a piece of chest armour.");
-    set_mass(1);
-    set_defense(([
-        "slashing" : 1.0,
-        "piercing" : 1.0,
-        "bludgeoning" : 1.0,
-    ]));
-    set_slot("torso");
+  ::mudlib_setup();
+  set_name("armour");
+  set_short("armour");
+  set_slot("torso");
+  set_long("This is a piece of chest armour.");
+  set_mass(1);
+  set_defense(([
+    "slashing" : 1.0,
+    "piercing" : 1.0,
+    "bludgeoning" : 1.0,
+  ]));
 }
 
+/**
+ * Sets the IDs for this armour and ensures "armour" and
+ * "armor" are always present as identifiers.
+ *
+ * @override
+ * @param {string | string*} ids - The IDs to set
+ */
 void set_id(mixed ids) {
-    ::set_id(ids);
-    add_id(({ "armour", "armor" }));
+  ::set_id(ids);
+  add_id(({ "armour", "armor" }));
 }
 
+/**
+ * Equips the armour to the given slot and recalculates the
+ * wearer's protection values.
+ *
+ * @override
+ * @param {STD_BODY} tp - The body equipping the armour
+ * @param {string} slot - The body slot to equip to
+ * @returns {int} 1 on success, 0 on failure
+ */
 int equip(object tp, string slot) {
     if(!::equip(tp, slot)) return 0;
 
@@ -43,48 +62,102 @@ int equip(object tp, string slot) {
     return 1;
 }
 
-int unequip(object tp, int silent) {
-    if(!objectp(tp))
-        tp = environment();
+/**
+ * Unequips the armour and recalculates the wearer's
+ * protection values. Falls back to the current environment
+ * if tp is not provided.
+ *
+ * @override
+ * @param {STD_BODY} tp - The body unequipping the armour
+ * @param {int} silent - Whether to suppress messages
+ * @returns {int} 1 on success, 0 on failure
+ */
+int unequip(object tp: (: environment() :), int silent: (: 0 :)) {
+  if(!::unequip(tp, silent))
+    return 0;
 
-    if(!::unequip(tp))
-        return 0;
+  if(tp)
+    tp->adjust_protection();
 
-    if(tp)
-        tp->adjust_protection();
-
-    return 1;
+  return 1;
 }
 
+/**
+ * Sets the full defence mapping for this armour, replacing
+ * any existing values.
+ *
+ * @param {([ string: float ])} def - Defence values keyed by
+ *                                    damage type
+ */
 public void set_defense(mapping def) {
     _defense = def;
 }
 
+/**
+ * Adds or updates a single defence type value.
+ *
+ * @param {string} type - The damage type to defend against
+ * @param {float} amount - The defence value
+ */
 public void add_defense(string type, float amount) {
     if(!_defense) _defense = ([ ]);
     _defense[type] = amount;
 }
 
+/**
+ * Returns the full defence mapping for this armour.
+ *
+ * @returns {([ string: float ])} Defence values keyed by
+ *                                damage type
+ */
 public mapping query_defense() {
     return _defense;
 }
 
+/**
+ * Returns the defence value for a specific damage type.
+ *
+ * @param {string} type - The damage type to query
+ * @returns {float} The defence value, or 0.0 if not set
+ */
 public float query_defense_amount(string type) {
     if(!_defense) return 0.0;
     return _defense[type];
 }
 
+/**
+ * Sets the armour class value.
+ *
+ * @param {float} ac - The armour class value
+ */
 public void set_ac(float ac) {
     _ac = ac;
 }
 
+/**
+ * Returns the current armour class value.
+ *
+ * @returns {float} The armour class value
+ */
 public float query_ac() {
     return _ac;
 }
 
+/**
+ * Adds to the current armour class value and returns the
+ * new total.
+ *
+ * @param {float} ac - The amount to add to armour class
+ * @returns {float} The new armour class value
+ */
 public float add_ac(float ac) {
     _ac += ac;
     return _ac;
 }
 
+/**
+ * Identifies this object as armour.
+ *
+ * @returns {int} Always returns 1
+ */
 int is_armour() { return 1; }
