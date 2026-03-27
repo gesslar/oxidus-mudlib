@@ -65,7 +65,7 @@ protected nomask int query_listen_port() {
 }
 
 protected nomask void start_server() {
-  int fd, status;
+  int fd;
 
   fd = socket_create(get_option("tls")
     ? STREAM_TLS_BINARY
@@ -82,22 +82,22 @@ protected nomask void start_server() {
     socket_set_option(fd, SO_TLS_KEY, "adm/certs/key.pem");
   }
 
-  status = socket_bind(fd, LISTEN_PORT);
-  if(status != EESUCCESS) {
-    _log(0, "Unable to bind to port %d: %s", LISTEN_PORT, socket_error(status));
+  int bindStatus = socket_bind(fd, LISTEN_PORT);
+  if(bindStatus != EESUCCESS) {
+    _log(0, "Unable to bind to port %d: %s", LISTEN_PORT, socket_error(bindStatus));
     return;
   }
 
-  status = socket_listen(fd, "socket_listen");
-  if(status != EESUCCESS) {
-    _log(0, "Unable to listen on socket: %s", socket_error(status));
+  int listenStatus = socket_listen(fd, "on_socket_listen");
+  if(listenStatus != EESUCCESS) {
+    _log(0, "Unable to listen on socket: %s", socket_error(listenStatus));
     return;
   }
 
   _log(1, "Listening on port %d", LISTEN_PORT);
 }
 
-protected nomask void socket_listen(int fd) {
+protected nomask void on_socket_listen(int fd) {
   int client_fd;
   mapping client;
   string client_address;
@@ -134,7 +134,7 @@ void socket_ready(int fd) {
 }
 
 nomask void close_all_client_connections() {
-  foreach(int fd, mapping client in clients)
+  foreach(int fd, mapping _ in clients)
     close_client_connection(fd);
 }
 

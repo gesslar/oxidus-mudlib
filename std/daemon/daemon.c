@@ -9,7 +9,7 @@
 inherit STD_OBJECT;
 inherit M_PERSIST_DATA;
 
-void create(mixed args...) {
+void create(mixed _args...) {
     setup_chain();
 }
 

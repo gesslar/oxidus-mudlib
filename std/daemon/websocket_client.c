@@ -22,7 +22,7 @@ inherit STD_DAEMON;
 inherit M_HTTP;
 
 // Functions
-private nomask string random_string();
+protected nomask string random_string(int length);
 protected nomask mapping websocket_connect(string url);
 
 private nomask void process_handshake(buffer buf);
@@ -31,7 +31,6 @@ private nomask mapping parse_websocket_frame(buffer buf);
 private nomask void process_websocket_message(mapping frame_info);
 private nomask buffer apply_mask(buffer data, buffer mask);
 varargs protected nomask int websocket_close(int code, string reason);
-protected nomask void shutdown_websocket();
 
 private string unformat_frame(buffer message);
 private nomask varargs buffer format_frame(int opcode, mixed args...);
@@ -154,9 +153,8 @@ protected nomask mapping websocket_connect(string url) {
  *
  * @param {string} host - The host that was resolved.
  * @param {string} addr - The resolved address.
- * @param {int} key - The key associated with the resolution request.
  */
-protected nomask void websocket_resolved(string host, string addr, int key) {
+protected nomask void websocket_resolved(string host, string addr) {
     int fd, result;
 
     _log(2, "Resolving WebSocket host: %s", host);
@@ -189,7 +187,7 @@ protected nomask void websocket_resolved(string host, string addr, int key) {
 
             call_if(this_object(), "websocket_handle_connection_error", result);
 
-            shutdown_websocket();
+            websocket_close();
             return;
         }
 
@@ -206,7 +204,7 @@ protected nomask void websocket_resolved(string host, string addr, int key) {
 
         call_if(this_object(), "websocket_handle_resolve_error");
 
-        shutdown_websocket();
+        websocket_close();
         return;
     }
 }
@@ -219,7 +217,6 @@ protected nomask void websocket_resolved(string host, string addr, int key) {
 public nomask void websocket_ready(int fd) {
     string out;
     string raw_key, sec_websocket_key;
-    string host;
     int result;
     string subs;
     int written;
@@ -235,13 +232,13 @@ public nomask void websocket_ready(int fd) {
 
     if(!stringp(raw_key = server["handshake_key"])) {
         _log(0, "No handshake key for fd %d", fd);
-        shutdown_websocket();
+        websocket_close();
         return;
     }
 
     if(!server["request"]["host"]) {
         _log(0, "No host specified for fd %d", fd);
-        shutdown_websocket();
+        websocket_close();
         return;
     }
 
@@ -277,7 +274,7 @@ public nomask void websocket_ready(int fd) {
     if(result != EESUCCESS) {
         _log(2, "Failed to send handshake request: %d", result);
         call_if(this_object(), "websocket_handle_handshake_error", result);
-        shutdown_websocket();
+        websocket_close();
     } else {
         call_if(this_object(), "websocket_handle_handshake_sent");
         _log(2, "Handshake request sent");
@@ -290,9 +287,6 @@ public nomask void websocket_ready(int fd) {
  * @param {int} fd - The file descriptor of the socket.
  */
 protected nomask void websocket_closed(int fd) {
-    float duration;
-    float speed;
-
     _log(3, "Socket closed for fd %d", fd);
 
     if(!server)
@@ -302,7 +296,7 @@ protected nomask void websocket_closed(int fd) {
 
     call_if(this_object(), "websocket_handle_closed");
 
-    shutdown_websocket(fd);
+    websocket_close();
 }
 
 /**
@@ -350,13 +344,12 @@ protected nomask void shutdown_websocket() {
 /**
  * Reads incoming data from the WebSocket.
  *
- * @param {int} fd - The file descriptor of the socket.
+ * @param {int} _fd - The file descriptor of the socket.
  * @param {buffer} incoming - The incoming data buffer.
  */
-public nomask void websocket_read(int fd, buffer incoming) {
+public nomask void websocket_read(int _fd, buffer incoming) {
     buffer buf;
     mapping frame_info;
-    mapping http;
 
     if(!server)
         return;
@@ -406,7 +399,7 @@ public nomask void websocket_read(int fd, buffer incoming) {
     if(sizeof(buf) && !server["response"]["headers"]) {
         mapping headers;
 
-        headers = parse_headers(buf, 1);
+        headers = parse_headers(to_string(buf), 1);
 
         if(!headers) {
             server["buffer"] = buf;
@@ -461,13 +454,12 @@ public nomask void websocket_read(int fd, buffer incoming) {
 /**
  * Processes the WebSocket handshake.
  *
- * @param {buffer} buf - The buffer containing the handshake data.
+ * @param {buffer} _buf - The buffer containing the handshake data.
  */
-private nomask void process_handshake(buffer buf) {
+private nomask void process_handshake(buffer _buf) {
     string raw_key = server["handshake_key"];
     string sec_websocket_key, concat, hash_result_hex, expected, accept;
     buffer hash_result_binary;
-    mapping frame_info;
     mapping response = server["response"];
 
     _log(2, "Validating handshake");
@@ -679,7 +671,6 @@ private nomask void process_unknown_frame(mapping frame_info);
 /**
  * Processes a WebSocket message based on the frame information.
  *
- * @param {int} fd - The file descriptor of the socket.
  * @param {mapping} frame_info - The frame information.
  */
 private nomask void process_websocket_message(mapping frame_info) {
@@ -934,7 +925,7 @@ private nomask buffer apply_mask(buffer data, buffer mask) {
  * @returns {string} - The unformatted frame as a string.
  */
 private string unformat_frame(buffer message) {
-    int len, i, frame_offset;
+    int i, frame_offset;
     int payload_len;
     buffer mask;
     buffer payload;
@@ -1147,13 +1138,6 @@ protected nomask string random_string(int length) {
     return result;
 }
 
- /**
- * Shuts down the WebSocket connection gracefully.
- */
-void shutdown() {
-    websocket_close();
-}
-
 void mudlib_unsetup() {
-    shutdown(WS_CLOSE_GOING_AWAY);
+  websocket_close(WS_CLOSE_GOING_AWAY);
 }

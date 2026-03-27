@@ -11,7 +11,6 @@ protected object generate_object(string path);
 
 object compile_object(string path) {
     string subzone, subzone_path;
-    object subzone_daemon;
     string *current_dir;
     string *path_parts;
 
@@ -23,10 +22,11 @@ object compile_object(string path) {
     subzone_path = current_dir[0] + subzone + "/zone";
 
     if(file_size(subzone_path + ".c") > 0) {
-        subzone_daemon = load_object(subzone_path);
+        /** @type {STD_VIRTUAL_SERVER} */object subzone_daemon = load_object(subzone_path);
         if(!subzone_daemon) {
             return 0;
         }
+
         return subzone_daemon->compile_object(implode(path_parts[1..], "/"));
     }
 
@@ -35,6 +35,6 @@ object compile_object(string path) {
 }
 
 // To be overridden by specific zone daemons
-protected object generate_object(string path) {
+protected object generate_object(string _path) {
     return 0;  // Default behavior: don't generate anything
 }
