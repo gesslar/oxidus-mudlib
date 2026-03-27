@@ -13,8 +13,6 @@
 
 inherit STD_REPORTER;
 
-void finish_report(string text, object tp);
-
 void setup() {
   set_report_type(query_file_name());
   set_git_hub_label("enhancement");

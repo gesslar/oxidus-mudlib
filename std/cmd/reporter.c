@@ -1,6 +1,10 @@
 /**
  * @file /std/cmd/reporter.c
- * @description Inherited by reporting commands, such as bug, typo, and idea.
+ *
+ * Inherited by reporting commands such as bug, typo, and idea.
+ * Handles the full report lifecycle: subject input, editor
+ * session, local log file writing, and optional GitHub issue
+ * submission.
  *
  * @created 2024-07-13 - Gesslar
  * @last_modified 2024-07-13 - Gesslar
@@ -15,14 +19,18 @@
 inherit STD_CMD;
 inherit M_LOG;
 
-protected nomask mixed start_report(object user);
-public nomask void finish_report(string text, object user);
-public nomask void finish_github(mapping response, object user);
-public nomask void get_subject(string subject, object user);
-
 private nomask nosave string report_type = "";
 private nomask nosave string git_hub_label = "";
 
+/**
+ * Sets the type of report this command generates (e.g.
+ * "bug", "typo", "idea"). Used in user-facing messages
+ * and log file naming.
+ *
+ * @protected
+ * @param {string} type - The report type identifier
+ * @errors If type is not a valid string
+ */
 protected nomask void set_report_type(string type) {
   if(!stringp(type) && !strlen(type))
     error("Bad argument 1 to set_report_type().");
@@ -30,6 +38,18 @@ protected nomask void set_report_type(string type) {
   report_type = type;
 }
 
+/**
+ * Sets the GitHub label used when submitting this report as
+ * a GitHub issue. Validates the label against the configured
+ * GITHUB_REPORTER types.
+ *
+ * @protected
+ * @param {string} label - The GitHub issue label
+ * @errors If label is not a valid string
+ * @errors If GITHUB_REPORTER configuration is missing
+ * @errors If no types are configured in GITHUB_REPORTER
+ * @errors If label is not a recognised type
+ */
 protected nomask void set_git_hub_label(string label) {
   mapping config = mudConfig("GITHUB_REPORTER");
 
@@ -52,6 +72,15 @@ mixed main(object user, string str) {
   return start_report(user, str);
 }
 
+/**
+ * Begins the report workflow. If no subject is provided,
+ * prompts the user for one via input_to. Otherwise proceeds
+ * directly to the editor session.
+ *
+ * @param {STD_BODY} user - The user filing the report
+ * @param {string} subject - The report subject line
+ * @returns {mixed} 1 on success, or an error message string
+ */
 mixed start_report(object user, string subject) {
   if(!strlen(report_type))
     return "Report type not set.\n";
@@ -67,9 +96,15 @@ mixed start_report(object user, string subject) {
   return 1;
 }
 
+/**
+ * Receives the subject line and opens the editor for the
+ * user to compose the report body. Aborts if the subject
+ * is empty.
+ *
+ * @param {string} subject - The report subject line
+ * @param {STD_BODY} user - The user filing the report
+ */
 public nomask void get_subject(string subject, object user) {
-  object editor;
-
   if(!subject || !strlen(subject))
     return tell(user, "Aborted.\n");
 
@@ -79,7 +114,19 @@ public nomask void get_subject(string subject, object user) {
   );
 }
 
-public nomask void finish_report(int status, string file, string temp_file, object user, string subject) {
+/**
+ * Callback invoked when the editor session completes.
+ * Writes the report to the local log file and, if a GitHub
+ * label is configured, submits it as a GitHub issue.
+ *
+ * @param {int} status - The editor exit status
+ * @param {string} _file - The editor file path
+ * @param {string} temp_file - The temporary file containing
+ *                             the report body
+ * @param {STD_BODY} user - The user who filed the report
+ * @param {string} subject - The report subject line
+ */
+public nomask void finish_report(int status, string _file, string temp_file, object user, string subject) {
   string log_file, log_text, gh_text;
   string text;
 
@@ -125,6 +172,14 @@ public nomask void finish_report(int status, string file, string temp_file, obje
     );
 }
 
+/**
+ * Callback invoked after the GitHub issue creation request
+ * completes. Notifies the user of success or failure.
+ *
+ * @param {mapping} status - The HTTP response containing a
+ *                           "code" key
+ * @param {STD_BODY} user - The user who filed the report
+ */
 public nomask void finish_github(mapping status, object user) {
   if(status["code"] == 201)
     tell(user, "Report submitted to GitHub.\n");
