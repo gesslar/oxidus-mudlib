@@ -1,20 +1,23 @@
 /**
  * @file /std/cmd/ability.c
- * @description Standard ability inheritance for commands
  *
- * @created 2024/02/20: Gesslar
- * @last_modified 2024/09/24: Gesslar
+ * Standard ability inheritance for commands. Provides the
+ * framework for ability usage including condition checks,
+ * cost management, cooldown tracking, and target resolution.
+ *
+ * @created 2024-02-20 - Gesslar
+ * @last_modified 2024-09-24 - Gesslar
  *
  * @history
- * 2024/02/20 - Gesslar - Created
- * 2024/09/24 - Gesslar - Added cooldown support
+ * 2024-02-20 - Gesslar - Created
+ * 2024-09-24 - Gesslar - Added cooldown support
  */
 
 inherit STD_ACT;
 
 // Functions
 int condition_check(object tp, string arg);
-mixed use(object tp, string arg) {}
+mixed use(object _tp, string _arg) {}
 int cost_check(object tp, string arg);
 void apply_cost(object tp, string arg);
 object local_target(object tp, string arg, function f);
@@ -49,11 +52,14 @@ mixed main(object tp, string arg) {
 }
 
 /**
- * @function condition_check
- * @description Checks the conditions for using the ability.
- * @param {object} tp - The player to check the conditions for.
- * @param {string} arg - The argument to check the conditions for.
- * @returns {int} 1 if the conditions are met, 2 if the conditions are not met, 0 if the conditions are unknown.
+ * Checks the conditions for using the ability, including
+ * whether the player is already acting, cooldown readiness,
+ * and resource cost availability.
+ *
+ * @param {STD_BODY} tp - The player to check conditions for
+ * @param {string} arg - The argument passed to the ability
+ * @returns {int} 1 if conditions are met, 2 if not met but
+ *                message was sent, 0 if unknown
  */
 int condition_check(object tp, string arg) {
   if(tp->is_acting()) {
@@ -73,21 +79,26 @@ int condition_check(object tp, string arg) {
 }
 
 /**
- * @function query_ability_type
- * @description Returns the type of ability.
- * @returns {string} The type of ability.
+ * Returns the type of ability.
+ *
+ * @returns {string} The ability type identifier
  */
 string query_ability_type() {
   return ability_type;
 }
 
 /**
- * @function local_target
- * @description Finds a local target for the ability.
- * @param {object} tp - The player to find the target for.
- * @param {string} arg - The argument to find the target for.
- * @param {function} f - The function to check the target for.
- * @returns {object} The target if found, 0 if not found.
+ * Finds a local target for the ability. If no argument is
+ * provided and target_current is set, falls back to the
+ * player's highest threat target. For aggressive abilities,
+ * also validates that combat is permitted.
+ *
+ * @param {STD_BODY} tp - The player using the ability
+ * @param {string} arg - The target identifier string
+ * @param {function} [f] - Optional filter function for
+ *                         target validation
+ * @returns {object | int} The target if found, 0 if not
+ * @errors If tp is not a valid object
  */
 varargs object local_target(object tp, string arg, function f) {
   object t;
@@ -128,7 +139,14 @@ varargs object local_target(object tp, string arg, function f) {
   return t;
 }
 
-int cost_check(object tp, string arg) {
+/**
+ * Checks whether the player has sufficient HP, SP, and MP to cover the
+ * ability's resource costs.
+ *
+ * @param {STD_BODY} tp - The player to check resources for
+ * @returns {int} 1 if the player can afford the cost, 0 if not
+ */
+int cost_check(object tp) {
   if(hp_cost && tp->query_hp() < hp_cost) {
     tell(tp, "You are too weak to do that.\n");
     return 0;
@@ -148,30 +166,33 @@ int cost_check(object tp, string arg) {
 }
 
 /**
- * @function apply_cost
- * @description Applies the cost of the ability to the player.
- * @param {object} tp - The player to apply the cost to.
- * @param {string} arg - The argument to apply the cost to.
+ * Applies the ability's resource costs by deducting HP, SP,
+ * and MP from the player.
+ *
+ * @param {STD_BODY} tp - The player to deduct costs from
  */
-void apply_cost(object tp, string arg) {
-  if(hp_cost) tp->adjust_hp(-hp_cost);
-  if(sp_cost) tp->adjust_sp(-sp_cost);
-  if(mp_cost) tp->adjust_mp(-mp_cost);
+void apply_cost(object tp) {
+  hp_cost && tp->adjust_hp(-hp_cost);
+  sp_cost && tp->adjust_sp(-sp_cost);
+  mp_cost && tp->adjust_mp(-mp_cost);
 }
 
 /**
- * @function find_cooldown_key
- * @description Finds the cooldown key for the ability.
- * @param {string} arg - The argument to find the cooldown key for.
- * @returns {string} The cooldown key if found, 0 if not found.
+ * Finds the matching cooldown key for the given argument by checking against
+ * the cooldown mapping's test patterns.
+ *
+ * @private
+ * @param {string} arg - The argument to match against
+ *                       cooldown patterns
+ * @returns {string | undefined} The cooldown key if found, 0 if no match
  */
 private string find_cooldown_key(string arg) {
   string key, test;
-  mixed *keys;
+  string *cles;
 
-  keys = keys(cooldowns);
-  if(sizeof(keys) == 1) {
-    key = keys[0];
+  cles = keys(cooldowns);
+  if(sizeof(cles) == 1) {
+    key = cles[0];
     test = cooldowns[key][0];
 
     if(test == "")
@@ -180,7 +201,7 @@ private string find_cooldown_key(string arg) {
     return test;
   }
 
-  foreach(key in keys) {
+  foreach(key in cles) {
     test = cooldowns[key][0];
 
     if(test == "")
@@ -190,23 +211,22 @@ private string find_cooldown_key(string arg) {
       return key;
   }
 
-  return 0;
+  return null;
 }
 
 /**
- * @function cooldown_check
- * @description Checks the cooldown for the ability.
- * @param {object} tp - The player to check the cooldown for.
- * @param {string} arg - The argument to check the cooldown for.
- * @returns {int} 1 if the cooldown is ready, 0 if the cooldown is not ready, 2 if the cooldown is unknown.
+ * Checks whether the ability's cooldown has expired for the
+ * given player.
+ *
+ * @param {STD_BODY} tp - The player to check cooldowns for
+ * @param {string} arg - The argument passed to the ability
+ * @returns {int} 1 if the cooldown is ready or no cooldown
+ *                applies, 0 if still on cooldown
  */
 int cooldown_check(object tp, string arg) {
-  string key;
-  int time;
-  string test;
-  mixed *value;
+  string key = find_cooldown_key(arg);
 
-  if(!(key = find_cooldown_key(arg)))
+  if(!key)
     return 1;
 
   if(tp->query_cooldown_remaining(key) > 0) {
@@ -218,14 +238,14 @@ int cooldown_check(object tp, string arg) {
 }
 
 /**
- * @function apply_cooldown
- * @description Applies the cooldown for the ability.
- * @param {object} tp - The player to apply the cooldown to.
- * @param {string} arg - The argument to apply the cooldown to.
+ * Applies the cooldown for the ability to the player based
+ * on the matched cooldown key and its configured duration.
+ *
+ * @param {STD_BODY} tp - The player to apply the cooldown to
+ * @param {string} arg - The argument passed to the ability
  */
 void apply_cooldown(object tp, string arg) {
   string key;
-  mixed result;
 
   key = find_cooldown_key(arg);
   if(!key)
