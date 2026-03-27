@@ -100,7 +100,7 @@ varargs nomask mapping http_request(string url, string method, mapping headers, 
 }
 
 varargs private nomask void http_connect(mapping request) {
-  int fd, status, key, port;
+  int fd, key;
   string host;
   mapping server;
   int secure;
@@ -210,8 +210,6 @@ nomask void socket_resolve(string host, string addr, int key) {
 
 nomask void socket_closed(int fd) {
   mapping server = servers[fd];
-  float duration;
-  float speed;
 
   if(!server) {
     _log(3, "No server found to be closed.");
@@ -233,7 +231,6 @@ nomask void shutdown_socket(int fd) {
   float speed;
   float now, started;
   float received_total;
-  mixed callback;
   int fs;
 
   _log(3, "Shutting down socket: %d", fd);
@@ -328,7 +325,7 @@ nomask void socket_read(int fd, buffer incoming) {
   if(sizeof(buf) && !server["response"]["headers"]) {
     mapping headers;
 
-    headers = parse_headers(buf, 1);
+    headers = parse_headers(to_string(buf), 1);
 
     if(!headers) {
       server["buffer"] = buf;
@@ -477,10 +474,7 @@ private nomask void process_response(int fd, mapping server) {
   // Content-Length
   else if(server["response"]["headers"]["content-length"]) {
     int expected = server["response"]["headers"]["content-length"];
-    mixed *assoc;
-    string *parts;
-    int *indices;
-    int i, sz;
+    int sz;
 
     _log(2, "Content-Length: %d", expected);
 

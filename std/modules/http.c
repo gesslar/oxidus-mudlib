@@ -117,9 +117,6 @@ protected nomask mapping parse_http_response(string str) {
   string header, body;
   mapping result = ([]);
   int start_cursor, end_cursor;
-  string test;
-  int i, sz;
-  string *lines;
 
   start_cursor = 0;
   end_cursor = find_marker(str, "\r\n\r\n");
@@ -223,7 +220,6 @@ protected nomask mapping parse_response_status(mixed str, int keep_remainder: (:
 
 protected nomask mapping parse_headers(mixed str, int keep_remainder) {
   mapping headers = ([]);
-  string remainder;
   string search_pat = "^.*?:\\s+.*\r\n";
   string extract_pat = "^(.*?):\\s+(.*)\r\n";
   string replace_pat = "^(.*?:\\s+.*\r\n)";
@@ -415,7 +411,7 @@ protected nomask string url_decode(string str) {
 }
 
 protected nomask mapping parse_url(string str) {
-  string location, protocol, host, path, secure_part;
+  string protocol, host, path;
   int port, secure;
   string *matches, port_string;
   mapping result = ([]);
@@ -450,9 +446,8 @@ protected nomask mapping parse_url(string str) {
 }
 
 protected nomask varargs int find_marker(mixed buf, string marker) {
-  int i, sz, marker_sz, direction, start;
+  int sz;
   string type = typeof(buf);
-  mixed marker_test;
 
   sz = sizeof(buf);
   if(stringp(buf))
@@ -554,7 +549,7 @@ protected nomask void cache_response(string file, buffer response) {
 }
 
 private nomask int integrity_check(string file, buffer response) {
-  buffer cached_content = read_buffer(file, 0, file_size(file));
+  buffer cached_content = (buffer)read_buffer(file, 0, file_size(file));
   if(sizeof(cached_content) != sizeof(response)) {
     _log(4, "Mismatch detected: Cached file size: %d, Response size: %d", sizeof(cached_content), sizeof(response));
     return 0;
@@ -572,14 +567,13 @@ private nomask int integrity_check(string file, buffer response) {
 
 protected nomask mixed read_cache(string file) {
   mixed response = "";
-  int chunk_size = get_config(__MAX_BYTE_TRANSFER__);
-  int max = get_config(__MAX_STRING_LENGTH__);
-  buffer buf, total;
+  int chunk_size = (int)get_config(__MAX_BYTE_TRANSFER__);
+  int max = (int)get_config(__MAX_STRING_LENGTH__);
+  buffer total;
   string tail;
 
   int curr = 0;
   int sz = file_size(file);
-  string input;
   int bytes_to_read;
 
   if(sz == -1) {
@@ -604,7 +598,7 @@ protected nomask mixed read_cache(string file) {
   while(curr < sz) {
     bytes_to_read = min(({sz - curr, chunk_size}));
 
-    buf = read_buffer(file, curr, bytes_to_read);
+    buffer buf = (buffer)read_buffer(file, curr, bytes_to_read);
     if(!buf) // Exit loop if read_bytes fails
       break;
 
@@ -623,9 +617,9 @@ protected nomask mixed read_cache(string file) {
   return total;
 }
 
-protected nomask string http_time_string(mapping client) {
+protected nomask string http_time_string() {
   int now = time();
-  mixed *lt = localtime(now), *gt;
+  mixed *lt = localtime(now);
   int off = lt[LT_GMTOFF];
 
   now += off + (-1 * lt[LT_ISDST]) * 3600;
