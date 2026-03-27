@@ -1,22 +1,19 @@
-/* inventory.c
-
- Tacitus @ LPUniversity
- 28-OCT-05
- Standard command
-
-*/
+/**
+ * @file /cmds/std/inventory.c
+ *
+ * Standard command to display a player's inventory.
+ *
+ * @created 2005-10-28 - Tacitus
+ * @last_modified 2005-10-28 - Tacitus
+ *
+ * @history
+ * 2005-10-28 - Tacitus - Created
+ */
 
 inherit STD_CMD;
 
-string query_wealth(object tp);
+private string query_wealth(object tp);
 
-/**
- * Main entry point to the command.
- *
- * @param {STD_BODY} tp - This player.
- * @param {string} args - The arguments to the command.
- * @returns {mixed} The result of the command.
- */
 mixed main(object tp, string args) {
   string* shorts;
   object* equipped = values(tp->query_equipped());
@@ -71,11 +68,12 @@ mixed main(object tp, string args) {
 }
 
 /**
+ * Returns a formatted string of the player's wealth across all currencies.
  *
  * @param {STD_BODY} tp - This player.
  * @returns {string} The wealth string.
  */
-string query_wealth(object tp) {
+private string query_wealth(object tp) {
   string *currencies = CURRENCY_D->currency_list();
   string *out = ({ });
 

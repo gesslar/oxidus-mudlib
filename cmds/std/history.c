@@ -1,5 +1,5 @@
 /**
- * @file /lpu/lib/cmds/std/history.c
+ * @file /cmds/std/history.c
  *
  * Command implementation for viewing a player's command history.
  * Allows viewing full history or specific ranges of past commands.
@@ -13,22 +13,6 @@
 
 inherit STD_CMD;
 
-/**
- * Displays command history for the calling player.
- *
- * Shows a numbered list of previously executed commands. Can display:
- * - Last 15 commands (default)
- * - Full history (with "all" argument)
- * - Custom range (with numeric argument)
- *
- * @param {object STD_PLAYER} caller - The player viewing their history
- * @param {string} args - Optional argument: "all" or number of entries to show
- * @returns {int|string} 1 on success, error message on failure
- * @example
- * history         // Shows last 15 commands
- * history all     // Shows entire history
- * history 25      // Shows last 25 commands
- */
 mixed main(object caller, string args) {
   int range, i;
   string *history = ({});
@@ -43,10 +27,9 @@ mixed main(object caller, string args) {
       range = to_int(args);
       if(!intp(range) || range < 0)
         return _error("Invalid argument type.");
-      else {
+      else
         for(i = sizeof(history) - (range + 1); i < sizeof(history); i++)
           printf(" %-5d %-5s %s\n", i, ":",  history[i]);
-      }
     }
   } else {
     for(sizeof(history) > 16 ? i = sizeof(history) - 16 : i = 0; i < sizeof(history); i++)
@@ -56,13 +39,7 @@ mixed main(object caller, string args) {
   return 1;
 }
 
-/**
- * Provides help documentation for the history command.
- *
- * @param {object STD_PLAYER} caller - The player requesting help
- * @returns {string} Help text explaining command usage
- */
-string help(object caller) {
+string query_help(object _caller) {
     return(" SYNTAX: history [range]\n\n"
     "This command allows you to view the history of commands that\n"
     "you've executed. By default is displays the last 15 commands\n"

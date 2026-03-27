@@ -30,9 +30,7 @@ void setup() {
   );
 }
 
-void finish_punch(object tp, object victim);
-
-mixed use(object tp, string arg) {
+mixed use(/** @type {STD_BODY} */ object tp, string arg) {
   object victim;
   mixed result;
 
@@ -40,7 +38,10 @@ mixed use(object tp, string arg) {
     return 1;
 
   if(!result = delay_act("punch", 2.0, assemble_call_back(
-    function(int status, object tp, object victim) {
+    function(int status,
+      /** @type {STD_BODY} */ object tp,
+      /** @type {STD_BODY} */ object victim
+    ) {
       if(!status)
           return;
 

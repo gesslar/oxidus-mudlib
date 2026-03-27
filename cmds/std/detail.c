@@ -1,7 +1,8 @@
 /**
  * @file /cmds/std/detail.c
- * @description This command is used for detailing your description and other
- *              features of your character.
+ *
+ * This command is used for detailing your description and other
+ * features of your character.
  *
  * @created 2024-07-30 - Gesslar
  * @last_modified 2024-07-30 - Gesslar
@@ -30,8 +31,8 @@ mixed main(object tp, string str) {
     return result || "Unknown feature.";
 }
 
-void finish_description(int status, string file, string temp_file, object tp);
-mixed detail_description(object tp) {
+private void finish_description(int status, string file, string temp_file, object tp);
+private mixed detail_description(object tp) {
     string prompt;
 
     prompt = "Enter your long description. You are limited to 800 characters\n\n";
@@ -44,12 +45,12 @@ mixed detail_description(object tp) {
     return 1;
 }
 
-void finish_description(int status, string file, string temp_file, object tp) {
+private void finish_description(int status, string file, string temp_file, object tp) {
     string text;
 
     defer((: rm, temp_file :));
 
-        if(status == ED_STATUS_ABORTED || file_size(temp_file) < 1) {
+    if(status == ED_STATUS_ABORTED || file_size(temp_file) < 1) {
         if(interactive(tp))
             _info(tp, "Description aborted.");
         return;

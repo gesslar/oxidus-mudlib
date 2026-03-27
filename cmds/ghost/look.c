@@ -1,3 +1,14 @@
+/**
+ * @file /cmds/ghost/look.c
+ * @description Ghost look command, inherits the standard look command.
+ *
+ * @created 2024-02-03 - Gesslar
+ * @last_modified 2024-02-03 - Gesslar
+ *
+ * @history
+ * 2024-02-03 - Gesslar - Created
+ */
+
 #include <commands.h>
 
 inherit CMD_LOOK;

@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/attr.c
- * @description Attribute command
+ *
+ * Attribute command.
  *
  * @created 2024-07-31 - Gesslar
  * @last_modified 2024-07-31 - Gesslar
@@ -11,7 +12,8 @@
 
 inherit STD_CMD;
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_BODY} */ object tp,
+    string _str) {
     string *attrs, attr;
     string out = "";
 

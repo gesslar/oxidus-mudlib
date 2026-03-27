@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/bug.c
- * @description Bug command for reporting bugs.
+ *
+ * Bug command for reporting bugs.
  *
  * @created 2024-07-07 - Gesslar
  * @last_modified 2024-07-07 - Gesslar
@@ -12,8 +13,6 @@
 #include <daemons.h>
 
 inherit STD_REPORTER;
-
-void finish_report(string text, object tp);
 
 void setup() {
     set_report_type(query_file_name());

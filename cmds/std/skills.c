@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/skills.c
- * @description Command for players to check their skill progress.
+ *
+ * Command for players to check their skill progress.
  *
  * @created 2024-07-31 - Gesslar
  * @last_modified 2024-07-31 - Gesslar
@@ -18,7 +19,8 @@ void setup() {
     help_text = "This command will display your current skill levels.\n";
 }
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_BODY} */ object tp,
+    string str) {
     mapping skills = tp->query_skills();
     string result;
 

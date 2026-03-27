@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/con.c
- * @description Check the condition of a living, including yourself.
+ *
+ * Check the condition of a living, including yourself.
  *
  * @created 2024-07-28 - Gesslar
  * @last_modified 2024-07-28 - Gesslar
@@ -22,7 +23,8 @@ void setup() {
     usage_text = "con [target]";
 }
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_BODY} */ object tp,
+    string str) {
     object ob;
     string name;
     string target;

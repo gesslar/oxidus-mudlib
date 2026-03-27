@@ -1,14 +1,18 @@
-// /cmds/std/duel.c
-// This is the command to start combat.
-//
-// Created:     2024/02/20: Gesslar
-// Last Change: 2024/02/20: Gesslar
-//
-// 2024/02/20: Gesslar - Created
+/**
+ * @file /cmds/std/duel.c
+ *
+ * Command to start combat with another living.
+ *
+ * @created 2024-02-20 - Gesslar
+ * @last_modified 2024-02-20 - Gesslar
+ *
+ * @history
+ * 2024-02-20 - Gesslar - Created
+ */
 
 inherit STD_ACT;
 
-mixed main(object tp, string arg) {
+mixed main(/** @type {STD_BODY} */ object tp, string arg) {
     object victim;
     string name, vname;
     object room = environment(tp);

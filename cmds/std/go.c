@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/go.c
- * @description The go command.
+ *
+ * The go command.
  *
  * @created 2024-02-03 - Gesslar
  * @last_modified 2024-02-03 - Gesslar
@@ -11,7 +12,7 @@
 
 inherit STD_CMD;
 
-mixed main(object tp, string arg) {
+mixed main(/** @type {STD_BODY} */ object tp, string arg) {
     mixed dest;
     mixed result;
     object room = environment(tp);
@@ -45,7 +46,6 @@ mixed main(object tp, string arg) {
 
     MOVE_D->pre_walk_direction(tp, room, arg);
     MOVE_D->post_walk_direction(tp, dest, arg);
-
 
     if(!wizardp(tp))
         tp->adjust_mp(-cost);

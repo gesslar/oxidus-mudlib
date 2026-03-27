@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/eat.c
- * @description Eat command
+ *
+ * Eat command.
  *
  * @created 2024-08-06 - Gesslar
  * @last_modified 2024-08-06 - Gesslar

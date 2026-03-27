@@ -1,218 +1,228 @@
-//update.c
-
-//Byre @ LPUniversity
-//05-APR-05
-//Object management
-
-//Last edited July 11th, 2006 by Tacitus
-// Last Change: 2024/02/04: Gesslar
-// - Added recursion to the update command
+/**
+ * @file /cmds/object/update.c
+ * @description Command for updating (reloading) objects, with optional
+ *              recursive inheritance updating.
+ *
+ * @created 2005-04-05 - Byre@LPUniversity
+ * @last_modified 2024-02-04 - Gesslar
+ *
+ * @history
+ * 2005-04-05 - Byre@LPUniversity - Created
+ * 2006-07-11 - Tacitus - Edited
+ * 2024-02-04 - Gesslar - Added recursion to the update command
+ */
 
 inherit STD_CMD;
 
-void do_update(string file);
-string *collect_inherits(object obj, int depth);
-string *deep_collect_inherits(object obj, mapping seen, int depth);
+private void doUpdate(string file);
+private string *collectInherits(object obj, int depth);
+private string *deepCollectInherits(
+  object obj, mapping seen, int depth
+);
 
-mixed main(object tp, string arg) {
-    object obj, room;
-    string error, *users;
-    string *files, file, *parts, start;
-    int depth = 0;
-    int is_room_obj;
-    string e;
+public mixed main(
+  /** @type {STD_PLAYER} */ object caller, string arg
+) {
+  object obj, room;
+  string *parts, start, file;
+  string *interactives;
+  string e;
+  int depth = 0;
+  int isRoomObj;
 
-    if(!objectp(room = environment(tp)))
-        return "You are not in a valid environment.";
+  if(!objectp(room = environment(caller)))
+    return "You are not in a valid environment.";
 
-    if(arg) {
-        if(arg == "-r" || arg == "-R") {
-            if(arg == "-r") depth = 1;
-            else if(arg == "-R") depth = 2;
-        } else if(sizeof(parts = pcre_extract(arg, "^-([rR]) (.*)$")) == 2) {
-            if(parts[0] == "r") depth = 1;
-            else depth = 2;
+  if(arg) {
+    if(arg == "-r" || arg == "-R") {
+      if(arg == "-r")
+        depth = 1;
+      else if(arg == "-R")
+        depth = 2;
+    } else if(sizeof(parts = pcre_extract(
+      arg, "^-([rR]) (.*)$"
+    )) == 2) {
+      if(parts[0] == "r")
+        depth = 1;
+      else
+        depth = 2;
 
-            file = parts[1];
-        } else {
-            depth = 0;
-            file = arg;
-        }
-    }
-
-    if(!file) {
-        if(!tp->query_env("cwf"))
-            return _error("You must provide an argument. Syntax: update [-rR] [<file>]");
-        file = tp->query_env("cwf");
+      file = parts[1];
     } else {
-        // First, try to find an object with the given name
-        obj = get_object(file);
+      depth = 0;
+      file = arg;
+    }
+  }
 
-        if(obj) {
-            // If we found an object, check if it's a clone
-            if(clonep(obj)) {
-                file = base_name(obj);
-            } else {
-                file = file_name(obj);
-            }
-        }
-        // If we didn't find an object, 'file' remains as the input string
+  if(!file) {
+    if(!caller->query_env("cwf"))
+      return _error(
+        "You must provide an argument. "
+        "Syntax: update [-rR] [<file>]"
+      );
+    file = caller->query_env("cwf");
+  } else {
+    obj = get_object(file);
+
+    if(obj) {
+      if(clonep(obj))
+        file = base_name(obj);
+      else
+        file = file_name(obj);
+    }
+  }
+
+  file = resolve_path(caller->query_env("cwd"), file);
+  file = append(file, ".c");
+
+  if(file == append(file_name(), ".c"))
+    return _error(
+      "You cannot update the update command. "
+      "Destruct it instead."
+    );
+
+  if(file[0..<3] == ROOM_VOID)
+    return _error("You cannot update the void object.");
+
+  start = file;
+
+  if(!obj)
+    obj = find_object(file);
+
+  isRoomObj = objectp(obj) && obj->is_room();
+
+  if(objectp(obj)) {
+    if(clonep(obj))
+      _info(caller, "Updating master of %s", file_name(obj));
+    else
+      _info(caller, "Updating %s", file);
+
+    if(virtualp(obj)) {
+      file = obj->query_virtual_master();
+      file = append(file, ".c");
     }
 
-    // At this point, 'file' should be a file name or a file path
-    file = resolve_path(tp->query_env("cwd"), file);
-
-    // Always append ".c" to the file name if it's not already there
-    file = append(file, ".c");
-
-    // Check if we're trying to update the update command itself
-    if(file == append(file_name(), ".c")) {
-        return _error("You cannot update the update command. Destruct it instead.");
+    if(isRoomObj) {
+      interactives = filter_array(
+        all_inventory(obj), (: interactive :)
+      );
+      interactives->move(load_object(ROOM_VOID), 1);
+      obj->remove();
+      if(obj)
+        destruct(obj);
     }
+  } else {
+    _info(caller, "Updating %s", file);
+  }
 
-    if(file[0..<3] == ROOM_VOID) {
-        return _error("You cannot update the void object.");
-    }
+  caller->set_env("cwf", start);
 
-    // if(!file_exists(file))
-    //     return _error("%s does not exist.", file);
+  e = catch(obj = load_object(file));
+  if(e)
+    return _error("Failed to load: %s\n%s", file, e);
 
-    start = file;
+  if(!objectp(obj))
+    return _error("Failed to load: %s", file);
 
-    if(!obj) {
-        obj = find_object(file);
-    }
+  string *files = collectInherits(obj, depth);
+  files = map(files, (: append($1, ".c") :));
+  filter(files, (: doUpdate :));
 
-    is_room_obj = objectp(obj) && obj->is_room();
+  obj = load_object(start);
+  if(isRoomObj && pointerp(interactives))
+    interactives->move(obj, 1);
 
-    if(objectp(obj)) {
-        if(clonep(obj)) {
-            _info(tp, "Updating master of %s", file_name(obj));
-        } else {
-            _info(tp, "Updating %s", file);
-        }
-
-        if(virtualp(obj)) {
-            file = obj->query_virtual_master();
-            file = append(file, ".c");
-        }
-
-        if(is_room_obj) {
-            users = filter_array(all_inventory(obj), (: interactive :));
-            users->move(load_object(ROOM_VOID), 1);
-            obj->remove();
-            if(obj) destruct(obj);
-        }
-        // For non-room objects, we don't destruct or move users
-    } else {
-        _info(tp, "Updating %s", file);
-    }
-
-    tp->set_env("cwf", start);
-
-    e = catch(obj = load_object(file));
-    if(e)
-        return _error("Failed to load: %s\n%s", file, e);
-
-    if(!objectp(obj))
-        return _error("Failed to load: %s", file);
-
-    files = collect_inherits(obj, depth);
-    files = map(files, (: append($1, ".c") :));
-    filter(files, (: do_update :));
-
-    obj = load_object(start);
-    if(is_room_obj && pointerp(users)) users->move(obj, 1);
-    return 1;
+  return 1;
 }
 
-void do_update(string file, string vfile) {
-    object obj;
-    string error, *users;
-    string *files;
+private void doUpdate(string file) {
+  object obj;
+  string err;
 
-    if(obj = find_object(file)) {
-        obj->remove();
-        if(obj) destruct(obj);
-    }
+  if(obj = find_object(file)) {
+    obj->remove();
+    if(obj)
+      destruct(obj);
+  }
 
-    if(!file_exists(file))
-        _error("%s does not exist.", file);
+  if(!file_exists(file)) {
+    _error("%s does not exist.", file);
+    return;
+  }
 
-    error = catch(obj = load_object(file));
+  err = catch(obj = load_object(file));
 
-    if(error){
-        _error("Failed to load: %s\n%s", file, error);
-        return;
-    }
+  if(err) {
+    _error("Failed to load: %s\n%s", file, err);
+    return;
+  }
 
-    if(pointerp(users)) users->move(obj, 1);
-    _ok("%s was updated.", file);
+  _ok("%s was updated.", file);
 }
 
-// Function to collect immediate and deep inherits.
-string *collect_inherits(object obj, int depth) {
-    string fname ;  // The file name of the requested object
-    mapping seen ;  // Initialize seen with the object itself to avoid adding it twice
-    string *files;
+private string *collectInherits(object obj, int depth) {
+  string fname = file_name(obj);
+  mapping seen = ([ fname: 1 ]);
+  string *files;
 
-    fname = file_name(obj);
-    seen = ([ fname: 1 ]);
-    files = ({});
+  if(depth == 0)
+    return ({ fname });
 
-    if(depth == 0) {
-        // Directly return the file name of the object for depth 0
-        return ({ fname });
-    } else if(depth >= 1) {
-        // Collect inherits according to depth
-        files = deep_collect_inherits(obj, seen, depth);
-        // Ensure the object itself is included last for depths 1 and 2
-        if(!sizeof(files) || files[<1] != fname) {
-            files += ({ fname });
-        }
-    }
+  files = deepCollectInherits(obj, seen, depth);
+  if(!sizeof(files) || files[<1] != fname)
+    files += ({ fname });
 
-    // No need to reverse for correct order as we want the base classes loaded first
-    return files;
+  return files;
 }
 
-string *deep_collect_inherits(object obj, mapping seen, int depth) {
-    string *files = ({});
+private string *deepCollectInherits(
+  object obj, mapping seen, int depth
+) {
+  string *files = ({});
 
-    if(depth > 0) {
-        foreach(string file in inherit_list(obj)) {
-            if(!seen[file]) {
-                object inherit_obj = find_object(file) || load_object(file);
-                seen[file] = 1; // Mark as seen to avoid duplicates
+  if(depth > 0) {
+    foreach(string file in inherit_list(obj)) {
+      if(!seen[file]) {
+        object inheritObj =
+          find_object(file) || load_object(file);
+        seen[file] = 1;
 
-                // For depth 2, recursively collect inherits; add directly for depth 1
-                if(depth == 2 && inherit_obj) {
-                    files += deep_collect_inherits(inherit_obj, seen, depth);
-                }
-                files += ({ file });
-            }
-        }
+        if(depth == 2 && inheritObj)
+          files += deepCollectInherits(
+            inheritObj, seen, depth
+          );
+
+        files += ({ file });
+      }
     }
+  }
 
-    return files;
+  return files;
 }
 
-string help(object tp) {
-    return
-"SYNTAX: update [-rR] [<file|here>]\n\n" +
-"If file is not specified, the current working file will be updated. If the "
-"file is specified, it will be updated. If the -r or -R flag is specified, "
-"the file will be updated along with all of its inherited files. The -r flag "
-"will only update the first level of inheritance, while the -R flag will "
-"update all levels of inheritance.\n\n"
+string query_help(object _caller) {
+  return
+"SYNTAX: update [-rR] [<file|here>]\n\n"
+"If file is not specified, the current working file will "
+"be updated. If the file is specified, it will be updated. "
+"If the -r or -R flag is specified, the file will be "
+"updated along with all of its inherited files. The -r "
+"flag will only update the first level of inheritance, "
+"while the -R flag will update all levels of "
+"inheritance.\n\n"
 "Examples:\n"
 "update - Update the cwf.\n"
 "update here - Update the current room.\n"
-"update -r here - Update the current room and its inherit_list().\n"
-"update -R here - Update the current room and its deep_inherit_list().\n"
+"update -r here - Update the current room and its "
+"inherit_list().\n"
+"update -R here - Update the current room and its "
+"deep_inherit_list().\n"
 "update /cmds/std/who - Update the who command.\n"
-"update -r /cmds/std/who - Update the who command and its inherit_list().\n"
-"update -R /cmds/std/who - Update the who command and its deep_inherit_list().\n"
+"update -r /cmds/std/who - Update the who command and "
+"its inherit_list().\n"
+"update -R /cmds/std/who - Update the who command and "
+"its deep_inherit_list().\n"
 "update -r - Update the cwf and its inherit_list().\n"
-"update -R - Update the cwf and its deep_inherit_list().\n";
+"update -R - Update the cwf and its "
+"deep_inherit_list().\n";
 }

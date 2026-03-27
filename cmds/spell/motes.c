@@ -24,15 +24,13 @@ void setup() {
 
   usage_text = "motes <target>";
   help_text = sprintf(
-"Summon motes of light to strike a target. This spell costs %.1f SP and has a "
-"cooldown of %d seconds.",
+"Summon motes of light to strike a target. This spell costs "
+"%.1f SP and has a cooldown of %d seconds.",
     evaluate(sp_cost), evaluate(cooldowns["motes"][1])
   );
 }
 
-void finish_motes(object tp, object victim);
-
-mixed use(object tp, string arg) {
+mixed use(/** @type {STD_BODY} */ object tp, string arg) {
   object victim;
   mixed result;
 
@@ -40,8 +38,34 @@ mixed use(object tp, string arg) {
     return 1;
 
   if(!result = delay_act("motes", 2.0, assemble_call_back(
-    (: finish_motes :),
-    tp, victim
+    function(int status,
+      /** @type {STD_BODY} */ object tp,
+      /** @type {STD_BODY} */ object victim
+    ) {
+      if(!status)
+        return;
+
+      if(!same_env_check(tp, victim))
+        return;
+
+      if(tp->can_strike(victim, "combat.spell.light")) {
+        float damage = 5.0 + tp->query_damage();
+
+        tp->targetted_action(
+          "{{FF0033}}Motes of light strike $t!{{res}}",
+          victim
+        );
+        tp->deliver_damage(victim, damage, "light");
+        tp->use_skill("combat.spell.light");
+      } else {
+        tp->simple_action(
+          "The motes of light disperse harmlessly."
+        );
+        victim->use_skill("combat.defense.evade");
+      }
+
+      victim->start_attack(tp);
+    }, tp, victim
   ))) {
     return "You are already doing something.";
   }
@@ -52,25 +76,4 @@ mixed use(object tp, string arg) {
   tp->simple_action("$N $vsummon motes of light...");
 
   return 1;
-}
-
-void finish_motes(int status, object tp, object victim) {
-  if(!status)
-    return;
-
-  if(!same_env_check(tp, victim))
-    return;
-
-  if(tp->can_strike(victim, "combat.spell.light")) {
-    float damage = 5.0 + tp->query_damage();
-
-    tp->targetted_action("{{FF0033}}Motes of light strike $t!{{res}}", victim);
-    tp->deliver_damage(victim, damage, "light");
-    tp->use_skill("combat.spell.light");
-  } else {
-    tp->simple_action("The motes of light disperse harmlessly.");
-    victim->use_skill("combat.defense.evade");
-  }
-
-  victim->start_attack(tp);
 }

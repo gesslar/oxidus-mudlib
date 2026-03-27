@@ -13,13 +13,6 @@
 
 inherit STD_CMD;
 
-/**
- * Switch bodies or switch back.
- *
- * @param {STD_PLAYER} user - The user calling this command.
- * @param {string} arg - The input the user typed in.
- * @returns {mixed} The results of this command.
- */
 mixed main(object user, string arg) {
   object
   /** @type {STD_BODY} */     dest,

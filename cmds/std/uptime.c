@@ -1,20 +1,27 @@
-//uptime.c
-
-//Tacitus @ LPUniversity
-//08-APR-05
-//Standard command
-
-//Last Edited on October 20th, 2005 by Tacitus
+/**
+ * @file /cmds/std/uptime.c
+ *
+ * Display how long the MUD has been running.
+ *
+ * @created 2005-04-08 - Tacitus @ LPUniversity
+ * @last_modified 2005-10-20 - Tacitus
+ *
+ * @history
+ * 2005-04-08 - Tacitus - Created
+ * 2005-10-20 - Tacitus - Last edited
+ */
 
 inherit STD_CMD;
 
-mixed main(object caller, string arg) {
-    tell_me(mud_name() + " has been running since " + ctime(time() - uptime()) + "\n");
-    return 1;
+mixed main(object tp, string _arg) {
+  tell_me(mud_name() + " has been running since " +
+    ctime(time() - uptime()) + "\n");
+  return 1;
 }
 
-string help(object caller) {
-    return(
-    " SYNTAX: uptime\n\n" +
-    "This command will tell you how the long them mud has been running.\n");
+string query_help(object _caller) {
+  return
+" SYNTAX: uptime\n\n"
+"This command will tell you how long the mud has been "
+"running.\n";
 }

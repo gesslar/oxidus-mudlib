@@ -11,6 +11,8 @@
  * 2025-03-10 - Gesslar - Created
  */
 
+inherit STD_CMD;
+
 mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   string cmd, arg;
 

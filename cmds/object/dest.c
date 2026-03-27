@@ -1,90 +1,100 @@
-/* dest.c
-
- Tacitus @ LPUniversity
- 31-OCT-05
- Standard object minipulation command
-
-*/
-
-//Last edited on July 19th, 2006 by Parthenon
-// Last Change: 2024/02/04: Gesslar
-// - General formatting
+/**
+ * @file /cmds/object/dest.c
+ * @description Command to destruct objects from memory.
+ *
+ * @created 2005-10-31 - Tacitus@LPUniversity
+ * @last_modified 2024-02-04 - Gesslar
+ *
+ * @history
+ * 2005-10-31 - Tacitus@LPUniversity - Created
+ * 2006-07-19 - Parthenon - Edited
+ * 2024-02-04 - Gesslar - General formatting
+ */
 
 inherit STD_CMD;
 
-mixed main(object tp, string str) {
-    string custom, tmp;
-    object ob, env, room;
-    int cloned;
-    string short, name;
+public mixed main(
+  /** @type {STD_PLAYER} */ object caller, string str
+) {
+  string custom, tmp;
+  object ob, env, room;
+  int cloned;
+  string shortDesc, callerName;
 
-    name = tp->query_name();
+  callerName = caller->query_name();
 
-    if(!str)
-        str = tp->query_env("cwf");
+  if(!str)
+    str = caller->query_env("cwf");
 
-    ob = get_object(str);
-    if(ob && userp(ob) && !adminp(tp))
-        return _error("You can't destruct players.");
+  ob = get_object(str);
+  if(ob && userp(ob) && !adminp(caller))
+    return _error("You can't destruct players.");
 
-    room = environment(tp);
+  room = environment(caller);
 
-    if(ob) {
-        cloned = clonep(ob);
-        env = environment(ob);
+  if(ob) {
+    cloned = clonep(ob);
+    env = environment(ob);
 
-        if(living(ob))
-            short = ob->query_name();
-        else
-            if(environment(ob))
-                short = add_article(get_short(ob));
-            else
-                short = file_name(ob);
+    if(living(ob))
+      shortDesc = ob->query_name();
+    else if(environment(ob))
+      shortDesc = add_article(get_short(ob));
+    else
+      shortDesc = file_name(ob);
 
-        if(tp->query_env("custom_dest") && wizardp(tp))
-            custom = tp->query_env("custom_dest");
+    if(caller->query_env("custom_dest") &&
+      wizardp(caller))
+      custom = caller->query_env("custom_dest");
 
-        if(custom) {
-            tmp = custom;
-            tmp = replace_string(tmp, "$O", short);
-            tmp = replace_string(tmp, "$N", name);
-        }
-
-        catch(ob->remove());
-        if(ob) destruct(ob);
-
-        if(ob) return _error("Ok that didn't work.");
-        else {
-            if(custom) {
-                if(env == room)
-                    tell_them(capitalize(tmp) + "\n");
-                return _ok("Destructed %s.", short);
-            } else {
-                if(env == room)
-                    tell_them(name + " destructs " + short + ".\n");
-                return _ok("Destructed %s.", short);
-            }
-        }
+    if(custom) {
+      tmp = custom;
+      tmp = replace_string(tmp, "$O", shortDesc);
+      tmp = replace_string(tmp, "$N", callerName);
     }
 
-    if(str[<2..<1] != ".c")
-        str += ".c";
+    catch(ob->remove());
+    if(ob)
+      destruct(ob);
 
-    str = resolve_path(tp->query_env("cwd"), str);
+    if(ob)
+      return _error("Ok that didn't work.");
 
-    if(ob = find_object(str)) {
-        tp->set_env("cwf", str);
-        ob->remove();
-        if(ob) destruct(ob);
-        return _ok("Destructing master object for '%s'.", str);
+    if(custom) {
+      if(env == room)
+        tell_them(capitalize(tmp) + "\n");
+    } else {
+      if(env == room)
+        tell_them(
+          callerName + " destructs " +
+          shortDesc + ".\n"
+        );
     }
 
-    return _error("Object '%s' not found.", str);
+    return _ok("Destructed %s.", shortDesc);
+  }
+
+  if(str[<2..<1] != ".c")
+    str += ".c";
+
+  str = resolve_path(caller->query_env("cwd"), str);
+
+  if(ob = find_object(str)) {
+    caller->set_env("cwf", str);
+    ob->remove();
+    if(ob)
+      destruct(ob);
+    return _ok(
+      "Destructing master object for '%s'.", str
+    );
+  }
+
+  return _error("Object '%s' not found.", str);
 }
 
-string help(object tp) {
-    return
-"SYNTAX: dest <object/filename>\n\n"+
-"This command destructs an object from memory.\n\n" +
+string query_help(object _caller) {
+  return
+"SYNTAX: dest <object/filename>\n\n"
+"This command destructs an object from memory.\n\n"
 "See also: clone";
 }

@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/time.c
- * @description This command allows players to check the current game time.
+ *
+ * Command to check the current game time.
  *
  * @created 2024-08-05 - Gesslar
  * @last_modified 2024-08-05 - Gesslar

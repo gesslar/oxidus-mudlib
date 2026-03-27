@@ -1,23 +1,27 @@
-/* look.c
-
- Tacitus @ LPUniversity
- 06-Oct-06
- Look Command (Rewrite # ... 3?)
-
-*/
+/**
+ * @file /cmds/std/look.c
+ *
+ * Look command for viewing rooms, objects, and livings.
+ *
+ * @created 2006-10-06 - Tacitus @ LPUniversity
+ * @last_modified 2006-10-06 - Tacitus
+ *
+ * @history
+ * 2006-10-06 - Tacitus - Created (Rewrite #3)
+ */
 
 inherit STD_ACT;
 
-mixed render_room(object tp, object room, int brief);
-mixed render_object(object tp, object room, string target);
-mixed render_container(object tp, object room, string target);
-mixed render_living(object tp, object room, object target, int brief);
-string highlight_view(string str, string *keys);
+private mixed render_room(object tp, object room, int brief);
+private mixed render_object(object tp, object room, string target);
+private mixed render_container(object tp, object room, string target);
+private mixed render_living(object tp, object room, object target, int brief);
+private string highlight_view(object tp, string str, string *keys);
 
 private nosave string default_highlight_colour = mudConfig("LOOK_HIGHLIGHT_COLOUR");
 private nosave string look_highlight_enabled = mudConfig("LOOK_HIGHLIGHT");
 
-mixed main(object tp, string arguments) {
+mixed main(/** @type {STD_PLAYER} */ object tp, string arguments) {
   string target;
   object room = environment(tp);
 
@@ -35,15 +39,14 @@ mixed main(object tp, string arguments) {
  * Highlights specific keywords in a given string based on user preferences.
  *
  * This function will highlight the specified keywords in the provided string
-  if(look_highlight_enabled != "on")
- * by the user's preferences or a default value.
+ * using a colour determined by the user's preferences or a default value.
  *
  * @param {object} tp - The player object
  * @param {string} str - The string to be processed
  * @param {string*} keys - The list of keywords to highlight
  * @returns {string} The processed string with highlighted keywords
  */
-string highlight_view(object tp, string str, string *keys) {
+private string highlight_view(object tp, string str, string *keys) {
   int i;
   string colour;
 
@@ -76,7 +79,7 @@ string highlight_view(object tp, string str, string *keys) {
   return str;
 }
 
-mixed render_room(object tp, object room, int brief) {
+private mixed render_room(object tp, object room, int brief) {
   string *exits, *doors;
   object *users, *objects;
   string result = "";
@@ -127,11 +130,10 @@ mixed render_room(object tp, object room, int brief) {
   if(sizeof(doors) > 0) {
     data = "";
     foreach(string door in doors) {
-      if(room->is_door_open(door)) {
+      if(room->is_door_open(door))
         data += sprintf("The %s door is open.\n", door);
-      } else {
+      else
         data += sprintf("The %s door is closed.\n", door);
-      }
     }
   }
   if(data)
@@ -160,7 +162,7 @@ mixed render_room(object tp, object room, int brief) {
   return 1;
 }
 
-mixed render_object(object tp, object room, string target) {
+private mixed render_object(object tp, object room, string target) {
   object ob;
   string name = tp->query_name();
   string desc = "";
@@ -226,7 +228,7 @@ mixed render_object(object tp, object room, string target) {
 }
 
 
-mixed render_living(object tp, object room, object target, int brief) {
+private mixed render_living(object tp, object room, object target, int brief) {
   string temp, result = "";
   string name;
   mapping equipment, wielded;
@@ -252,10 +254,11 @@ mixed render_living(object tp, object room, object target, int brief) {
     if(gender) {
       if(gender == "male" || gender == "female")
         temp = " a "+gender+" " + race;
-       else
+      else
         temp = " "+add_article(race);
-    } else
+    } else {
       temp = " "+add_article(race);
+    }
   } else {
     if(gender)
       temp = gender;
@@ -266,13 +269,13 @@ mixed render_living(object tp, object room, object target, int brief) {
   if(hair && eyes && hair != "no hair" && eyes != "no eyes") {
     if(strlen(temp))
       temp += ", with " + hair + " and " + eyes;
-     else
+    else
       temp = hair + " and " + eyes;
   } else if(hair && hair != "no hair") {
-      if(strlen(temp))
-        temp += ", with " + hair;
-      else
-        temp = hair;
+    if(strlen(temp))
+      temp += ", with " + hair;
+    else
+      temp = hair;
   } else if(eyes && eyes != "no eyes") {
     if(strlen(temp))
       temp += ", with " + eyes;
@@ -328,7 +331,7 @@ mixed render_living(object tp, object room, object target, int brief) {
   return 1;
 }
 
-mixed render_container(object tp, object room, string arg) {
+private mixed render_container(object tp, object room, string arg) {
   object ob;
   string target;
   int here_flag;
@@ -359,8 +362,9 @@ mixed render_container(object tp, object room, string arg) {
     if(sizeof(contents) > 0) {
       desc += ob->query_short()+" contains:\n";
       desc += implode(map(contents, (: get_short($1, 1) :)), "\n") + "\n";
-    } else
+    } else {
       desc += ob->query_short()+" is empty.\n";
+    }
   }
 
   if(present(ob, tp))
@@ -371,11 +375,11 @@ mixed render_container(object tp, object room, string arg) {
   return desc;
 }
 
-string query_help(object tp) {
+string query_help(object _caller) {
   return(
-"SYNTAX: look [<in/at>] <object> [<on/in> <object>]\n\n"
-"This command will allow you to look at objects in your environment. "
-"If no argument is supplied, it will show you the whole room. You can "
-"also look at specific objects by typing 'look <object>' or 'look at object'. "
-"You might also try looking into an object by typing 'look in <object>'.");
+    "SYNTAX: look [<in/at>] <object> [<on/in> <object>]\n\n"
+    "This command will allow you to look at objects in your environment. "
+    "If no argument is supplied, it will show you the whole room. You can "
+    "also look at specific objects by typing 'look <object>' or 'look at object'. "
+    "You might also try looking into an object by typing 'look in <object>'.");
 }

@@ -1,68 +1,80 @@
-/* clean.c
-
-Icoz@LPUniversity (ico2ico2@gmail.com)
-28-OCT-05
-Object minipulation command
-
-QC Review: Tacitus on October 28th, 2005
-
-Last edited on October 29th, 2005 by Tacitus
-
-*/
-
-// Last Change: 2024/02/04: Gesslar
-// - General formatting + refactor to use newer codes support.
+/**
+ * @file /cmds/object/clean.c
+ * @description Command to destroy all non-living, non-protected objects
+ *              within a target object's inventory.
+ *
+ * @created 2005-10-28 - Icoz@LPUniversity
+ * @last_modified 2024-02-04 - Gesslar
+ *
+ * @history
+ * 2005-10-28 - Icoz@LPUniversity - Created
+ * 2005-10-29 - Tacitus - QC Review and edit
+ * 2024-02-04 - Gesslar - General formatting and refactor
+ */
 
 inherit STD_CMD;
 
-mixed main(object tp, string arg) {
-     int i;
-     object target;
-     object ob, next;
+public mixed main(
+  /** @type {STD_PLAYER} */ object caller, string arg
+) {
+  object target;
+  object ob, next;
 
-     if(!arg) target = tp;
-     else {
-          if(arg[0]!='/') arg = resolve_path(tp->query_env("cwd"), arg);
-          if(arg[<2..<1] != ".c") arg += ".c";
-          if(!target) target = find_object(arg);
-          if(!target) target = present(arg, tp);
-          if(!target) target = present(arg, environment(tp));
-     }
+  if(!arg) {
+    target = caller;
+  } else {
+    if(arg[0] != '/')
+      arg = resolve_path(caller->query_env("cwd"), arg);
+    if(arg[<2..<1] != ".c")
+      arg += ".c";
+    if(!target)
+      target = find_object(arg);
+    if(!target)
+      target = present(arg, caller);
+    if(!target)
+      target = present(arg, environment(caller));
+  }
 
-     if(!target)
-          return _error("Error locating target.");
+  if(!target)
+    return _error("Error locating target.");
 
-     tp->_info("Destroying all objects in '" + get_short(target) + "'.\n");
-     ob = first_inventory(target);
-     while(ob) {
-          string short = get_short(ob);
+  _info(
+    caller,
+    "Destroying all objects in '%s'.",
+    get_short(target)
+  );
 
-          next = next_inventory(ob);
-          if(ob->query_no_clean() || ob->can_clean_up()) {
-               ob = next;
-               continue;
-          }
-          if(living(ob)) {
-               ob = next;
-               continue;
-          }
+  ob = first_inventory(target);
+  while(ob) {
+    string shortDesc = get_short(ob);
 
-          ob->remove();
-          if(ob)
-               destruct(ob);
+    next = next_inventory(ob);
+    if(ob->query_no_clean() || ob->can_clean_up()) {
+      ob = next;
+      continue;
+    }
+    if(living(ob)) {
+      ob = next;
+      continue;
+    }
 
-          _ok(tp, "%s destroyed.", short);
-          ob = next;
-     }
+    ob->remove();
+    if(ob)
+      destruct(ob);
 
-     return 1;
+    _ok(caller, "%s destroyed.", shortDesc);
+    ob = next;
+  }
+
+  return 1;
 }
 
-string help(object tp) {
-     return
+string query_help(object _caller) {
+  return
 "SYNTAX: clean <object>\n\n"
-"This command will destory all objects within another object (aka the objects "
-"inventory). Your argument may be an object that is in your inventory, your "
-"environment, or a filename. If you do not speicfy an object, it will remove "
-"your inventory.";
+"This command will destroy all objects within another "
+"object (aka the object's inventory). Your argument may "
+"be an object that is in your inventory, your "
+"environment, or a filename. If you do not specify an "
+"object, it will remove your inventory.";
 }

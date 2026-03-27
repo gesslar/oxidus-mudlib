@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/nibble.c
- * @description Nibble command
+ *
+ * Nibble command.
  *
  * @created 2024-08-07 - Gesslar
  * @last_modified 2024-08-07 - Gesslar

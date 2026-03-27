@@ -1,27 +1,31 @@
-/* clone.c
-
- Tacitus @ LPUniversity
- 31-OCT-05
- Standard object minipulation command
-
-*/
-
-//Last edited on July 19th, 2006 by Parthenon
+/**
+ * @file /cmds/object/clone.c
+ * @description Command to clone objects into the game world.
+ *
+ * @created 2005-10-31 - Tacitus@LPUniversity
+ * @last_modified 2006-07-19 - Parthenon
+ *
+ * @history
+ * 2005-10-31 - Tacitus@LPUniversity - Created
+ * 2006-07-19 - Parthenon - Edited
+ */
 
 inherit STD_CMD;
 
-mixed main(object tp, string str) {
+public mixed main(
+  /** @type {STD_PLAYER} */ object caller, string str
+) {
   object ob, dest, env;
-  string err, custom, tmp, short, file;
+  string err, custom, tmp, shortDesc, fileName;
   int result;
 
   if(!str)
-      str = tp->query_env("cwf");
+    str = caller->query_env("cwf");
 
   if(!str)
-    return "SYNTAX: clone <filename>";
+    return _error("SYNTAX: clone <filename>");
 
-  env = environment(tp);
+  env = environment(caller);
 
   if(ob = get_object(str)) {
     if(virtualp(ob))
@@ -29,79 +33,74 @@ mixed main(object tp, string str) {
     else
       str = base_name(ob);
 
-    _info(tp, "Making a copy of %O.", ob);
-
+    _info(caller, "Making a copy of %O.", ob);
     ob = null;
   }
 
-  str = resolve_path(tp->query_env("cwd"), str);
+  str = resolve_path(caller->query_env("cwd"), str);
 
   err = catch(ob = new(str));
 
   if(stringp(err))
-    return _error("An error was encountered when cloning the object:\n%s", err);
+    return _error(
+      "An error was encountered when cloning the "
+      "object:\n%s", err
+    );
 
   if(!ob)
     return _error("Unable to clone the object.");
 
-  short = get_short(ob);
-  file = file_name(ob);
-  dest = tp;
+  shortDesc = get_short(ob);
+  fileName = file_name(ob);
+  dest = caller;
 
   result = ob->move(dest);
-  if(result == MOVE_OK) {
-    if(tp->query_env("custom_clone") && wizardp(tp))
-      custom = tp->query_env("custom_clone");
-      if(custom) {
-        tmp = custom;
-        tmp = replace_string(tmp, "$O", short);
-        tmp = replace_string(tmp, "$N", tp->query_name());
-        tell_them(capitalize(tmp) + "\n");
-        _ok(file + "' cloned to " + get_short(dest) + " (" +file_name(dest)+ ").\n");
-      } else {
-        _ok(file + "' cloned to " + get_short(dest) + " (" +file_name(dest)+ ").\n");
-        tell_them(capitalize(tp->query_name()) + " creates " + short + ".\n");
-      }
 
-      tp->set_env("cwf", str);
+  if(result == MOVE_TOO_HEAVY) {
+    ob->move(env);
+    caller->set_env("cwf", str);
+    return _ok("%s was moved to the room.", shortDesc);
+  }
 
-      return 1;
-    } else {
-      if(result == MOVE_TOO_HEAVY) {
-        ob->move(env);
-        return _ok("%s was moved to the room.", short);
-      }
+  if(result == MOVE_NO_DEST)
+    return _error("The object has no destination.");
 
-      if(result == MOVE_NO_DEST)
-          return _error("The object has no destination.");
+  if(result == MOVE_NOT_ALLOWED)
+    return _error(
+      "You are not allowed to carry the object."
+    );
 
-      if(result == MOVE_NOT_ALLOWED)
-          return _error("You are not allowed to carry the object.");
+  if(result == MOVE_DESTRUCTED)
+    return _error("The object has been destructed.");
 
-      if(result == MOVE_DESTRUCTED)
-          return _error("The object has been destructed.");
-    }
-
-  if(tp->query_env("custom_clone") && wizardp(tp))
-    custom = tp->query_env("custom_clone");
+  if(caller->query_env("custom_clone") && wizardp(caller))
+    custom = caller->query_env("custom_clone");
 
   if(custom) {
     tmp = custom;
-    tmp = replace_string(tmp, "$O", short);
-    tmp = replace_string(tmp, "$N", tp->query_name());
+    tmp = replace_string(tmp, "$O", shortDesc);
+    tmp = replace_string(tmp, "$N", caller->query_name());
     tell_them(capitalize(tmp) + "\n");
-    _ok(file + "' cloned to " + get_short(dest) + " (" +file_name(dest)+ ").\n");
   } else {
-    _ok(file + "' cloned to " + get_short(dest) + " (" +file_name(dest)+ ").\n");
-    tell_them(tp->query_name() + " creates " + short + ".\n");
+    tell_them(
+      capitalize(caller->query_name()) +
+      " creates " + shortDesc + ".\n"
+    );
   }
 
-  tp->set_env("cwf", str);
+  _ok(
+    "%s cloned to %s (%s).",
+    fileName, get_short(dest), file_name(dest)
+  );
+
+  caller->set_env("cwf", str);
+
   return 1;
 }
 
-string help(object tp) {
-  return (" SYNTAX: clone <file>\n\n" +
-  "This command produces a clone of a file.\n\n" +
-  "See also: dest");
+string query_help(object _caller) {
+  return
+"SYNTAX: clone <file>\n\n"
+"This command produces a clone of a file.\n\n"
+"See also: dest";
 }

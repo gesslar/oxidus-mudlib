@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/say.c
- * @description A command to say something to the room.
+ *
+ * A command to say something to the room.
  *
  * @created 2024-08-18 - Gesslar
  * @last_modified 2024-08-18 - Gesslar
@@ -17,7 +18,8 @@ void setup() {
 "This command enables you to speak to the room.";
 }
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_BODY} */ object tp,
+    string str) {
     if(!str)
         return "Say what?";
 

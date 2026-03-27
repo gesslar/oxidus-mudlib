@@ -1,213 +1,251 @@
-//Simple emote command
-
-//Tacitus @ LPUniversity
-//02-APR-05
-//General Command
-
-//Last edited on October 8th, 2005 by Tacitus
-//Last edited on June 19th, 2006 by Parthenon
-
+/**
+ * @file /cmds/std/emote.c
+ *
+ * Custom emote command with targeted name substitution.
+ *
+ * @created 2005-04-02 - Tacitus @ LPUniversity
+ * @last_modified 2006-06-19 - Parthenon
+ *
+ * @history
+ * 2005-04-02 - Tacitus - Created
+ * 2005-10-08 - Tacitus - Last edited
+ * 2006-06-19 - Parthenon - Last edited
+ */
 
 #define TP this_body()
 #define TPQN this_body()->query_name()
 #define TPQCN capitalize(this_body()->query_name())
 
+private string *listOfNamesInEmote;
+private mixed *targetedUsers;
 
-/********* GLOBALS ***************/
-string *list_of_names_in_emote;
-mixed *targeted_users;
+private void parseLiving(string arg);
+private int getUsersTargeted();
+private void printEmotesToTargets(string arg,
+    object *targetsToPrintTo);
+private object *getTargetsToPrintTo();
 
-/********* PROTOTYPES ***********/
-void parse_living(string arg);
-int get_users_targeted();
-void print_emotes_to_targets(string arg, object *targets_to_print_to);
-object *get_targets_to_print_to();
+mixed main(object _caller, string arg) {
+  object *targetsToPrintTo;
 
+  if(!arg)
+    return "Syntax: emote <message>\n";
 
-mixed main(object caller, string arg) {
-    object *targets_to_print_to;
+  listOfNamesInEmote = ({});
+  targetedUsers = ({});
+  targetsToPrintTo = ({});
 
-    if(!arg)
-    return notify_fail("Syntax: emote <message>\n");
+  if(strsrch(arg, "$") != -1)
+    parseLiving(arg);
 
-    list_of_names_in_emote = ({});
-    targeted_users = ({});
-    targets_to_print_to = ({});
+  targetsToPrintTo = getTargetsToPrintTo();
 
-    if(strsrch(arg, "$") != -1)
-    parse_living(arg);
+  if(listOfNamesInEmote)
+    if(!getUsersTargeted())
+      return 0;
 
-    targets_to_print_to = get_targets_to_print_to();
-
-    if(list_of_names_in_emote)
-    if(!get_users_targeted())
-        return 0;
-
-    if(targets_to_print_to) {
-        print_emotes_to_targets(arg, targets_to_print_to);
-        return 1;
-    }// END IF
-
-    tell_me("You emote: " + capitalize(this_body()->query_name()) + " " +
-        arg + "\n");
-    tell_them(capitalize(this_body()->query_name()) + " " + arg + "\n");
+  if(targetsToPrintTo) {
+    printEmotesToTargets(arg, targetsToPrintTo);
     return 1;
+  }
+
+  tell_me("You emote: " + TPQCN + " " + arg + "\n");
+  tell_them(TPQCN + " " + arg + "\n");
+  return 1;
 }
 
-string help(object caller) {
-    return(" SYNTAX: emote <string>\n\n" +
-    "This command allows you to do custom emotes. Example, if you\n" +
-    "type 'emote smiles serenely' then the others in the room will\n" +
-    "see '" + TPQCN + " smiles serenly.' You can also use people's names\n" +
-    "who are present in the room. If you type 'emote smiles serenely\n" +
-    "at $parthenon' and Parthenon is present, then Parthenon will see\n" +
-    "'" + TPQCN + " smiles serenly at you.' and the room will see\n'" +
-    TPQCN + " smiles serenely at Parthenon.' You may also use the\n" +
-    "possessive form of the person's name like '$parthenon's' and\n" +
-    "Parthenon will see 'your'.\n\n" +
-    "See also: say\n");
+string query_help(object _caller) {
+  return
+" SYNTAX: emote <string>\n\n"
+"This command allows you to do custom emotes. Example, "
+"if you\ntype 'emote smiles serenely' then the others "
+"in the room will\nsee '" + TPQCN + " smiles "
+"serenely.' You can also use people's names\nwho are "
+"present in the room. If you type 'emote smiles "
+"serenely\nat $parthenon' and Parthenon is present, "
+"then Parthenon will see\n'" + TPQCN + " smiles "
+"serenely at you.' and the room will see\n'" + TPQCN +
+" smiles serenely at Parthenon.' You may also use "
+"the\npossessive form of the person's name like "
+"'$parthenon's' and\nParthenon will see 'your'.\n\n"
+"See also: say\n";
 }
 
+private void parseLiving(string arg) {
+  int i, j;
+  string tmp, currItem;
+  string *tmpArray;
 
-/********* FUNC IMPLEMENTATION ***********/
-void parse_living(string arg) {
-    int i, j;
-    string tmp, curr_item;
-    string *tmp_array;
+  tmpArray = explode(arg, " ");
 
-    tmp_array = explode(arg, " ");
+  for(i = 0; i < sizeof(tmpArray); i++) {
+    currItem = tmpArray[i];
 
-    for(i = 0; i < sizeof(tmp_array); i++) {
-        curr_item = tmp_array[i];
+    if(currItem[0] == '$') {
+      for(j = sizeof(currItem) - 1; j > 0; j--) {
+        if((currItem[j] >= 65 && currItem[j] <= 90)
+        || (currItem[j] >= 97 && currItem[j] <= 122)) {
+          tmp = currItem[1..j];
+          if(!listOfNamesInEmote)
+            listOfNamesInEmote =
+              ({ capitalize(tmp) });
+          else
+            listOfNamesInEmote +=
+              ({ capitalize(tmp) });
 
-        if(curr_item[0] == '$') {
-            for(j = sizeof(curr_item)-1; j > 0; j--) {
-                if((curr_item[j] >= 65 && curr_item[j] <= 90) || (curr_item[j] >= 97 && curr_item[j] <= 122)) {
-                    tmp = curr_item[1..j];
-                    if(!list_of_names_in_emote)
-                        list_of_names_in_emote = ({ capitalize(tmp) });
-                    else
-                        list_of_names_in_emote += ({ capitalize(tmp) });
-
-                    break;
-                }// END IF
-            }// END FOR
-        }// END IF
-    }// NED FOR
+          break;
+        }
+      }
+    }
+  }
 }
 
-int get_users_targeted() {
-    mixed *user_list_and_possessive = ({});
-    object tmp;
-    int i;
+private int getUsersTargeted() {
+  mixed *userListAndPossessive = ({});
+  object tmp;
+  int i;
 
-    for(i = 0; i < sizeof(list_of_names_in_emote); i++) {
-        if(list_of_names_in_emote[i][<2..<1] == "'s") {
-            tmp = present(lower_case(list_of_names_in_emote[i][0..<3]), environment(this_body()));
+  for(i = 0; i < sizeof(listOfNamesInEmote); i++) {
+    if(listOfNamesInEmote[i][<2..<1] == "'s") {
+      tmp = present(
+        lower_case(listOfNamesInEmote[i][0..<3]),
+        environment(TP));
 
-            if(!tmp)
-                return notify_fail(capitalize(list_of_names_in_emote[i][0..<3]) + " is not present!\n");
+      if(!tmp)
+        return
+          notify_fail(
+            capitalize(listOfNamesInEmote[i][0..<3]) +
+            " is not present!\n");
 
-            user_list_and_possessive += ({ tmp, 1 });
-        } else if(list_of_names_in_emote[i][<2..<1] == "s'") {
-            tmp = present(lower_case(list_of_names_in_emote[i][0..<2]), environment(this_body()));
+      userListAndPossessive += ({ tmp, 1 });
+    } else if(listOfNamesInEmote[i][<2..<1] == "s'") {
+      tmp = present(
+        lower_case(listOfNamesInEmote[i][0..<2]),
+        environment(TP));
 
-            if(!tmp)
-            return notify_fail(capitalize(list_of_names_in_emote[i][0..<2]) + " is not present!\n");
+      if(!tmp)
+        return
+          notify_fail(
+            capitalize(listOfNamesInEmote[i][0..<2]) +
+            " is not present!\n");
 
-            user_list_and_possessive += ({tmp, 1 });
-        } else {
-            tmp = present(lower_case(list_of_names_in_emote[i]), environment(this_body()));
+      userListAndPossessive += ({ tmp, 1 });
+    } else {
+      tmp = present(
+        lower_case(listOfNamesInEmote[i]),
+        environment(TP));
 
-            if(!tmp)
-            return notify_fail(capitalize(list_of_names_in_emote[i]) + " is not present!\n");
+      if(!tmp)
+        return
+          notify_fail(
+            capitalize(listOfNamesInEmote[i]) +
+            " is not present!\n");
 
-            user_list_and_possessive += ({ tmp, 0 });
-        }// END ELSE
-    }// END FOR
+      userListAndPossessive += ({ tmp, 0 });
+    }
+  }
 
-    targeted_users = user_list_and_possessive;
+  targetedUsers = userListAndPossessive;
 
-    return 1;
+  return 1;
 }
 
-void print_emotes_to_targets(string arg, object *targets_to_print_to) {
-    int i;
-    string tmp_emote, tmp_name, tmp_emote2;
-    string curr_target_name;
-    object curr_target;
-    object *exclude_list;
+private void printEmotesToTargets(string arg,
+    object *targetsToPrintTo) {
+  int i;
+  string tmpEmote, tmpName, tmpEmote2;
+  string currTargetName;
+  object currTarget;
+  object *excludeList;
 
-    arg = replace_string(arg, "$", "");
-    tmp_emote = arg;
+  arg = replace_string(arg, "$", "");
+  tmpEmote = arg;
 
-    for(i = 0; i < sizeof(targets_to_print_to); i++) {
-        if(targets_to_print_to[i] == 0)
-            targets_to_print_to -= ({ targets_to_print_to[i] });
-    }// END FOR
+  for(i = 0; i < sizeof(targetsToPrintTo); i++)
+    if(targetsToPrintTo[i] == 0)
+      targetsToPrintTo -= ({ targetsToPrintTo[i] });
 
-    for(i = 0; i < sizeof(list_of_names_in_emote); i++) {
-        tmp_name = list_of_names_in_emote[i];
-        if(strsrch(tmp_emote, lower_case(list_of_names_in_emote[i])) != -1)
-            tmp_emote = replace_string(tmp_emote, lower_case(list_of_names_in_emote[i]), tmp_name);
-        }// END FOR
+  for(i = 0; i < sizeof(listOfNamesInEmote); i++) {
+    tmpName = listOfNamesInEmote[i];
+    if(strsrch(tmpEmote,
+        lower_case(listOfNamesInEmote[i])) != -1)
+      tmpEmote = replace_string(tmpEmote,
+        lower_case(listOfNamesInEmote[i]), tmpName);
+  }
 
-    tmp_emote2 = tmp_emote;
+  tmpEmote2 = tmpEmote;
 
-    if(tmp_emote2[<1..<1] != "." && tmp_emote2[<1..<1] != "!" && tmp_emote2[<1..<1] != "?")
-    tmp_emote2 += ".";
+  if(tmpEmote2[<1..<1] != "."
+  && tmpEmote2[<1..<1] != "!"
+  && tmpEmote2[<1..<1] != "?")
+    tmpEmote2 += ".";
 
-    tell_me("You emote: " + TPQCN + " " + tmp_emote2 + "\n");
+  tell_me("You emote: " + TPQCN + " " + tmpEmote2 +
+    "\n");
 
+  for(i = 0; i < sizeof(targetsToPrintTo); i++) {
+    tmpEmote2 = tmpEmote;
+    currTarget = targetsToPrintTo[i];
+    currTargetName =
+      capitalize(currTarget->query_name());
 
-    for(i = 0; i < sizeof(targets_to_print_to); i++) {
-        tmp_emote2 = tmp_emote;
-        curr_target = targets_to_print_to[i];
-        curr_target_name = capitalize(curr_target->query_name());
+    if(targetedUsers[i + 1] == 1
+    && currTargetName[<1] == 's')
+      tmpEmote2 = replace_string(tmpEmote2,
+        currTargetName + "'", "your");
+    else if(targetedUsers[i + 1] == 1)
+      tmpEmote2 = replace_string(tmpEmote2,
+        currTargetName + "'s", "your");
+    else
+      tmpEmote2 = replace_string(tmpEmote2,
+        currTargetName, "you");
 
-        if(targeted_users[i+1] == 1 && curr_target_name[<1] == 's')
-            tmp_emote2 = replace_string(tmp_emote2, curr_target_name + "'", "your");
-        else if(targeted_users[i+1] == 1)
-            tmp_emote2 = replace_string(tmp_emote2, curr_target_name + "'s", "your");
-        else
-            tmp_emote2 = replace_string(tmp_emote2, curr_target_name, "you");
+    if(strsrch(tmpEmote2, TPQCN + "'s") != -1
+    || strsrch(tmpEmote2, TPQCN + "'") != -1) {
+      tmpEmote2 = replace_string(tmpEmote2,
+        TPQCN + "'s", "his/her");
+      tmpEmote2 = replace_string(tmpEmote2,
+        TPQCN + "'", "his/her");
+    }
 
-        if((strsrch(tmp_emote2, TPQCN + "'s") != -1) || (strsrch(tmp_emote2, TPQCN + "'") != -1)) {
-            tmp_emote2 = replace_string(tmp_emote2, TPQCN + "'s", "his/her");
-            tmp_emote2 = replace_string(tmp_emote2, TPQCN + "'", "his/her");
-        }// END IF
+    if(strsrch(tmpEmote2, TPQCN) != -1)
+      tmpEmote2 = replace_string(tmpEmote2,
+        TPQCN, "he/she");
 
-        if(strsrch(tmp_emote2, TPQCN) != -1)
-            tmp_emote2 = replace_string(tmp_emote2, TPQCN, "he/she");
+    if(tmpEmote2[<1..<1] != "."
+    && tmpEmote2[<1..<1] != "!"
+    && tmpEmote2[<1..<1] != "?")
+      tmpEmote2 += ".";
 
-        if(tmp_emote2[<1..<1] != "." && tmp_emote2[<1..<1] != "!" && tmp_emote2[<1..<1] != "?")
-            tmp_emote2 += ".";
+    tell(currTarget, TPQCN + " " + tmpEmote2 + "\n");
+  }
 
-        tell(curr_target, TPQCN + " " + tmp_emote2 + "\n");
-    }// END FOR
+  tmpEmote2 = tmpEmote;
 
-    tmp_emote2 = tmp_emote;
+  if(tmpEmote2[<1..<1] != "."
+  && tmpEmote2[<1..<1] != "!"
+  && tmpEmote2[<1..<1] != "?")
+    tmpEmote += ".";
 
-    if(tmp_emote2[<1..<1] != "." && tmp_emote2[<1..<1] != "!" && tmp_emote2[<1..<1] != "?")
-    tmp_emote += ".";
+  excludeList = targetsToPrintTo + ({ TP });
 
-    exclude_list = targets_to_print_to + ({ TP });
-
-    tell_them(TPQCN + " " + tmp_emote + "\n", exclude_list);
-
-    return;
+  tell_them(TPQCN + " " + tmpEmote + "\n",
+    excludeList);
 }
 
-object *get_targets_to_print_to() {
-    int i;
-    object *tmp_array = ({});
+private object *getTargetsToPrintTo() {
+  int i;
+  object *tmpArray = ({});
 
-    for(i = 0; i < sizeof(list_of_names_in_emote); i++) {
-        if(member_array(find_living(lower_case(list_of_names_in_emote[i])), tmp_array) == -1)
-            tmp_array += ({ find_living(lower_case(list_of_names_in_emote[i])) });
-    }// END FOR
+  for(i = 0; i < sizeof(listOfNamesInEmote); i++)
+    if(member_array(
+        find_living(
+          lower_case(listOfNamesInEmote[i])),
+        tmpArray) == -1)
+      tmpArray += ({ find_living(
+        lower_case(listOfNamesInEmote[i])) });
 
-    tmp_array -= ({ TP });
+  tmpArray -= ({ TP });
 
-    return tmp_array;
+  return tmpArray;
 }
