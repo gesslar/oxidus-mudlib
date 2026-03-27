@@ -377,8 +377,8 @@ string stringify(mixed val) {
 }
 
 // TODO: maybe use a define?
-// private nosave string decimal = mud_config("DECIMAL");
-// private nosave string thousands = mud_config("THOUSANDS");
+// private nosave string decimal = mudConfig("DECIMAL");
+// private nosave string thousands = mudConfig("THOUSANDS");
 private nosave string decimal = ".";
 private nosave string thousands = ",";
 
