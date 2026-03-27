@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/score.c
- * @description Score command
+ *
+ * Score command.
  *
  * @created 2024-08-06 - Gesslar
  * @last_modified 2024-08-06 - Gesslar
@@ -11,7 +12,8 @@
 
 inherit STD_CMD;
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_BODY} */ object tp,
+    string _str) {
     string result;
 
     result = sprintf("You are %s, a level %d %s.\n",

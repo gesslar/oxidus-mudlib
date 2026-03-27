@@ -1,6 +1,7 @@
 /**
- * @file /cmds/std/dispose.c
- * @description Get rid of dead bodies!
+ * @file /cmds/std/test.c
+ *
+ * Test command stub.
  *
  * @created 2024-08-06 - Gesslar
  * @last_modified 2024-08-06 - Gesslar

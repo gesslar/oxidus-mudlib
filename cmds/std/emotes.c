@@ -1,126 +1,124 @@
-//emotes command
+/**
+ * @file /cmds/std/emotes.c
+ *
+ * List all available emotes.
+ *
+ * @created 2006-06-28 - Parthenon @ LPUniversity
+ * @last_modified 2006-06-28 - Parthenon
+ *
+ * @history
+ * 2006-06-28 - Parthenon - Created
+ */
 
-//Parthenon @ LPUniversity
-//28-JUN-06
-//General Command
+private string *singledEmotes = ({});
 
-//Last edited on June 28th, 2006 by Parthenon
+private void fixArray(string *arr);
+private void printEmotes(string *emotes);
 
-string *singled_emotes = ({});
+mixed main(object _tp, string _arg) {
+  string *emotes;
 
-void fix_array(string *arr);
-void print_emotes(string *emotes);
+  emotes = ({});
+  emotes = SOUL_D->query_emotes();
 
-mixed main(object caller, string arg) {
-    string *emotes;
+  if(!emotes)
+    return "Error [emotes]: There are no emotes "
+      "available\n";
 
-    emotes = ({});
-    emotes = SOUL_D->query_emotes();
+  singledEmotes = ({});
+  fixArray(emotes);
 
-    if(!emotes)
-    return notify_fail("Error [emotes]: There are no emotes available\n");
+  tell_me("\nAvailable emotes:\n");
 
-    singled_emotes = ({});
-    fix_array(emotes);
+  printEmotes(singledEmotes);
 
-    tell_me("\nAvailable emotes:\n");
-
-    //for(i = 0; i < sizeof(singled_emotes); i++)
-    //    tell_me(singled_emotes[i]+"\n");
-
-    print_emotes(singled_emotes);
-
-    return 1;
+  return 1;
 }
 
-void print_emotes(string *emotes) {
-    int i, num_full_rows, num_extras, index;
-    int new_line = 0, row_count = 0, column_count = 0;
-    int *indexes_printed = ({});
-    int tmp = 1, need_to_add;
-    string *all_emotes = SOUL_D->query_emotes();
+private void printEmotes(string *emotes) {
+  int i, numFullRows, numExtras, index;
+  int newLine = 0, rowCount = 0, columnCount = 0;
+  int *indexesPrinted = ({});
+  int tmp = 1, needToAdd;
+  string *allEmotes = SOUL_D->query_emotes();
 
-    num_full_rows = sizeof(emotes) / 4;
-    num_extras = sizeof(emotes) % 4;
+  numFullRows = sizeof(emotes) / 4;
+  numExtras = sizeof(emotes) % 4;
 
-    if(num_extras)
-    need_to_add = 1;
+  if(numExtras)
+    needToAdd = 1;
 
-    for(i = 0; i < sizeof(emotes); i++) {
-        if(new_line >= 4) {
-            tell_me("\n");
-            new_line = 0;
-            row_count++;
-            column_count = 0;
-        }
+  for(i = 0; i < sizeof(emotes); i++) {
+    if(newLine >= 4) {
+      tell_me("\n");
+      newLine = 0;
+      rowCount++;
+      columnCount = 0;
+    }
 
-        if(sizeof(indexes_printed) >= 4) {
-            index = indexes_printed[column_count]+row_count;
+    if(sizeof(indexesPrinted) >= 4) {
+      index = indexesPrinted[columnCount] + rowCount;
 
-            if(index > sizeof(emotes) - 1)
-                continue;
+      if(index > sizeof(emotes) - 1)
+        continue;
 
-            if((member_array(emotes[index]+"/t", all_emotes) != -1) && (member_array(emotes[index], all_emotes) != -1))
-                printf("%-15s", emotes[index]);
-            else if((member_array(emotes[index], all_emotes) != -1))
-                printf("%-15s", emotes[index]);
-            else
-                printf("%-15s", emotes[index]);
+      tell(this_player(), sprintf("%-15s", emotes[index]));
+    } else {
+      if(i == 0) {
+        index = 0;
+      } else {
+        if(needToAdd) {
+          if(numExtras) {
+            index = rowCount * columnCount +
+              numFullRows * columnCount + tmp;
+            numExtras--;
+            tmp++;
+          } else {
+            index = rowCount * columnCount +
+              numFullRows * columnCount + tmp;
+          }
         } else {
-            if(i == 0)
-                index = 0;
-            else {
-                if(need_to_add) {
-                    if(num_extras) {
-                        index = row_count * column_count + num_full_rows * column_count + tmp;
-                        num_extras--;
-                        tmp++;
-                    } else
-                        index = row_count * column_count + num_full_rows * column_count + tmp;
-                } else
-                    index = row_count * column_count + num_full_rows * column_count;
-            }
-
-            if((member_array(emotes[index]+"/t", all_emotes) != -1) && (member_array(emotes[index], all_emotes) != -1))
-                printf("%-15s", emotes[index]);
-            else if((member_array(emotes[index], all_emotes) != -1))
-                printf("%-15s", emotes[index]);
-            else
-                printf("%-15s", emotes[index]);
-
-            indexes_printed += ({ (index) });
+          index = rowCount * columnCount +
+            numFullRows * columnCount;
         }
+      }
 
-        new_line++;
-        column_count++;
+      tell(this_player(), sprintf("%-15s", emotes[index]));
+
+      indexesPrinted += ({ (index) });
     }
 
-    tell_me("\n\n*Cyan* untargeted only.\n");
-    tell_me("*Blue* targeted only.\n\n");
+    newLine++;
+    columnCount++;
+  }
+
+  tell_me("\n\n*Cyan* untargeted only.\n");
+  tell_me("*Blue* targeted only.\n\n");
 }
 
-
-int alphabetize(string arg1, string arg2) {
-    return strcmp(arg1, arg2);
+private int alphabetize(string arg1, string arg2) {
+  return strcmp(arg1, arg2);
 }
 
-void fix_array(string *arr) {
-    int i;
+private void fixArray(string *arr) {
+  int i;
 
-    for(i = 0; i < sizeof(arr); i++) {
-        if(arr[i][<2..<1] == "/t")
-            arr[i] = arr[i][0..<3];
+  for(i = 0; i < sizeof(arr); i++) {
+    if(arr[i][<2..<1] == "/t")
+      arr[i] = arr[i][0..<3];
 
-        if(member_array(arr[i], singled_emotes) == -1)
-            singled_emotes += ({ arr[i] });
-    }
+    if(member_array(arr[i], singledEmotes) == -1)
+      singledEmotes += ({ arr[i] });
+  }
 
-    singled_emotes = sort_array(singled_emotes, "alphabetize");
+  singledEmotes =
+    sort_array(singledEmotes, "alphabetize");
 }
 
-string help(object caller) {
-    return(" SYNTAX: emotes\n\n" +
-    "This command allows you to see all of the emotes available for you\n"+
-    "to use.\n\n"+
-    "See also: emote\n");
+string query_help(object _caller) {
+  return
+" SYNTAX: emotes\n\n"
+"This command allows you to see all of the emotes "
+"available for you\nto use.\n\n"
+"See also: emote\n";
 }

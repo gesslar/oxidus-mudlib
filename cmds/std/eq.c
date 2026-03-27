@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/eq.c
- * @description List all your equipped items
+ *
+ * List all your equipped items.
  *
  * @created 2024-07-27 - Gesslar
  * @last_modified 2024-07-27 - Gesslar
@@ -11,7 +12,8 @@
 
 inherit STD_ACT;
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_BODY} */ object tp,
+    string str) {
   mapping eq, wielded;
   string slot, *slots;
   string out = "";

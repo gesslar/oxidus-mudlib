@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/waypoint.c
- * @description Command for managing waypoints.
+ *
+ * Command for managing waypoints.
  *
  * @created 2024-09-02 - Gesslar
  * @last_modified 2024-09-02 - Gesslar
@@ -30,9 +31,9 @@ void setup() {
   "You must have GMCP enabled to use this command.";
 }
 
-string list_waypoints(object tp);
-string set_waypoint(object tp);
-string remove_waypoint(object tp, int num);
+private mixed list_waypoints(object tp);
+private mixed set_waypoint(object tp);
+private mixed remove_waypoint(object tp, int num);
 
 mixed main(object tp, string str) {
   string name = query_privs(tp);
@@ -55,7 +56,7 @@ mixed main(object tp, string str) {
   return usage(tp);
 }
 
-mixed list_waypoints(object tp) {
+private mixed list_waypoints(object tp) {
   string name = query_privs(tp);
   string file = user_data_directory(name) + "waypoints.txt";
   int max_waypoints = mudConfig("WAYPOINTS_MAX");
@@ -68,8 +69,7 @@ mixed list_waypoints(object tp) {
   if(file_exists(file)) {
     data = read_file(file);
     wps = restore_variable(data);
-  }
-  else
+  } else
     wps = ({});
 
   sz = sizeof(wps);
@@ -88,7 +88,7 @@ mixed list_waypoints(object tp) {
   return result;
 }
 
-mixed set_waypoint(object tp) {
+private mixed set_waypoint(object tp) {
   string name = query_privs(tp);
   string file = user_data_directory(name) + "waypoints.txt";
   mixed *wps;
@@ -127,7 +127,7 @@ mixed set_waypoint(object tp) {
   return sprintf("Waypoint %d set to %s.", num+1, room_short);
 }
 
-mixed remove_waypoint(object tp, int num) {
+private mixed remove_waypoint(object tp, int num) {
   string name = query_privs(tp);
   string file = user_data_directory(name) + "waypoints.txt";
   mixed *wps = ({});

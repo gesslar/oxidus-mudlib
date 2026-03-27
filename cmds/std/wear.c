@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/wear.c
- * @description Wear command
+ *
+ * Wear command.
  *
  * @created 2024-07-26 - Gesslar
  * @last_modified 2024-07-26 - Gesslar
@@ -21,7 +22,8 @@ void setup() {
    usage_text = "wear <item>";
 }
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_BODY} */ object tp,
+    string str) {
     object ob;
     string slot;
     string slots;

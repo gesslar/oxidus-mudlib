@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/remove.c
- * @description Command to remove worn items
+ *
+ * Command to remove worn items.
  *
  * @created 2024-07-26 - Gesslar
  * @last_modified 2024-07-26 - Gesslar
@@ -19,7 +20,8 @@ void setup() {
     usage_text = "remove <item>";
 }
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_BODY} */ object tp,
+    string str) {
     object ob;
     string slot;
     string *slots;

@@ -1,7 +1,8 @@
 /**
  * @file /cmds/std/travel.c
- * @description Command to run to common destinations from your current
- *              location. Requires GMCP.
+ *
+ * Command to run to common destinations from your current
+ * location. Requires GMCP.
  *
  * @created 2024-08-24 - Gesslar
  * @last_modified 2024-08-24 - Gesslar
@@ -38,7 +39,7 @@ void setup() {
 "You must have GMCP enabled to use this command.";
 }
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_PLAYER} */ object tp, string str) {
   string *stops;
   string wp_file;
   mixed *wps;

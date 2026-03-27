@@ -1,7 +1,8 @@
 /**
  * @file /cmds/std/passwd.c
- * @description Command to manage your own password or the password of another
- *              user.
+ *
+ * Command to manage your own password or the password of another
+ * user.
  *
  * @created 2024-07-14 - Gesslar
  * @last_modified 2024-07-14 - Gesslar
@@ -12,9 +13,9 @@
 
 inherit STD_CMD;
 
-void password_confirmed(int status, object tp);
-void new_password(string str, object tp);
-void confirm_password(string str, string pass, object tp);
+private void password_confirmed(int status, object tp);
+private void new_password(string str, object tp);
+private void confirm_password(string str, string pass, object tp);
 
 mixed main(object tp, string arg) {
     _info("Changing your password.");
@@ -23,7 +24,7 @@ mixed main(object tp, string arg) {
     return 1;
 }
 
-void password_confirmed(int status, object tp) {
+private void password_confirmed(int status, object tp) {
     if(status) {
         _question("Please enter your new password: ");
         input_to((:new_password:), I_NOECHO | I_NOESC, tp);
@@ -32,7 +33,7 @@ void password_confirmed(int status, object tp) {
     }
 }
 
-void new_password(string str, object tp) {
+private void new_password(string str, object tp) {
     if(!str || str == "") {
         _error("Password cannot be empty.");
         return;
@@ -41,7 +42,7 @@ void new_password(string str, object tp) {
     input_to((:confirm_password:), I_NOECHO | I_NOESC, str, tp);
 }
 
-void confirm_password(string str, string pass, object tp) {
+private void confirm_password(string str, string pass, object tp) {
     if(str == pass) {
         _ok("Password accepted.");
         ACCOUNT_D->writeAccount(tp->query_real_name(), "password", crypt(str, 0));
@@ -51,7 +52,7 @@ void confirm_password(string str, string pass, object tp) {
     }
 }
 
-string query_help(object tp) {
+string query_help(object _caller) {
     return
 "SYNTAX: passwd\n\n"
 "This command allows you to change your current passwd. You will be asked to "

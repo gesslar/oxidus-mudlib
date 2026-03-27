@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/set.c
- * @description Command to manage preferences in a player object.
+ *
+ * Command to manage preferences in a player object.
  *
  * @created 2024-08-17 - Gesslar
  * @last_modified 2024-08-17 - Gesslar
@@ -8,7 +9,6 @@
  * @history
  * 2024-08-17 - Gesslar - Created
  */
-
 
 inherit STD_CMD;
 
@@ -32,18 +32,18 @@ void setup() {
 "View {{ul1}}help preferences{{ul0}} for available preferences.";
 }
 
-void prompt_colour_result(string input, object tp, string variable);
+private void prompt_colour_result(string input, object tp, string variable);
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_PLAYER} */ object tp, string str) {
   string var_name, var_value, *keys;
   mapping data;
   int i;
 
   if(!str) {
     data = tp->list_pref();
-    if(!mapp(data))
+    if(!mapp(data)) {
       return _info("No preferences currently set.");
-    else {
+    } else {
       if(!sizeof(data))
         return _info("No preferences currently set.");
 
@@ -92,7 +92,7 @@ mixed main(object tp, string str) {
   return 1;
 }
 
-void prompt_colour_result(string result, object tp, string variable) {
+private void prompt_colour_result(string result, object tp, string variable) {
   switch(result) {
     case "cancel":
       _ok(tp, "You opt not to set this value at this time.");

@@ -1,42 +1,48 @@
 /**
  * @file /cmds/file/rmdir.c
- * @description Command to remove a directory.
+ *
+ * Command to remove a directory.
  *
  * @created 2024-08-16 - Gesslar
- * @last_modified 2024-08-16 - Gesslar
+ * @last_modified 2026-03-23 - Gesslar
  *
  * @history
  * 2024-08-16 - Gesslar - Created
+ * 2026-03-23 - Gesslar - Updated to current conventions
  */
 
 inherit STD_CMD;
 
 void setup() {
-    usage_text = "rmdir <directory name>";
-    help_text =
-"This command permanantly removes a specified directory. It will not "
-"currently delete a directory that has content (ie. The directory "
-"you wish to remove must be empty before it can be deleted.)";
+  usage_text = "rmdir <directory name>";
+  help_text =
+"This command permanently removes a specified directory. "
+"It will not currently delete a directory that has content "
+"(i.e. the directory you wish to remove must be empty "
+"before it can be deleted).";
 }
 
-mixed main(object tp, string str) {
-    if(!str)
-        return _usage(tp);
+mixed main(/** @type {STD_PLAYER} */ object caller,
+    string str) {
+  if(!str)
+    return _usage(caller);
 
-    str = resolve_path(tp->query_env("cwd"), str);
+  str = resolve_path(caller->query_env("cwd"), str);
 
-    if(!directory_exists(str) || file_exists(str))
-        return _error("%s is not a directory.", str);
+  if(!directory_exists(str) || file_exists(str))
+    return _error(caller,
+      "%s is not a directory.", str);
 
-    if(sizeof(get_dir(str + "/")))
-        return _error("%s is not empty.", str);
+  if(sizeof(get_dir(str + "/")))
+    return _error(caller, "%s is not empty.", str);
 
-    if(!master()->valid_write(str, tp, "rmdir"))
-        return _error("Permission denied.");
+  if(!master()->valid_write(str, caller, "rmdir"))
+    return _error(caller, "Permission denied.");
 
-    rmdir(str)
-        ? _ok("Directory removed: %s", str)
-        : _error("Could not remove directory: %s", str);
+  rmdir(str)
+    ? _ok(caller, "Directory removed: %s", str)
+    : _error(caller,
+        "Could not remove directory: %s", str);
 
-    return 1;
+  return 1;
 }

@@ -1,14 +1,16 @@
-/* drop.c
-
- Ico2 @ LPUniversity
- 27-OCTOBER-05
- Standard command
-
-QC Review: Tacitus on October 28th, 2005
-
-Last edited on June 27th, 2006 by Tacitus
-
-*/
+/**
+ * @file /cmds/std/drop.c
+ *
+ * Standard command to drop objects from inventory.
+ *
+ * @created 2005-10-27 - Ico2
+ * @last_modified 2006-06-27 - Tacitus
+ *
+ * @history
+ * 2005-10-27 - Ico2 - Created
+ * 2005-10-28 - Tacitus - QC Review
+ * 2006-06-27 - Tacitus - Last edited
+ */
 
 inherit STD_ACT;
 

@@ -1,13 +1,18 @@
-// /cmds/std/wealth.c
-//
-// Created:     2024/03/02: Gesslar
-// Last Change: 2024/03/02: Gesslar
-//
-// 2024/03/02: Gesslar - Created
+/**
+ * @file /cmds/std/wealth.c
+ *
+ * Command to display the player's current wealth.
+ *
+ * @created 2024-03-02 - Gesslar
+ * @last_modified 2024-03-02 - Gesslar
+ *
+ * @history
+ * 2024-03-02 - Gesslar - Created
+ */
 
 inherit STD_CMD;
 
-mixed main(object tp, string arg) {
+mixed main(/** @type {STD_BODY} */ object tp, string arg) {
     string *currencies = CURRENCY_D->currency_list();
     string *out = ({ });
 

@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/unalias.c
- * @description Command to unalias a verb
+ *
+ * Command to unalias a verb.
  *
  * @created 2024-10-06 - Gesslar
  * @last_modified 2024-10-06 - Gesslar

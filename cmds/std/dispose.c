@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/dispose.c
- * @description Get rid of dead bodies!
+ *
+ * Command to dispose of dead bodies.
  *
  * @created 2024-08-06 - Gesslar
  * @last_modified 2024-08-06 - Gesslar

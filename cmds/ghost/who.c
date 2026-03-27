@@ -1,102 +1,105 @@
-//who.c
-
-//Tacitus @ LPUniversity
-//08-APR-05
-//Standard Command
-
-//I don't like it, please recode this for me :) [Tacitus]
-
-//Last edited October 4th, 2006 by Tacitus
+/**
+ * @file /cmds/ghost/who.c
+ * @description Who command displaying currently connected users.
+ *
+ * @created 2005-04-08 - Tacitus
+ * @last_modified 2006-10-04 - Tacitus
+ *
+ * @history
+ * 2005-04-08 - Tacitus - Created
+ */
 
 inherit STD_CMD;
 
-object *add_array(object *oldlist, object *newlist);
+private int sortName(
+  /** @type {STD_BODY} */ object ob1,
+  /** @type {STD_BODY} */ object ob2
+);
+private object *addArray(object *oldArr, object *newArr);
 
-mixed main(object caller, string arg) {
-    string ret, mudname;
-    mixed *packet;
-    object *list, c;
-    object *admin_arr,*dev_arr, *user_arr;
-    int i;
+mixed main(object caller, string _arg) {
+  string ret = "";
+  object *list;
+  object *adminArr = ({});
+  object *devArr = ({});
+  object *userArr = ({});
 
+  ret += read_file("/adm/etc/logo") + "\n\n";
+  ret += sprintf("%10s  %10s\n\n",
+    "Username [* editing, + in input]", "Idle"
+  );
 
-    admin_arr = ({});
-    dev_arr   = ({});
-    user_arr  = ({});
-    ret = "";
+  list = users();
 
-    /* Fixed your error. Tricky */
+  foreach(object ob in list) {
+    if(adminp(ob) && ob->query_real_name() != "login")
+      adminArr += ({ ob });
+    else if(devp(ob))
+      devArr += ({ ob });
+    else
+      userArr += ({ ob });
+  }
 
-    ret += read_file("/adm/etc/logo") + "\n\n";
+  adminArr = sort_array(adminArr, (: sortName :));
+  devArr = sort_array(devArr, (: sortName :));
+  userArr = sort_array(userArr, (: sortName :));
 
-    ret += sprintf("%10s  %10s\n\n", "Username [* editing, + in input]", "Idle");
+  list = ({});
+  list = addArray(list, adminArr);
+  list = addArray(list, devArr);
+  list = addArray(list, userArr);
 
-    list = users();
+  for(int i = 0; i < sizeof(list); i++) {
+    string tag;
 
-    foreach(object name in list) {
-        if(adminp(name) && name->query_real_name() != "login")
-            admin_arr += ({ name });
-        else if(devp(name))
-            dev_arr += ({ name });
-        else
-            user_arr += ({ name });
-    }
+    if(!(string)list[i]->query_name())
+      continue;
 
-    admin_arr = sort_array(admin_arr, "sort_name");
-    dev_arr   = sort_array(dev_arr,   "sort_name");
-    user_arr = sort_array(user_arr, "sort_name");
+    if(list[i]->query_real_name() == "login")
+      tag = "[ LOGIN ]";
+    else if(adminp(list[i]))
+      tag = "[ Admin ]";
+    else if(devp(list[i]))
+      tag = "[ Dev   ]";
+    else
+      tag = "[ User  ]";
 
-    list = ({});
-    list = add_array(list, admin_arr);
-    list = add_array(list, dev_arr);
-    list = add_array(list, user_arr);
+    ret += sprintf(" %-s   %-15s %15s\n", tag,
+      list[i]->query_name()
+      + (in_edit(list[i]) ? "*" : "")
+      + (in_input(list[i]) ? "+" : ""),
+      query_idle(list[i]) / 60 + "m"
+    );
+  }
 
-    //    list = sort_array(list, "sort_users");
+  ret += "\n";
+  tell(caller, ret);
 
-    for(i = 0; i < sizeof(list); i ++) {
-        string tag;
+  return 1;
+}
 
-        if(!(string)list[i]->query_name())
-            continue;
-
-        if(list[i]->query_real_name() == "login")
-            tag = "[ LOGIN ]";
-        else if(adminp(list[i]))
-            tag = "[ Admin ]";
-        else if(devp(list[i]))
-            tag = "[ Dev   ]";
-        else
-            tag = "[ User  ]";
-
-        ret += sprintf(" %-s   %-15s %15s\n", tag,
-          list[i]->query_name() +
-          (in_edit(list[i]) ? "*" : "") +
-          (in_input(list[i]) ? "+" : ""),
-          query_idle(list[i]) / 60 + "m");
-    }
-
-    ret +=("\n");
-    tell_me(ret);
+private int sortName(
+    /** @type {STD_BODY} */ object ob1,
+    /** @type {STD_BODY} */ object ob2) {
+  if(ob1->query_name() > ob2->query_name())
     return 1;
+  else if(ob1->query_name() < ob2->query_name())
+    return -1;
+
+  return 0;
 }
 
-int sort_name(object ob1, object ob2) {
-    if(ob1->query_name() > ob2->query_name())    return 1;
-    else if(ob1->query_name() < ob2 ->query_name())    return -1;
-    else return 0;
+private object *addArray(object *oldArr, object *newArr) {
+  foreach(object ob in newArr)
+    oldArr += ({ ob });
+
+  return oldArr;
 }
 
-object *add_array(object *oldarr, object *newarr) {
-    foreach(object name in newarr) {
-        oldarr += ({ name });
-    }
-
-    return oldarr;
-}
-
-string help(object caller) {
-    return(" SYNTAX: who\n\n" +
-    "This command will display all the users who are currently logged\n" +
-    "into " + mud_name() + ". It also lets you know if they are currently\n" +
-    "editing, in input, and/or idle.\n");
+string query_help(object _caller) {
+  return
+"SYNTAX: who\n\n"
+"This command will display all the users who are currently "
+"logged into " + mud_name() + ". It also lets you know if "
+"they are currently editing, in input, and/or idle.";
 }

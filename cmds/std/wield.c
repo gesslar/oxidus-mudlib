@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/wield.c
- * @description Wield command!
+ *
+ * Wield command.
  *
  * @created 2024-08-04 - Gesslar
  * @last_modified 2024-08-04 - Gesslar
@@ -11,7 +12,8 @@
 
 inherit STD_ACT;
 
-mixed main(object tp, string str) {
+mixed main(/** @type {STD_BODY} */ object tp,
+    string str) {
     object ob;
     mixed result;
 

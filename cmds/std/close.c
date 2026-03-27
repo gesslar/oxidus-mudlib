@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/close.c
- * @description Command to close a container or door
+ *
+ * Command to close a container or door.
  *
  * @created 2024-08-08 - Gesslar
  * @last_modified 2024-08-08 - Gesslar
@@ -46,8 +47,8 @@ mixed main(object tp, string args) {
     if(other_room) {
       foreach(string dir in other_room->query_exit_ids()) {
         if(other_room->query_exit_dest(dir) == room) {
-            other_room->set_door_open(dir, false, false);
-            break;
+          other_room->set_door_open(dir, false, false);
+          break;
         }
       }
     }

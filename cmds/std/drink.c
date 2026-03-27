@@ -1,6 +1,7 @@
 /**
  * @file /cmds/std/drink.c
- * @description Drink command
+ *
+ * Drink command.
  *
  * @created 2024-08-06 - Gesslar
  * @last_modified 2024-08-06 - Gesslar
