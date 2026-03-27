@@ -189,7 +189,7 @@ void error_handler(mapping mp, int caught) {
 #if 0
 void error_handler(mapping mp, int caught) {
     string ret;
-    string logfile = caught ? mud_config("LOG_CATCH") : mud_config("LOG_RUNTIME");
+    string logfile = caught ? mudConfig("LOG_CATCH") : mudConfig("LOG_RUNTIME");
     string what = mp["error"];
     string userid;
 

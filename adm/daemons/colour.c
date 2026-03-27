@@ -71,7 +71,7 @@ void setup() {
  */
 private int tooDarkCheck() {
   return 1;
-  // return mud_config("COLOUR_TOO_DARK") == "on";
+  // return mudConfig("COLOUR_TOO_DARK") == "on";
 }
 
 /**

@@ -29,12 +29,12 @@ void lazy_query(string db, string q, mixed *callback);
 private nosave mapping handle = ([ ]);
 private nosave mapping databases = ([ ]);
 private nosave mapping table_definitions = ([ ]);
-private nosave int db_chunk_size = mud_config("DB_CHUNK_SIZE");
+private nosave int db_chunk_size = mudConfig("DB_CHUNK_SIZE");
 
 void setup() {
-    string db_path = mud_config("DB_PATH");
-    string db_suffix = mud_config("DB_SUFFIX");
-    string table_suffix = mud_config("DB_TABLE_SUFFIX");
+    string db_path = mudConfig("DB_PATH");
+    string db_suffix = mudConfig("DB_SUFFIX");
+    string table_suffix = mudConfig("DB_TABLE_SUFFIX");
 
     databases = ([ ]);
     table_definitions = ([ ]);
