@@ -24,7 +24,7 @@ inherit M_LOG;
 
 private nosave mapping login_gmcp_data = ([ "client" : null, "supports" : null, ]);
 
-private nosave mapping environ_data = ([]);
+private nosave mapping __environ_data = ([]);
 private nosave mapping account = null;
 
 void get_account(string str);
@@ -479,7 +479,7 @@ void enter_world(string name, int reconnecting) {
   body->set_gmcp_client(login_gmcp_data["client"]);
   body->set_gmcp_supports(login_gmcp_data["supports"]);
   body->clear_environ_data();
-  body->set_environ_data(environ_data);
+  body->set_environ_data(__environ_data);
 
   // If they are not reconnecting, figure out where to put them
   if(!reconnecting) {
@@ -625,7 +625,7 @@ mapping query_gmcp_supports() {
 }
 
 void receive_environ(string var, mixed value) {
-  environ_data[var] = value;
+  __environ_data[var] = value;
 }
 
 void auto_destruct() {
