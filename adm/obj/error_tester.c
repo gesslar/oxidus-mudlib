@@ -22,7 +22,7 @@ private nosave string *exclude = ({
   "ATTIC", ".git", ".vscode", "tmp", "TMP", "u",
   "log", "doc", "plans", "players", "data", "_attic",
   "weapon2", "removed", "cards", "fluffos", ".github", "ARCHIVE",
-  "archive", "home",
+  "archive", "home", "node_modules",
 });
 
 private nosave int file_call_out = 0;

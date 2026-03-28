@@ -44,7 +44,7 @@ private nosave mixed _prevent_get = 0;
  * Sets up the object and processes the setup chain, then calls reset().
  * This function is private so only the driver can call it.
  *
- * @param {mixed} args... - Variable arguments passed during creation
+ * @param {mixed...} args - Variable arguments passed during creation
  */
 private varargs void create(mixed args...) {
   set_notify_destruct(1);

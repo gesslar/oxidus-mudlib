@@ -1,6 +1,8 @@
 /**
- * @file /std/user/player.c
- * @description Player object for user characters.
+ * @file /std/living/player.c
+ * Player object for user characters. Handles the lifecycle of a
+ * player body including login, logout, heartbeat, persistence,
+ * environment variables, and GMCP integration.
  *
  * @created 2024-07-29 - Gesslar
  * @last_modified 2024-07-29 - Gesslar
@@ -25,35 +27,45 @@ private nosave mapping environ_data = ([]);
 private int _last_login = 0;
 private int ed_setup = 0;
 
-/* Connection functions */
+/**
+ * Initialises the player body with default values and
+ * preferences. Called during the login process to prepare the
+ * body for play.
+ *
+ * @public
+ */
 void setup_body() {
   set_living_name(query_real_name());
   set_id(({query_real_name()}));
-  // set_real_name(name());
   set_heart_beat(mudConfig("DEFAULT_HEART_RATE"));
-  if(!query_race()) set_race(mudConfig("DEFAULT_RACE"));
-  if(!queryLevel()) setLevel(1.0);
+  !query_race() && set_race(mudConfig("DEFAULT_RACE"));
+  !queryLevel() && setLevel(1.0);
+  !query_env("cwd") && set_env("cwd", "/doc");
+  !query_short() && set_short(query_name());
+  !query_pref("colour") && set_pref("colour", "on");
+  !query_pref("auto_tune") && set_pref("auto_tune", "all");
+  !query_pref("biff") && set_pref("biff", "on");
+  !query_pref("prompt") && set_pref("prompt", ">");
   set_level_mod(0.0);
-  if(!query_env("cwd")) set_env("cwd", "/doc");
-  if(!query_short()) set_short(query_name());
-  if(!query_pref("colour")) set_pref("colour", "on");
-  if(!query_pref("auto_tune")) set_pref("auto_tune", "all");
-  if(!query_pref("biff")) set_pref("biff", "on");
-  if(!query_pref("prompt")) set_pref("prompt", ">");
   init_living();
   rehash_capacity();
   update_regen_interval();
-
   set_log_prefix(sprintf("(%O)", this_object()));
 
   slot(SIG_SYS_CRASH, "on_crash");
   slot(SIG_PLAYER_ADVANCED, "on_advance");
 }
 
+/**
+ * Finalises entry into the game world. Tunes auto-channels,
+ * sets the last login time, and restores inventory if this is
+ * not a reconnection.
+ *
+ * @public
+ * @param {int} reconnecting - Whether this is a reconnection to an existing body
+ */
 void enter_world(int reconnecting) {
-  string *cmds, *ch;
-  int i;
-  object mail_client;
+  string *ch;
 
   if(!is_member(query_privs(previous_object()), "admin"))
     return;
@@ -76,6 +88,12 @@ void enter_world(int reconnecting) {
   }
 }
 
+/**
+ * Handles the player leaving the game world. Executes any
+ * quit-file commands, saves the body, and notifies the room.
+ *
+ * @public
+ */
 void exit_world() {
   string *cmds;
   int i;
@@ -96,14 +114,34 @@ void exit_world() {
   save_body();
 }
 
+/**
+ * Sets the last login timestamp.
+ *
+ * @public
+ * @param {int} time - The login timestamp
+ */
 void set_last_login(int time) {
   _last_login = time;
 }
 
+/**
+ * Returns the last login timestamp.
+ *
+ * @public
+ * @returns {int} The last login timestamp
+ */
 int query_last_login() {
   return _last_login;
 }
 
+/**
+ * Called by the driver when the player's network connection is
+ * lost. Saves the body, notifies the room, and marks the player
+ * as link-dead.
+ *
+ * @public
+ * @apply
+ */
 void net_dead() {
   if(origin() != ORIGIN_DRIVER)
     return;
@@ -114,15 +152,22 @@ void net_dead() {
   save_body();
 
   if(environment())
-    tell_all(environment(), query_name()+ " falls into stupour.\n");
+    tell_all(environment(), query_name()+ " falls into stupor.\n");
 
-  add_extra_short("link_dead", "[stupour]");
+  add_extra_short("link_dead", "[stupor]");
   log_file(LOG_LOGIN, query_real_name() + " went link-dead on " + ctime(time()) + "\n");
 
   if(interactive(this_object()))
     emit(SIG_USER_LINKDEAD, this_object());
 }
 
+/**
+ * Handles a player reconnecting to their link-dead body.
+ * Restores saved data, updates the last login time, and
+ * removes the link-dead marker.
+ *
+ * @public
+ */
 void reconnect() {
   restore_body();
   set_last_login(time());
@@ -132,7 +177,14 @@ void reconnect() {
   /* reconnection logged in login object */
 }
 
-/* Body Object Functions */
+/**
+ * Player heartbeat. Handles link-dead timeout, idle keepalive,
+ * death checks, healing ticks, boon processing, and GMCP vital
+ * updates.
+ *
+ * @public
+ * @apply
+ */
 void heart_beat() {
   clean_up_enemies();
   cooldown();
@@ -141,7 +193,7 @@ void heart_beat() {
     if(!interactive(this_object())) {
       if((time() - query_last_login()) > 3600) {
         if(environment())
-          simple_action("$N $vfade out of existance.");
+          simple_action("$N $vfade out of existence.");
         log_file(LOG_LOGIN, query_real_name() + " auto-quit after 1 hour of net-dead at " + ctime(time()) + ".\n");
         remove();
         return;
@@ -169,12 +221,25 @@ void heart_beat() {
     GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, null);
 }
 
+/**
+ * Whether this player supports Unicode output. Returns false
+ * if a screenreader is active.
+ *
+ * @public
+ * @returns {int} 1 if Unicode is supported, 0 otherwise
+ */
 int supports_unicode() {
   if(has_screenreader()) return 0;
   return query_pref("unicode") == "on";
 }
 
-void on_crash(mixed arg...) {
+/**
+ * Signal handler for system crash events. Attempts to save
+ * the player body before the MUD shuts down.
+ *
+ * @public
+ */
+void on_crash() {
   int result;
 
   if(previous_object() != signal_d())
@@ -183,6 +248,12 @@ void on_crash(mixed arg...) {
   catch(result = save_body());
 }
 
+/**
+ * Called during object teardown. Removes all modules and emits
+ * the logout signal if the player is still interactive.
+ *
+ * @public
+ */
 void mudlib_unsetup() {
   remove_all_modules();
 
@@ -191,15 +262,17 @@ void mudlib_unsetup() {
 }
 
 /**
- * @description This function is called by the driver when the environment of
- *              an object is destructed. It will attempt to move the object to
- *              the void or hall if possible. If it cannot move the object, it
- *              will attempt to save the object and then destruct it.
- * @param {object} ob - The environment of the object that was destructed.
+ * Called by the driver when the environment of an object is
+ * destructed. Attempts to move the player to the void or start
+ * room. If neither is available, clones a temporary void room
+ * as a last resort.
+ *
+ * @public
+ * @apply
+ * @param {object} ob - The environment that was destructed
  */
 void move_or_destruct(object ob) {
   object env = environment();
-  object new_env;
 
   // If we didn't come from the driver, we don't need to do anything
   if(origin() != ORIGIN_DRIVER)
@@ -232,28 +305,69 @@ void move_or_destruct(object ob) {
   move_object(ob);
 }
 
+/**
+ * Returns the value of an environment variable.
+ *
+ * @public
+ * @param {string} key - The environment variable name
+ * @returns {mixed} The value, or undefined if not set
+ */
 mixed query_environ(string key) {
   return environ_data[key];
 }
 
+/**
+ * Clears all stored environment variable data.
+ *
+ * @public
+ */
 void clear_environ_data() {
   environ_data = ([ ]);
 }
 
+/**
+ * Returns a copy of all environment variable data.
+ *
+ * @public
+ * @returns {mapping} Copy of the environment data mapping
+ */
 mapping query_all_environ() {
   return copy(environ_data);
 }
 
+/**
+ * Sets an environment variable, converting the value from
+ * its string representation.
+ *
+ * @public
+ * @param {string} key - The environment variable name
+ * @param {mixed} value - The value to set
+ */
 void set_environ_option(string key, mixed value) {
   environ_data[key] = fromString(value);
 
   _log(1, "Setting environ option: %s = %O", key, value);
 }
 
+/**
+ * Receives an environment variable update from the client
+ * telnet negotiation.
+ *
+ * @public
+ * @param {string} var - The environment variable name
+ * @param {mixed} value - The value received
+ */
 void receive_environ(string var, mixed value) {
   set_environ_option(var, value);
 }
 
+/**
+ * Bulk-sets environment variables from a mapping. Only
+ * callable by the login object.
+ *
+ * @public
+ * @param {mapping} data - Mapping of variable names to values
+ */
 void set_environ(mapping data) {
   if(base_name(previous_object()) != LOGIN_OB)
     return;
@@ -269,6 +383,12 @@ void set_environ(mapping data) {
   }
 }
 
+/**
+ * Serialises the player's inventory to a file for later
+ * restoration. Requires admin privileges or self-call.
+ *
+ * @public
+ */
 void save_inventory() {
   string save;
 
@@ -278,11 +398,24 @@ void save_inventory() {
   write_file(user_inventory_data(query_privs(this_object())), save, 1);
 }
 
+/**
+ * Restores the player body's saved variables from the save
+ * file. Requires admin privileges or self-call.
+ *
+ * @public
+ */
 void restore_body() {
   if(!is_member(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
   if(is_member(query_privs(previous_object()), "admin") || query_privs(previous_object()) == this_body()->query_real_name()) restore_object(user_body_data(query_real_name()));
 }
 
+/**
+ * Restores the player's inventory from the saved inventory
+ * file, then wipes the file. Requires admin privileges or
+ * self-call.
+ *
+ * @public
+ */
 void restore_inventory() {
   string e;
   string file, data;
@@ -305,6 +438,12 @@ void restore_inventory() {
   wipe_inventory();
 }
 
+/**
+ * Deletes the saved inventory file. Requires admin privileges
+ * or self-call.
+ *
+ * @public
+ */
 void wipe_inventory() {
   string file;
 
@@ -314,6 +453,15 @@ void wipe_inventory() {
   rm(file);
 }
 
+/**
+ * Saves the player body's variables to the save file and
+ * triggers an inventory save. Requires admin privileges,
+ * self-call, or the quit command.
+ *
+ * @public
+ * @returns {int} The result of save_object(), or 0 on
+ *                permission failure
+ */
 int save_body() {
   int result;
 
@@ -328,6 +476,14 @@ int save_body() {
   return result;
 }
 
+/**
+ * Whether the player is using a screenreader, as indicated
+ * by the SCREEN_READER environment variable or the
+ * screenreader preference.
+ *
+ * @public
+ * @returns {int} 1 if a screenreader is active, 0 otherwise
+ */
 int has_screenreader() {
   if(query_environ("SCREEN_READER") == true)
     return true;
@@ -338,29 +494,76 @@ int has_screenreader() {
   return false;
 }
 
+/**
+ * Sets the ed editor setup flags for this player.
+ *
+ * @public
+ * @param {int} value - The ed setup flags
+ * @returns {int} 1 on success
+ */
 int set_ed_setup(int value) {
   ed_setup = value;
   return 1;
 }
 
+/**
+ * Sends a GMCP item removal notification to the client.
+ *
+ * @public
+ * @param {STD_ITEM} item - The item being removed
+ * @param {STD_CONTAINER} prev - The container it was removed from
+ */
 void event_gmcp_item_remove(object item, object prev) {
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_ITEMS_REMOVE, ({ item, prev }));
 }
 
+/**
+ * Sends a GMCP item addition notification to the client.
+ *
+ * @public
+ * @param {STD_ITEM} item - The item being added
+ * @param {STD_CONTAINER} dest - The destination container
+ */
 void event_gmcp_item_add(object item, object dest) {
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_ITEMS_ADD, ({ item, dest }));
 }
 
+/**
+ * Sends a GMCP item update notification to the client.
+ *
+ * @public
+ * @param {STD_ITEM} item - The item being updated
+ * @param {STD_CONTAINER} dest - The container the item is in
+ */
 void event_gmcp_item_update(object item, object dest) {
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_ITEMS_UPDATE, ({ item, dest }));
 }
 
+/**
+ * Returns the ed editor setup flags for this player.
+ *
+ * @public
+ * @returns {int} The ed setup flags
+ */
 int query_ed_setup() { return ed_setup ; }
 
+/**
+ * Attempts to reclaim this_player() for this object by
+ * re-enabling commands via a bound function pointer.
+ *
+ * @public
+ * @returns {int} 1 if this_player() now matches this object
+ */
 int reclaim_this_player() {
   evaluate(bind(enable_commands, this_object()));
 
   return this_player() == this_object();
 }
 
+/**
+ * Identifies this object as a player character.
+ *
+ * @public
+ * @returns {int} Always returns 1
+ */
 int is_pc() { return 1 ; }

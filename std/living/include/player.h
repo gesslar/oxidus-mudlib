@@ -2,7 +2,7 @@
 #define __PLAYER_H__
 
 void setup_body() ;
-void enter_world() ;
+void enter_world(int reconnecting) ;
 void exit_world() ;
 void net_dead() ;
 void reconnect() ;

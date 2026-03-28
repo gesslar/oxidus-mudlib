@@ -22,6 +22,11 @@ inherit M_LOG;
 private nomask nosave string report_type = "";
 private nomask nosave string git_hub_label = "";
 
+public nomask void get_subject(string subject, object user);
+mixed start_report(object user, string subject);
+public nomask void finish_report(int status, string _file, string temp_file, object user, string subject);
+public nomask void finish_github(mapping status, object user);
+
 /**
  * Sets the type of report this command generates (e.g.
  * "bug", "typo", "idea"). Used in user-facing messages
