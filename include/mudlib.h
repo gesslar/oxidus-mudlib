@@ -34,6 +34,7 @@
 #define STD_HTTP_CLIENT     DIR_STD "daemon/http_client"
 #define STD_HTTP_SERVER     DIR_STD "daemon/http_server"
 #define STD_ITEM            DIR_STD "object/item"
+#define STD_LIVING          DIR_STD_LIVING "living"
 #define STD_NPC             DIR_STD_LIVING "npc"
 #define STD_OB_E            DIR_STD "object/ob_prop"
 #define STD_OBJECT          DIR_STD "object/object"
