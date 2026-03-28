@@ -12,7 +12,6 @@ varargs void _log(mixed args...) {
     int lvl = -1;
     string message;
     mixed *rest;
-    string out;
     string prefix;
     int no_time;
 

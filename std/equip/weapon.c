@@ -146,11 +146,10 @@ mixed can_equip(object tp) {
  * @param {string} slot - The body slot to wield in
  * @returns {mixed} 1 on success, 0 or an error string on failure
  */
-mixed equip(object tp: (: environment() :), string slot) {
+mixed equip(object tp, string slot) {
   mixed result;
 
-  if(!living(tp))
-    return 0;
+  tp ??= environment();
 
   if(__equipped) {
     printf("Already equipped: %O\n", this_object());
@@ -202,11 +201,13 @@ mixed can_unequip(object tp) {
  *                         message
  * @returns {int} 1 on success, 0 on failure
  */
-varargs int unequip(object tp: (: environment() :), int silent) {
+varargs int unequip(object tp, int silent) {
   if(!__equipped)
     return 0;
 
   __equipped = 0;
+
+  tp ??= environment();
 
   if(!living(tp))
     return 0;

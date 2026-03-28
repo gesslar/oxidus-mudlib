@@ -20,7 +20,6 @@ private mapping _defense = ([ ]);
 private float _ac = 0.0;
 
 void mudlib_setup() {
-  ::mudlib_setup();
   set_name("armour");
   set_short("armour");
   set_slot("torso");

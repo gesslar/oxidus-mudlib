@@ -197,12 +197,13 @@ int validManip(string name) {
   if(!prev && !caller)
     return false;
 
-  if(!is_member(query_privs(prev), "admin") &&
-     query_privs(prev) != name &&
-     base_name(previous_object()) != "/std/modules/gmcp/Char" &&
-     (caller && query_privs(caller)) != name
-  )
+  if(!is_member(query_privs(prev), "admin")
+      && query_privs(prev) != name
+      && base_name(previous_object()) != "/std/modules/gmcp/Char"
+      && (caller && query_privs(caller)) != name
+  ) {
     return false;
+  }
 
   return true;
 }
