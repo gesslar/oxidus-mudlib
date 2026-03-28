@@ -18,14 +18,13 @@
 #include <player.h>
 
 inherit STD_BODY;
-
 inherit __DIR__ "living";
 
 inherit M_GMCP;
 
-private nosave mapping environ_data = ([]);
-private int _last_login = 0;
-private int ed_setup = 0;
+private nosave mapping __environ_data = ([]);
+private int __last_login = 0;
+private int __ed_setup = 0;
 
 /**
  * Initialises the player body with default values and
@@ -121,7 +120,7 @@ void exit_world() {
  * @param {int} time - The login timestamp
  */
 void set_last_login(int time) {
-  _last_login = time;
+  __last_login = time;
 }
 
 /**
@@ -131,7 +130,7 @@ void set_last_login(int time) {
  * @returns {int} The last login timestamp
  */
 int query_last_login() {
-  return _last_login;
+  return __last_login;
 }
 
 /**
@@ -313,7 +312,7 @@ void move_or_destruct(object ob) {
  * @returns {mixed} The value, or undefined if not set
  */
 mixed query_environ(string key) {
-  return environ_data[key];
+  return __environ_data[key];
 }
 
 /**
@@ -322,7 +321,7 @@ mixed query_environ(string key) {
  * @public
  */
 void clear_environ_data() {
-  environ_data = ([ ]);
+  __environ_data = ([ ]);
 }
 
 /**
@@ -332,7 +331,7 @@ void clear_environ_data() {
  * @returns {mapping} Copy of the environment data mapping
  */
 mapping query_all_environ() {
-  return copy(environ_data);
+  return copy(__environ_data);
 }
 
 /**
@@ -344,7 +343,7 @@ mapping query_all_environ() {
  * @param {mixed} value - The value to set
  */
 void set_environ_option(string key, mixed value) {
-  environ_data[key] = fromString(value);
+  __environ_data[key] = fromString(value);
 
   _log(1, "Setting environ option: %s = %O", key, value);
 }
@@ -379,7 +378,7 @@ void set_environ(mapping data) {
     if(stringp(value))
       set_environ_option(key, value);
     else
-      environ_data[key] = value;
+      __environ_data[key] = value;
   }
 }
 
@@ -502,7 +501,7 @@ int has_screenreader() {
  * @returns {int} 1 on success
  */
 int set_ed_setup(int value) {
-  ed_setup = value;
+  __ed_setup = value;
   return 1;
 }
 
@@ -545,7 +544,7 @@ void event_gmcp_item_update(object item, object dest) {
  * @public
  * @returns {int} The ed setup flags
  */
-int query_ed_setup() { return ed_setup ; }
+int query_ed_setup() { return __ed_setup ; }
 
 /**
  * Attempts to reclaim this_player() for this object by
