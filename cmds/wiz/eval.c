@@ -10,7 +10,7 @@
 
 inherit STD_CMD;
 
-mixed main(object caller, string arg) {
+mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   string file;
   object ob;
   string err;
@@ -37,7 +37,7 @@ mixed main(object caller, string arg) {
 
   err = catch {
     reset_eval_cost();
-    result = ob->eval();
+    result = call_other(ob, "eval");
     cost = limit - eval_cost();
   };
 
@@ -47,7 +47,7 @@ mixed main(object caller, string arg) {
   if(err)
     return _error("Runtime error:\n%s\nSee logs for more details.", err);
 
-  _ok("Result = %O", result);
+  _ok("Result (%s) = %O", typeof(result), result);
   _ok("Eval cost: %s", add_commas(cost));
 
   return 1;
