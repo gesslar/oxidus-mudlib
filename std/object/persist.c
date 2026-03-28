@@ -80,8 +80,10 @@ varargs string save_to_string(int recursep) {
 
   map["#base_name#"] = base_name();
 
+  /** @type {STD_ITEM*} */ object *obs = all_inventory();
+
   if(save_recurse)
-    map["#inventory#"] = all_inventory()->save_to_string(1) - ({ 0 });
+    map["#inventory#"] = obs->save_to_string(1) - ({ 0 });
 
   return save_variable(map);
 }
@@ -98,12 +100,10 @@ varargs string save_to_string(int recursep) {
  */
 void load_from_string(mixed value, int recurse) {
   mixed data;
-  mixed *tmpsaved_vars;
   mixed val;
   string key;
   string obj;
   object ob;
-  mapping current;
 
   if(!mapp(value))
     data = restore_variable(value);
