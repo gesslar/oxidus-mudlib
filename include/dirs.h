@@ -21,6 +21,7 @@
 #define DIR_STD_CMD             DIR_STD "cmd/"
 #define DIR_STD_EXT             DIR_STD "ext/"
 #define DIR_STD_HANDLERS        DIR_STD "handlers/"
+#define DIR_STD_HANDLERS_GMCP   DIR_STD_HANDLERS "gmcp/"
 #define DIR_STD_LIVING          DIR_STD "living/"
 #define DIR_STD_MODULES         DIR_STD "modules/"
 #define DIR_STD_OBJECT          DIR_STD "object/"
