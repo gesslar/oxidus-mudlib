@@ -7,7 +7,7 @@
 // 2022/08/23: Gesslar - Created
 
 inherit STD_OBJECT;
-inherit M_PERSIST_DATA;
+inherit EXT_PERSIST_DATA;
 
 void create(mixed _args...) {
     setup_chain();

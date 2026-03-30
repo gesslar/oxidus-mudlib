@@ -18,7 +18,7 @@
  * Checks if the function exists and its owner object hasn't been destructed.
  *
  * @param {mixed} f - Function pointer to validate
- * @returns {int} 1 if function is valid and callable, 0 otherwise
+ * @returns {f is function} 1 if function is valid and callable, 0 otherwise
  * @example
  * function f = (: object->method :);
  * if(valid_function(f)) {

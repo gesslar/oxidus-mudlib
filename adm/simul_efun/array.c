@@ -286,7 +286,6 @@ varargs mixed array_fill(mixed *arr, mixed value, int size, int start_index) {
  */
 varargs mixed array_pad(mixed *arr, int size, mixed value, int beginning) {
   mixed *work;
-  int i;
   int len;
 
   !pointerp(arr) && arr = ({});
@@ -446,19 +445,23 @@ float *reverse_sort_float(float *list) {
  * ```
  */
 varargs mixed *intersection(mixed *arr1, mixed *arr2, function f) {
-  mixed *res = ({ });
-  mixed *arrs = ({arr1, arr2});
+  assert_arg(pointerp(arr1), 1, "arr1 must be an array.");
+  assert_arg(pointerp(arr2), 2, "arr2 must be an array.");
 
-  // Use the smaller array for the outer loop to minimise iterations
-  arrs = sort_array(arrs, (: sizeof($1) > sizeof($2) :));
+  if(valid_function(f)) {
+    mixed *res = ({ });
+    mixed *arrs = sort_array(({arr1, arr2}), (: sizeof($1) > sizeof($2) :));
 
-  foreach(mixed elem in arrs[0]) {
-    if(includes(arrs[1], elem, f) && !includes(res, elem)) {
-      res += ({ elem });
+    foreach(mixed elem in arrs[0]) {
+      if(includes(arrs[1], elem, f) && !includes(res, elem)) {
+        res += ({ elem });
+      }
     }
+
+    return res;
   }
 
-  return res;
+  return arr1 & arr2;
 }
 
 /**
@@ -583,7 +586,7 @@ int array_unshift(mixed ref *arr, mixed value) {
 /**
  * Adds a value to the end of an array only if it doesn't already exist.
  *
- * @param {mixed ref*} arr The array to modify
+ * @param {mixed} arr The array to modify
  * @param {mixed} value The value to add uniquely
  * @return {int} The size of the array after the operation
  */
@@ -597,8 +600,8 @@ int set_push(mixed ref *arr, mixed value) {
 /**
  * Adds a value to the beginning of an array only if it doesn't already exist.
  *
- * @param {mixed ref*} arr The array to modify
- * @param {mixed} value The value to add uniquely
+ * @param {mixed} arr - The array to modify
+ * @param {mixed} value - The value to add uniquely
  * @return {int} The size of the array after the operation
  */
 int set_unshift(mixed ref *arr, mixed value) {
@@ -836,7 +839,7 @@ mixed array_eject(mixed ref *arr, int index) {
  * the index where it was found. If the value is not found, the array remains
  * unchanged and -1 is returned.
  *
- * @param {mixed ref*} arr - The array to modify.
+ * @param {mixed} arr - The array to modify.
  * @param {mixed} value - The value to remove from the array.
  * @returns {int} The index where the value was found and removed, or -1 if not found.
  * @errors If the first argument is not an array
@@ -874,7 +877,7 @@ varargs int array_remove(mixed ref *arr, mixed value) {
  * value are found. The function returns the total number of elements
  * that were removed.
  *
- * @param {mixed ref*} arr - The array to modify.
+ * @param {mixed} arr - The array to modify.
  * @param {mixed} value - The value to remove from the array.
  * @returns {int} The total number of occurrences that were removed.
  * @errors If the first argument is not an array
@@ -959,7 +962,7 @@ mixed *flatten_array(mixed *arr) {
  *
  * @param {mixed*} arr - Array to search
  * @param {function} fun - Test function
- * @param {mixed} [extra...] - Additional arguments to pass to test function
+ * @param {mixed} [extra] - Additional arguments to pass to test function
  * @returns {int} Index of first matching element or -1 if none found
  * @errors If arguments are invalid types
  */
@@ -969,9 +972,11 @@ varargs int find_index(mixed *arr, function fun, mixed extra...) {
   assert_arg(pointerp(arr), 1, "Array is required");
   assert_arg(valid_function(fun), 2, "Function is required");
 
-  for(i = 0, sz = sizeof(arr); i < sz; i++)
-    if(extra ? fun(arr[i], extra...) : fun(arr[i]) == 1)
+  for(i = 0, sz = sizeof(arr); i < sz; i++) {
+    if(extra ? fun(arr[i], extra...) : fun(arr[i]) == 1) {
       return i;
+    }
+  }
 
   return -1;
 }
@@ -981,7 +986,7 @@ varargs int find_index(mixed *arr, function fun, mixed extra...) {
  *
  * @param {mixed*} arr - Array to search
  * @param {function} fun - Test function
- * @param {mixed} [extra...] - Additional arguments to pass to test function
+ * @param {mixed} [extra] - Additional arguments to pass to test function
  * @returns {mixed} First matching element or null if none found
  * @errors If arguments are invalid types
  */

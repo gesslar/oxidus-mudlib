@@ -11,7 +11,7 @@
 
 inherit __DIR__ "village_base";
 
-inherit M_SHOP;
+inherit EXT_SHOP;
 
 void setup() {
   set_short("Olum Village Shop");

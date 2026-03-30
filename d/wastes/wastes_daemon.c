@@ -11,7 +11,7 @@
 
 inherit STD_VIRTUAL_MAP;
 
-inherit M_NOISE;
+inherit EXT_NOISE;
 
 private void setup_wastes_shorts();
 private void setup_wastes_longs();

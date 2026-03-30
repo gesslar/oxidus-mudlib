@@ -10,7 +10,7 @@
 #include <logs.h>
 
 inherit STD_BODY;
-inherit M_LOOT;
+inherit EXT_LOOT;
 
 inherit __DIR__ "living";
 
@@ -23,7 +23,7 @@ void mudlib_setup() {
         rehash_capacity();
         add_init("start_heart_beat");
         add_hb("stop_heart_beat");
-        add_module("mob/combat_memory");
+        add_module("std/modules/mob/combat_memory");
     }
 }
 

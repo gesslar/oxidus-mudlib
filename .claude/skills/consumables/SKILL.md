@@ -1,6 +1,6 @@
 ---
 name: consumables
-description: Understand and work with the consumable system in Oxidus. Covers the M_USES base module, M_EDIBLE (food/eat/nibble), M_POTABLE (drink/sip), STD_FOOD, STD_DRINK, action message customization, and creating food and drink items.
+description: Understand and work with the consumable system in Oxidus. Covers the EXT_USES base module, EXT_EDIBLE (food/eat/nibble), EXT_POTABLE (drink/sip), STD_FOOD, STD_DRINK, action message customization, and creating food and drink items.
 ---
 
 # Consumables Skill
@@ -10,15 +10,15 @@ You are helping work with the Oxidus consumable system. Follow the `lpc-coding-s
 ## Architecture Overview
 
 ```
-M_USES (std/modules/uses.c)         — base use-count tracking
-  ├── M_EDIBLE (std/modules/edible.c)  — eat/nibble mechanics
-  └── M_POTABLE (std/modules/potable.c) — drink/sip mechanics
+EXT_USES (std/ext/uses.c)         — base use-count tracking
+  ├── EXT_EDIBLE (std/ext/edible.c)  — eat/nibble mechanics
+  └── EXT_POTABLE (std/ext/potable.c) — drink/sip mechanics
 
-STD_ITEM + M_EDIBLE  → STD_FOOD (std/consume/food.c)
-STD_ITEM + M_POTABLE → STD_DRINK (std/consume/drink.c)
+STD_ITEM + EXT_EDIBLE  → STD_FOOD (std/consume/food.c)
+STD_ITEM + EXT_POTABLE → STD_DRINK (std/consume/drink.c)
 ```
 
-## M_USES — `std/modules/uses.c`
+## EXT_USES — `std/ext/uses.c`
 
 Base module tracking consumable quantities.
 
@@ -40,9 +40,9 @@ Base module tracking consumable quantities.
 | `set_use_status_message` | `void set_use_status_message(string msg)` | Set custom status message |
 | `query_use_status_message` | `string query_use_status_message()` | Get status message |
 
-## M_EDIBLE — `std/modules/edible.c`
+## EXT_EDIBLE — `std/ext/edible.c`
 
-Inherits `M_USES`. Adds eat/nibble mechanics with customizable action messages.
+Inherits `EXT_USES`. Adds eat/nibble mechanics with customizable action messages.
 
 ### Properties
 
@@ -86,9 +86,9 @@ Each action type (`"consume"`, `"nibble"`) supports three message slots:
 - If both self and room are null → `tp->simple_action(default)`
 - Otherwise → `tp->my_action(self_msg)` + `tp->other_action(room_msg)`
 
-## M_POTABLE — `std/modules/potable.c`
+## EXT_POTABLE — `std/ext/potable.c`
 
-Inherits `M_USES`. Adds drink/sip mechanics. Mirrors M_EDIBLE's structure.
+Inherits `EXT_USES`. Adds drink/sip mechanics. Mirrors EXT_EDIBLE's structure.
 
 ### Functions
 
@@ -121,7 +121,7 @@ Inherits `M_USES`. Adds drink/sip mechanics. Mirrors M_EDIBLE's structure.
 
 ## STD_FOOD — `std/consume/food.c`
 
-Inherits `STD_ITEM` + `M_EDIBLE`. Ready-to-use food inheritable.
+Inherits `STD_ITEM` + `EXT_EDIBLE`. Ready-to-use food inheritable.
 
 **Automatic behavior:**
 - Calls `set_edible(1)` in `mudlib_setup()`
@@ -139,7 +139,7 @@ Inherits `STD_ITEM` + `M_EDIBLE`. Ready-to-use food inheritable.
 
 ## STD_DRINK — `std/consume/drink.c`
 
-Inherits `STD_ITEM` + `M_POTABLE`. Ready-to-use drink inheritable.
+Inherits `STD_ITEM` + `EXT_POTABLE`. Ready-to-use drink inheritable.
 
 **Automatic behavior:**
 - Calls `set_potable(1)` in `mudlib_setup()`
@@ -227,15 +227,15 @@ Food items can also be created as virtual objects via `.food` LPML files (see th
 ```lpc
 #define STD_FOOD   DIR_STD "consume/food"
 #define STD_DRINK  DIR_STD "consume/drink"
-#define M_EDIBLE   DIR_STD_MODULES "edible"
-#define M_POTABLE  DIR_STD_MODULES "potable"
-#define M_USES     DIR_STD_MODULES "uses"
+#define EXT_EDIBLE   DIR_STD_EXT "edible"
+#define EXT_POTABLE  DIR_STD_EXT "potable"
+#define EXT_USES     DIR_STD_EXT "uses"
 ```
 
 ## Important Notes
 
 - `set_uses()` initializes `_max_uses` on the first call. Subsequent calls only change `_uses`.
 - `adjust_uses()` returns null (not 0) on boundary violation — check with `nullp()`.
-- STD_FOOD/STD_DRINK auto-remove the object when uses hit 0. If you don't want this, inherit M_EDIBLE/M_POTABLE directly instead.
+- STD_FOOD/STD_DRINK auto-remove the object when uses hit 0. If you don't want this, inherit EXT_EDIBLE/EXT_POTABLE directly instead.
 - Action messages use the `$-token` system (see `action-messages` skill): `$N` = actor, `$v` = verb conjugation, `$o` = object.
 - Uses are persisted via `save_var()` — they survive storage in containers and player inventory saves.

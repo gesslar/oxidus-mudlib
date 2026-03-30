@@ -10,7 +10,7 @@
  */
 
 inherit __DIR__ "village_base";
-inherit M_BANK;
+inherit EXT_BANK;
 
 void setup() {
   set_short("Well-appointed office");

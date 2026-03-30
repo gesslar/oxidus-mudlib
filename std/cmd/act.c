@@ -10,4 +10,4 @@
 
 inherit STD_CMD;
 
-inherit M_CHECKS;
+inherit EXT_CHECKS;

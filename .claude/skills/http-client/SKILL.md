@@ -10,13 +10,13 @@ You are helping create or modify HTTP client daemons for Oxidus. These are LPC d
 ## Architecture Overview
 
 ```
-STD_DAEMON + M_HTTP
+STD_DAEMON + EXT_HTTP
   └── STD_HTTP_CLIENT (std/daemon/http_client.c) — base HTTP client
         └── Your daemon (e.g., adm/daemons/my_api.c)
 ```
 
 - **`STD_HTTP_CLIENT`** (`#define STD_HTTP_CLIENT DIR_STD "daemon/http_client"`) — base class providing socket management, request sending, response parsing, redirect following, and caching.
-- **`M_HTTP`** (`std/modules/http.c`) — shared module for URL parsing, header parsing, body parsing, URL encoding/decoding, and caching utilities. Inherited by `STD_HTTP_CLIENT` automatically.
+- **`EXT_HTTP`** (`std/ext/http.c`) — shared module for URL parsing, header parsing, body parsing, URL encoding/decoding, and caching utilities. Inherited by `STD_HTTP_CLIENT` automatically.
 - **`HTTPC_D`** (`adm/daemons/httpc.c`) — a ready-made wrapper daemon that adds a callback mechanism on top of `STD_HTTP_CLIENT`. Use this for simple fetch-and-callback patterns instead of writing your own daemon.
 
 ## Required Include
@@ -270,7 +270,7 @@ From `<http.h>`:
 | `CONTENT_TYPE_APPLICATION_FORM_URLENCODED` | `"application/x-www-form-urlencoded"` |
 | `CONTENT_TYPE_MULTIPART_FORM_DATA` | `"multipart/form-data"` |
 
-## URL Utility Functions (from M_HTTP)
+## URL Utility Functions (from EXT_HTTP)
 
 These are available in any object inheriting `STD_HTTP_CLIENT`:
 

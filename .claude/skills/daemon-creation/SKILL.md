@@ -1,6 +1,6 @@
 ---
 name: daemon-creation
-description: Create and modify daemons for Oxidus. Covers inheriting STD_DAEMON, the setup chain, persistence (setPersistent/saveData/restore_data), preloading, SWAP_D for reload-safe data, logging with M_LOG, and the teardown chain.
+description: Create and modify daemons for Oxidus. Covers inheriting STD_DAEMON, the setup chain, persistence (setPersistent/saveData/restore_data), preloading, SWAP_D for reload-safe data, logging with EXT_LOG, and the teardown chain.
 ---
 
 # Daemon Creation Skill
@@ -15,7 +15,7 @@ STD_OBJECT (std/object/object.c)
         └── Your daemon (e.g., adm/daemons/my_daemon.c)
 ```
 
-- **`STD_DAEMON`** (`#define STD_DAEMON DIR_STD "daemon/daemon"`) — inherits `STD_OBJECT` + `M_PERSIST_DATA`
+- **`STD_DAEMON`** (`#define STD_DAEMON DIR_STD "daemon/daemon"`) — inherits `STD_OBJECT` + `EXT_PERSIST_DATA`
 - Daemons are loaded once and persist in memory (not cloned)
 - They are accessed via `load_object()` or a `#define` constant in `<daemons.h>`
 
@@ -85,7 +85,7 @@ Implement `unsetup()` if your daemon needs cleanup (e.g., closing sockets, remov
 
 ## Persistence
 
-`STD_DAEMON` inherits `M_PERSIST_DATA`, giving every daemon access to persistence. To enable it:
+`STD_DAEMON` inherits `EXT_PERSIST_DATA`, giving every daemon access to persistence. To enable it:
 
 ```c
 void setup() {
@@ -127,7 +127,7 @@ private nosave object *cached_objects = ({});
 
 ```c
 inherit STD_DAEMON;
-inherit M_LOG;
+inherit EXT_LOG;
 
 private int event_count;
 private mapping event_log = ([]);
@@ -170,13 +170,13 @@ On destruct:
   unsetup_chain() → save_data() + post_save()
 ```
 
-## Logging with M_LOG
+## Logging with EXT_LOG
 
-`STD_OBJECT` does **not** include `M_LOG`. If your daemon needs logging, inherit it explicitly:
+`STD_OBJECT` does **not** include `EXT_LOG`. If your daemon needs logging, inherit it explicitly:
 
 ```c
 inherit STD_DAEMON;
-inherit M_LOG;
+inherit EXT_LOG;
 ```
 
 ### Logging API
@@ -311,7 +311,7 @@ See the `signal-system` skill for the full signal reference.
 #include <daemons.h>
 
 inherit STD_DAEMON;
-inherit M_LOG;
+inherit EXT_LOG;
 
 // Persistent — saved across reboots
 private mapping achievements = ([]);
@@ -368,7 +368,7 @@ void unsetup() {
 
 When creating a new daemon:
 
-1. Inherit `STD_DAEMON` (and `M_LOG` if you need logging)
+1. Inherit `STD_DAEMON` (and `EXT_LOG` if you need logging)
 2. Implement `setup()` for initialization
 3. Decide if it needs persistence (`setPersistent(1)`)
 4. Decide if it needs preloading (add to `/adm/etc/preload`)

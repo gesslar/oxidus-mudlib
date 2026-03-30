@@ -10,13 +10,13 @@ You are helping create or modify WebSocket client daemons for Oxidus. These are 
 ## Architecture Overview
 
 ```
-STD_DAEMON + M_HTTP
+STD_DAEMON + EXT_HTTP
   └── STD_WS_CLIENT (std/daemon/websocket_client.c) — base WebSocket client
         └── Your daemon (e.g., adm/daemons/my_ws.c)
 ```
 
 - **`STD_WS_CLIENT`** (`#define STD_WS_CLIENT DIR_STD "daemon/websocket_client"`) — base class implementing the full RFC 6455 WebSocket protocol: HTTP upgrade handshake, frame parsing/formatting, masking, ping/pong, and graceful close.
-- **`M_HTTP`** (`std/modules/http.c`) — shared module for URL parsing, header parsing, etc. Inherited automatically.
+- **`EXT_HTTP`** (`std/ext/http.c`) — shared module for URL parsing, header parsing, etc. Inherited automatically.
 
 ## Required Include
 

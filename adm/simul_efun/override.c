@@ -127,7 +127,8 @@ void set_privs(object ob, string privs) {
  *              efun, this function accepts a null argument and will check
  *              if the previous object is a user if no argument is provided.
  * @param {object} ob - The object to check.
- * @returns {int} - 1 if the object is a user, otherwise 0.
+ * @returns {ob is STD_PLAYER} 1 if the object is a user, otherwise
+ *                             0.
  */
 varargs int userp(object ob) {
   if(!ob)

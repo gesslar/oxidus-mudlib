@@ -10,7 +10,7 @@
  */
 
 inherit STD_DAEMON;
-inherit M_LOG;
+inherit EXT_LOG;
 
 private void drop_items(object tp, mixed item, object source);
 private mixed process_loot_item(mixed item, object tp, object source);

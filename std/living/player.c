@@ -20,7 +20,7 @@
 inherit STD_BODY;
 inherit __DIR__ "living";
 
-inherit M_GMCP;
+inherit EXT_GMCP;
 
 private nosave mapping __environ_data = ([]);
 private int __last_login = 0;

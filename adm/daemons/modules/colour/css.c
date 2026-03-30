@@ -9,7 +9,7 @@
 * 2024-07-14 - Gesslar - Created
 */
 
-mapping colour_to_hex = ([
+private nosave mapping __colour_to_hex = ([
   "000": "#000000", "001": "#800000", "002": "#008000", "003": "#808000",
   "004": "#000080", "005": "#800080", "006": "#008080", "007": "#C0C0C0",
   "008": "#808080", "009": "#FF0000", "010": "#00FF00", "011": "#FFFF00",
@@ -76,7 +76,7 @@ mapping colour_to_hex = ([
   "252": "#D0D0D0", "253": "#DADADA", "254": "#E4E4E4", "255": "#EEEEEE"
 ]);
 
-mapping hex_to_colour = ([
+private nosave mapping __hex_to_colour = ([
   "#000000": "000", "#800000": "001", "#008000": "002", "#808000": "003",
   "#000080": "004", "#800080": "005", "#008080": "006", "#C0C0C0": "007",
   "#808080": "008", "#FF0000": "009", "#00FF00": "010", "#FFFF00": "011",
@@ -145,21 +145,21 @@ mapping hex_to_colour = ([
 
 varargs mixed colour_to_hex(int colour) {
   if(nullp(colour))
-    return colour_to_hex;
+    return __colour_to_hex;
 
   if(colour < 0 || colour > 255 )
     return "";
 
-  return colour_to_hex[sprintf("%03d", colour)];
+  return __colour_to_hex[sprintf("%03d", colour)];
 }
 
 varargs mixed hex_to_colour(string hex) {
   if(nullp(hex))
-    return hex_to_colour;
+    return __hex_to_colour;
 
   hex = upper_case(hex);
   if(hex[0] == '#')
     hex = hex[1..];
 
-  return hex_to_colour[hex];
+  return __hex_to_colour[hex];
 }

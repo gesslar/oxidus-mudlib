@@ -11,7 +11,7 @@
 
 inherit STD_ITEM;
 
-inherit M_POTABLE;
+inherit EXT_POTABLE;
 
 string consume_message();
 

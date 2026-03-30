@@ -9,13 +9,13 @@ The action message system (derived from Lima MUD) composes messages that automat
 
 **Core files:**
 - `adm/daemons/action.c` — message composition engine (`ACTION_D`)
-- `std/modules/action.c` — module wrapper inherited by living objects
+- `std/ext/action.c` — module wrapper inherited by living objects
 - `adm/simul_efun/english.c` — pronoun functions (`subjective`, `objective`, `possessive`, `reflexive`)
 - `adm/simul_efun/grammar.c` — pluralisation helpers
 
 ## Action Functions
 
-All are called on the actor object (via `M_ACTION` module). The actor is always `previous_object()`.
+All are called on the actor object (via `EXT_ACTION` module). The actor is always `previous_object()`.
 
 | Function | Who Sees It | Use For |
 |---|---|---|

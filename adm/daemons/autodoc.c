@@ -14,7 +14,7 @@
  */
 
 inherit STD_DAEMON;
-inherit M_LOG;
+inherit EXT_LOG;
 
 // Function prototypes
 public nomask int check_running();

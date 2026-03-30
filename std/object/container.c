@@ -289,6 +289,6 @@ public string query_key_id() {
  *
  * Used for type checking.
  *
- * @returns {int} Always returns 1
+ * @returns {STD_CONTAINER} Always returns 1
  */
 int is_container() { return 1; }

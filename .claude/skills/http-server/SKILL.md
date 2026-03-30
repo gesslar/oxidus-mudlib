@@ -10,13 +10,13 @@ You are helping create or modify HTTP server daemons for Oxidus. These are LPC d
 ## Architecture Overview
 
 ```
-STD_DAEMON + M_HTTP
+STD_DAEMON + EXT_HTTP
   └── STD_HTTP_SERVER (std/daemon/http_server.c) — base HTTP server
         └── Your daemon (e.g., adm/daemons/my_server.c)
 ```
 
 - **`STD_HTTP_SERVER`** (`#define STD_HTTP_SERVER DIR_STD "daemon/http_server"`) — base class providing socket binding, client connection management, request parsing, and response sending.
-- **`M_HTTP`** (`std/modules/http.c`) — shared module for HTTP parsing utilities. Inherited automatically.
+- **`EXT_HTTP`** (`std/ext/http.c`) — shared module for HTTP parsing utilities. Inherited automatically.
 
 ## Required Include
 

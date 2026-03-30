@@ -1,6 +1,6 @@
 ---
 name: messaging
-description: Understand and use the messaging system for Oxidus. Covers tell functions (tell, tell_up, tell_down, tell_all, tell_me, tell_them), the containment hierarchy, message reception and processing (M_MESSAGING), action messages (simple_action, targetted_action, etc.), system feedback (_ok, _error, _warn, _info), message type flags, and color/accessibility handling.
+description: Understand and use the messaging system for Oxidus. Covers tell functions (tell, tell_up, tell_down, tell_all, tell_me, tell_them), the containment hierarchy, message reception and processing (EXT_MESSAGING), action messages (simple_action, targetted_action, etc.), system feedback (_ok, _error, _warn, _info), message type flags, and color/accessibility handling.
 ---
 
 # Messaging Skill
@@ -16,7 +16,7 @@ Game code calls tell(), tell_all(), simple_action(), _ok(), etc.
 Simul_efun layer                       <- adm/simul_efun/messaging.c, system.c
        |                                  adm/daemons/action.c
        v
-M_MESSAGING receive functions          <- std/modules/messaging.c
+EXT_MESSAGING receive functions          <- std/ext/messaging.c
   receive_direct / receive_up / receive_down / receive_all
        |
        v
@@ -37,7 +37,7 @@ do_receive()                           <- core message processor
 | `adm/simul_efun/messaging.c` | `tell`, `tell_direct`, `tell_up`, `tell_down`, `tell_all`, `tell_me`, `tell_them` |
 | `adm/simul_efun/system.c` | `_ok`, `_error`, `_warn`, `_info`, `_question`, `_debug`, `debug` |
 | `adm/daemons/action.c` | `simple_action`, `my_action`, `other_action`, `target_action`, `my_target_action`, `targetted_action`, `compose_message` |
-| `std/modules/messaging.c` | `M_MESSAGING` — `receive_up`, `receive_down`, `receive_all`, `receive_direct`, `do_receive` |
+| `std/ext/messaging.c` | `EXT_MESSAGING` — `receive_up`, `receive_down`, `receive_all`, `receive_direct`, `do_receive` |
 | `include/messaging.h` | Message type flag defines |
 
 ## Quick Reference: Which Function to Use
@@ -151,9 +151,9 @@ tell(tp, "Enter password: ", MSG_PROMPT);
 tell(tp, "Raw text\n", NO_COLOUR);
 ```
 
-## Message Reception (M_MESSAGING)
+## Message Reception (EXT_MESSAGING)
 
-All objects inherit `M_MESSAGING` (via `std/object/object.c`). It provides:
+All objects inherit `EXT_MESSAGING` (via `std/object/object.c`). It provides:
 
 ### Control Functions
 

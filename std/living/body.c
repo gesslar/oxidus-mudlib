@@ -30,7 +30,6 @@ inherit __DIR__ "communication";
 inherit __DIR__ "ed";
 inherit __DIR__ "env";
 inherit __DIR__ "equipment";
-inherit __DIR__ "module";
 inherit __DIR__ "pager";
 inherit __DIR__ "race";
 inherit __DIR__ "skills";
@@ -38,8 +37,8 @@ inherit __DIR__ "visibility";
 inherit __DIR__ "vitals";
 inherit __DIR__ "wealth";
 
-inherit M_ACTION;
-inherit M_LOG;
+inherit EXT_ACTION;
+inherit EXT_LOG;
 
 /* Prototypes */
 

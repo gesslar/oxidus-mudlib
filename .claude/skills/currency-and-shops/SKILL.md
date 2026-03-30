@@ -1,6 +1,6 @@
 ---
 name: currency-and-shops
-description: Understand and work with the currency, wealth, transaction, shop, bank, coin, and loot-value systems in Oxidus. Covers the currency daemon, wealth tracking, transaction math, inventory-based shops (M_SHOP), menu-based shops (M_SHOP_MENU), the bank daemon, coin objects, and item values.
+description: Understand and work with the currency, wealth, transaction, shop, bank, coin, and loot-value systems in Oxidus. Covers the currency daemon, wealth tracking, transaction math, inventory-based shops (EXT_SHOP), menu-based shops (EXT_SHOP_MENU), the bank daemon, coin objects, and item values.
 ---
 
 # Currency and Shops Skill
@@ -16,12 +16,12 @@ CURRENCY_D (adm/daemons/currency.c)     — currency registry, conversion
 wealth.c (std/living/wealth.c)           — per-living coin storage
   |
   v
-M_CURRENCY (std/modules/currency.c)      — transaction handling
-  ├── M_SHOP (std/modules/shop.c)        — inventory-based shop (has storage object)
-  └── M_SHOP_MENU (std/modules/shop_menu.c) — menu-based shop (clones on demand)
+EXT_CURRENCY (std/ext/currency.c)        — transaction handling
+  ├── EXT_SHOP (std/ext/shop.c)          — inventory-based shop (has storage object)
+  └── EXT_SHOP_MENU (std/ext/shop_menu.c) — menu-based shop (clones on demand)
 
 BANK_D (adm/daemons/bank.c)             — SQLite-backed bank accounts
-  └── M_BANK (std/modules/bank.c)       — room commands for banking
+  └── EXT_BANK (std/ext/bank.c)         — room commands for banking
 
 LIB_COIN (lib/coin.c)                   — physical coin objects
 STD_VALUE (std/object/value.c)           — item monetary value
@@ -92,9 +92,9 @@ private nomask mapping _wealth = ([]);   // e.g., ([ "copper": 50, "gold": 3 ])
 
 **Important:** `adjust_wealth` returns `mixed` — it can return an error string if the currency is invalid, funds are insufficient, or the player can't carry the weight. Always check the return type.
 
-## Transaction Module — `std/modules/currency.c`
+## Transaction Module — `std/ext/currency.c`
 
-Macro: `M_CURRENCY`. Inherited by both shop modules.
+Macro: `EXT_CURRENCY`. Inherited by both shop modules.
 
 ### `handle_transaction(object tp, int cost) : mixed`
 
@@ -139,7 +139,7 @@ Breaks a base-unit amount into the minimum number of coins per denomination. Doe
 least_coins(125)  // → ([ "gold": 1, "silver": 2, "copper": 5 ])
 ```
 
-Used by `M_SHOP`'s sell command to compute payout.
+Used by `EXT_SHOP`'s sell command to compute payout.
 
 ### Other Functions
 
@@ -149,9 +149,9 @@ Used by `M_SHOP`'s sell command to compute payout.
 | `can_afford(object ob, int cost, string currency)` | Single-denomination check |
 | `format_currency(int amount, string currency)` | Returns `"<amount> <currency>"` |
 
-## Inventory-Based Shop — `std/modules/shop.c`
+## Inventory-Based Shop — `std/ext/shop.c`
 
-Macro: `M_SHOP`. Inherits `M_CURRENCY` and `CLASS_STORAGE`.
+Macro: `EXT_SHOP`. Inherits `EXT_CURRENCY` and `CLASS_STORAGE`.
 
 Items are stored in a persistent `STD_STORAGE_OBJECT`. Players buy items out of it and sell items into it.
 
@@ -159,7 +159,7 @@ Items are stored in a persistent `STD_STORAGE_OBJECT`. Players buy items out of 
 
 ```lpc
 inherit STD_ROOM;
-inherit M_SHOP;
+inherit EXT_SHOP;
 
 void setup() {
     // ... room descriptions, exits, etc. ...
@@ -216,9 +216,9 @@ The storage object has `ignore_capacity(1)` and `ignore_mass(1)` — no limits o
 
 **Known issue:** `create_storage()` currently has a hardcoded `storage_org`. Each shop must override this or they share storage.
 
-## Menu-Based Shop — `std/modules/shop_menu.c`
+## Menu-Based Shop — `std/ext/shop_menu.c`
 
-Macro: `M_SHOP_MENU`. Inherits `CLASS_MENU` and `M_CURRENCY`.
+Macro: `EXT_SHOP_MENU`. Inherits `CLASS_MENU` and `EXT_CURRENCY`.
 
 Items are **cloned fresh on each purchase**. No storage object. No sell command. Ideal for food, drink, and consumable vendors.
 
@@ -226,7 +226,7 @@ Items are **cloned fresh on each purchase**. No storage object. No sell command.
 
 ```lpc
 inherit STD_ROOM;
-inherit M_SHOP_MENU;
+inherit EXT_SHOP_MENU;
 
 void setup() {
     // ... room descriptions, exits, etc. ...
@@ -268,7 +268,7 @@ class Menu {
 
 ## When to Use Which Shop
 
-| Feature | M_SHOP | M_SHOP_MENU |
+| Feature | EXT_SHOP | EXT_SHOP_MENU |
 |---|---|---|
 | Items persist between purchases | Yes (storage object) | No (cloned fresh) |
 | Players can sell items back | Yes | No |
@@ -289,13 +289,13 @@ SQLite-backed via `DB_D`. Stores a single balance in **base (copper) units**.
 | `add_balance` | `mixed (string name, int amount)` | Adjusts balance (negative for withdrawals). Fails if result < 0 |
 | `query_activity` | `mixed (string name, int limit)` | Returns activity log array. Default limit 10 |
 
-### Bank Module — `std/modules/bank.c`
+### Bank Module — `std/ext/bank.c`
 
-Macro: `M_BANK`. Provides room commands.
+Macro: `EXT_BANK`. Provides room commands.
 
 ```lpc
 inherit STD_ROOM;
-inherit M_BANK;
+inherit EXT_BANK;
 
 void setup() {
     // ... room setup ...
@@ -391,7 +391,7 @@ On `die()` in `body.c`:
 1. **All values are in base (copper) units internally.** `set_value(100)` means 100 copper = 1 gold. Shops, transactions, and bank all work in copper.
 2. **`adjust_wealth()` can silently fail.** It returns a string on error (invalid currency, insufficient funds, over encumbrance). Always check the return type.
 3. **`reverse_transaction()` is mandatory on buy failure.** If `handle_transaction` succeeds but the item can't be moved to the player, you must call `reverse_transaction` or coins are duplicated/lost.
-4. **Two shop architectures serve different purposes.** `M_SHOP` for persistent inventory (gear shops). `M_SHOP_MENU` for clone-on-demand (food/drink vendors). Using `M_SHOP` for consumables causes persistent item accumulation.
+4. **Two shop architectures serve different purposes.** `EXT_SHOP` for persistent inventory (gear shops). `EXT_SHOP_MENU` for clone-on-demand (food/drink vendors). Using `EXT_SHOP` for consumables causes persistent item accumulation.
 5. **`query_value()` on coins returns an array, not int.** Code that handles mixed items must check for this.
 6. **`adjust_value()` does not persist.** Only `set_value()` calls `save_var()`.
 7. **Bank stores copper internally.** Deposit 1 gold, withdraw 100 copper — this is by design.
