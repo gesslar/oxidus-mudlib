@@ -56,7 +56,7 @@ float setLevel(float level) {
     return queryLevel();
 }
 
-int force_me(string cmd) {
+int forceMe(string cmd) {
     return command(cmd);
 }
 

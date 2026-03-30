@@ -1,132 +1,132 @@
 /**
  * @file /std/object/command.c
- * @description Replacement for add_action, allowing for mixed results and more
- *              flexible command handling.
+ * @description Replacement for add_action, allowing for mixed results
+ *              and more flexible command handling.
  *
  * @created 2024-03-03 - Gesslar
- * @last_modified 2025-03-16 - GitHub Copilot
+ * @last_modified 2025-03-29 - Gesslar
  *
  * @history
  * 2024-03-03 - Gesslar - Created
  * 2025-03-16 - GitHub Copilot - Added documentation
+ * 2025-03-29 - Gesslar - Converted to camelCase coding standards
  */
 
 #include "/std/living/include/alias.h"
 #include "/std/living/include/pager.h"
 #include <command.h>
 
-private nosave mapping _commands = ([]);
+private nosave mapping cmdHandlers = ([]);
+private string *cmdPaths = ({});
+nosave string *cmdHistory = ({});
 
 /**
- * Adds a command handler to this object.
- *
- * @param {string|string*} command - Command name or array of command names
- * @param {function|string} action - Function pointer or method name to handle command
+ * @description Adds a command handler to this object.
+ * @param {string|string*} command - Command name or array of
+ *                                   command names
+ * @param {function|string} action - Function pointer or method
+ *                                   name to handle command
  * @errors If action function does not exist
  * @errors If command or action parameters are invalid types
  */
-void add_command(mixed command, mixed action) {
+public void addCommand(mixed command, mixed action) {
   if(stringp(command)) {
-    remove_command(command);
+    removeCommand(command);
     if(stringp(action)) {
-      if(!function_exists(action)) {
-        error("add_command: No such function " + action + " in " + file_name() + ".\n");
-      }
-      _commands[command] = action;
+      if(!function_exists(action))
+        error("addCommand: No such function " +
+          action + " in " + file_name() + ".\n");
+
+      cmdHandlers[command] = action;
     } else if(valid_function(action)) {
-      _commands[command] = action;
+      cmdHandlers[command] = action;
     } else {
-      error("add_command: Illegal action " + action + " in " + file_name() + ".\n");
+      error("addCommand: Illegal action " +
+        action + " in " + file_name() + ".\n");
     }
   } else if(pointerp(command)) {
-    foreach(mixed cmd in command) {
-      add_command(cmd, action);
-    }
+    foreach(mixed cmd in command)
+      addCommand(cmd, action);
   } else {
-    error("add_command: Illegal command " + command + " in " + file_name() + ".\n");
+    error("addCommand: Illegal command " +
+      command + " in " + file_name() + ".\n");
   }
 }
 
 /**
- * Removes one or more commands from this object.
- *
- * @param {string|string*} command - Command name or array of command names
+ * @description Removes one or more commands from this object.
+ * @param {string|string*} command - Command name or array of
+ *                                   command names
  */
-void remove_command(mixed command) {
-  mixed action;
-
+public void removeCommand(mixed command) {
   if(stringp(command)) {
-    action = _commands[command];
-    map_delete(_commands, command);
+    map_delete(cmdHandlers, command);
   } else if(pointerp(command)) {
-    foreach(mixed cmd in command) {
-      if(stringp(cmd)) {
-        action = _commands[cmd];
-        map_delete(_commands, cmd);
-      }
-    }
+    foreach(mixed cmd in command)
+      if(stringp(cmd))
+        map_delete(cmdHandlers, cmd);
   }
 }
 
 /**
- * Removes all commands that use a specific action handler.
- *
- * @param {function|string} action - Function name or pointer to remove
+ * @description Removes all commands that use a specific action
+ *              handler.
+ * @param {function|string} action - Function name or pointer to
+ *                                   remove
  */
-void remove_command_all(mixed action) {
-  foreach(mixed command, mixed act in _commands) {
+public void removeCommandAll(mixed action) {
+  foreach(mixed command, mixed act in cmdHandlers) {
     if(act == action) {
-      map_delete(_commands, command);
-      remove_command(command);
+      map_delete(cmdHandlers, command);
+      removeCommand(command);
     }
   }
 }
 
 /**
- * Returns the action associated with a command.
- *
+ * @description Returns the action associated with a command.
  * @param {string} command - The command to query
- * @returns {function|string|null} Action handler or null if not found
+ * @returns {function|string|null} Action handler or null if not
+ *                                 found
  */
-mixed query_command(string command) {
-  return _commands[command];
+public mixed queryCommand(string command) {
+  return cmdHandlers[command];
 }
 
 /**
- * Returns all registered commands and their actions.
- *
+ * @description Returns all registered commands and their actions.
  * @returns {mapping} Copy of commands mapping
  */
-mapping query_commands() {
-  return copy(_commands);
+public mapping queryCommands() {
+  return copy(cmdHandlers);
 }
 
-string *query_all_commands() {
+public string *queryAllCommands() {
   return commands();
 }
 
 /**
- * Finds all commands that share the same action handler.
- *
- * Returns an array containing the given command and any other commands
- * that use the same action handler.
- *
+ * @description Finds all commands that share the same action
+ *              handler. Returns an array containing the given
+ *              command and any other commands that use the same
+ *              action handler.
  * @param {string} command - The command to find matches for
- * @returns {string*} Array of commands sharing the same handler, or empty array
+ * @returns {string*} Array of commands sharing the same handler,
+ *                    or empty array
  */
-string *query_matching_commands(string command) {
+public string *queryMatchingCommands(string command) {
   string *matches = allocate(1);
 
-  if(nullp(_commands[command]))
+  if(nullp(cmdHandlers[command]))
     return ({});
 
   matches[0] = command;
 
-  foreach(mixed cmd, mixed action in _commands) {
+  foreach(mixed cmd, mixed action in cmdHandlers) {
     if(cmd == matches[0])
       continue;
 
-    if(action == _commands[command])
+    if(action == cmdHandlers[command])
       matches += ({ cmd });
   }
 
@@ -134,48 +134,53 @@ string *query_matching_commands(string command) {
 }
 
 /**
- * Initialises the commands mapping to an empty state.
+ * @description Initialises the commands mapping to an empty state.
  */
-void init_commands() {
-  _commands = ([]);
+public void initCommands() {
+  cmdHandlers = ([]);
 }
 
 /**
- * Evaluates a command by calling its associated action.
- *
+ * @description Evaluates a command by calling its associated
+ *              action.
  * @param {STD_PLAYER} user - The object triggering the command
  * @param {string} command - The command name
  * @param {string} arg - The command arguments
- * @returns {mixed} Result of command evaluation, or null if no handler
+ * @returns {mixed} Result of command evaluation, or null if no
+ *                  handler
  */
-mixed evaluate_command(object user, string command, string arg) {
-  if(stringp(_commands[command]))
+public mixed evaluateCommand(object user, string command,
+    string arg) {
+  if(stringp(cmdHandlers[command]))
     return call_other(this_object(), command, user, arg);
 
-  if(!valid_function(_commands[command]))
+  if(!valid_function(cmdHandlers[command]))
     return null;
 
-  function action = _commands[command];
+  function action = cmdHandlers[command];
 
   return action(user, arg);
 }
 
+/**
+ * @description Driver apply for processing input before command
+ *              parsing.
+ * @param {string} arg - The raw input string
+ * @returns {string} The processed input string
+ */
 string process_input(string arg) {
   return arg;
 }
 
-private string *_path = ({});
-nosave string *_command_history = ({});
-
-string *query_path() {
-  return copy(_path);
+public string *queryPath() {
+  return copy(cmdPaths);
 }
 
-int add_path(string str) {
+public int addPath(string str) {
   if(!adminp(previous_object()) && this_body() != this_object())
     return 0;
 
-  if(includes(_path, str))
+  if(includes(cmdPaths, str))
     return 0;
 
   str = append(str, "/");
@@ -183,13 +188,13 @@ int add_path(string str) {
   if(!directory_exists(str))
     return 0;
 
-  _path = _path || ({});
-  push(ref _path, str);
+  cmdPaths = cmdPaths || ({});
+  push(ref cmdPaths, str);
 
   return 1;
 }
 
-public void set_path(mixed path) {
+public void setPath(mixed path) {
   string *paths;
 
   if(stringp(path))
@@ -197,60 +202,60 @@ public void set_path(mixed path) {
   else if(pointerp(path))
     paths = copy(path);
 
-  filter(paths, (: add_path :));
+  filter(paths, (: addPath :));
 }
 
-int rem_path(string str) {
+public int remPath(string str) {
   if(!adminp(previous_object()) && this_body() != this_object())
     return 0;
 
-  if(!includes(_path, str))
+  if(!includes(cmdPaths, str))
     return 0;
 
-  _path -= ({str});
+  cmdPaths -= ({str});
 
   return 1;
 }
 
-void add_wizard_paths() {
+public void addWizardPaths() {
   string *paths = explode_file("/adm/etc/wizard_paths");
 
-  filter(paths, (: add_path :));
+  filter(paths, (: addPath :));
 }
 
-void remove_wizard_paths() {
-  filter(query_path(), (: rem_path :));
+public void removeWizardPaths() {
+  filter(queryPath(), (: remPath :));
 
-  add_standard_paths();
+  addStandardPaths();
 }
 
-void add_standard_paths() {
+public void addStandardPaths() {
   string *paths = explode_file("/adm/etc/standard_paths");
 
-  filter(paths, (: add_path :));
+  filter(paths, (: addPath :));
 }
 
-void add_ghost_paths() {
+public void addGhostPaths() {
   string *paths = explode_file("/adm/etc/ghost_paths");
 
-  filter(paths, (: add_path :));
+  filter(paths, (: addPath :));
 }
 
-nomask varargs string *query_command_history(int index, int range) {
-  if(this_body() != this_object() && !adminp(previous_object()))
+public nomask varargs string *queryCommandHistory(int index,
+    int range) {
+  if(this_body() != this_object()
+      && !adminp(previous_object()))
     return ({});
 
   if(!index)
-    return _command_history + ({});
-
+    return cmdHistory + ({});
   else if(range)
-    return _command_history[index..range] + ({});
-
+    return cmdHistory[index..range] + ({});
   else
-    return ({ _command_history[index] });
+    return ({ cmdHistory[index] });
 }
 
-int command_hook(string arg) {
+public int commandHook(string arg) {
   string verb, err, *cmds = ({});
 
   object
@@ -261,7 +266,7 @@ int command_hook(string arg) {
   int sz;
   mixed result;
   string complete;
-  mixed return_value;
+  mixed returnValue;
 
   caller = this_body();
 
@@ -291,21 +296,22 @@ int command_hook(string arg) {
   obs += ({ this_object() });
 
   foreach(ob in obs) {
-    result = ob->evaluate_command(this_object(), verb, arg);
-    result = evaluate_result(result);
+    result = ob->evaluateCommand(this_object(), verb, arg);
+    result = evaluateResult(result);
     if(result == 1)
       return 1;
   }
 
   if(arg)
-    _command_history += ({ verb + " " + arg });
+    cmdHistory += ({ verb + " " + arg });
   else
-    _command_history += ({ verb });
+    cmdHistory += ({ verb });
 
   // Communication checks
   catch {
     if(environment())
-      if(SOUL_D->request_emote(verb, arg)) return 1;
+      if(SOUL_D->request_emote(verb, arg))
+        return 1;
 
     err = catch(load_object(CHAN_D));
     if(!err)
@@ -313,7 +319,7 @@ int command_hook(string arg) {
         return 1;
   };
 
-  cmds = map(_path, (: $1 + $(verb) + ".c" :));
+  cmds = map(cmdPaths, (: $1 + $(verb) + ".c" :));
   cmds = filter(cmds, (: file_exists :));
 
   sz = sizeof(cmds);
@@ -333,25 +339,26 @@ int command_hook(string arg) {
     err = catch(cmd = load_object(cmds[0]));
 
     if(err) {
-      tell_me("Error: Command " + verb + " non-functional.\n");
+      tell_me("Error: Command " + verb +
+        " non-functional.\n");
       tell_me(err);
       return 1;
     }
 
-    return_value = cmd->main(caller, arg);
+    returnValue = cmd->main(caller, arg);
 
-    result = evaluate_result(return_value);
+    result = evaluateResult(returnValue);
     if(result == 1)
       return 1;
 
-    return return_value;
+    return returnValue;
   }
 
   return 0;
 }
 
-public string find_command_path(string verb) {
-  string *paths = query_path();
+public string findCommandPath(string verb) {
+  string *paths = queryPath();
   string path;
 
   foreach(string p in paths) {
@@ -364,7 +371,7 @@ public string find_command_path(string verb) {
   return path;
 }
 
-private nomask int evaluate_result(mixed result) {
+private nomask int evaluateResult(mixed result) {
   if(stringp(result)) {
     if(!strlen(result)) {
       return 0;
@@ -386,11 +393,10 @@ private nomask int evaluate_result(mixed result) {
   return result;
 }
 
-int force_me(string cmd) {
-  if(
-        this_body() != this_object()
-    && !adminp(previous_object())
-    && !adminp(this_caller()))
+public int forceMe(string cmd) {
+  if(this_body() != this_object()
+      && !adminp(previous_object())
+      && !adminp(this_caller()))
     return 0;
   else
     return command(cmd);

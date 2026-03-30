@@ -32,7 +32,7 @@ mixed main(/** @type {STD_BODY} */ object caller, string _arg) {
     // This is a hack because otherwise the privileges won't work
     // for saving player data, because this_interactive() will be
     // the object that called quit, instead of the player object.
-    call_out_walltime((:$(su_body)->force_me("quit") :), 0.01);
+    call_out_walltime((:$(su_body)->forceMe("quit") :), 0.01);
     return 1;
   }
 

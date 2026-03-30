@@ -29,8 +29,9 @@ This applies to identifiers (variable names, function names, file names), commen
 
 - Use 2 spaces for indentation.
 - Use spaces around operators and after commas.
-- NO space after keywords (e.g., `if`, `while`, `for`).
-- No trailing spaces at the end of lines or files.
+- No trailing spaces at the end of lines.
+- Files must end with a single trailing newline.
+- No more than 1 consecutive empty line.
 - Use a single space after `//` for comments.
 - NO space after `#` for preprocessor directives.
 - Use a single space before and after `=` for assignments.
@@ -43,6 +44,22 @@ This applies to identifiers (variable names, function names, file names), commen
 - NO space after `->` for pointer member access.
 - Use a single space before and after `?` and before and after `:` for ternary operators.
 - NO space after `!` for negation.
+- Always a single space before an opening brace `{`.
+
+### Keyword Spacing
+
+Control-flow keywords that take a parenthesised condition attach directly to it — no space before `(`:
+
+- `if(`, `for(`, `while(`, `switch(`, `foreach(`
+
+Keywords that sit between blocks or before a brace get a space on both sides:
+
+- `} else {`, `} else if(`, `do {`
+- `} catch {`, `} catch(`
+
+Keywords that precede an expression get a space after:
+
+- `return expr;`, `case VALUE:`, `error("...");`
 
 ## Bracing Style
 
@@ -192,10 +209,58 @@ float attackSpeed = 2.0;
 
 ## Control Structures
 
-- Blank lines between logical sections of code.
 - For switch statements, the `case` keyword is not indented, but case content is indented one level.
 - Always include a `default` case in switch statements when appropriate.
 - Switch bracing follows the rules in the **Bracing Style** section above — see there for examples.
+
+## Blank Line Padding
+
+Use blank lines to give code room to breathe. The rules below keep control blocks visually separate from the code around them.
+
+### After control blocks
+
+Always place a blank line **after** the closing of these control structures (unless the next line is itself a closing brace):
+
+- `if` / `else if` / `else` chains
+- `while` loops
+- `for` / `foreach` loops
+- `switch` statements
+- `do` / `while` loops
+
+### Before `return`
+
+Always place a blank line **before** a `return` statement, unless the `return` is the only statement in the block.
+
+### General
+
+- No more than 1 consecutive empty line anywhere in a file.
+- Use blank lines between logical sections of code (variable groups, setup blocks, etc.).
+
+### Examples
+
+```lpc
+void doWork(int value) {
+  if(value < 0)
+    value = 0;
+
+  string result = process(value);
+
+  if(result) {
+    log(result);
+    notify(result);
+  }
+
+  for(int i = 0; i < sizeof(items); i++)
+    handleItem(items[i]);
+
+  return result;
+}
+
+// return as only statement — no blank line needed
+int queryValue() {
+  return value;
+}
+```
 
 ## Comments
 

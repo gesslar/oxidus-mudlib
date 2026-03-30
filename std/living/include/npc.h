@@ -2,7 +2,7 @@
 #define __NPC_H__
 
 float setLevel(float level) ;
-int force_me(string cmd) ;
+int forceMe(string cmd) ;
 void start_heart_beat() ;
 void stop_heart_beat() ;
 int player_check() ;

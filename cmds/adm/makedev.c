@@ -32,9 +32,9 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   if(devp(query_privs(body))) {
     _info("That user is already a developer.");
     _info("Setting up command path for '%s'.", capitalize(body->query_real_name()));
-    body->add_path("/cmds/wiz/");
-    body->add_path("/cmds/object/");
-    body->add_path("/cmds/file/");
+    body->addPath("/cmds/wiz/");
+    body->addPath("/cmds/object/");
+    body->addPath("/cmds/file/");
     return 1;
   }
 
@@ -47,9 +47,9 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   assure_dir(path + "public");
   assure_dir(path + "private");
   cp("/d/std/workroom.c", path + "workroom.c");
-  body->add_path("/cmds/wiz/");
-  body->add_path("/cmds/object/");
-  body->add_path("/cmds/file/");
+  body->addPath("/cmds/wiz/");
+  body->addPath("/cmds/object/");
+  body->addPath("/cmds/file/");
   security_editor = new(OBJ_SECURITY_EDITOR);
   security_editor->enableMembership(query_privs(body), "developer");
   security_editor->writeState(0);

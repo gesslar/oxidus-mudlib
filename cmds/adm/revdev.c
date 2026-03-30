@@ -31,10 +31,10 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   _info("Revoking developer access for '%s'.", capitalize(body->query_real_name()));
 
   _ok(body, "Developer Access Revoked.");
-  body->rem_path("/cmds/wiz/");
-  body->rem_path("/cmds/object/");
-  body->rem_path("/cmds/file/");
-  body->rem_path("/cmds/adm/");
+  body->remPath("/cmds/wiz/");
+  body->remPath("/cmds/object/");
+  body->remPath("/cmds/file/");
+  body->remPath("/cmds/adm/");
 
   /** @type {OBJ_SECURITY_EDITOR} */ object security_editor = new(OBJ_SECURITY_EDITOR);
   security_editor->disableMembership(query_privs(body), "developer");

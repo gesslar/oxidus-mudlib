@@ -17,7 +17,7 @@ mixed main(object caller, string args) {
   int range, i;
   string *history = ({});
 
-  history = caller->query_command_history();
+  history = caller->queryCommandHistory();
 
   if(stringp(args)) {
     if(args == "all") {

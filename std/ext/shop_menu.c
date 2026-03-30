@@ -26,9 +26,9 @@ void remove_menu_item(string file);
 void wipe_menu();
 
 void init_shop() {
-    add_command("buy", "cmd_buy");
-    add_command(({"list","menu"}), "cmd_menu");
-    add_command("view", "cmd_view");
+    addCommand("buy", "cmd_buy");
+    addCommand(({"list","menu"}), "cmd_menu");
+    addCommand("view", "cmd_view");
 }
 
 /**
