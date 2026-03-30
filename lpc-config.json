@@ -19,5 +19,13 @@
     "tmp/",
     "adm/dist/fluffos/"
   ],
+  "defines": [
+    {
+      "__PACKAGE_DB__": "kakadoodoo",
+    },
+    {
+      "__USE_SQLITE3__": "3",
+    }
+  ],
   "diagnostics": "on"
 }

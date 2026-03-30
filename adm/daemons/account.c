@@ -100,19 +100,15 @@ public int createAccount(string name, string password) {
  * @returns {AccountRecord} The account data if found, null otherwise
  */
 public mapping loadAccount(string name) {
-  debug("=> loadAccount");
   if(!validManip(name))
     return null;
 
-  debug("validManip: succeeded");
   if(!name || !stringp(name))
     return null;
 
-  debug("name and is stringp");
   if(!accounts[name]) {
     string file = accountFile(name);
 
-    debug("file = %O", file);
     if(!file_exists(file))
       return null;
 

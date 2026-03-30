@@ -1,14 +1,27 @@
-// /std/ext/bank.c
-//
-// Created:     2024/02/29: Gesslar
-// Last Change: 2024/02/29: Gesslar
-//
-// 2024/02/29: Gesslar - Created
+/**
+ * @file /std/ext/bank.c
+ *
+ * Extension module that provides banking commands for room objects.
+ * Allows players to register accounts, deposit and withdraw currency,
+ * and check their balance. All amounts are stored internally as
+ * copper and converted on deposit/withdrawal.
+ *
+ * @created 2024-02-29 - Gesslar
+ * @last_modified 2024-02-29 - Gesslar
+ *
+ * @history
+ * 2024-02-29 - Gesslar - Created
+ */
 
 #include <daemons.h>
 
 void add_command(string cmd, string fun);
 
+/**
+ * Initialises the banking commands for the room. Should be called
+ * during room setup to register the register, deposit, withdraw,
+ * and balance commands.
+ */
 void init_bank() {
   add_command("register", "cmd_register");
   add_command("deposit", "cmd_deposit");
@@ -16,7 +29,13 @@ void init_bank() {
   add_command("balance", "cmd_balance");
 }
 
-mixed cmd_balance(object tp, string arg) {
+/**
+ * Displays the player's current bank balance.
+ *
+ * @param {STD_PLAYER} tp - The player checking their balance.
+ * @returns {string} A message with the balance or an error.
+ */
+mixed cmd_balance(object tp) {
   mixed result;
 
   result = BANK_D->query_balance(tp->query_name());
@@ -25,7 +44,14 @@ mixed cmd_balance(object tp, string arg) {
 
   return "You have " + add_commas(result) + " coins in your account.\n";
 }
-mixed cmd_register(object tp, string arg) {
+
+/**
+ * Registers a new bank account for the player.
+ *
+ * @param {STD_PLAYER} tp - The player registering an account.
+ * @returns {string} A success or failure message.
+ */
+mixed cmd_register(object tp) {
   mixed result;
 
   result = BANK_D->new_account(tp->query_name());
@@ -38,8 +64,15 @@ mixed cmd_register(object tp, string arg) {
   return "You have successfully registered an account with the bank.\n";
 }
 
+/**
+ * Deposits coins from the player's wealth into their bank
+ * account. The amount is converted to copper for internal storage.
+ *
+ * @param {STD_PLAYER} tp - The player making the deposit.
+ * @param {string} str - Expected format: "<number> <currency type>".
+ * @returns {string} A success or failure message.
+ */
 mixed cmd_deposit(object tp, string str) {
-  mixed *config = mudConfig("CURRENCY");
   int num, conv, have;
   string type;
   mixed result;
@@ -79,9 +112,19 @@ mixed cmd_deposit(object tp, string str) {
   return "You have deposited " + add_commas(num) + " " + type + " coins.\n";
 }
 
+/**
+ * Withdraws coins from the player's bank account into their
+ * wealth. The requested amount is converted from the specified
+ * currency type to copper for the balance check, then the coins
+ * are added to the player's wealth. If adjusting the player's
+ * wealth fails, the balance deduction is rolled back.
+ *
+ * @param {STD_PLAYER} tp - The player making the withdrawal.
+ * @param {string} str - Expected format: "<number> <currency type>".
+ * @returns {string} A success or failure message.
+ */
 mixed cmd_withdraw(object tp, string str) {
-  mixed *config = mudConfig("CURRENCY");
-  int num, base, have, rate;
+  int num, base;
   string type;
   mixed result;
   string name;
