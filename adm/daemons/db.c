@@ -6,9 +6,10 @@
  * provides synchronous and chunked (lazy) query interfaces.
  *
  * @created 2024-02-27 - Gesslar
- * @last_modified 2024-02-27 - Gesslar
+ * @last_modified 2026-03-30 - Gesslar
  *
  * @history
+ * 2026-03-30 - Gesslar - Added REST-style query interface
  * 2024-02-27 - Gesslar - Created
  */
 
