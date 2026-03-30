@@ -294,7 +294,6 @@ string account_path(string name);
 string accountFile(string name);
 int validAccount(string name);
 int ghostp(object user);
-int linkp(object user);
 varargs int valid_user(mixed user);
 
 // File: util.c

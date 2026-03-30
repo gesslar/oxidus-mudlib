@@ -49,6 +49,7 @@ object create_body(string name) {
   body->restore_body();
   body->mudlib_setup();
 
+
   return body;
 }
 

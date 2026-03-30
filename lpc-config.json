@@ -25,6 +25,9 @@
     },
     {
       "__USE_SQLITE3__": "3",
+    },
+    {
+      "__SAVE_EXTENSION__": ".o"
     }
   ],
   "diagnostics": "on"

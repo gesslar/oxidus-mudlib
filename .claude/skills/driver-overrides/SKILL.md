@@ -38,7 +38,6 @@ Only succeeds if `previous_object()` is one of:
 - `STD_GHOST` (ghost object)
 - A user object (`userp()`)
 - `CMD_SU` (the su command)
-- A link object (`linkp()`)
 
 All other callers get `0` returned. This prevents arbitrary objects from hijacking connections.
 

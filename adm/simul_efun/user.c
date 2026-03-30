@@ -73,7 +73,7 @@ string user_data_directory(string name) {
 /**
  * Returns the home directory path for the user.
  *
- * @param {string|STD_USER} name - The user's name, or the body of the user.
+ * @param {string | STD_PLAYER} name - The user's name, or the body of the user.
  * @returns {string} The home directory path for the user.
  */
 string home_path(mixed name) {
@@ -126,21 +126,11 @@ int validAccount(string name) {
 /**
  * Returns 1 if the object is a ghost, 0 if not.
  *
- * @param {object} ob - The object to check.
- * @returns {int} 1 if the object is a ghost, otherwise 0.
+ * @param {STD_GHOST} ob - The object to check.
+ * @returns {ob is STD_GHOST} 1 if the object is a ghost, otherwise 0.
  */
 int ghostp(object ob) {
   return ob->is_ghost();
-}
-
-/**
- * Returns 1 if the object is a user object, 0 if not.
- *
- * @param {object} ob - The object to check.
- * @returns {int} 1 if the object is a user object, otherwise 0.
- */
-int linkp(object ob) {
-  return ob->is_user();
 }
 
 /**
