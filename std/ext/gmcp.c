@@ -87,109 +87,113 @@ varargs void do_gmcp(string package, mixed data) {
     send_gmcp(message);
 }
 
-// This funcation sanitises the data to be sent to the client. It will convert
+// This function sanitises the data to be sent to the client. It will convert
 // the data to a string if it is not already a string. For mappings and arrays,
 // it will convert the data to a string representation of the data. GMCP should
 // always send keys and values as strings, so we convert them here.
 mixed gmcp_stringify(mixed data) {
-    switch(typeof(data)) {
-        case T_STRING:
-            return data;
-        case T_INT:
-            return sprintf("%d", data);
-        case T_ARRAY: {
-                mixed *result;
+  switch(typeof(data)) {
+    case T_STRING:
+      return data;
+    case T_INT:
+      return sprintf("%d", data);
+    case T_ARRAY: {
+      mixed *result;
 
-                result = map(data, (: gmcp_stringify :));
+      result = map(data, (: gmcp_stringify :));
 
-                return result;
-            }
-        case T_OBJECT:
-            return "";
-        case T_MAPPING: {
-                mapping result = ([ ]);
-                mixed key, value;
-
-                foreach(key, value in data) {
-                    result[gmcp_stringify(key)] = gmcp_stringify(value);
-                }
-
-                return result;
-            }
-        case T_FUNCTION:
-            return "";
-        case T_FLOAT:
-            return sprintf("%f", data);
-        case T_BUFFER:
-            return "";
-        case T_CLASS:
-            return "";
-        default:
-            return "";
+      return result;
     }
+    case T_OBJECT:
+      return "";
+    case T_MAPPING: {
+      mapping result = ([ ]);
+      mixed key, value;
 
-    return "";
+      foreach(key, value in data) {
+        result[gmcp_stringify(key)] = gmcp_stringify(value);
+      }
+
+      return result;
+    }
+    case T_FUNCTION:
+      return "";
+    case T_FLOAT:
+      return sprintf("%f", data);
+    case T_BUFFER:
+      return "";
+    case T_CLASS:
+      return "";
+    default:
+      return "";
+  }
 }
 
 void clear_gmcp_data() {
-    gmcp_data = ([ ]);
+  gmcp_data = ([ ]);
 }
 
 void set_gmcp_client(mapping data) {
-    gmcp_data["client"] = data;
+  gmcp_data["client"] = data;
 }
 
 mapping query_gmcp_client() {
-    return copy(gmcp_data["client"]);
+  return copy(gmcp_data["client"]);
 }
 
 void set_gmcp_supports(mapping data) {
-    gmcp_data["supports"] = data;
+  gmcp_data["supports"] = data;
 }
 
 mapping query_gmcp_supports() {
-    return copy(gmcp_data["supports"]);
+  return copy(gmcp_data["supports"]);
 }
 
 // Function to determine if a specific package (and optionally module/
 // submodule) is supported
 int query_gmcp_supported(string fullname) {
-    string *parts, package, module, submodule;
-    mapping supports = query_gmcp_supports();
-    class ClassGMCP gmcp;
+  string package, module, submodule;
+  mapping supports = query_gmcp_supports();
+  class ClassGMCP gmcp;
 
-    gmcp = GMCP_D->convert_message(fullname);
+  gmcp = GMCP_D->convert_message(fullname);
 
-    // Check if the package is supported
-    if(!supports[package]) return 0; // Package not found
+  // Check if the package is supported
+  if(!supports[package])
+    return 0; // Package not found
 
-    // If a module is specified, check for its support
-    if(module && supports[package]["modules"]) {
-        if(!supports[package]["modules"][module]) return 0; // Module not found
+  // If a module is specified, check for its support
+  if(module && supports[package]["modules"]) {
+    if(!supports[package]["modules"][module])
+      return 0; // Module not found
 
-        // If a submodule is specified, check for its support
-        if(submodule && supports[package]["modules"][module]["submodules"]) {
-            if(!supports[package]["modules"][module]["submodules"][submodule]) return 0; // Submodule not found
-        } else if(submodule) {
-            // Submodule specified but no submodules are supported under the module
-            return 0;
-        }
-    } else if(module) {
-        // Module specified but no modules are supported under the package
-        return 0;
+    // If a submodule is specified, check for its support
+    if(submodule && supports[package]["modules"][module]["submodules"]) {
+      if(!supports[package]["modules"][module]["submodules"][submodule])
+        return 0; // Submodule not found
+    } else if(submodule) {
+      // Submodule specified but no submodules are supported under the module
+      return 0;
     }
+  } else if(module) {
+    // Module specified but no modules are supported under the package
+    return 0;
+  }
 
-    // If we've reached this point, the specified package (and optionally module/submodule) is supported
-    return 1;
+  // If we've reached this point, the specified package (and optionally module/
+  // submodule) is supported
+  return 1;
 }
 
 
 public int gmcp_enabled() {
-    if(!has_gmcp(this_object()))
-        return 0;
+  if(!has_gmcp(this_object()))
+    return 0;
 
-    if(base_name() == LOGIN_OB)
-        return 1;
+  // @lpc-expect-error: comparison is made at runtime after being inherited,
+  // you silly billy
+  if(base_name() == LOGIN_OB)
+    return 1;
 
-    return query_pref("gmcp") != "off";
+  return query_pref("gmcp") != "off";
 }

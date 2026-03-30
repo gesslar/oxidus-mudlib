@@ -49,7 +49,7 @@ void shutdown(int how) {
       return;
 
   emit(SIG_SYS_SHUTDOWN);
-  PERSIST_D->persist_objects();
+  PERSIST_D->persistObjects();
   efun::shutdown(how);
 }
 

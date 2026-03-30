@@ -18,9 +18,9 @@ varargs int setPersistent(int x: (: 1 :)) {
     if(!data_file) set_data_file();
 
     if(x == 1)
-        PERSIST_D->register_peristent(this_object());
+        PERSIST_D->registerPersistent(this_object());
     else
-        PERSIST_D->unregister_persistent(this_object());
+        PERSIST_D->unregisterPersistent(this_object());
 
     return persistent = x;
 }
