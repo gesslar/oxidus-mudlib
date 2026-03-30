@@ -23,14 +23,14 @@
  * @returns {int} 1 on success, 0 if the caller lacks permission
  */
 int exec(object to, object from) {
-  if(is_member(query_privs(previous_object()), "admin") ||
-     base_name(previous_object()) == STD_GHOST ||
-     userp(previous_object()) ||
-     base_name(previous_object()) == CMD_SU ||
-     linkp(previous_object()))
+  if(is_member(query_privs(previous_object()), "admin")
+    || base_name(previous_object()) == STD_GHOST
+    || userp(previous_object())
+    || base_name(previous_object()) == CMD_SU) {
     return efun::exec(to, from);
-  else
+  } else {
     return 0;
+  }
 }
 
 /**

@@ -1,14 +1,18 @@
-/*login.c
-
-* Tacitus @ LPUniversity
-* 04-APR-05
-* Login Daemon
-
-* Recoded on October 7th, 2005 by Tacitus
-
-*/
-
-/* Last edited on October 6th, 2006 by Tacitus */
+/**
+ * @file /adm/obj/login.c
+ *
+ * Login object cloned for each new connection. Handles account
+ * authentication, character selection, character creation, and
+ * transitioning the player into the game world.
+ *
+ * @created 2005-04-04 - Tacitus
+ * @last_modified 2025-03-30 - Gesslar
+ *
+ * @history
+ * 2005-04-04 - Tacitus - Created
+ * 2005-10-07 - Tacitus - Recoded
+ * 2006-10-06 - Tacitus - Last edited
+ */
 
 #include <daemons.h>
 #include <gmcp_defines.h>
@@ -22,74 +26,96 @@ inherit EXT_MESSAGING;
 inherit EXT_GMCP;
 inherit EXT_LOG;
 
-private nosave mapping login_gmcp_data = ([ "client" : null, "supports" : null, ]);
+private void get_account(string str);
+private void get_password(string str, int i);
+private void verify_password(string str, int i);
+private void new_account(string str, string name);
+private void auto_destruct();
+private void reconnect(string str, string name);
+private void enter_world(string name, int reconnecting);
+private object create_body(string name);
+private string parse_tokens(string text);
+private void greet();
+private void character_menu();
+private void character_menu_input(string str, string prompt);
+private void first_admin_login();
 
+/** @type {STD_PLAYER} */ private nosave object body;
+private nosave mapping __login_gmcp_data = ([ "client" : null, "supports" : null, ]);
 private nosave mapping __environ_data = ([]);
-private nosave mapping account = null;
+private nosave mapping __account = null;
+private nosave string __name, __character;
+private nosave string __login_message = parse_tokens(read_file(mudConfig("LOGIN_MSG")));
+private nosave int __call_out_id;
+private nosave int __gmcp_login_status = 0;
+private nosave int __greet_call;
+private nosave int __attempts = 0;
 
-void get_account(string str);
-void get_password(string str, int i);
-void verify_password(string str, int i);
-void new_account(string str, string name);
-void auto_destruct();
-void reconnect(string str, string name);
-void setup_new();
-void enter_world(string name, int reconnecting);
-void idle_email(string str);
-object create_body(string name);
-string parse_tokens(string text);
-void greet();
-void character_menu();
-void character_menu_input(string str, string prompt);
-void first_admin_login();
+/**
+ * Schedules the login object for removal after a brief delay.
+ */
+private void dest_me() {
+  call_out_walltime((:remove:), 0.2);
+}
 
-string name, character;
-
-object body;
-
-string login_message = parse_tokens(read_file(mudConfig("LOGIN_MSG")));
-
-int call_out_id;
-int gmcp_login_status = 0;
-int greet_call;
-private nosave int attempts = 0;
-void dest_me() { call_out_walltime((:remove:), 0.2); }
-
-void create() {
+/**
+ * Initialises the login object and sets up an auto-destruct timer for clones.
+ */
+public void setup() {
   set_log_level(0);
 
   if(clonep())
-    call_out_id = call_out_walltime("auto_destruct", 60.0);
-
-  set_notify_destruct(1);
+    __call_out_id = call_out_walltime("auto_destruct", 60.0);
 }
 
-void logon() {
-  tell(this_object(), login_message);
-  greet_call = call_out_walltime((:greet:), 0.2);
+/**
+ * Called when the connection is established. Displays the login
+ * message and schedules the greeting prompt.
+ */
+private void logon() {
+  tell(this_object(), __login_message);
+
+  __greet_call = call_out_walltime((:greet:), 0.2);
 }
 
-void greet(int gmcp_auth) {
-  if(gmcp_login_status && find_call_out(gmcp_login_status) == -1)
+/**
+ * Displays the account login prompt. Skipped if GMCP
+ * authentication has already completed.
+ */
+private void greet() {
+  if(__gmcp_login_status && find_call_out(__gmcp_login_status) == -1)
     return;
 
   tell(this_object(),
     "\n"
     "You can login as your account or as character@account.\n"
-    "Login as which account? ");
+    "Login as which account? "
+  );
+
   input_to("get_account");
 }
 
-void gmcp_authenticated(string name, string char) {
-  int reconnecting = 0;
+/**
+ * Handles GMCP-based authentication, bypassing the password
+ * prompt. Reconnects to an existing body if the character is
+ * already logged in.
+ *
+ * @param {string} char - The character name
+ */
+public void gmcp_authenticated(string _username, string char) {
   object old_body;
 
   if(old_body = find_player(char)) {
-    write_file(log_dir() + LOG_LOGIN, capitalize(old_body->query_real_name()) + " ("+getoid(old_body)+") reconnected from " +
-      query_ip_number(this_object()) + " on " + ctime(time()) + "\n");
+    write_file(
+      log_dir() + LOG_LOGIN,
+      capitalize(old_body->query_real_name()) + " (" + getoid(old_body) +
+      ") reconnected from " + query_ip_number(this_object()) +
+      " on " + ctime(time()) + "\n"
+    );
 
     if(interactive(old_body)) {
       _info(old_body, "Your body has been displaced by another login.\n");
+
       remove_interactive(old_body);
     }
 
@@ -100,13 +126,22 @@ void gmcp_authenticated(string name, string char) {
   }
 }
 
-void get_account(string str) {
-  int i;
-
+/**
+ * Processes account name input. Checks lockdown status, loads
+ * the account, and either proceeds to password entry or offers
+ * account creation.
+ *
+ * @param {string} str - The account name entered by the user
+ */
+private void get_account(string str) {
   load_object(LOCKDOWN_D);
 
   if(LOCKDOWN_D->is_ip_banned(query_ip_number(this_object()))) {
-    _error("\nYour IP address, " + query_ip_number(this_object()) + " has been banned from " + mud_name() + ".\n");
+    _error(
+      "\nYour IP address, " + query_ip_number(this_object()) +
+      " has been banned from " + mud_name() + ".\n"
+    );
+
     return dest_me();
   }
 
@@ -121,20 +156,25 @@ void get_account(string str) {
     return dest_me();
   }
 
-  if(sscanf(str, "%s@%s", character, name) != 2)
-    name = str;
+  if(sscanf(str, "%s@%s", __character, __name) != 2)
+    __name = str;
 
-  if(LOCKDOWN_D->query_dev_lock() && wizardp(name) && !adminp(name)) {
+  if(LOCKDOWN_D->query_dev_lock() && wizardp(__name) && !adminp(__name)) {
     _error(LOCKDOWN_D->query_dev_lock_msg());
     return dest_me();
   }
 
-  if(LOCKDOWN_D->query_player_lock() && (!adminp(name) && !wizardp(name))) {
+  if(LOCKDOWN_D->query_player_lock()
+    && !adminp(__name)
+    && !wizardp(__name)
+  ) {
     _error(LOCKDOWN_D->query_player_lock_msg());
     return dest_me();
   }
 
-  if(LOCKDOWN_D->query_vip_lock() && (!adminp(name) && !wizardp(name) && (member_array(name, LOCKDOWN_D->query_play_testers()) == -1))) {
+  if(LOCKDOWN_D->query_vip_lock()
+    && !adminp(__name) && !wizardp(__name)
+    && member_array(__name, LOCKDOWN_D->query_play_testers()) == -1) {
     _error(LOCKDOWN_D->query_vip_lock_msg());
     return dest_me();
   }
@@ -157,24 +197,27 @@ void get_account(string str) {
   }
 #endif
 
-  account = ACCOUNT_D->loadAccount(name);
-  if(!account) {
+  __account = ACCOUNT_D->loadAccount(__name);
+
+  if(!__account) {
     if(LOCKDOWN_D->query_player_lock()) {
       _error(LOCKDOWN_D->query_player_lock_msg());
       return dest_me();
     }
 
-    _info("The account %s does not exist.", name);
+    _info("The account %s does not exist.", __name);
     _question("Would you like to create it? ");
-    input_to("new_account", name);
+    input_to("new_account", __name);
     return;
   }
 
-  if(character && pointerp(account["characters"]) && member_array(character, account["characters"]) == -1) {
-    character = null;
+  if(__character
+    && pointerp(__account["characters"])
+    && member_array(__character, __account["characters"]) == -1) {
+    __character = null;
   }
 
-  if(!account["password"]) {
+  if(!__account["password"]) {
     _info("Your account has no password. All accounts must have a password.\n");
     _question("Please enter a new password: ");
     input_to("get_password", 1, 2);
@@ -185,15 +228,24 @@ void get_account(string str) {
   input_to("get_password", 1, 0);
 }
 
-void get_password(string str, int i) {
+/**
+ * Processes password input for both login verification and new
+ * password creation. When i is 0, verifies against the stored
+ * password. When i is non-zero, sets a new password.
+ *
+ * @param {string} str - The password entered by the user
+ * @param {int} i - 0 for login verification, non-zero for new
+ *                  password creation
+ */
+private void get_password(string str, int i) {
   string pass;
   string curr;
 
   if(!i) {
-    curr = account["password"];
+    curr = __account["password"];
     pass = crypt(str, curr);
     if(pass != curr) {
-      if(++attempts >= 3) {
+      if(++__attempts >= 3) {
         _error("Too many failed login attempts.");
         _ok("Goodbye.");
         return dest_me();
@@ -204,11 +256,13 @@ void get_password(string str, int i) {
       input_to("get_password", 1, i);
       return;
     } else {
-      int char_index = character ? member_array(character, account["characters"]) : null;
-      remove_call_out(call_out_id);
-      call_out_id = null;
+      int char_index = __character
+        ? member_array(__character, __account["characters"])
+        : null;
+      remove_call_out(__call_out_id);
+      __call_out_id = null;
 
-      if(!character)
+      if(!__character)
         character_menu();
       else
         character_menu_input(sprintf("%d", char_index + 1), null);
@@ -223,13 +277,13 @@ void get_password(string str, int i) {
       return;
     }
 
-    if(!validAccount(account["name"])) {
-      if(!ACCOUNT_D->createAccount(account["name"], crypt(str, 0))) {
+    if(!validAccount(__account["name"])) {
+      if(!ACCOUNT_D->createAccount(__account["name"], crypt(str, 0))) {
         _error("There was a problem creating your account.");
         return dest_me();
       }
 
-      account = ACCOUNT_D->loadAccount(account["name"]);
+      __account = ACCOUNT_D->loadAccount(__account["name"]);
     }
 
     _question("Please enter your password again to verify: ");
@@ -238,13 +292,21 @@ void get_password(string str, int i) {
   }
 }
 
-void verify_password(string str, int i) {
+/**
+ * Verifies that the re-entered password matches the one just
+ * set during account creation. Removes the account and restarts
+ * if passwords do not match.
+ *
+ * @param {string} str - The password entered for verification
+ * @param {int} i - Passed through to get_password on mismatch
+ */
+private void verify_password(string str, int i) {
   string curr;
 
-  curr = account["password"];
+  curr = __account["password"];
   str = crypt(str, curr);
   if(str != curr) {
-    ACCOUNT_D->removeAccount(account["name"]);
+    ACCOUNT_D->removeAccount(__account["name"]);
     _error("Your passwords do not match.");
     _question("Please enter your password: ");
     input_to("get_password", 1, i);
@@ -257,9 +319,18 @@ void verify_password(string str, int i) {
   }
 }
 
-void new_account(string str, string name) {
-  if(str == "y" || str == "yes" || str == "yup" || str == "sure" || str == "indeed") {
-    account = ([
+/**
+ * Handles the yes/no response to the new account creation
+ * prompt. If confirmed, proceeds to password entry; otherwise,
+ * prompts for a different account name.
+ *
+ * @param {string} str - The user's yes/no response
+ * @param {string} name - The account name to create
+ */
+private void new_account(string str, string name) {
+  if(str == "y" || str == "yes" || str == "yup"
+    || str == "sure" || str == "indeed") {
+    __account = ([
       "name" : name,
     ]);
 
@@ -272,8 +343,13 @@ void new_account(string str, string name) {
   input_to("get_account");
 }
 
-void character_menu() {
-  string *characters = account["characters"];
+/**
+ * Displays the character selection menu listing all characters
+ * on the account, with options to create a new character or
+ * quit.
+ */
+private void character_menu() {
+  string *characters = __account["characters"];
   int sz, i;
   string prompt = "\nCharacter select:\n\n";
 
@@ -298,9 +374,18 @@ void character_menu() {
   input_to("character_menu_input", prompt);
 }
 
-void character_menu_input(string str, string prompt) {
+/**
+ * Processes selection from the character menu. Handles numeric
+ * character selection, new character creation, quitting, and
+ * reconnection to existing bodies.
+ *
+ * @param {string} str - The user's menu selection
+ * @param {string} prompt - The menu prompt for redisplay on
+ *                          error
+ */
+private void character_menu_input(string str, string prompt) {
   int i;
-  string *characters = account["characters"];
+  string *characters = __account["characters"];
   int sz = sizeof(characters);
 
   if(str == "q") {
@@ -360,13 +445,23 @@ void character_menu_input(string str, string prompt) {
   if(!body)
     return;
 
-  write_file(log_dir() + LOG_LOGIN, capitalize(characters[i]) + " ("+getoid(body)+") logged in from " +
-    query_ip_number(this_object()) + " on " + ctime(time()) + "\n");
+  write_file(
+    log_dir() + LOG_LOGIN,
+    capitalize(characters[i]) + " (" + getoid(body) + ") logged in from " +
+    query_ip_number(this_object()) + " on " + ctime(time()) + "\n"
+  );
 
   enter_world(characters[i], 0);
 }
 
-void new_character(string str) {
+/**
+ * Processes new character name input. Validates length, format,
+ * and uniqueness, then creates the character, body, and home
+ * directory.
+ *
+ * @param {string} str - The desired character name
+ */
+private void new_character(string str) {
   if(!str || strlen(str) < 3 || strlen(str) > 12) {
     _error("Character names must be between 3 and 12 characters.");
     _question("Enter the name of your new character: ");
@@ -388,7 +483,7 @@ void new_character(string str) {
     return;
   }
 
-  if(!ACCOUNT_D->addCharacter(name, str)) {
+  if(!ACCOUNT_D->addCharacter(__name, str)) {
     _error("There was a problem creating your character.");
     return dest_me();
   }
@@ -398,8 +493,11 @@ void new_character(string str) {
   if(!body)
     return;
 
-  write_file(log_dir() + LOG_LOGIN, capitalize(str) + " ("+getoid(body)+") logged in from " +
-    query_ip_number(this_object()) + " on " + ctime(time()) + "\n");
+  write_file(
+    log_dir() + LOG_LOGIN,
+    capitalize(str) + " (" + getoid(body) + ") logged in from " +
+    query_ip_number(this_object()) + " on " + ctime(time()) + "\n"
+  );
 
   assure_dir(str);
 
@@ -410,7 +508,13 @@ void new_character(string str) {
   enter_world(str, 0);
 }
 
-void first_admin_login() {
+/**
+ * Handles first-ever login setup. If the FIRST_USER marker file
+ * does not exist, grants the current player developer and admin
+ * membership, creates their home directories, and writes the
+ * marker file.
+ */
+private void first_admin_login() {
   if(!file_exists(mudConfig("FIRST_USER"))) {
     object security_editor;
     string home_path = home_path(body->query_real_name());
@@ -422,20 +526,35 @@ void first_admin_login() {
     catch(cp("/d/std/workroom.c", home_path(privs)));
     body->addWizardPaths();
     security_editor = new(OBJ_SECURITY_EDITOR);
-    security_editor->enable_membership(privs, "developer");
-    security_editor->enable_membership(privs, "admin");
-    security_editor->write_state(0);
+    security_editor->enableMembership(privs, "developer");
+    security_editor->enableMembership(privs, "admin");
+    security_editor->writeState(0);
     write_file(mudConfig("FIRST_USER"), privs, 1);
     _ok(this_object(), "You are now an admin.");
   }
 }
 
-void reconnect(string str, string name) {
+/**
+ * Handles the yes/no response to the reconnection prompt. If
+ * confirmed, displaces the old interactive and reconnects. If
+ * declined, removes the old body and logs in fresh.
+ *
+ * @param {string} str - The user's yes/no response
+ * @param {string} name - The character name to reconnect
+ */
+private void reconnect(string str, string name) {
   str = lower_case(str);
 
-  if(str == "y" || str == "yes" || str == "yup" || str == "sure" || str == "indeed") {
-    write_file(log_dir() + LOG_LOGIN, capitalize(body->query_real_name()) + " reconnected from " +
-      query_ip_number(this_object()) + " on " + ctime(time()) + "\n");
+  if(str == "y"
+    || str == "yes"
+    || str == "yup"
+    || str == "sure"
+    || str == "indeed") {
+    write_file(
+      log_dir() + LOG_LOGIN,
+      capitalize(body->query_real_name()) + " reconnected from " +
+      query_ip_number(this_object()) + " on " + ctime(time()) + "\n"
+    );
 
     if(interactive(body)) {
       _info(body, "Your body has been displaced by another login.\n");
@@ -444,18 +563,28 @@ void reconnect(string str, string name) {
 
     body->reconnect();
     enter_world(name, 1);
-    return;
   } else {
     body->remove();
     tell(this_object(), "You have chosen not to reconnect to your old body.\n");
-    write_file(log_dir() + LOG_LOGIN, capitalize(str) + " ("+getoid(body)+") logged in from " +
+    write_file(
+      log_dir() + LOG_LOGIN,
+      capitalize(str) + " (" + getoid(body) + ") logged in from " +
       query_ip_number(this_object()) + " on " + ctime(time()) + "\n");
+
     enter_world(name, 0);
-    return;
   }
 }
 
-void enter_world(string name, int reconnecting) {
+/**
+ * Transitions the player body into the game world. Handles exec,
+ * body setup, GMCP initialisation, start location resolution,
+ * and movement. Removes the login object on completion.
+ *
+ * @param {string} name - The character name entering the world
+ * @param {int} reconnecting - 1 if reconnecting to an existing
+ *                             body, 0 for a fresh login
+ */
+private void enter_world(string name, int reconnecting) {
   string loc;
   string e;
   object room;
@@ -463,6 +592,7 @@ void enter_world(string name, int reconnecting) {
 
   if(!objectp(body))
     body = BODY_D->create_body(name);
+
 
   if(body->is_dead()) {
     body->remove();
@@ -474,17 +604,21 @@ void enter_world(string name, int reconnecting) {
   if(reconnecting)
     body->reconnect();
 
-  body->setup_body(name);
+
+
+  body->setup_body();
   body->clear_gmcp_data();
-  body->set_gmcp_client(login_gmcp_data["client"]);
-  body->set_gmcp_supports(login_gmcp_data["supports"]);
+  body->set_gmcp_client(__login_gmcp_data["client"]);
+  body->set_gmcp_supports(__login_gmcp_data["supports"]);
   body->clear_environ_data();
-  body->set_environ_data(__environ_data);
+  body->set_environ(__environ_data);
 
   // If they are not reconnecting, figure out where to put them
   if(!reconnecting) {
+
     if(devp(body)) {
       loc = body->query_env("start_location");
+
       if(loc == "last_location")
         loc = body->query_last_location();
       else
@@ -494,36 +628,36 @@ void enter_world(string name, int reconnecting) {
     }
 
     if(e = catch(room = load_object(loc))) {
-      tell(body,"Unable to load your start location\n");
-      tell(body,"Please contact an admin for assistance.\n");
+      tell(body, "Unable to load your start location\n");
+      tell(body, "Please contact an admin for assistance.\n");
     }
 
     if(e = catch(result = body->move_living(room, null, null, "SILENT"))) {
-      tell(body,"Unable to move you to your start location.\n");
-      tell(body,"Please contact an admin for assistance.\n");
+      tell(body, "Unable to move you to your start location.\n");
+      tell(body, "Please contact an admin for assistance.\n");
     }
 
     if(result) {
-      tell(body,"Unable to move you to your start location: " + MOVE_REASON[result] + "\n");
-      tell(body,"Please contact an admin for assistance.\n");
+      tell(body, "Unable to move you to your start location: " + MOVE_REASON[result] + "\n");
+      tell(body, "Please contact an admin for assistance.\n");
     }
 
     if(devp(body) && !environment(body)) {
       // Try one more time to put them in the start location
       loc = ROOM_START;
       if(e = catch(room = load_object(loc))) {
-        tell(body,"Unable to load your start location\n");
-        tell(body,"Please contact an admin for assistance.\n");
+        tell(body, "Unable to load your start location\n");
+        tell(body, "Please contact an admin for assistance.\n");
       }
 
       if(e = catch(result = body->move_living(room, null, null, "SILENT"))) {
-        tell(body,"Unable to move you to your start location.\n");
-        tell(body,"Please contact an admin for assistance.\n");
+        tell(body, "Unable to move you to your start location.\n");
+        tell(body, "Please contact an admin for assistance.\n");
       }
 
       if(result) {
-        tell(body,"Unable to move you to your start location: " + MOVE_REASON[result] + "\n");
-        tell(body,"Please contact an admin for assistance.\n");
+        tell(body, "Unable to move you to your start location: " + MOVE_REASON[result] + "\n");
+        tell(body, "Please contact an admin for assistance.\n");
       }
     }
   }
@@ -546,7 +680,14 @@ void enter_world(string name, int reconnecting) {
   remove();
 }
 
-object create_body(string name) {
+/**
+ * Creates and initialises a player body for the given character
+ * name. Only callable from within this object.
+ *
+ * @param {string} name - The character name
+ * @returns {object} The created body, or 0 on failure
+ */
+private object create_body(string name) {
   string err;
 
   if(origin() != ORIGIN_LOCAL)
@@ -567,11 +708,25 @@ object create_body(string name) {
   return body;
 }
 
-string query_real_name() {
+/**
+ * Returns the identity of this object for logging and display
+ * purposes.
+ *
+ * @returns {string} Always returns "login"
+ */
+public string query_real_name() {
   return "login";
 }
 
-string parse_tokens(string text) {
+/**
+ * Replaces placeholder tokens in the login message text with
+ * live values such as mud name, user count, date, and version
+ * information.
+ *
+ * @param {string} text - The raw login message with %tokens
+ * @returns {string} The message with tokens replaced
+ */
+private string parse_tokens(string text) {
   catch {
     text = replace_string(text, "%mud_name", mud_name());
     text = replace_string(text, "%users", implode(
@@ -585,51 +740,83 @@ string parse_tokens(string text) {
     text = replace_string(text, "%lib_name", lib_name());
     text = replace_string(text, "%lib_version", lib_version());
     text = replace_string(text, "%baselib_version", baselib_version());
-    text = replace_string(text, "%cap_mud_name",
-      implode(explode(mud_name(), ""), (: capitalize($1)
-      + capitalize($2) :)));
+    text = replace_string(text, "%cap_mud_name", upper_case(mud_name()));
     text = replace_string(text, "%driver_version", driver_version());
   };
 
   return text;
 }
 
-void set_gmcp_client(mapping client) {
-  login_gmcp_data["client"] = client;
+/**
+ * Stores the GMCP client identification data received during
+ * the handshake.
+ *
+ * @param {mapping} client - The client identification mapping
+ */
+public void set_gmcp_client(mapping client) {
+  __login_gmcp_data["client"] = client;
 }
 
-mapping query_gmcp_client() {
-  return login_gmcp_data["client"];
+/**
+ * Returns the stored GMCP client identification data.
+ *
+ * @returns {mapping} The client identification mapping
+ */
+public mapping query_gmcp_client() {
+  return __login_gmcp_data["client"];
 }
 
-void set_gmcp_supports(mapping supports) {
-  login_gmcp_data["supports"] = supports;
+/**
+ * Stores the GMCP supported packages mapping. If the client
+ * supports Char.Login, initiates GMCP authentication and
+ * delays the normal greeting prompt.
+ *
+ * @param {mapping} supports - The supported GMCP packages
+ */
+public void set_gmcp_supports(mapping supports) {
+  __login_gmcp_data["supports"] = supports;
 
-  if(!gmcp_login_status) {
+  if(!__gmcp_login_status) {
     if(of("Char", supports) &&
        of("modules", supports["Char"]) &&
        of("Login", supports["Char"]["modules"])) {
       mapping payload = ([ "type" : ({ "password-credentials" }) ]);
 
-      _info(this_object(), "\n["+mud_name()+"] GMCP Authentication available.");
+      _info(this_object(), "\n[" + mud_name() + "] GMCP Authentication available.");
 
       GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_LOGIN_DEFAULT, payload);
 
-      gmcp_login_status = call_out_walltime((: greet :), 1.0);
+      __gmcp_login_status = call_out_walltime((: greet :), 1.0);
     }
   }
 }
 
-mapping query_gmcp_supports() {
-  return login_gmcp_data["supports"];
+/**
+ * Returns the stored GMCP supported packages mapping.
+ *
+ * @returns {mapping} The supported GMCP packages
+ */
+public mapping query_gmcp_supports() {
+  return __login_gmcp_data["supports"];
 }
 
-void receive_environ(string var, mixed value) {
+/**
+ * Stores an environment variable received from the client via
+ * telnet NEW-ENVIRON negotiation.
+ *
+ * @param {string} var - The environment variable name
+ * @param {mixed} value - The environment variable value
+ */
+private void receive_environ(string var, mixed value) {
   __environ_data[var] = value;
 }
 
-void auto_destruct() {
-  if(!call_out_id)
+/**
+ * Called after the 60-second login timeout. Notifies the user
+ * and destroys the login object.
+ */
+private void auto_destruct() {
+  if(!__call_out_id)
     return;
 
   if(interactive(this_object()))
