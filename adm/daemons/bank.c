@@ -6,9 +6,10 @@
  * and transaction activity history.
  *
  * @created 2024-02-28 - Gesslar
- * @last_modified 2024-02-28 - Gesslar
+ * @last_modified 2026-03-30 - Gesslar
  *
  * @history
+ * 2026-03-30 - Gesslar - Refactored to use DB_D REST interface
  * 2024-02-28 - Gesslar - Created
  */
 
