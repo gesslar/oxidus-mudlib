@@ -44,7 +44,6 @@ void setup() {
  *                    if the account already exists or if there was a database error.
  */
 mixed new_account(string name) {
-  string query;
   mixed result;
 
   name = capitalize(lower_case(name));
@@ -53,15 +52,25 @@ mixed new_account(string name) {
   if(!nullp(result))
     return "Account already exists.";
 
-  query = sprintf(
-    "INSERT INTO balance (name, amount, time) VALUES ('%s', 0, %d); " +
-    "INSERT INTO activity (time, name, amount) VALUES (%d, '%s', 0);",
-    name, time(), time(), name
-  );
+  result = DB_D->rest("POST", "db://bank/balance", ([
+    "name": name,
+    "time": time(),
+    "amount": 0,
+  ]));
 
-  result = DB_D->query(db, query);
+  if(stringp(result))
+    return result;
 
-  return stringp(result) ? result : 1;
+  result = DB_D->rest("POST", "db://bank/activity", ([
+    "name": name,
+    "time": time(),
+    "amount": 0,
+  ]));
+
+  if(stringp(result))
+    return result;
+
+  return 1;
 }
 
 /**
@@ -73,13 +82,10 @@ mixed new_account(string name) {
  *                    if there was a database error.
  */
 mixed query_balance(string name) {
-  string query;
   mixed result;
 
   name = capitalize(lower_case(name));
-  query = sprintf(balance_statements["select"], name);
-
-  result = DB_D->query(db, query);
+  result = DB_D->rest("GET", sprintf("db://bank/balance?name=%s", name));
 
   if(stringp(result))
     return result;
@@ -100,7 +106,6 @@ mixed query_balance(string name) {
  *                    there are insufficient funds, or if there was a database error.
  */
 mixed add_balance(string name, int amount) {
-  string query;
   mixed result, current_balance;
   int new_balance;
 
@@ -117,13 +122,21 @@ mixed add_balance(string name, int amount) {
   if(new_balance < 0)
     return "Insufficient funds.";
 
-  query = sprintf(
-    "UPDATE balance SET amount = %d, time = %d WHERE name = '%s'; " +
-    "INSERT INTO activity (time, name, amount) VALUES (%d, '%s', %d);",
-    new_balance, time(), name, time(), name, amount
-  );
+  result = DB_D->rest("PUT", "db://bank/balance?name="+name, ([
+    "time": time(),
+    "amount": new_balance,
+  ]));
 
-  result = DB_D->query(db, query);
+  if(stringp(result))
+    return "Database error: " + result;
+
+  result = DB_D->rest("POST", "db://bank/activity", ([
+    "name": name,
+    "time": time(),
+    "amount": amount,
+  ]));
+
+  printf("result %O\n", result);
 
   if(stringp(result))
     return "Database error: " + result;
@@ -141,16 +154,16 @@ mixed add_balance(string name, int amount) {
  *                    or an error message if there was a database error.
  */
 varargs mixed query_activity(string name, int limit: (: 10 :)) {
-  string query;
   mixed result;
 
   name = capitalize(lower_case(name));
-  if(limit > 0)
-    query = sprintf(activity_statements["select_limited"], name, limit);
-  else
-    query = sprintf(activity_statements["select"], name);
 
-  result = DB_D->query(db, query);
+  if(limit > 0)
+    result = DB_D->rest("GET", sprintf("db://bank/activity?name=%s&_order=time:desc&_limit=%d", name, limit));
+  else
+    result = DB_D->rest("GET", sprintf("db://bank/activity?name=%s&_order=time:desc", name));
+
+
 
   if(stringp(result))
     return result;

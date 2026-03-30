@@ -106,6 +106,7 @@ mixed cmd_deposit(object tp, string str) {
   conv = to_int(CURRENCY_D->convert_currency(num, type, "copper"));
 
   result = BANK_D->add_balance(name, conv);
+
   if(stringp(result))
     return result + "\n";
 
