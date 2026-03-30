@@ -183,7 +183,7 @@ varargs int add_once(string master, string pattern, string file, string func, mi
  * @param {class Alarm} alarm - The alarm to execute
  */
 void executeAlarm(class Alarm alarm) {
-  mixed err;
+  string err;
   object ob;
 
   if(!cfile_exists(alarm.file)) {
@@ -289,7 +289,7 @@ string *parseAlarmLine(string line) {
 class Alarm createAlarm(string *parts, int silent) {
   class Alarm alarm;
   string type, pattern, master, file, func, *args;
-  mixed err;
+  string err;;
 
   err = catch {
     if(sizeof(parts) >= 5) {
@@ -342,7 +342,7 @@ int calculateAlarmTime(class Alarm alarm, int next) {
   int alarm_time = -1;
   string alarm_time_str, alarm_date_time;
   int year, month, alarm_wday, hours, minutes;
-  mixed err;
+  string err;;
 
   err = catch {
     switch(alarm.type) {
@@ -542,7 +542,7 @@ void execute_boot_alarms() {
  * @throws If validation fails and silent is 0
  */
 int validateAlarm(class Alarm alarm, int silent) {
-  mixed err;
+  string err;
   object ob;
 
   if(!cfile_exists(alarm.file)) {

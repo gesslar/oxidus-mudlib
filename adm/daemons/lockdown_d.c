@@ -56,7 +56,7 @@ void unlock_mud();
 int is_ip_banned(string ip);
 int is_user_banned(string user);
 
-int setup() {
+void setup() {
     setPersistent();
 }
 

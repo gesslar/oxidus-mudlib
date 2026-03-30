@@ -1,12 +1,16 @@
-/* ga_server.c
-
- Tacitus @ LPUniversity
- 14-JAN-06
- Global Alias Server
-
-*/
-
-/* Preproccessor Statements */
+/**
+ * @file /adm/daemons/ga_server.c
+ *
+ * Global Alias Server. Parses a configuration file of global
+ * aliases and extended verbs, then serves them to players based
+ * on privilege group membership.
+ *
+ * @created 2006-01-14 - Tacitus @ LPUniversity
+ * @last_modified 2006-01-14 - Tacitus @ LPUniversity
+ *
+ * @history
+ * 2006-01-14 - Tacitus @ LPUniversity - Created
+ */
 
 #include <origin.h>
 
@@ -14,131 +18,171 @@
 
 inherit STD_DAEMON;
 
-/* Prototypes */
+private void parseConfig();
+private string *parseLines(string str);
+private void addAlias(string verb, string cm, string *groups);
+public mapping getAlias(string priv);
+public mapping getXverb(string priv);
 
-void parse_config();
-string *parse(string str);
-void add_alias(string verb, string cm, string *groups);
-mapping get_alias(string priv);
-mapping get_xverb(string priv);
+private mapping __xverb = ([]);
+private mapping __alias = ([]);
 
-/* Global Variables */
-
-mapping xverb = ([]);
-mapping alias = ([]);
-
-/* Functions */
-
-int setup() {
-     set_no_clean(1);
-     parse_config();
+void setup() {
+  set_no_clean(1);
+  parseConfig();
 }
 
-void parse_config() {
-     int i, total_errors = 0, total_parsed = 0;
-     string *conf;
-     string *cur_groups = ({});
-     string out = "";
-     float time;
+/**
+ * Reads and parses the global alias configuration file, populating
+ * the alias and extended verb mappings by privilege group.
+ */
+private void parseConfig() {
+  int i, totalErrors = 0, totalParsed = 0;
+  string *conf;
+  string *curGroups = ({});
+  string out = "";
+  float time;
 
-     time = time_frac();
-     conf = parse(read_file(CONFIG_FILE));
+  time = time_frac();
+  conf = parseLines(read_file(CONFIG_FILE));
 
-     for(i = 0; i < sizeof(conf); i++) {
-          string groups, verb, alias;
+  for(i = 0; i < sizeof(conf); i++) {
+    string groups, verb, al;
 
-          if(!conf[i]) continue;
+    if(!conf[i])
+      continue;
 
-          if(sscanf(conf[i], ":;%s:", groups)) {
-               cur_groups = explode(groups, " ");
-               continue;
-          }
+    if(sscanf(conf[i], ":;%s:", groups)) {
+      curGroups = explode(groups, " ");
+      continue;
+    }
 
-          if(!sizeof(cur_groups)) {
-               out += "\n";
-               out += "\tGlobal Alias Server Error: No assignment definition found.\n";
-               out += "\tGlobal Alias Server Error: Global Aliases were not parsed.\n";
-               return;
-          }
+    if(!sizeof(curGroups)) {
+      out += "\n";
+      out += "\tGlobal Alias Server Error: No assignment definition found.\n";
+      out += "\tGlobal Alias Server Error: Global Aliases were not parsed.\n";
 
-          if(sscanf(conf[i], "%s %s", verb, alias)) {
-               add_alias(verb, alias, cur_groups);
-               total_parsed ++;
-          }
+      return;
+    }
 
-          else {
-               out += "\n";
-               out += "\tGlobal Alias Server Error: Definition found (" + i +") but in invalid format.\n";
-               total_errors ++;
-          }
-     }
+    if(sscanf(conf[i], "%s %s", verb, al)) {
+      addAlias(verb, al, curGroups);
+      totalParsed++;
+    } else {
+      out += "\n";
+      out += "\tGlobal Alias Server Error: "
+        "Definition found (" + i + ") but in invalid format.\n";
+      totalErrors++;
+    }
+  }
 
-     out += "\nGlobal Alias Server: " + total_parsed + " global aliases parsed. " + total_errors + " errors encountered. " +
-          sprintf("(%.2fms)\n", time_frac() - time);
+  out += "\nGlobal Alias Server: " + totalParsed
+    + " global aliases parsed. " + totalErrors
+    + " errors encountered. "
+    + sprintf("(%.2fms)\n", time_frac() - time);
 }
 
-string *parse(string str) {
-     string *arr;
-     int i;
+/**
+ * Splits a raw config string into lines, stripping comments and
+ * blank lines.
+ *
+ * @param {string} str - The raw file contents to parse
+ * @returns {string*} Cleaned lines, with nulls where lines were
+ *                    removed
+ */
+private string *parseLines(string str) {
+  string *arr;
+  int i;
 
-     if(!str) {
-          return ({});
-     }
+  if(!str)
+    return ({});
 
-     arr = explode(str, "\n");
+  arr = explode(str, "\n");
 
-     for(i = 0; i < sizeof(arr); i++) {
-          if(arr[i][0] == '#' || arr[i] == "") {
-               arr[i] = 0;
-               continue;
-          }
-          arr[i] = replace_string(arr[i], "\t", "");
-     }
-     return arr;
+  for(i = 0; i < sizeof(arr); i++) {
+    if(arr[i][0] == '#' || arr[i] == "") {
+      arr[i] = 0;
+      continue;
+    }
+
+    arr[i] = replace_string(arr[i], "\t", "");
+  }
+
+  return arr;
 }
 
+/**
+ * Registers an alias or extended verb for the given privilege
+ * groups. Verbs prefixed with `$` are stored as extended verbs.
+ *
+ * @param {string} verb - The alias verb (prefix with $ for xverb)
+ * @param {string} cmd - The command the alias expands to
+ * @param {string*} groups - Privilege groups this alias belongs to
+ */
+private void addAlias(string verb, string cmd, string *groups) {
+  int i;
 
-void add_alias(string verb, string cmd, string *groups) {
-     int i;
+  if(origin() != ORIGIN_LOCAL)
+    return;
 
-     if(origin() != ORIGIN_LOCAL) return;
+  if(verb[0] == '$' && strlen(verb) > 1) {
+    if(!mapp(__xverb))
+      __xverb = ([]);
 
-     if(verb[0] == '$' && strlen(verb) > 1) {
-          if(!mapp(xverb)) xverb = ([]);
+    for(i = 0; i < sizeof(groups); i++) {
+      if(!__xverb[groups[i]])
+        __xverb += ([groups[i] : ([])]);
 
-          for(i = 0; i < sizeof(groups); i++) {
-               if(!xverb[groups[i]]) xverb += ([groups[i] : ([]) ]);
-               xverb[groups[i]] += ([verb[1..<1] : cmd]);
-          }
-     }
+      __xverb[groups[i]] += ([verb[1..<1] : cmd]);
+    }
+  } else {
+    if(!mapp(__alias))
+      __alias = ([]);
 
-     else {
-          if(!mapp(alias)) alias = ([]);
-          for(i = 0; i < sizeof(groups); i++) {
-               if(!alias[groups[i]]) alias += ([groups[i] : ([]) ]);
-               alias[groups[i]] += ([verb : cmd]);
-          }
-     }
+    for(i = 0; i < sizeof(groups); i++) {
+      if(!__alias[groups[i]])
+        __alias += ([groups[i] : ([])]);
+
+      __alias[groups[i]] += ([verb : cmd]);
+    }
+  }
 }
 
-mapping get_alias(string priv) {
-     int i;
-     string *keys = keys(alias);
-     mapping ret = ([]);
+/**
+ * Returns the merged alias mapping for a given privilege string,
+ * combining all groups the caller belongs to plus the "all" group.
+ *
+ * @param {string} priv - The privilege string to match against
+ * @returns {mapping} Combined alias mapping of verb to command
+ */
+public mapping getAlias(string priv) {
+  int i;
+  string *k = keys(__alias);
+  mapping ret = ([]);
 
-     for(i = 0; i < sizeof(keys); i++)
-          if(is_member(priv, keys[i]) || keys[i] == "all") ret += alias[keys[i]];
+  for(i = 0; i < sizeof(k); i++)
+    if(is_member(priv, k[i]) || k[i] == "all")
+      ret += __alias[k[i]];
 
-     return ret;
+  return ret;
 }
 
-mapping get_xverb(string priv) {
-     int i;
-     string *keys = keys(xverb);
-     mapping ret = ([]);
+/**
+ * Returns the merged extended verb mapping for a given privilege
+ * string, combining all groups the caller belongs to plus the
+ * "all" group.
+ *
+ * @param {string} priv - The privilege string to match against
+ * @returns {mapping} Combined xverb mapping of verb to command
+ */
+public mapping getXverb(string priv) {
+  int i;
+  string *k = keys(__xverb);
+  mapping ret = ([]);
 
-     for(i = 0; i < sizeof(keys); i++)
-          if(is_member(priv, keys[i]) || keys[i] == "all") ret += xverb[keys[i]];
+  for(i = 0; i < sizeof(k); i++)
+    if(is_member(priv, k[i]) || k[i] == "all")
+      ret += __xverb[k[i]];
 
-     return ret;
+  return ret;
 }

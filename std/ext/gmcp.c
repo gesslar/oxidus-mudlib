@@ -34,7 +34,7 @@ private nosave mapping gmcp_data = ([ ]);
 // will check if the player has GMCP enabled and behave accordingly.
 void gmcp(string message) {
     class ClassGMCP gmcp;
-    mixed err;
+    string err;
     string gmcp_module;
     object ob;
 

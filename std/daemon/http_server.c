@@ -164,7 +164,7 @@ protected nomask void socket_shutdown(int fd) {
 }
 
 protected nomask void socket_read(int fd, buffer incoming) {
-  mixed err;
+  string err;
   mapping result;
   mapping client;
   string buf;

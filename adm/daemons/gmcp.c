@@ -76,7 +76,7 @@ class ClassGMCP convert_message(string message) {
   if(message_info == null)
     gmcp.payload = null;
   else {
-    mixed err;
+    string err;
     err = catch {
       gmcp.payload = json_decode(message_info);
     };
@@ -100,10 +100,9 @@ class ClassGMCP convert_message(string message) {
  * @errors If the GMCP module cannot be found or loaded
  */
 varargs void send_gmcp(object body, string gmcp_package, mixed arg) {
-  mixed *packet;
   class ClassGMCP gmcp;
   string gmcp_module;
-  mixed err;
+  string err;
   object ob;
   string base;
 
@@ -171,14 +170,15 @@ varargs void broadcast_gmcp(mixed audience, string gmcp_package, mixed arg) {
     return;
 
   if(objectp(audience)) {
-    if(audience->is_room()) {
-      targets = present_players(audience);
+    object ob = (object)audience;
+    if(call_other(ob, "is_room")) {
+      targets = present_players(ob);
       if(!sizeof(targets))
         return;
-    } else if(audience->is_player())
-      targets += ({ audience });
+    } else if(call_other(ob, "is_player"))
+      targets += ({ ob });
   } else if(arrayp(audience))
-    targets += audience;
+    targets += (object *)audience;
   else
     return;
   foreach(object target in targets)

@@ -1,8 +1,8 @@
 /**
  * @file /adm/daemons/github_issues.c
- * @description Daemon to handle github issues
- * @details This daemon is used to handle GitHub issues for the mud. It uses
- * the GitHub Issues API to create issues in the mud's GitHub repository.
+ *
+ * Daemon to handle GitHub issues. Uses the GitHub Issues API to
+ * create issues in the mud's GitHub repository.
  *
  * @created 2024-07-07 - Gesslar
  * @last_modified 2024-07-07 - Gesslar
@@ -34,16 +34,16 @@ void setup() {
 }
 
 /**
- * @daemon_function create_issue
- * @description Create a new issue in the GitHub repository
+ * Create a new issue in the GitHub repository.
+ *
  * @param {string} type - The type of issue to create
  * @param {string} title - The title of the issue
  * @param {string} body - The body of the issue
- * @param {mixed} callback - The callback function to call when the request is
- *                           complete
- * @returns mixed - Returns 1 if the request was successful, a string if there
- *                 was an error.
-*/
+ * @param {mixed*} [callback] - The callback function to call
+ *                               when the request is complete
+ * @returns {int | string} 1 if the request was successful, or
+ *                         an error message string
+ */
 
 varargs mixed create_issue(string type, string title, string body, mixed *callback) {
   mapping config = mudConfig("GITHUB_REPORTER");
@@ -97,10 +97,10 @@ varargs mixed create_issue(string type, string title, string body, mixed *callba
 }
 
 /**
- * @function http_handle_shutdown
- * @description Handle the response from the GitHub API
+ * Handle the response from the GitHub API.
+ *
  * @param {mapping} response - The response from the GitHub API
-*/
+ */
 void http_handle_shutdown(mapping response) {
   mixed body = response["response"]["body"];
   int request_id = response["request"]["start_time"];
@@ -129,47 +129,44 @@ void http_handle_shutdown(mapping response) {
 
   body = parse_body(body, response["response"]["headers"]["content-type"]);
 
-  string err = catch (call_back(request["callback"], response["response"]["status"]));
-  if(err)
-    _log(2, "Error calling callback: %O", err);
+  execute_callback(request, response["response"]["status"]);
 }
-// TODO: fix up to use assemble_call_back and call_back
 /**
- * @function execute_callback
- * @description Execute the callback function
- * @param {mapping} request - The request containing the callback function
+ * Execute the callback function.
+ *
+ * @param {mapping} request - The request containing the callback
+ *                            function
  * @param {mapping} response - The response from the GitHub API
-*/
+ */
 void execute_callback(mapping request, mapping response) {
-  string err = catch {
-    if(request["callback"]) {
-      if(stringp(request["callback"]) && request["callback"] != "RESUBMIT") {
-        if(objectp(request["caller"]) && function_exists(request["callback"], request["caller"])) {
-          call_other(request["caller"], request["callback"], response);
-        } else {
-          _log(2, "Invalid caller or callback function: %O %O", request["caller"], request["callback"]);
-        }
-      } else if(valid_function(request["callback"])) {
-        function f = request["callback"];
+  mixed cb = request["callback"];
+  string err;
 
-        f(response);
-      } else {
-        _log(2, "Invalid callback function: %O", request["callback"]);
-      }
+  if(!cb || cb == "RESUBMIT")
+    return;
+
+  if(!pointerp(cb)) {
+    err = catch(cb = stringp(cb) ?
+      assemble_call_back(request["caller"], cb) :
+      assemble_call_back(cb));
+
+    if(err) {
+      _log(2, "Invalid callback: %O (%O)", cb, err);
+      return;
     }
-  };
+  }
+
+  err = catch(call_back(cb, response));
 
   if(err)
     _log(2, "Error calling callback: %O", err);
 }
 
 /**
- * @daemon_function process_backlog
- * @description Process the backlog of requests
- * @details This function processes the backlog of requests in the
- *          /data/github/issues/pending directory. It passes a list of files to
- *          process_next() to process each request.
-*/
+ * Process the backlog of requests in the
+ * /data/github/issues/pending directory. Passes a list of files
+ * to process_next() to process each request.
+ */
 public nomask void process_backlog() {
   string *files = get_dir("/data/github/issues/pending/*.txt");
 
@@ -180,10 +177,11 @@ public nomask void process_backlog() {
 }
 
 /**
- * @function process_next
- * @description Process the next request in the backlog
- * @param {string[]} files - The list of files remaining in the backlog to process
-*/
+ * Process the next request in the backlog.
+ *
+ * @param {string*} files - The list of files remaining in the
+ *                          backlog to process
+ */
 private nomask void process_next(string *files) {
   function schedule_next = (: call_out_walltime("process_next", 5.0, $1) :);
 
@@ -261,10 +259,10 @@ private nomask void process_next(string *files) {
   }
 }
 /**
- * @function parse_time
- * @description convert a GitHub date-time string to an epoch time
+ * Convert a GitHub date-time string to an epoch time.
+ *
  * @param {string} datetime - The date-time string to convert
- * @returns {int} - The epoch time
+ * @returns {int} The epoch time
  */
 private nomask int parse_time(string datetime) {
     // Convert the date-time string to a time structure using strptime

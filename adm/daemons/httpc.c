@@ -53,7 +53,7 @@ nomask void http_handle_shutdown(mapping server) {
   mixed *callback;
   mixed func;
   object ob;
-  mixed err;
+  string err;
 
   _log(2, "Handling shutdown");
 

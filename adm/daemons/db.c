@@ -79,7 +79,7 @@ public void setup() {
       __databases[dbName] = databaseFile;
 
       if(sizeof(tables)) {
-        mixed err = catch {
+        string err = catch {
           int fd;
           mixed result;
           int closeResult;

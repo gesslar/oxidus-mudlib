@@ -152,7 +152,7 @@ private nomask void check_dir() {
 
 private nomask void check_file() {
   string file;
-  mixed err;
+  string err;;
 
   scanning -= 1;
   file = files_to_check[0];
@@ -411,7 +411,7 @@ private nomask mixed *consolidate_function(string function_name, mapping func) {
   mixed *currs;
   string *curr;
   string line;
-  mixed err;
+  string err;;
   int sz;
 
   err = catch {
@@ -489,7 +489,7 @@ private nomask mixed *consolidate_function(string function_name, mapping func) {
 
 private nomask string generate_doc_content(string function_name, mapping func) {
   string out = "";
-  mixed err;
+  string err;;
   mixed *parts;
 
   err = catch(parts = consolidate_function(function_name, func));
@@ -562,7 +562,7 @@ private nomask void generate_mud_docs() {
 
 private nomask string generate_function_markdown(string function_name, mapping func) {
   string out = "";
-  mixed err;
+  string err;;
   mixed *parts;
 
   err = catch(parts = consolidate_function(function_name, func));
@@ -607,7 +607,7 @@ private nomask string generate_function_markdown(string function_name, mapping f
 
 private nomask string generate_index_markdown(string source_file, mapping funcs) {
   string out = "";
-  mixed err;
+  string err;
 
   err = catch {
     string *function_names, function_name;

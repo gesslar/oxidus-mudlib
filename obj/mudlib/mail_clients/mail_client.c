@@ -284,7 +284,7 @@ protected void prompt() {
 protected varargs void parse_mailcmd(string arg) {
     int max_msgs, curr_msg, i;
     int num1 = to_int(arg), num2;
-    mixed err;
+    string err;
 
     resync_mailbox();
 
@@ -468,7 +468,7 @@ protected varargs void do_save(int num1, int num2) {
 protected varargs void i_SaveDir(string arg, int num1, int num2) {
     string path;
     mapping message = ([]);
-    mixed err;
+    string err;
     int i;
 
     if(!arg || arg == "") {
@@ -536,7 +536,7 @@ protected varargs void i_SaveDir(string arg, int num1, int num2) {
 }//END i_SaveDir
 
 protected varargs void i_Overwrite(string arg, string path, int num1, int num2) {
-    mixed err;
+    string err;
     mapping message = ([]);
     int i;
 

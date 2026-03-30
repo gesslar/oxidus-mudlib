@@ -1,6 +1,8 @@
 /**
  * @file /adm/daemons/loot.c
- * @description This daemon is responsible for handling the loot system.
+ *
+ * Daemon responsible for handling the loot system, including item
+ * drops, coin drops, and automatic valuation.
  *
  * @created 2024-08-05 - Gesslar
  * @last_modified 2024-08-05 - Gesslar
@@ -14,8 +16,7 @@ inherit EXT_LOG;
 
 private void drop_items(object tp, mixed item, object source);
 private mixed process_loot_item(mixed item, object tp, object source);
-private void autovalue_loot_item(mixed item, object tp, object source);
-private string determine_currency_type(int value);
+private void autovalue_loot_item(object item, object tp, object source);
 private void drop_coins(object tp, mixed item, object source);
 public int determine_value_by_level(int level);
 
@@ -24,14 +25,14 @@ void setup() {
 }
 
 /**
- * @daemon_function loot_drop
- * @description Drops loot from the loot table from the source into the source.
- * @param {object} tp - The player to drop the loot for.
- * @param {object} source - The source of the loot.
+ * Drops loot from the source's loot table into the source.
+ *
+ * @param {STD_PLAYER} _tp - The player to drop the loot for
+ * @param {STD_NPC} source - The source of the loot
  */
-void loot_drop(object tp, object source) {
-  mixed *loot_table, *loot;
-  float chance;
+void loot_drop(object _tp, object source) {
+  mixed *loot_table;
+  mixed loot;
 
   loot_table = source->query_loot_table();
 
@@ -51,13 +52,14 @@ void loot_drop(object tp, object source) {
 }
 
 /**
- * @daemon_function coin_drop
- * @description Drops coins from the coin table from the source into the source.
- * @param {object} tp - The player to drop the coins for.
- * @param {object} source - The source of the coins.
+ * Drops coins from the source's coin table into the source.
+ *
+ * @param {STD_PLAYER} tp - The player to drop the coins for
+ * @param {STD_NPC} source - The source of the coins
  */
 void coin_drop(object tp, object source) {
-  mixed *coin_table, *loot;
+  mixed *coin_table;
+  mixed loot;
   float chance;
   float roll;
 
@@ -76,13 +78,12 @@ void coin_drop(object tp, object source) {
   }
 }
 
-
 /**
- * @function drop_items
- * @description Drops items from the item into the source.
- * @param {object} tp - The player to drop the items for.
- * @param {mixed} item - The item to drop.
- * @param {object} source - The source to drop the items into.
+ * Processes and drops a loot item into the source.
+ *
+ * @param {STD_PLAYER} tp - The player to drop the items for
+ * @param {mixed} item - The item to drop
+ * @param {STD_NPC} source - The source to drop the items into
  */
 private void drop_items(object tp, mixed item, object source) {
   mixed processed_item;
@@ -117,12 +118,14 @@ private void drop_items(object tp, mixed item, object source) {
 }
 
 /**
- * @function process_loot_item
- * @description Processes the loot item.
- * @param {mixed} item - The item to process.
- * @param {object} tp - The player to process the item for.
- * @param {object} source - The source to process the item for.
- * @returns {mixed} - The processed item.
+ * Recursively processes a loot item, resolving functions, arrays,
+ * and weighted mappings into a file path or file/args pair.
+ *
+ * @param {mixed} item - The item to process
+ * @param {STD_PLAYER} tp - The player to process the item for
+ * @param {STD_NPC} source - The source to process the item for
+ * @returns {mixed} The processed item as a string path, a
+ *                  ({ string, mixed }) pair, or 0 on failure
  */
 private mixed process_loot_item(mixed item, object tp, object source) {
   int size, index;
@@ -156,6 +159,7 @@ private mixed process_loot_item(mixed item, object tp, object source) {
 
   if(mapp(item))
     return process_loot_item(element_of_weighted(item), tp, source);
+
   if(stringp(item))
     return item;
 
@@ -163,29 +167,30 @@ private mixed process_loot_item(mixed item, object tp, object source) {
 }
 
 /**
- * @function autovalue_loot_item
- * @description Autovalue the loot item if the autovalue property is set.
- * @param {mixed} item - The item to autovalue.
- * @param {object} tp - The player to autovalue the item for.
- * @param {object} source - The source to autovalue the item for.
+ * Sets the value of a loot item automatically based on the
+ * source's level, if the item's autovalue loot property is set.
+ *
+ * @param {OBJ_LOOT} item - The item to autovalue
+ * @param {STD_PLAYER} _tp - The player to autovalue the item for
+ * @param {STD_NPC} source - The source to autovalue the item for
  */
-private void autovalue_loot_item(mixed item, object tp, object source) {
+private void autovalue_loot_item(object item, object _tp, object source) {
   // Determine if we have autovalue on this item
   if(item->query_loot_property("autovalue") == true) {
-    int value = determine_value_by_level(source->query_level());
+    int value = determine_value_by_level(source->queryLevel());
 
     item->set_value(value);
   }
 }
 
 /**
- * @function drop_coins
- * @description Drops coins from the coin table from the source into the source.
- * @param {object} tp - The player to drop the coins for.
- * @param {mixed} item - The value array of currency type and number.
- * @param {object} source - The source to drop the coins into.
+ * Creates a coin object and moves it into the source.
+ *
+ * @param {STD_PLAYER} _tp - The player to drop the coins for
+ * @param {mixed} item - The value array of currency type and number
+ * @param {STD_NPC} source - The source to drop the coins into
  */
-private void drop_coins(object tp, mixed item, object source) {
+private void drop_coins(object _tp, mixed item, object source) {
   string type;
   int num;
   object coin_ob;
@@ -205,10 +210,11 @@ private void drop_coins(object tp, mixed item, object source) {
 }
 
 /**
- * @daemon_function determine_value_by_level
- * @description Determines the value of the coins based on the level of the source.
- * @param {int} level - The level of the source.
- * @returns {int} - The value of the coins.
+ * Determines a coin value based on level, applying a configured
+ * variance for randomisation.
+ *
+ * @param {int} level - The level of the source
+ * @returns {int} The calculated coin value
  */
 public int determine_value_by_level(int level) {
   int value;

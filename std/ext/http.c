@@ -286,7 +286,7 @@ protected nomask mixed parse_body(mixed body, string content_type) {
   mixed payload = ([]);
   string type, encoding;
   string *encoding_matches;
-  mixed err;
+  string err;
 
   _log(2, "Beginning parse_body");
 

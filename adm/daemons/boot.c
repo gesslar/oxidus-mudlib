@@ -28,7 +28,7 @@ void setup() {
  * @function boot
  * @description Called from the master object when the mud boots up.
  */
-void boot(mixed arg...) {
+void boot() {
   if(previous_object() != signal_d())
     return;
 

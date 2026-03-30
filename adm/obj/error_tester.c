@@ -92,7 +92,7 @@ void check_dir() {
 
 void check_file() {
   string file;
-  mixed err;
+  string err;
 
   check_running();
 

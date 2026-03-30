@@ -675,7 +675,7 @@ private nomask void process_unknown_frame(mapping frame_info);
  */
 private nomask void process_websocket_message(mapping frame_info) {
     int opcode;
-    mixed err;
+    string err;
 
     opcode = frame_info["opcode"];
 

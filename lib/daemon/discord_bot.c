@@ -65,7 +65,7 @@ void mudlib_setup() {
 }
 
 void start_bot() {
-    mixed err;
+    string err;
 
     if(!is_setup())
         error("Bot not setup");
@@ -136,7 +136,7 @@ void gateway_api_callback(mapping response) {
 }
 
 void initiate_discord(mapping response) {
-    mixed err;
+    string err;
     mixed payload;
     string url, host;
     string *matches;
@@ -483,7 +483,7 @@ nomask void discord_send_text(string event_name, mapping info) {
     mapping request;
     mapping headers;
     mixed *callback;
-    mixed err;
+    string err;
 
     if(!mapp(info))
         error("Invalid argument 1 to discord_send_text()");

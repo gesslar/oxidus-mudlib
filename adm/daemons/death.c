@@ -1,6 +1,8 @@
 /**
  * @file /adm/daemons/death.c
- * @description Death routines and functions
+ *
+ * Handles death and revival event logging. Listens for player
+ * death and revival signals and records them to the death log.
  *
  * @created 2024-07-28 - Gesslar
  * @last_modified 2024-07-28 - Gesslar
@@ -17,6 +19,13 @@ void setup() {
   slot(SIG_PLAYER_REVIVED, "player_revived");
 }
 
+/**
+ * Logs a player death event, recording the player name, killer
+ * name, and location.
+ *
+ * @param {STD_PLAYER} player - The player who died
+ * @param {STD_BODY} killer - The entity that killed the player
+ */
 void player_died(object player, object killer) {
   log_file("death", sprintf("[%s] %s was killed by %s [%O]\n",
       ctime(),
@@ -27,6 +36,12 @@ void player_died(object player, object killer) {
   );
 }
 
+/**
+ * Logs a player revival event, recording the player name and
+ * location.
+ *
+ * @param {STD_PLAYER} player - The player who was revived
+ */
 void player_revived(object player) {
   log_file("death", sprintf("[%s] %s was revived [%O]\n",
       ctime(),

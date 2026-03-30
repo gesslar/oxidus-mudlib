@@ -409,7 +409,7 @@ protected nomask void socket_ready(int fd) {
 private nomask void process_response(int fd, mapping server) {
   string file = server["cache"];
   mixed response = "";
-  mixed err;
+  string err;
   buffer cache;
   string buf;
   string rn = "\\r\\n", capture = "("+rn+")", replace = "";
