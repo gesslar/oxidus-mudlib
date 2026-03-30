@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "wiki": "docker compose -f adm/etc/starlight/docker-compose.yml up -d",
+    "wiki:stop": "docker compose -f adm/etc/starlight/docker-compose.yml down",
+    "wiki:dev": "npm --prefix doc/wiki run dev",
+    "wiki:build": "npm --prefix doc/wiki run build"
+  },
   "devDependencies": {
     "@gesslar/lpc-mcp": "^1.6.0"
   }

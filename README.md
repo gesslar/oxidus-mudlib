@@ -7,7 +7,7 @@ This is now gLPU, which is Gesslar's LPU, a fork of LPUniversity.
 ## Setting up and documentation
 
 Information on setting up and further documentation of the systems and
-functions of gLPU can be found on the [gLPU documentation site](https://glpu.gesslar.dev/).
+functions of gLPU can be found on the [gLPU documentation site](https://oxidus.online/).
 
 ## AI Assistant Guidelines
 
@@ -15,4 +15,4 @@ If you're an AI coding assistant working with this codebase, please review the d
 
 ## Contributing
 
-For information on contributing, see the [Contributing Guide](https://glpu.gesslar.dev/contributing).
+For information on contributing, see the [Contributing Guide](https://oxidus.online/contributing).

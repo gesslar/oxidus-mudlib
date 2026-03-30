@@ -1,0 +1,45 @@
+// @ts-check
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+import { readFileSync } from 'node:fs';
+
+const loadGrammar = (file) => JSON.parse(
+	readFileSync(new URL(`./src/grammars/${file}`, import.meta.url), 'utf-8')
+);
+const lpmlGrammar = loadGrammar('lpml.tmLanguage.json');
+const lpcGrammar = loadGrammar('lpc.tmLanguage.json');
+
+// https://astro.build/config
+export default defineConfig({
+	integrations: [
+		starlight({
+			expressiveCode: {
+				shiki: {
+					langs: [lpmlGrammar, lpcGrammar],
+				},
+			},
+			title: 'Oxidus',
+			logo: {
+				light: './src/assets/logo.svg',
+				dark: './src/assets/logo.svg',
+			},
+			favicon: '/favicon.ico',
+			social: [
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/gesslar/oxidus-mudlib' },
+				{ icon: 'discord', label: 'Discord', href: 'https://discord.gg/wzUbBgs3AQ' },
+			],
+			sidebar: [
+				{
+					label: 'Getting Started',
+					items: [
+						{ label: 'Introduction', slug: '' },
+					],
+				},
+				{
+					label: 'Systems',
+					autogenerate: { directory: 'systems' },
+				},
+			],
+		}),
+	],
+});

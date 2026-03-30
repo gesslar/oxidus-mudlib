@@ -54,3 +54,5 @@ node_modules
 # AI
 .code/
 .mcp.json
+
+doc/_wiki
