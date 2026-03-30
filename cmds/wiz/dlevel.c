@@ -10,7 +10,7 @@
  */
 
 inherit STD_CMD;
-inherit M_UNICODE;
+inherit EXT_UNICODE;
 
 varargs mixed main(object tp, string str) {
     mapping levels = debug_levels();

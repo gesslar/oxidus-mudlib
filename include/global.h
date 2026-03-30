@@ -9,6 +9,8 @@
 #include <inventory.h>
 #include <lib.h>
 #include <messaging.h>
+#include <ext.h>
+#include <handlers.h>
 #include <modules.h>
 #include <move.h>
 #include <mudlib.h>

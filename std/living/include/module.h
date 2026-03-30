@@ -1,12 +1,8 @@
-#ifndef __MODULE_H__
-#define __MODULE_H__
+#ifndef __LIVING_MODULE_H__
+#define __LIVING_MODULE_H__
 
-varargs object add_module(string module, mixed args...) ;
-object query_module(string module) ;
-void remove_module(string module) ;
-object get_module(string module) ;
-mapping query_modules() ;
-varargs mixed module(string module, string func, mixed args...) ;
-void remove_all_modules() ;
+// Module management is now provided at the object level.
+// See /std/object/module.c and /include/module.h
+#include <module.h>
 
-#endif // __MODULE_H__
+#endif // __LIVING_MODULE_H__

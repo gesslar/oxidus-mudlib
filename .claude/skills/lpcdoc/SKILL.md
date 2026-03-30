@@ -218,10 +218,13 @@ int pointerp(mixed arg);
 int is_living(mixed o);
 ```
 
-Type predicates are not limited to simple type-checking functions. Any
-function that returns a truthy or falsy value can use a predicate to
-narrow a parameter. A description may follow the predicate to document
-the return value for human readers:
+**When to use type predicates:** If a function validates the type of
+a parameter and returns a truthy or falsy result, it should use a type
+predicate. This includes simple type-checking wrappers (like
+`valid_function`), but is not limited to them — any function whose
+return value implies a type guarantee about a parameter is a
+candidate. A description may follow the predicate to document the
+return value for human readers:
 
 ```c
 /**
@@ -947,6 +950,42 @@ new documentation.
 - `@description` — Remove the tag and keep the text as the leading
   description paragraph (the description is always the first thing in
   the comment block; it does not need a tag).
+
+## Suppression Directives
+
+The LPC Language Services extension supports comment directives that
+suppress or control diagnostic output. Unlike LPCDoc tags (which
+provide documentation and type information), these are standalone
+single-line comments that control the type checker's behaviour.
+
+### `@lpc-ignore`
+
+Suppresses all diagnostics on the immediately following line.
+
+```c
+// @lpc-ignore - ignore int to string assignment error
+string foo = 123;
+```
+
+### `@lpc-nocheck`
+
+Disables all diagnostics for the entire file. Must be placed at the
+top of the file.
+
+```c
+// @lpc-nocheck
+```
+
+### `@lpc-expect-error`
+
+Asserts that the next line produces a diagnostic. If the expected
+error does **not** occur, the directive itself becomes an error.
+Useful for intentional type violations.
+
+```c
+// @lpc-expect-error: method does not exist
+o->foo();
+```
 
 ## Imperative Information
 

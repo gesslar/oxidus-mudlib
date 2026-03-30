@@ -1,6 +1,8 @@
 #ifndef __OBJECT_H__
 #define __OBJECT_H__
 
+#include "module.h"
+
 string set_name(string str);
 string query_name();
 string query_real_name();

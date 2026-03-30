@@ -20,7 +20,7 @@ GMCP_D->send_gmcp(user, package, payload)    ← adm/daemons/gmcp.c
        │
        ▼
 Module gathers data, calls user->do_gmcp(package, data)
-       │                                     ← std/modules/gmcp.c (M_GMCP)
+       │                                     ← std/ext/gmcp.c (EXT_GMCP)
        ├─ stringifies all values
        ├─ JSON-encodes payload
        └─ sends via send_gmcp() driver efun to client
@@ -36,7 +36,7 @@ Module gathers data, calls user->do_gmcp(package, data)
 | `adm/daemons/modules/gmcp/Comm.c` | Communication: channel text |
 | `adm/daemons/modules/gmcp/Client.c` | Client features: GUI install |
 | `adm/daemons/modules/gmcp/Room.c` | Room info and travel paths |
-| `std/modules/gmcp.c` | `M_GMCP` module on player/login objects. Provides `do_gmcp()` for final transmission |
+| `std/ext/gmcp.c` | `EXT_GMCP` module on player/login objects. Provides `do_gmcp()` for final transmission |
 | `include/gmcp_defines.h` | All `GMCP_PKG_*`, `GMCP_KEY_*`, `GMCP_VAL_*` defines |
 
 ## The send_gmcp() Function
@@ -177,7 +177,7 @@ Full initialization burst: StatusVars, Status, Vitals, Room.Info, inventory list
 
 ## Final Transmission: do_gmcp()
 
-`user->do_gmcp(string package, mixed data)` on `M_GMCP` performs the actual send:
+`user->do_gmcp(string package, mixed data)` on `EXT_GMCP` performs the actual send:
 
 1. Checks runtime config `__RC_ENABLE_GMCP__`
 2. Checks `gmcp_enabled()` on the user

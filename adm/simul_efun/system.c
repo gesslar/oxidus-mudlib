@@ -1,5 +1,5 @@
 #include <simul_efun.h>
-#include <modules.h>
+#include <ext.h>
 
 //system.c
 
@@ -202,7 +202,7 @@ private string _format_message(string type, int includeDecoration, string str, m
     } else {
       colour_index = 0;
 
-      if(M_UNICODE->supports_unicode())
+      if(EXT_UNICODE->supports_unicode())
         tag_index = 0;
       else
         tag_index = 1;

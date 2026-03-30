@@ -1,15 +1,10 @@
-/* Do not remove the headers from this file! see /USAGE for more info. */
-/* General message handling.  Inherit it in anything that needs it.
- *
- * -Beek
- */
-
 /**
- * @file /ox/lib/adm/daemons/action.c
- * @description A message composition and delivery system for handling in-game
- * actions and their resulting messages. This daemon manages how different
- * participants see actions performed in the game, handling proper grammar,
- * pronouns, and message targeting automatically.
+ * @file /adm/daemons/action.c
+ *
+ * A message composition and delivery system for handling in-game
+ * actions and their resulting messages. This daemon manages how
+ * different participants see actions performed in the game, handling
+ * proper grammar, pronouns, and message targeting automatically.
  *
  * The system supports:
  * - Different perspectives for different viewers
@@ -25,11 +20,6 @@
 inherit STD_DAEMON;
 
 #include <daemons.h>
-
-//:MODULE
-// The message module.  The correct way to compose and send any messages
-// To users is using this module, as it will automatically get the grammar
-// right for each person involved.
 
 /**
  * Retrieves a short description for an object or string.
@@ -223,11 +213,6 @@ mixed *handle_ob(mixed ob, string res, mapping has) {
   return ({ res, bit });
 }
 
-//:FUNCTION compose_message
-//The lowest level message composing function; it is passed the object
-//for whom the message is wanted, the message string, the array of people
-//involved, and the objects involved.  It returns the appropriate message.
-//Usually this routine is used through the higher level interfaces.
 /**
  * Composes a complex message for a specific viewer.
  *
@@ -457,14 +442,6 @@ varargs string compose_message(object forwhom, string msg, object *who, mixed *o
   return append(res, "\n");
 }
 
-//### This now always indents continuation lines.  Might want a flag at the
-//### end to enable or disable that.
-//:FUNCTION inform
-//Given an array of participants, and an array of messages, and either an
-//object or array of objects, deliver each message to the appropriate
-//participant, being careful not to deliver a message twice.
-//The last arg is either a room, in which that room is told the 'other'
-//message, or an array of people to recieve the 'other' message.
 /**
  * Delivers messages to appropriate recipients.
  *
@@ -491,11 +468,6 @@ void inform(object *who, string *msgs, mixed others) {
     if(others) tell_all(others, msgs[sizeof(who)], null, who);
 }
 
-//:FUNCTION action
-//Make the messages for a given group of people involved.  The return
-//value will have one array per person, as well as one for anyone else.
-//inform() can be used to send these messages to the right people.
-//see: inform
 /**
  * Creates messages for all participants in an action.
  *
@@ -521,9 +493,6 @@ varargs string *action(object *who, mixed msg, mixed *obs...) {
   return res;
 }
 
-//:FUNCTION simple_action
-//Generate and send s for an action involving the user and possibly
-//some objects
 /**
  * Generates and sends a message about an action involving just the actor.
  *
@@ -553,8 +522,6 @@ varargs void simple_action(mixed msg, mixed obs...) {
       tell_all(environment(previous_object()), others, null, who);
 }
 
-//:FUNCTION my_action
-//Generate and send a message that should only be seen by the person doing it
 /**
  * Generates and sends a message only to the actor.
  *
@@ -578,8 +545,6 @@ varargs void my_action(mixed msg, mixed *obs...) {
   tell(previous_object(), us);
 }
 
-//:FUNCTION target_action
-//Generate and send a message that should only be seen by the target
 /**
  * Generates and sends a message only to the target of an action.
  *
@@ -604,8 +569,6 @@ varargs void target_action(mixed msg, object target, mixed *obs...) {
   target->tell(them);
 }
 
-//:FUNCTION my_target_action
-//Generate and send a target-based message that should only be seen by the sender
 /**
  * Generates and sends a target-based message only to the actor.
  *
@@ -630,8 +593,6 @@ varargs void my_target_action(mixed msg, object target, mixed *obs...) {
   tell(previous_object(), us);
 }
 
-//:FUNCTION other_action
-//Generate and send a message that should only be seen by others
 /**
  * Generates and sends a message to everyone except the actor.
  *
@@ -658,9 +619,6 @@ varargs void other_action(mixed msg, mixed *obs...) {
     tell_all(environment(previous_object()), others, null, who);
 }
 
-//:FUNCTION targetted_action
-//Generate and send a message involving the doer and a target (and possibly
-//other objects)
 /**
  * Generates and sends messages for an action involving an actor and target.
  *

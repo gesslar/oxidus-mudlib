@@ -14,7 +14,7 @@
 #include <origin.h>
 
 inherit STD_DAEMON;
-inherit M_LOG;
+inherit EXT_LOG;
 
 private nomask int boot_number;
 

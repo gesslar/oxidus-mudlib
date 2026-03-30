@@ -19,7 +19,7 @@
 #include <socket_err.h>
 
 inherit STD_DAEMON;
-inherit M_HTTP;
+inherit EXT_HTTP;
 
 // Functions
 protected nomask string random_string(int length);

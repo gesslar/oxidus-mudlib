@@ -100,15 +100,19 @@ public int createAccount(string name, string password) {
  * @returns {AccountRecord} The account data if found, null otherwise
  */
 public mapping loadAccount(string name) {
+  debug("=> loadAccount");
   if(!validManip(name))
     return null;
 
+  debug("validManip: succeeded");
   if(!name || !stringp(name))
     return null;
 
+  debug("name and is stringp");
   if(!accounts[name]) {
     string file = accountFile(name);
 
+    debug("file = %O", file);
     if(!file_exists(file))
       return null;
 
@@ -199,7 +203,7 @@ int validManip(string name) {
 
   if(!is_member(query_privs(prev), "admin")
       && query_privs(prev) != name
-      && base_name(previous_object()) != "/std/modules/gmcp/Char"
+      && base_name(previous_object()) != H_GMCP_CHAR
       && (caller && query_privs(caller)) != name
   ) {
     return false;

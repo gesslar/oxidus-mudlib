@@ -23,7 +23,7 @@
 #define NO_USER_CALLS
 
 inherit STD_CMD;
-inherit M_REF;
+inherit EXT_REF;
 
 #define SYNTAX \
   "Syntax: call [-<uid>] " \

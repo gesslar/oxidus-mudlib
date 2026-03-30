@@ -17,13 +17,13 @@ STD_MONSTER (std/mobs/monster.c)          — data-driven virtual_setup for LPML
   └── STD_NPC
 
 race.c (std/living/race.c)               — race module loader
-race/race.c (module base)                — body parts, equipment slots, regen rates
+race/race.c (std/modules/race/race.c)   — body parts, equipment slots, regen rates
 race/human.c, race/ghost.c, etc.         — specific race implementations
 
 decision.c (std/living/decision.c)       — utility-AI for NPC behavior
 combat_memory.c (mob module)             — remember and attack on sight
 
-M_LOOT (std/modules/loot.c)              — loot/coin table definitions
+EXT_LOOT (std/ext/loot.c)                — loot/coin table definitions
 LOOT_D (adm/daemons/loot.c)              — loot drop resolution on death
 ```
 
@@ -36,7 +36,7 @@ STD_MONSTER (std/mobs/monster.c)
               ├── STD_CONTAINER, STD_ITEM
               ├── advancement, attributes, boon, combat, damage
               ├── equipment, module, race, skills, vitals, wealth
-              └── M_ACTION, M_LOG
+              └── EXT_ACTION, EXT_LOG
 ```
 
 ## Creating a Code-Based NPC
@@ -255,11 +255,11 @@ coins: {
 
 ### `set_race(string race)`
 
-1. Checks for race module file at `DIR_STD_MODULES_MOBILE "race/" + race + ".c"`.
+1. Checks for race module file at `DIR_STD_MODULES "race/" + race + ".c"`.
 2. If file exists: loads via `add_module("race/" + race)`. The module's `start_module()` sets up body parts.
 3. **If file doesn't exist: silently stores just the string.** No body parts, no equipment slots, no regen rates. No error is raised.
 
-### Race Module Base — `std/modules/mobile/race/race.c`
+### Race Module Base — `std/modules/race/race.c`
 
 All race modules inherit this.
 
@@ -311,8 +311,8 @@ All race modules inherit this.
 ### Creating a New Race
 
 ```lpc
-// std/modules/mobile/race/orc.c
-inherit DIR_STD_MODULES_MOBILE "race/race";
+// std/modules/race/orc.c
+inherit M_MOBILE "race/race";
 
 protected void set_up_body_parts(object ob, mixed args...) {
     use_default_body_parts();           // start with humanoid template
@@ -322,9 +322,9 @@ protected void set_up_body_parts(object ob, mixed args...) {
 }
 ```
 
-## Loot System — `std/modules/loot.c`
+## Loot System — `std/ext/loot.c`
 
-Mixed into `STD_NPC` via `inherit M_LOOT` in `npc.c`.
+Mixed into `STD_NPC` via `inherit EXT_LOOT` in `npc.c`.
 
 ### Loot Table
 
@@ -419,7 +419,7 @@ if(valid_function(result["func"]))
 
 **Note:** `add_func` is keyed by description string and looked up separately from the Decision — the description must match exactly.
 
-## Combat Memory Module — `std/modules/mobile/mob/combat_memory.c`
+## Combat Memory Module — `std/modules/mob/combat_memory.c`
 
 Automatically added to all NPCs in `npc.c::mudlib_setup()`.
 

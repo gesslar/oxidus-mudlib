@@ -11,7 +11,7 @@
 
 inherit __DIR__ "village_base";
 
-inherit M_SHOP_MENU;
+inherit EXT_SHOP_MENU;
 
 void setup() {
   set_short("Olum Village Bakery");

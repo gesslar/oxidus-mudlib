@@ -15,7 +15,7 @@
 
 inherit STD_BODY;
 
-inherit M_GMCP;
+inherit EXT_GMCP;
 
 void mudlib_setup() {
   set_log_level(0);

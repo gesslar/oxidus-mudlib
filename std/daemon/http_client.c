@@ -33,7 +33,7 @@
 #include <daemons.h>
 
 inherit STD_DAEMON;
-inherit M_HTTP;
+inherit EXT_HTTP;
 
 // Prototypes
 varargs private nomask void http_connect(mapping request);

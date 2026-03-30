@@ -17,7 +17,7 @@
 #include <ed.h>
 
 inherit STD_CMD;
-inherit M_LOG;
+inherit EXT_LOG;
 
 private nomask nosave string report_type = "";
 private nomask nosave string git_hub_label = "";

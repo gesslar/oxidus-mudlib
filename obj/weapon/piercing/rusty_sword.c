@@ -10,7 +10,7 @@
  */
 
 inherit STD_WEAPON;
-inherit M_PROC;
+inherit EXT_PROC;
 
 void bite(object attacker, object defender);
 

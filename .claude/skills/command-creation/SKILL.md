@@ -38,7 +38,7 @@ You are helping create or modify commands for Oxidus. Commands are LPC files tha
 ```
 STD_OBJECT
   └── STD_CMD (std/cmd/cmd.c) — base command class
-        └── STD_ACT (std/cmd/act.c) — action commands, includes M_CHECKS
+        └── STD_ACT (std/cmd/act.c) — action commands, includes EXT_CHECKS
               └── STD_ABILITY (std/cmd/ability.c) — abilities with cost/cooldown
                     └── STD_SPELL (std/cmd/spell.c) — spell commands
 ```
@@ -50,7 +50,7 @@ Also: `STD_REPORTER` (`std/cmd/reporter.c`) — for bug/idea/typo reports, inher
 | Inherit | When |
 |---|---|
 | `STD_CMD` | General commands, info display, wizard tools — no action checks needed |
-| `STD_ACT` | Player actions (drop, eat, close) — includes `M_CHECKS` for validation |
+| `STD_ACT` | Player actions (drop, eat, close) — includes `EXT_CHECKS` for validation |
 | `STD_ABILITY` | Abilities with HP/SP/MP costs, cooldowns, and condition checks |
 | `STD_SPELL` | Spells (extends ability with spell-specific features) |
 

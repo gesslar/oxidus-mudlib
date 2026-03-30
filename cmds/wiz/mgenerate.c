@@ -10,7 +10,7 @@
  */
 
 inherit STD_CMD;
-inherit M_LOG;
+inherit EXT_LOG;
 
 private string generate_cell(string area_type, int x, int y, int width, int ref *elevation_map, int ref terrain_seed);
 string generate_area(string area_name, string area_type, int width, int height);

@@ -10,7 +10,7 @@
  */
 
 inherit STD_ITEM;
-inherit M_EDIBLE;
+inherit EXT_EDIBLE;
 
 string consume_message();
 

@@ -59,16 +59,6 @@ varargs int same_array(mixed *one, mixed *two, int exact);
 int same_array_precisely(mixed *one, mixed *two);
 varargs mixed reduce(mixed *arr, function fun, mixed init, mixed arg...);
 varargs void each(mixed src, function fun, mixed extra...);
-varargs int valid_smap(mixed map, int non_empty);
-int smap_set(mixed ref *map, mixed key, mixed value);
-mixed smap_get(mixed *map, mixed key);
-int smap_has(mixed *map, mixed key);
-int smap_delete(mixed ref *map, mixed key);
-void smap_clear(mixed ref *map);
-mixed *smap_keys(mixed *map);
-mixed *smap_values(mixed *map);
-mixed *smap_from_mapping(mapping m);
-mapping smap_to_mapping(mixed *map);
 
 // File: base64.c
 string base64_encode(mixed source_str);

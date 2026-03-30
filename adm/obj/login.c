@@ -18,9 +18,9 @@
 
 inherit STD_ITEM;
 
-inherit M_MESSAGING;
-inherit M_GMCP;
-inherit M_LOG;
+inherit EXT_MESSAGING;
+inherit EXT_GMCP;
+inherit EXT_LOG;
 
 private nosave mapping login_gmcp_data = ([ "client" : null, "supports" : null, ]);
 

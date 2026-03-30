@@ -20,13 +20,14 @@ inherit __DIR__ "cooldown";
 inherit __DIR__ "heartbeat";
 inherit __DIR__ "id";
 inherit __DIR__ "init";
+inherit __DIR__ "module";
 inherit __DIR__ "persist";
 inherit __DIR__ "setup";
 inherit __DIR__ "stats";
 inherit __DIR__ "weight";
 
-inherit M_CLEAN;
-inherit M_MESSAGING;
+inherit EXT_CLEAN;
+inherit EXT_MESSAGING;
 
 private nomask nosave function *_destruct_functions = ({});
 private nomask nosave function *_reset_functions = ({});
@@ -36,6 +37,8 @@ protected nosave mixed *_create_args = ({});
 private nosave string _virtual_master = 0;
 private nosave object _last_location = 0;
 private string _last_location_string = "";
+
+/** @type {int | function} */
 private nosave mixed _prevent_get = 0;
 
 /**
@@ -94,11 +97,11 @@ varargs void reset() {
  * @returns {int} Always returns 1
  */
 int remove() {
-  object *obs, ob, env = environment();
+  object *obs, env = environment();
 
   catch(call_if(this_object(), "removing", env));
 
-  /** @type {STD_ITEM} */ ob = first_inventory();
+  /** @type {STD_ITEM} */ object ob = first_inventory();
   while(ob) {
     int result;
 
@@ -247,13 +250,16 @@ string query_virtual_master() {
  * and runs the destruct chain and functions.
  */
 void on_destruct() {
-  /** @type {STD_ITEM} */ object env = environment();
+  object env = environment();
 
   if(env) {
-    if(!env->ignore_capacity())
-      env->adjust_fill(-query_mass());
-    if(!env->ignore_mass())
-      env->adjust_mass(query_mass());
+    if((/** @type {STD_CONTAINER} */ (env))->is_container()) {
+      if(!(/** @type {STD_CONTAINER} */ (env))->ignore_capacity())
+        (/** @type {STD_CONTAINER} */ (env))->adjust_fill(-query_mass());
+    }
+
+    if(!(/** @type {STD_CONTAINER} */ (env))->ignore_mass())
+      (/** @type {STD_ITEM} */ (env))->adjust_mass(query_mass());
 
     event(env, "gmcp_item_remove", env);
   }
@@ -404,12 +410,7 @@ void set_prevent_get(mixed val) {
  * @returns {int} 1 if pickup is prevented, 0 if allowed
  */
 int query_prevent_get() {
-  int result;
-
-  if(!valid_function(_prevent_get))
-    return _prevent_get;
-
-  function f = _prevent_get;
-
-  return f(this_object());
+  return valid_function(_prevent_get)
+    ? _prevent_get(this_object())
+    : _prevent_get;
 }
