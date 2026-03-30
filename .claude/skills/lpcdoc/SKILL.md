@@ -9,6 +9,17 @@ This document provides instructions for generating LPCDoc comment blocks for
 LPC source code. Follow these guidelines to create accurate, consistent, and
 useful documentation.
 
+## Documentation Requirements
+
+1. **All `public` functions require an LPCDoc block.** `protected` and
+   `private` functions should be documented when their purpose is not
+   obvious from the name and signature, but it is not mandatory.
+2. **A description is mandatory** on every LPCDoc block. Every doc
+   comment must begin with a description of the element it documents.
+3. **Types are mandatory on `@param` and `@returns`.** The `{type}`
+   annotation is required, not optional — every `@param` must include
+   a type and every `@returns` must include a type.
+
 ## Updating Existing Code
 
 When working on a file, **update any existing comments and headers that do not
@@ -97,6 +108,9 @@ Documents a function parameter.
 
 **Syntax:** `@param {type} name - Description`
 
+A hyphen (`-`) is **required** between the parameter name and its
+description.
+
 ```c
 /**
  * @param {int} attack - The attack power value.
@@ -146,6 +160,8 @@ void increment(int ref value) {
 Documents the return value of a function.
 
 **Syntax:** `@returns {type} Description`
+
+Do **not** use a hyphen between the type and the description.
 
 ```c
 /**

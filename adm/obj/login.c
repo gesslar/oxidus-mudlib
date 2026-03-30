@@ -420,7 +420,7 @@ void first_admin_login() {
     assure_dir(home_path + "public");
     assure_dir(home_path + "private");
     catch(cp("/d/std/workroom.c", home_path(privs)));
-    body->add_wizard_paths();
+    body->addWizardPaths();
     security_editor = new(OBJ_SECURITY_EDITOR);
     security_editor->enable_membership(privs, "developer");
     security_editor->enable_membership(privs, "admin");

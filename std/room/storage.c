@@ -32,9 +32,9 @@ private class StorageOptions storage_options;
  * and sets up object cleanup on destruction.
  */
 void init_storage_room() {
-  add_command("list", cmd_list);
-  add_command("store", cmd_store);
-  add_command("take", cmd_take);
+  addCommand("list", cmd_list);
+  addCommand("store", cmd_store);
+  addCommand("take", cmd_take);
 
   add_destruct(destructing);
 }

@@ -51,9 +51,9 @@ void mudlib_setup() {
   }
 
   enable_commands();
-  add_standard_paths();
+  addStandardPaths();
   if(wizardp())
-    add_wizard_paths();
+    addWizardPaths();
 
   if(!query_pref("prompt"))
     set_pref("prompt", ">");
@@ -61,8 +61,8 @@ void mudlib_setup() {
   set_prevent_get(1);
   // TODO figure out how we were getting this twice and then
   //      fix that and then remove remove_action() heres
-  remove_action("command_hook", "");
-  add_action("command_hook", "", 1);
+  remove_action("commandHook", "");
+  add_action("commandHook", "", 1);
   set_ignore_mass(1);
 }
 
@@ -230,7 +230,7 @@ varargs int move_living(mixed dest, string dir, string depart_message, string ar
     tell_down(curr, tmp, null, ({ this_object() }));
   }
 
-  force_me("look");
+  forceMe("look");
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_ROOM_INFO, environment());
 

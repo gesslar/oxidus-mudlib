@@ -25,7 +25,7 @@ void mudlib_setup() {
 
 /* Connection functions */
 void setup_body() {
-  add_action("command_hook", "", 1);
+  add_action("commandHook", "", 1);
   add_action("revive", "revive");
   set_living_name(query_real_name());
   set_id(({query_real_name()}));
@@ -38,7 +38,7 @@ void setup_body() {
   set_env("move_out", "$N drifts away to the $D.");
   set_env("move_in", "$N drifts into the area.");
   enable_commands();
-  add_ghost_paths();
+  addGhostPaths();
   if(!query_short()) set_short(query_name());
   if(!query_pref("colour")) set_pref("colour", "off");
   if(!query_pref("prompt")) set_pref("prompt", ">");

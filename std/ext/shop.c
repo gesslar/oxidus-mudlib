@@ -32,9 +32,9 @@ protected nosave object store;
 private nosave mixed *shop_inventory = ({});
 
 void init_shop() {
-  add_command("buy", "cmd_buy");
-  add_command("sell", "cmd_sell");
-  add_command("list", "cmd_list");
+  addCommand("buy", "cmd_buy");
+  addCommand("sell", "cmd_sell");
+  addCommand("list", "cmd_list");
 
   create_storage();
 

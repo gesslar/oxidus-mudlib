@@ -109,7 +109,7 @@ mixed main(object tp, string args) {
   }
 
   foreach(ob in obs) {
-    int result = ob->force_me(cmd);
+    int result = ob->forceMe(cmd);
     if(result == false) {
       _info(tp, "Unable to force %s to %s", ob->query_name(), cmd);
     } else {

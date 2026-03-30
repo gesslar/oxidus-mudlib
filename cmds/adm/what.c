@@ -17,7 +17,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string _arg) {
   tell(caller, "=----------------------------------------------=\n");
 
   foreach(/** @type {STD_PLAYER} */ object user in users()) {
-    string *commandHistory = user->query_command_history();
+    string *commandHistory = user->queryCommandHistory();
     if(!living(user)) continue;
 
     if(sizeof(commandHistory) <= 0)
