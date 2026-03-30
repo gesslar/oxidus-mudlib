@@ -270,6 +270,9 @@ mixed call_back(mixed cb, mixed new_arg...) {
  * Attempts to call the named function, returning null if function doesn't
  * exist instead of throwing an error.
  *
+ * IMPORTANT: function_exists() requires that the needle function have public
+ * visibility.
+ *
  * @param {object|string} ob - Target object or filename
  * @param {string} func - Function name to call
  * @param {...mixed} [arg] - Arguments to pass to function
