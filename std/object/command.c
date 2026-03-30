@@ -18,9 +18,9 @@
 #include "/std/living/include/pager.h"
 #include <command.h>
 
-private nosave mapping cmdHandlers = ([]);
-private string *cmdPaths = ({});
-nosave string *cmdHistory = ({});
+private nosave mapping __cmdHandlers = ([]);
+private string *__cmdPaths = ({});
+private nosave string *__cmdHistory = ({});
 
 /**
  * Adds a command handler to this object.
@@ -39,9 +39,9 @@ public void addCommand(mixed command, mixed action) {
       if(!function_exists(action))
         error("No such function " + action + " in " + file_name() + ".\n");
 
-      cmdHandlers[command] = action;
+      __cmdHandlers[command] = action;
     } else if(valid_function(action)) {
-      cmdHandlers[command] = action;
+      __cmdHandlers[command] = action;
     } else {
       error("Illegal action " + action + " in " + file_name() + ".\n");
     }
@@ -61,11 +61,11 @@ public void addCommand(mixed command, mixed action) {
  */
 public void removeCommand(mixed command) {
   if(stringp(command)) {
-    map_delete(cmdHandlers, command);
+    map_delete(__cmdHandlers, command);
   } else if(pointerp(command)) {
     foreach(mixed cmd in command)
       if(stringp(cmd))
-        map_delete(cmdHandlers, cmd);
+        map_delete(__cmdHandlers, cmd);
   }
 }
 
@@ -76,9 +76,9 @@ public void removeCommand(mixed command) {
  *                                     to remove
  */
 public void removeCommandAll(mixed action) {
-  foreach(mixed command, mixed act in cmdHandlers) {
+  foreach(mixed command, mixed act in __cmdHandlers) {
     if(act == action) {
-      map_delete(cmdHandlers, command);
+      map_delete(__cmdHandlers, command);
       removeCommand(command);
     }
   }
@@ -92,7 +92,7 @@ public void removeCommandAll(mixed action) {
  *          undefined if not found
  */
 public mixed queryCommand(string command) {
-  return cmdHandlers[command];
+  return __cmdHandlers[command];
 }
 
 /**
@@ -101,7 +101,7 @@ public mixed queryCommand(string command) {
  * @returns {mapping} Copy of the commands mapping
  */
 public mapping queryCommands() {
-  return copy(cmdHandlers);
+  return copy(__cmdHandlers);
 }
 
 /**
@@ -126,16 +126,16 @@ public string *queryAllCommands() {
 public string *queryMatchingCommands(string command) {
   string *matches = allocate(1);
 
-  if(nullp(cmdHandlers[command]))
+  if(nullp(__cmdHandlers[command]))
     return ({});
 
   matches[0] = command;
 
-  foreach(mixed cmd, mixed action in cmdHandlers) {
+  foreach(mixed cmd, mixed action in __cmdHandlers) {
     if(cmd == matches[0])
       continue;
 
-    if(action == cmdHandlers[command])
+    if(action == __cmdHandlers[command])
       matches += ({ cmd });
   }
 
@@ -146,7 +146,7 @@ public string *queryMatchingCommands(string command) {
  * Initialises the commands mapping to an empty state.
  */
 public void initCommands() {
-  cmdHandlers = ([]);
+  __cmdHandlers = ([]);
 }
 
 /**
@@ -160,13 +160,13 @@ public void initCommands() {
  */
 public mixed evaluateCommand(object user, string command,
     string arg) {
-  if(stringp(cmdHandlers[command]))
-    return call_other(this_object(), cmdHandlers[command], user, arg);
+  if(stringp(__cmdHandlers[command]))
+    return call_other(this_object(), __cmdHandlers[command], user, arg);
 
-  if(!valid_function(cmdHandlers[command]))
+  if(!valid_function(__cmdHandlers[command]))
     return null;
 
-  function action = cmdHandlers[command];
+  function action = __cmdHandlers[command];
 
   return action(user, arg);
 }
@@ -188,7 +188,7 @@ string process_input(string arg) {
  * @returns {string*} Copy of the command paths array
  */
 public string *queryPath() {
-  return copy(cmdPaths);
+  return copy(__cmdPaths);
 }
 
 /**
@@ -202,7 +202,7 @@ public int addPath(string str) {
   if(!adminp(previous_object()) && this_body() != this_object())
     return 0;
 
-  if(includes(cmdPaths, str))
+  if(includes(__cmdPaths, str))
     return 0;
 
   str = append(str, "/");
@@ -210,8 +210,8 @@ public int addPath(string str) {
   if(!directory_exists(str))
     return 0;
 
-  cmdPaths = cmdPaths || ({});
-  push(ref cmdPaths, str);
+  __cmdPaths = __cmdPaths || ({});
+  push(ref __cmdPaths, str);
 
   return 1;
 }
@@ -245,10 +245,10 @@ public int remPath(string str) {
   if(!adminp(previous_object()) && this_body() != this_object())
     return 0;
 
-  if(!includes(cmdPaths, str))
+  if(!includes(__cmdPaths, str))
     return 0;
 
-  cmdPaths -= ({str});
+  __cmdPaths -= ({str});
 
   return 1;
 }
@@ -308,11 +308,11 @@ public nomask varargs string *queryCommandHistory(int index,
     return ({});
 
   if(!index)
-    return cmdHistory + ({});
+    return __cmdHistory + ({});
   else if(range)
-    return cmdHistory[index..range] + ({});
+    return __cmdHistory[index..range] + ({});
   else
-    return ({ cmdHistory[index] });
+    return ({ __cmdHistory[index] });
 }
 
 /**
@@ -371,9 +371,9 @@ public int commandHook(string arg) {
   }
 
   if(arg)
-    cmdHistory += ({ verb + " " + arg });
+    __cmdHistory += ({ verb + " " + arg });
   else
-    cmdHistory += ({ verb });
+    __cmdHistory += ({ verb });
 
   // Communication checks
   catch {
@@ -387,7 +387,7 @@ public int commandHook(string arg) {
         return 1;
   };
 
-  cmds = map(cmdPaths, (: $1 + $(verb) + ".c" :));
+  cmds = map(__cmdPaths, (: $1 + $(verb) + ".c" :));
   cmds = filter(cmds, (: file_exists :));
 
   sz = sizeof(cmds);

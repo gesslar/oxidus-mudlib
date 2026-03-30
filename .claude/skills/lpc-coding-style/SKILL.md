@@ -130,7 +130,15 @@ FluffOS LPC now supports C-style mixed declarations. Declare things close to whe
 
 Prefer declaring locals near their first use inside the narrowest scope that makes sense. Group related locals together when it improves readability. Global variables may be declared anywhere before use; placing them together near the top of the file is still helpful for discoverability.
 
-Global variables should be `private` by default. Only omit `private` when external objects genuinely need direct access to the variable (which is rare — prefer accessor functions).
+Always use an explicit visibility modifier (`private`, `protected`, or `public`) on file-global variables. Global variables should be `private` by default. Only widen to `protected` or `public` when external objects or inheritors genuinely need direct access (which is rare — prefer accessor functions).
+
+File-global variables must be prefixed with `__` (double underscore). This serves three purposes: collision reduction when multiple inherits define similarly named variables, shadow evasion so locals never accidentally mask a global, and clear taxonomy — a `__` prefix immediately signals "file-global" at every use site.
+
+```lpc
+private nosave mapping __cmdHandlers = ([]);
+private string *__cmdPaths = ({});
+private nosave string *__cmdHistory = ({});
+```
 
 ### Functions
 
