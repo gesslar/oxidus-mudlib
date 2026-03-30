@@ -1,6 +1,9 @@
 /**
  * @file /adm/daemons/bank.c
- * @description Bank daemon
+ *
+ * Bank daemon responsible for managing player bank accounts,
+ * including creation, balance queries, deposits/withdrawals,
+ * and transaction activity history.
  *
  * @created 2024-02-28 - Gesslar
  * @last_modified 2024-02-28 - Gesslar
@@ -12,38 +15,20 @@
 inherit STD_DAEMON;
 
 // Forward declarations
-void setup();
-mixed new_account(string name);
-mixed query_balance(string name);
-mixed add_balance(string name, int amount);
-varargs mixed query_activity(string name, int limit);
-
-private nosave string db = "bank";
-// These statements are in sprintf format
-private nosave mapping balance_statements = ([]);
-private nosave mapping activity_statements = ([]);
-
-void setup() {
-  balance_statements = ([
-    "select" : "SELECT amount FROM balance WHERE name = '%s' ;",
-    "update" : "UPDATE balance SET amount = %d, time = %d WHERE name = '%s' ;",
-    "add" : "INSERT INTO balance (name, amount, time) VALUES ('%s', %d, %d) ;",
-  ]);
-  activity_statements = ([
-    "select": "SELECT * FROM activity WHERE name = '%s' ORDER BY time DESC ;",
-    "select_limited": "SELECT * FROM activity WHERE name = '%s' ORDER BY time DESC LIMIT %d ;",
-    "add" : "INSERT INTO activity (time, name, amount) VALUES (%d, '%s', %d);",
-  ]);
-}
+public mixed new_account(string name);
+public mixed query_balance(string name);
+public mixed add_balance(string name, int amount);
+public varargs mixed query_activity(string name, int limit);
 
 /**
- * @daemon_function new_account
- * @description Creates a new bank account for the given name.
- * @param {string} name - The name of the account holder.
- * @returns {mixed} - 1 if the account was created successfully, an error message
- *                    if the account already exists or if there was a database error.
+ * Creates a new bank account for the given name.
+ *
+ * @param {string} name - The name of the account holder
+ * @returns {mixed} 1 if the account was created successfully,
+ *                  or an error string if the account already
+ *                  exists or there was a database error
  */
-mixed new_account(string name) {
+public mixed new_account(string name) {
   mixed result;
 
   name = capitalize(lower_case(name));
@@ -74,14 +59,14 @@ mixed new_account(string name) {
 }
 
 /**
- * @daemon_function query_balance
- * @description Retrieves the current balance for the given account name.
- * @param {string} name - The name of the account holder.
- * @returns {mixed} - The current balance as an integer if the account exists,
- *                    null if the account doesn't exist, or an error message
- *                    if there was a database error.
+ * Retrieves the current balance for the given account name.
+ *
+ * @param {string} name - The name of the account holder
+ * @returns {mixed} The current balance as an integer if the
+ *                  account exists, null if the account doesn't
+ *                  exist, or an error string on database failure
  */
-mixed query_balance(string name) {
+public mixed query_balance(string name) {
   mixed result;
 
   name = capitalize(lower_case(name));
@@ -97,15 +82,17 @@ mixed query_balance(string name) {
 }
 
 /**
- * @daemon_function add_balance
- * @description Adds (or subtracts) the specified amount from the given account.
- * @param {string} name - The name of the account holder.
- * @param {int} amount - The amount to add (positive) or subtract (negative).
- * @returns {mixed} - A success message if the transaction was completed,
- *                    an error message if the account doesn't exist,
- *                    there are insufficient funds, or if there was a database error.
+ * Adds or subtracts the specified amount from the given
+ * account.
+ *
+ * @param {string} name - The name of the account holder
+ * @param {int} amount - The amount to add (positive) or
+ *                       subtract (negative)
+ * @returns {mixed} 1 on success, or an error string if the
+ *                  account doesn't exist, there are
+ *                  insufficient funds, or on database failure
  */
-mixed add_balance(string name, int amount) {
+public mixed add_balance(string name, int amount) {
   mixed result, current_balance;
   int new_balance;
 
@@ -136,8 +123,6 @@ mixed add_balance(string name, int amount) {
     "amount": amount,
   ]));
 
-  printf("result %O\n", result);
-
   if(stringp(result))
     return "Database error: " + result;
 
@@ -145,15 +130,18 @@ mixed add_balance(string name, int amount) {
 }
 
 /**
- * @daemon_function query_activity
- * @description Retrieves the recent activity for the given account.
- * @param {string} name - The name of the account holder.
- * @param {int} [limit=10] - The maximum number of recent activities to retrieve.
- * @returns {mixed} - An array of recent activities if successful,
- *                    null if there are no activities,
- *                    or an error message if there was a database error.
+ * Retrieves the recent activity for the given account.
+ *
+ * @param {string} name - The name of the account holder
+ * @param {int} [limit=10] - The maximum number of recent
+ *                           activities to retrieve
+ * @returns {mixed} An array of recent activities if
+ *                  successful, null if there are no
+ *                  activities, or an error string on
+ *                  database failure
  */
-varargs mixed query_activity(string name, int limit: (: 10 :)) {
+public varargs mixed query_activity(string name,
+  int limit: (: 10 :)) {
   mixed result;
 
   name = capitalize(lower_case(name));
@@ -162,8 +150,6 @@ varargs mixed query_activity(string name, int limit: (: 10 :)) {
     result = DB_D->rest("GET", sprintf("db://bank/activity?name=%s&_order=time:desc&_limit=%d", name, limit));
   else
     result = DB_D->rest("GET", sprintf("db://bank/activity?name=%s&_order=time:desc", name));
-
-
 
   if(stringp(result))
     return result;
