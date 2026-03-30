@@ -158,8 +158,7 @@ public void initCommands() {
  * @returns {mixed} Result of command evaluation, or undefined
  *          if no handler
  */
-public mixed evaluateCommand(object user, string command,
-    string arg) {
+public mixed evaluateCommand(object user, string command, string arg) {
   if(stringp(__cmdHandlers[command]))
     return call_other(this_object(), __cmdHandlers[command], user, arg);
 
@@ -361,6 +360,7 @@ public int commandHook(string arg) {
   if(environment())
     obs += ({ environment() }) + all_inventory(environment());
 
+  // This object should be parsed last.
   obs += ({ this_object() });
 
   foreach(ob in obs) {
@@ -453,7 +453,6 @@ private nomask int evaluateResult(mixed result) {
       return 0;
     } else {
       result = append(result, "\n");
-      debug(result);
       page(result);
       return 1;
     }

@@ -544,7 +544,7 @@ int push(mixed ref *arr, mixed value) {
 }
 
 int array_push(mixed ref *arr, mixed value) {
-  return push(arr, value);
+  return push(ref arr, value);
 }
 
 /**

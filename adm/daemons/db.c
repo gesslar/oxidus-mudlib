@@ -13,6 +13,7 @@
  */
 
 inherit STD_DAEMON;
+inherit EXT_HTTP;
 
 #ifndef __PACKAGE_DB__
 #else
@@ -30,6 +31,11 @@ private void executeQuery(string db, string q, int offset, string queryId, mixed
 public mapping queryDatabases();
 public mapping queryTables(string dbName);
 public void lazyQuery(string db, string q, mixed *callback);
+public varargs mixed rest(string method, string url, mapping data, mixed *callback);
+private mapping parseDbUrl(string url);
+private string escapeValue(mixed v);
+private string whereFromMapping(mapping m);
+private string setFromMapping(mapping m);
 
 private nosave mapping __handle = ([]);
 private nosave mapping __databases = ([]);
@@ -351,7 +357,7 @@ private void executeQuery(
   }
 
   // Check if there might be more data to fetch
-  if(sizeof(rows) == __dbChunkSize) {
+  if(rows == __dbChunkSize) {
     call_out("executeQuery", 1, db, q, offset + __dbChunkSize, queryId, cb);
   } else {
     // Final chunk, process accumulated result
@@ -468,22 +474,22 @@ public string statementFromMapping(mapping data) {
   if(!sizeof(data))
     return null;
 
-  string statement = "(" + implode(keys(data), ",") + ") VALUES (";
-
+  string *columns = ({});
   string *values = ({});
+
   foreach(mixed k, mixed v in data) {
     if(!stringp(k))
       continue;
 
-    if(typeof(v) == T_STRING)
-      array_push(ref values, "'" + replace_string(v, "'", "''") + "'");
-    else
-      array_push(ref values, (string)v);
+    array_push(ref columns, k);
+    array_push(ref values, escapeValue(v));
   }
 
-  statement += implode(values, ",") + ")";
+  if(!sizeof(columns))
+    return null;
 
-  return statement;
+  return "(" + implode(columns, ",") + ") VALUES (" +
+    implode(values, ",") + ")";
 }
 
 /**
@@ -501,6 +507,193 @@ public int allowUpsert(string db) {
 
   return (version[0] > 3) ||
     (version[0] == 3 && version[1] >= 24);
+}
+
+/**
+ * Executes a REST-style database operation using a URL-based
+ * interface. Maps HTTP verbs to SQL operations:
+ * GET = SELECT, POST = INSERT, PUT = UPDATE, DELETE = DELETE.
+ * URLs follow the form: db://database/table?key=val&key=val
+ * Special query params: _limit, _offset, _order (col:asc/desc).
+ *
+ * @param {string} method - The HTTP method (GET, POST, PUT, DELETE)
+ * @param {string} url - The database URL (db://database/table?query)
+ * @param {mapping} [data] - Column:value pairs for POST or PUT
+ * @param {mixed*} [callback] - Optional callback for async results
+ * @returns {mixed} Query results, error string, or 1 if using callback
+ *
+ * @errors If the URL format is invalid
+ * @errors If the database or table does not exist
+ * @errors If POST or PUT is missing a data mapping
+ * @errors If PUT or DELETE has no query params for WHERE
+ * @errors If the method is not GET, POST, PUT, or DELETE
+ */
+public varargs mixed rest(string method, string url,
+  mapping data, mixed *callback) {
+  mapping parsed = parseDbUrl(url);
+
+  if(!parsed)
+    error("Invalid URL format. Expected: db://database/table");
+
+  string db = parsed["db"];
+  string table = parsed["table"];
+  mapping params = parsed["query"];
+
+  if(!validDb(db))
+    error("Unknown database: " + db);
+
+  if(!validTable(db, table))
+    error("Unknown table: " + table + " in " + db);
+
+  // Separate special params from WHERE conditions
+  string orderClause = "";
+  string limitClause = "";
+  string offsetClause = "";
+
+  if(mapp(params)) {
+    if(!nullp(params["_order"])) {
+      string *orderParts = explode(params["_order"], ":");
+      string col = orderParts[0];
+      string dir = sizeof(orderParts) > 1 ?
+        upper_case(orderParts[1]) : "ASC";
+
+      if(dir != "ASC" && dir != "DESC")
+        dir = "ASC";
+
+      orderClause = " ORDER BY " + col + " " + dir;
+      map_delete(params, "_order");
+    }
+
+    if(!nullp(params["_limit"])) {
+      limitClause = " LIMIT " + to_int(params["_limit"]);
+      map_delete(params, "_limit");
+    }
+
+    if(!nullp(params["_offset"])) {
+      offsetClause = " OFFSET " + to_int(params["_offset"]);
+      map_delete(params, "_offset");
+    }
+  }
+
+  string where = whereFromMapping(params);
+  string q;
+
+  switch(method) {
+    case "GET":
+      q = "SELECT * FROM " + table + where +
+        orderClause + limitClause + offsetClause;
+      break;
+    case "POST": {
+      if(!mapp(data) || !sizeof(data))
+        error("POST requires a data mapping.");
+
+      string values = statementFromMapping(data);
+
+      if(!values)
+        error("Failed to build INSERT statement.");
+
+      q = "INSERT INTO " + table + " " + values;
+      break;
+    }
+    case "PUT": {
+      if(!mapp(data) || !sizeof(data))
+        error("PUT requires a data mapping.");
+
+      if(!strlen(where))
+        error("PUT requires query params for WHERE clause.");
+
+      string set = setFromMapping(data);
+      q = "UPDATE " + table + " " + set + where;
+      break;
+    }
+    case "DELETE": {
+      if(!strlen(where))
+        error("DELETE requires query params for WHERE clause.");
+
+      q = "DELETE FROM " + table + where;
+      break;
+    }
+    default:
+      error("Unsupported method: " + method);
+  }
+
+  debug("query %O\n", q);
+  return query(db, q, callback);
+}
+
+/**
+ * Parses a db:// URL into its components.
+ *
+ * @private
+ * @param {string} url - URL in the form db://database/table?query
+ * @returns {mapping} Parsed components with keys: db, table, query
+ */
+private mapping parseDbUrl(string url) {
+  string *matches = pcre_extract(url,
+    "^db://([^/?]+)/([^/?]+)(?:\\?(.*))?$"
+  );
+
+  if(!sizeof(matches) || sizeof(matches) < 2)
+    return 0;
+
+  mapping result = ([
+    "db" : matches[0],
+    "table" : matches[1],
+    "query" : sizeof(matches) > 2 ?
+      parse_query(matches[2]) : ([]),
+  ]);
+
+  return result;
+}
+
+/**
+ * Escapes a value for safe inclusion in a SQL statement.
+ *
+ * @private
+ * @param {mixed} v - The value to escape
+ * @returns {string} The escaped value as a SQL literal
+ */
+private string escapeValue(mixed v) {
+  if(typeof(v) == T_STRING)
+    return "'" + replace_string(v, "'", "''") + "'";
+
+  return "" + v;
+}
+
+/**
+ * Builds a SQL WHERE clause from a mapping of conditions.
+ *
+ * @private
+ * @param {mapping} m - Mapping of column:value pairs
+ * @returns {string} WHERE clause string, or empty string if no
+ *                   conditions
+ */
+private string whereFromMapping(mapping m) {
+  if(!mapp(m) || !sizeof(m))
+    return "";
+
+  string *conditions = ({});
+
+  foreach(string k, mixed v in m)
+    conditions += ({ k + " = " + escapeValue(v) });
+
+  return " WHERE " + implode(conditions, " AND ");
+}
+
+/**
+ * Builds a SQL SET clause from a mapping of column:value pairs.
+ *
+ * @private
+ * @param {mapping} m - Mapping of column:value pairs
+ * @returns {string} SET clause string
+ */
+private string setFromMapping(mapping m) {
+  string *assignments = ({});
+
+  foreach(string k, mixed v in m)
+    assignments += ({ k + " = " + escapeValue(v) });
+
+  return "SET " + implode(assignments, ", ");
 }
 
 #endif // __USE_SQLITE3__

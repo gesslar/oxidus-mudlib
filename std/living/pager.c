@@ -33,11 +33,12 @@ varargs void page(mixed text, mixed *cb, int no_colour) {
   page_display = query_pref("page_display") || mudConfig("PAGE_DISPLAY");
 
   if(no_colour == 1)
-      no_colour = MSG_PROMPT | NO_COLOUR;
+      no_colour = NO_COLOUR;
   else
-      no_colour = MSG_PROMPT;
+      no_colour = 0;
 
   sz = sizeof(text);
+
   continue_page("", text, cb, no_colour, more_lines, page_display, sz, 0);
 }
 
@@ -47,9 +48,10 @@ void continue_page(string input, string *text, mixed *cb, int no_colour, int mor
   string *this_page;
 
   if(input == "q") {
-      if(!nullp(cb))
-          call_back(cb);
-      return;
+    if(!nullp(cb))
+      call_back(cb);
+
+    return;
   }
 
   // Calculate the end index for this page
@@ -63,20 +65,22 @@ void continue_page(string input, string *text, mixed *cb, int no_colour, int mor
   curr = end + 1;
 
   if(curr < sizeof(text)) {
-      switch(page_display) {
-          case "percent" :
-              mess += sprintf("\n[%d%% - Press <Return> to continue, q to quit]", percent(curr, num));
-              break;
-          default:
-              mess += sprintf("\n[%d/%d - Press <Return> to continue, q to quit]", curr, num);
-              break;
-      }
+    switch(page_display) {
+      case "percent":
+          mess += sprintf("\n[%d%% - Press <Return> to continue, q to quit]", percent(curr, num));
+          break;
+      default:
+          mess += sprintf("\n[%d/%d - Press <Return> to continue, q to quit]", curr, num);
+          break;
+    }
 
-      tell(this_object(), mess, no_colour);
-      input_to("continue_page", text, cb, no_colour, more_lines, page_display, num, curr);
+    tell(this_object(), mess, no_colour | MSG_PROMPT);
+
+    input_to("continue_page", text, cb, no_colour, more_lines, page_display, num, curr);
   } else {
-      tell(this_object(), mess, no_colour);
-      if(!nullp(cb))
-          call_back(cb);
+    tell(this_object(), mess, no_colour);
+
+    if(!nullp(cb))
+      call_back(cb);
   }
 }
