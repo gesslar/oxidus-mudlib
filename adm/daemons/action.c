@@ -28,22 +28,22 @@ inherit STD_DAEMON;
  * either the name or short description. For strings, returns them unmodified.
  *
  * @param {STD_PLAYER|STD_NPC|STD_ITEM|string} x - The item to get a description for
- * @returns {string | *} The appropriate short description
+ * @returns {string} The appropriate short description
  */
 private string short(mixed x) {
   assert(stringp(x) || objectp(x) && (has(x, "query_name") || has(x, "query_name")));
 
   if(stringp(x))
-    return x;
+    return /** @type {string} */ (x);
 
   if(objectp(x)) {
     if(living(x))
-      return x->query_name();
+      return /** @type {string} */ (x->query_name());
     else
-      return x->query_name() || x->query_short();
+      return /** @type {string} */ (x->query_name() || x->query_short());
   }
 
-  return x;
+  return /** @type {string} */ (x);
 }
 
 /**
@@ -53,7 +53,7 @@ private string short(mixed x) {
  * For strings, ensures they have an appropriate indefinite article.
  *
  * @param {STD_ITEM | string} x - The object or string to process
- * @returns {string | *} The description with appropriate article
+ * @returns {string} The description with appropriate article
  */
 string a_short(mixed x) {
   if(objectp(x)) {
@@ -68,7 +68,7 @@ string a_short(mixed x) {
   if(stringp(x))
     return add_article(x);
 
-  return x;
+  return /** @type {string} */ (x);
 }
 
 /**
@@ -78,7 +78,7 @@ string a_short(mixed x) {
  * For strings, ensures they have the definite article.
  *
  * @param {STD_ITEM | string} x - The object or string to process
- * @returns {string | *} The description with the definite article
+ * @returns {string} The description with the definite article
  */
 string the_short(mixed x) {
   if(objectp(x)) {
@@ -93,7 +93,7 @@ string the_short(mixed x) {
   if(stringp(x))
     return add_article(x, 1);
 
-  return x;
+  return /** @type {string} */ (x);
 }
 
 /**
@@ -403,7 +403,6 @@ varargs string compose_message(object forwhom, string msg, object *who, mixed *o
           has[who[num]]++;
           break;
         }
-        break;
       case 'b':
       case 'B':
         //Bit of defensive coding here
@@ -425,7 +424,6 @@ varargs string compose_message(object forwhom, string msg, object *who, mixed *o
           has[who[num]]++;
           break;
         }
-        break;
     }
 
     // hack to prevent errors.
@@ -463,7 +461,7 @@ void inform(object *who, string *msgs, mixed others) {
   }
 
   if(pointerp(others))
-    map_array(others - who, (: tell_down($1, $2, null, $3) :), msgs[<1], who);
+    map_array(/** @type {object*} */ (others) - who, (: tell_down($1, $2, null, $3) :), msgs[<1], who);
   else
     if(others) tell_all(others, msgs[sizeof(who)], null, who);
 }
@@ -479,16 +477,18 @@ void inform(object *who, string *msgs, mixed others) {
 varargs string *action(object *who, mixed msg, mixed *obs...) {
   int i;
   string *res;
+  string str_msg;
 
   if(pointerp(msg))
     msg = element_of(msg);
 
+  str_msg = /** @type {string} */ (msg);
   res = allocate(sizeof(who) + 1);
 
   for(i = 0; i < sizeof(who); i++)
-    res[i] = compose_message(who[i], msg, who, obs...);
+    res[i] = compose_message(who[i], str_msg, who, obs...);
 
-  res[sizeof(who)] = compose_message(0, msg, who, obs...);
+  res[sizeof(who)] = compose_message(0, str_msg, who, obs...);
 
   return res;
 }
@@ -502,6 +502,7 @@ varargs string *action(object *who, mixed msg, mixed *obs...) {
 varargs void simple_action(mixed msg, mixed obs...) {
   string us;
   string others;
+  string str_msg;
   object *who;
 
   if(!sizeof(msg))
@@ -512,8 +513,9 @@ varargs void simple_action(mixed msg, mixed obs...) {
   if(pointerp(msg))
     msg = element_of(msg);
 
-  us = compose_message(previous_object(), msg, who, obs...);
-  others = compose_message(0, msg, who, obs...);
+  str_msg = /** @type {string} */ (msg);
+  us = compose_message(previous_object(), str_msg, who, obs...);
+  others = compose_message(0, str_msg, who, obs...);
 
   tell(previous_object(), us);
   tell_down(all_inventory(previous_object()), others);
@@ -530,6 +532,7 @@ varargs void simple_action(mixed msg, mixed obs...) {
  */
 varargs void my_action(mixed msg, mixed *obs...) {
   string us;
+  string str_msg;
   object *who;
 
   if(!sizeof(msg))
@@ -540,7 +543,8 @@ varargs void my_action(mixed msg, mixed *obs...) {
   if(pointerp(msg))
     msg = element_of(msg);
 
-  us = compose_message(previous_object(), msg, who, obs...);
+  str_msg = /** @type {string} */ (msg);
+  us = compose_message(previous_object(), str_msg, who, obs...);
 
   tell(previous_object(), us);
 }
@@ -554,6 +558,7 @@ varargs void my_action(mixed msg, mixed *obs...) {
  */
 varargs void target_action(mixed msg, object target, mixed *obs...) {
   string them;
+  string str_msg;
   object *who;
 
   if(!sizeof(msg))
@@ -564,9 +569,10 @@ varargs void target_action(mixed msg, object target, mixed *obs...) {
   if(pointerp(msg))
     msg = element_of(msg);
 
-  them = compose_message(target, msg, who, obs...);
+  str_msg = /** @type {string} */ (msg);
+  them = compose_message(target, str_msg, who, obs...);
 
-  target->tell(them);
+  tell(target, them);
 }
 
 /**
@@ -578,6 +584,7 @@ varargs void target_action(mixed msg, object target, mixed *obs...) {
  */
 varargs void my_target_action(mixed msg, object target, mixed *obs...) {
   string us;
+  string str_msg;
   object *who;
 
   if(!sizeof(msg))
@@ -588,7 +595,8 @@ varargs void my_target_action(mixed msg, object target, mixed *obs...) {
   if(pointerp(msg))
     msg = element_of(msg);
 
-  us = compose_message(previous_object(), msg, who, obs...);
+  str_msg = /** @type {string} */ (msg);
+  us = compose_message(previous_object(), str_msg, who, obs...);
 
   tell(previous_object(), us);
 }
@@ -601,6 +609,7 @@ varargs void my_target_action(mixed msg, object target, mixed *obs...) {
  */
 varargs void other_action(mixed msg, mixed *obs...) {
   string others;
+  string str_msg;
   object *who;
 
   if(!sizeof(msg))
@@ -611,7 +620,8 @@ varargs void other_action(mixed msg, mixed *obs...) {
   if(pointerp(msg))
     msg = element_of(msg);
 
-  others = compose_message(0, msg, who, obs...);
+  str_msg = /** @type {string} */ (msg);
+  others = compose_message(0, str_msg, who, obs...);
 
   tell_down(all_inventory(previous_object()), others);
 
@@ -628,6 +638,7 @@ varargs void other_action(mixed msg, mixed *obs...) {
  */
 varargs void targetted_action(mixed msg, object target, mixed *obs...) {
   string us, them, others;
+  string str_msg;
   object *who;
 
   if(!sizeof(msg))
@@ -638,9 +649,10 @@ varargs void targetted_action(mixed msg, object target, mixed *obs...) {
   if(pointerp(msg))
     msg = element_of(msg);
 
-  us = compose_message(previous_object(), msg, who, obs...);
-  them = compose_message(target, msg, who, obs...);
-  others = compose_message(0, msg, who, obs...);
+  str_msg = /** @type {string} */ (msg);
+  us = compose_message(previous_object(), str_msg, who, obs...);
+  them = compose_message(target, str_msg, who, obs...);
+  others = compose_message(0, str_msg, who, obs...);
 
   tell(previous_object(), us);
   tell(target, them);
