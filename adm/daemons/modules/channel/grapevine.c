@@ -102,7 +102,7 @@ int rec_msg(string chan, string usr, string msg) {
   history[chan] += ({ ldate(time(),1) +" "+ltime() + " [" + capitalize(chan) + "] " + capitalize(usr) + real_message + "\n" });
 
   if(!of(chan, locals))
-    GRAPEVINE_D->grapevine_broadcast_message(chan, usr, msg);
+    GRAPEVINE_D->grapevineBroadcastMessage(chan, usr, msg);
 
   saveData();
 

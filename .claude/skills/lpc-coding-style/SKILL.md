@@ -381,7 +381,17 @@ needs without adding a redundant doc comment.
 
 ## Line Width
 
-- Keep lines within 80 columns. This is a MUD — content is consumed in terminal contexts where 80 columns is the norm.
+- Lines should be comfortable to read at a glance. Most lines
+  naturally fall well under 80 columns; that's fine and normal.
+- Don't wrap a line that reads cleanly just because it crosses a
+  column threshold. A 90-character line in a block of one-liners
+  reads better than an awkwardly broken 78-character one.
+- When a line is genuinely hard to parse at a glance, the fix is
+  usually structural — extract an intermediate variable, simplify
+  the expression, or break a chain of calls into steps. Mechanical
+  line-breaking is a last resort.
+- If nothing structural helps and you must wrap, somewhere around
+  80 columns is a reasonable guide — but use judgment, not a ruler.
 - This applies to LPC source files and LPML data files alike.
 
 ## Performance Considerations

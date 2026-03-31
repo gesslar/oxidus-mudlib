@@ -25,13 +25,13 @@ mixed main(object tp, string str) {
 
   switch(cmd) {
     case "pstatus" :
-      GRAPEVINE_D->grapevine_send_event_players_status(
+      GRAPEVINE_D->grapevineSendEventPlayersStatus(
         arg,
         assemble_call_back((: handle_pstatus :), tp),
       );
       return _ok(sprintf("Sending players status request for %s", arg));
     case "gstatus" :
-      GRAPEVINE_D->grapevine_send_event_games_status(
+      GRAPEVINE_D->grapevineSendEventGamesStatus(
         arg,
         assemble_call_back((: handle_gstatus :), tp, arg),
       );
