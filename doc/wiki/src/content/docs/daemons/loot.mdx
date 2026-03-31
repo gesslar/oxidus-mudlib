@@ -3,13 +3,15 @@ title: LOOT_D
 description: Loot daemon API reference — item drops, coin drops, and auto-valuation.
 ---
 
-import ClassBrowser from "../../../components/class-browser/ClassBrowser.astro";
-import ClassExtends from "../../../components/class-browser/ClassExtends.astro";
-import ClassMethod from "../../../components/class-browser/ClassMethod.astro";
-import ClassMethodInput from "../../../components/class-browser/ClassMethodInput.astro";
-import ClassMethodOutput from "../../../components/class-browser/ClassMethodOutput.astro";
-import ClassProperty from "../../../components/class-browser/ClassProperty.astro";
-import ClassPropertyType from "../../../components/class-browser/ClassPropertyType.astro";
+import {
+  ClassBrowser,
+  ClassExtends,
+  ClassMethod,
+  ClassMethodInput,
+  ClassMethodOutput,
+  ClassProperty,
+  ClassPropertyType,
+} from "../../../components/class-browser";
 
 <ClassBrowser language="lpc" name="LOOT_D" source="adm/daemons/loot.c" type="object">
   Daemon responsible for handling the loot system, including item drops,

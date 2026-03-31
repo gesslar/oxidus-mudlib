@@ -6,16 +6,18 @@ interface Props {
   visibility?: string;
   /** Syntax highlight type for the name (maps to cb-hl-* CSS class) */
   highlight?: string;
+  /** Pre-expand this method card */
+  open?: boolean;
 }
 
-const { name, visibility, highlight = "function" } = Astro.props;
+const { name, visibility, highlight = "function", open = false } = Astro.props;
 
 const modifiers = visibility ? visibility.trim().split(/\s+/) : [];
 const primaryVis = modifiers[0] || "";
 const visClass = primaryVis ? `cb-vis-${primaryVis}` : "";
 ---
 
-<details class={`cb-method ${visClass}`} id={name}>
+<details class={`cb-method ${visClass}`} id={name} open={open}>
   <summary>
     <a class="cb-anchor" href={`#${name}`} aria-label={`Link to ${name}`}>#</a>
     {modifiers.map((mod) => (

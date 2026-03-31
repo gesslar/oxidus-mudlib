@@ -4,23 +4,23 @@
  * ============================================================ */
 
 /* ----------------------------------------------------------
- * Highlight token colors (GitHub Light defaults)
- * Override these on .cb-browser or any ancestor.
+ * Token colors are derived at build time from Shiki themes.
+ * These fallbacks are used only if theme resolution fails.
  * ---------------------------------------------------------- */
 .cb-browser {
-  --cb-hl-function: #6f42c1;
-  --cb-hl-type: #d73a49;
-  --cb-hl-object: #6f42c1;
-  --cb-hl-parameter: #e36209;
-  --cb-hl-variable: #e36209;
-  --cb-hl-keyword: #d73a49;
-  --cb-hl-string: #032f62;
-  --cb-hl-number: #005cc5;
+  --cb-hl-function: #b392f0;
+  --cb-hl-type: #f97583;
+  --cb-hl-object: #b392f0;
+  --cb-hl-parameter: #ffab70;
+  --cb-hl-variable: #ffab70;
+  --cb-hl-keyword: #f97583;
+  --cb-hl-string: #9ecbff;
+  --cb-hl-number: #79b8ff;
   --cb-hl-comment: #6a737d;
-  --cb-hl-constant: #005cc5;
-  --cb-hl-support: #005cc5;
-  --cb-hl-tag: #22863a;
-  --cb-hl-property: #005cc5;
+  --cb-hl-constant: #79b8ff;
+  --cb-hl-support: #79b8ff;
+  --cb-hl-tag: #85e89d;
+  --cb-hl-property: #79b8ff;
 
   /* Layout tokens */
   --cb-border: var(--sl-color-gray-5);
@@ -48,23 +48,9 @@
 }
 
 /* ----------------------------------------------------------
- * Dark theme overrides
+ * Dark theme layout overrides
  * ---------------------------------------------------------- */
 :root[data-theme="dark"] .cb-browser {
-  --cb-hl-function: #b392f0;
-  --cb-hl-type: #f97583;
-  --cb-hl-object: #b392f0;
-  --cb-hl-parameter: #ffab70;
-  --cb-hl-variable: #ffab70;
-  --cb-hl-keyword: #f97583;
-  --cb-hl-string: #9ecbff;
-  --cb-hl-number: #79b8ff;
-  --cb-hl-comment: #6a737d;
-  --cb-hl-constant: #79b8ff;
-  --cb-hl-support: #79b8ff;
-  --cb-hl-tag: #85e89d;
-  --cb-hl-property: #79b8ff;
-
   --cb-bg: var(--sl-color-gray-6, #161b22);
   --cb-header-bg: var(--sl-color-gray-5, #21262d);
   --cb-method-bg: var(--sl-color-gray-6, #161b22);
@@ -142,6 +128,77 @@
   font-family: var(--cb-font-mono);
   font-size: 0.75rem;
   opacity: 0.65;
+}
+
+/* ----------------------------------------------------------
+ * Header action buttons (copy JSON, expand/collapse)
+ * ---------------------------------------------------------- */
+.cb-copy-json {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  margin-inline-start: 0.5rem;
+  background: none;
+  border: 1px solid var(--cb-border);
+  border-radius: var(--cb-badge-radius);
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.cb-copy-json:hover {
+  opacity: 0.9;
+}
+
+.cb-copy-json svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.cb-copy-json.cb-copied {
+  opacity: 1;
+  border-color: var(--cb-badge-public);
+  color: var(--cb-badge-public);
+}
+
+/* ----------------------------------------------------------
+ * Expand/collapse all toggle
+ * ---------------------------------------------------------- */
+.cb-toggle-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  margin-inline-start: 0.5rem;
+  background: none;
+  border: 1px solid var(--cb-border);
+  border-radius: var(--cb-badge-radius);
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.cb-toggle-all:hover {
+  opacity: 0.9;
+}
+
+.cb-toggle-all svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  transition: transform 0.15s ease;
+}
+
+.cb-toggle-all.cb-all-expanded svg {
+  transform: rotate(180deg);
 }
 
 /* ----------------------------------------------------------
