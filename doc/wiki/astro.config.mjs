@@ -1,9 +1,12 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightScrollToTop from 'starlight-scroll-to-top';
+import starlightHeadingBadges from 'starlight-heading-badges';
+import starlightCodeblockFullscreen from 'starlight-codeblock-fullscreen';
 import { readFileSync } from 'node:fs';
 
-const loadGrammar = (file) => JSON.parse(
+const loadGrammar = (/** @type {string} */ file) => JSON.parse(
 	readFileSync(new URL(`./src/grammars/${file}`, import.meta.url), 'utf-8')
 );
 const lpmlGrammar = loadGrammar('lpml.tmLanguage.json');
@@ -13,11 +16,17 @@ const lpcGrammar = loadGrammar('lpc.tmLanguage.json');
 export default defineConfig({
 	integrations: [
 		starlight({
+			plugins: [
+				starlightScrollToTop(),
+				starlightHeadingBadges(),
+				// starlightCodeblockFullscreen(), // TODO: duplicate export default bug with scroll-to-top — https://github.com/frostybee/starlight-codeblock-fullscreen/issues/2
+			],
 			expressiveCode: {
 				shiki: {
 					langs: [lpmlGrammar, lpcGrammar],
 				},
 			},
+			customCss: ['./src/styles/custom.css'],
 			title: 'Oxidus',
 			logo: {
 				light: './src/assets/logo.svg',
@@ -29,12 +38,6 @@ export default defineConfig({
 				{ icon: 'discord', label: 'Discord', href: 'https://discord.gg/wzUbBgs3AQ' },
 			],
 			sidebar: [
-				{
-					label: 'Getting Started',
-					items: [
-						{ label: 'Introduction', slug: '' },
-					],
-				},
 				{
 					label: 'Systems',
 					autogenerate: { directory: 'systems' },
