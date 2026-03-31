@@ -51,8 +51,6 @@ varargs int fetch(mixed *callback, string method, string url, mapping headers, s
 nomask void http_handle_shutdown(mapping server) {
   int serial;
   mixed *callback;
-  mixed func;
-  object ob;
   string err;
 
   _log(2, "Handling shutdown");

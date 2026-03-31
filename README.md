@@ -1,4 +1,4 @@
-# gLPU - LPUniversity #
+# gLPU - LPUniversity
 
 The LPUniversity Mudlib was downloaded from <http://dead-souls.net/files/lpuni_fluffos_v1.zip> and converted and fixed to work with the current version of FluffOS 2019 before being posted to this git repository.
 
