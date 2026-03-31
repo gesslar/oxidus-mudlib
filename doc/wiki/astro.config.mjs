@@ -42,6 +42,10 @@ export default defineConfig({
 					label: 'Systems',
 					autogenerate: { directory: 'systems' },
 				},
+				{
+					label: 'Daemons',
+					autogenerate: { directory: 'daemons' },
+				},
 			],
 		}),
 	],

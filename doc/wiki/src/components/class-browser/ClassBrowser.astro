@@ -1,0 +1,72 @@
+---
+import "./class-browser.css";
+import TargetLink from "./TargetLink.astro";
+import { generateThemeCSS } from "./resolve-theme";
+
+interface Props {
+  /** Language for syntax context (e.g. "lpc", "typescript", "lua") */
+  language?: string;
+  /** Class/module/object name */
+  name: string;
+  /** Source file path */
+  source?: string;
+  /** Type badge: object, module, class, interface */
+  type?: string;
+  /** Link URL — no protocol = internal */
+  target?: string;
+}
+
+const { language, name, source, type, target } = Astro.props;
+
+const badgeClass = type
+  ? `cb-badge cb-badge-${type}`
+  : "cb-badge cb-badge-default";
+
+const themeCSS = await generateThemeCSS();
+---
+
+{themeCSS && <style set:html={themeCSS} />}
+<div class="cb-browser not-content" data-language={language}>
+  <header class="cb-header">
+    {type && <span class={badgeClass}>{type}</span>}
+    <span class="cb-header-name">{name}</span>
+    {source && <span class="cb-source">{source}</span>}
+    {target && <TargetLink target={target} />}
+  </header>
+  <div class="cb-body">
+    <slot />
+  </div>
+</div>
+
+<script>
+  function initClassBrowser() {
+    // Hash navigation: open and scroll to target method
+    const hash = location.hash.slice(1);
+    if (hash) {
+      const target = document.getElementById(hash);
+      if (target && target.classList.contains("cb-method")) {
+        target.open = true;
+        // Small delay so the browser can lay out the opened details
+        requestAnimationFrame(() => {
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+    }
+
+    // Anchor click: copy permalink to clipboard, don't toggle the details
+    document.querySelectorAll(".cb-anchor").forEach((anchor) => {
+      anchor.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const href = anchor.getAttribute("href") || "";
+        const url = location.origin + location.pathname + href;
+        history.replaceState(null, "", href);
+        navigator.clipboard.writeText(url);
+      });
+    });
+  }
+
+  // Run on initial load and Astro view transitions
+  initClassBrowser();
+  document.addEventListener("astro:after-swap", initClassBrowser);
+</script>

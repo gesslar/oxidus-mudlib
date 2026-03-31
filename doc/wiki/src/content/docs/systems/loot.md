@@ -1,5 +1,5 @@
 ---
-title: Loot System
+title: Loot
 description: Item and coin drops from NPCs.
 ---
 

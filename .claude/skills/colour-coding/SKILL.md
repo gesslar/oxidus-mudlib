@@ -20,15 +20,18 @@ Oxidus uses a true colour system based on hexadecimal RGB values enclosed in dou
 |---|---|
 | `{{RRGGBB}}` | Foreground colour (6-digit hex) |
 | `{{RGB}}` | Foreground colour (3-digit shorthand) |
-| `{{res}}` or `{{RES}}` | Reset all formatting to default |
+| `^^RRGGBB^^` | Background colour (6-digit hex) |
+| `^^RGB^^` | Background colour (3-digit shorthand) |
+| `{{res}}` or `{{RES}}` | Reset all formatting and colour to default |
 
 Examples:
-- `{{FF0000}}` — red
-- `{{F00}}` — red (shorthand)
-- `{{009966}}` — green
-- `{{FFFFFF}}` — white
+- `{{FF0000}}` — red foreground
+- `{{F00}}` — red foreground (shorthand)
+- `^^0000FF^^` — blue background
+- `^^00F^^` — blue background (shorthand)
+- `{{FFFFFF}}^^FF0000^^` — white text on red background
 
-Unlike Pinkfish-style codes, you do not need to reset between colour changes — the system simply switches colours. Use `{{res}}` when you want to return to default.
+Unlike Pinkfish-style codes, you do not need to reset between colour changes — the system simply switches colours. Use `{{res}}` when you want to return to default. `{{res}}` resets both foreground and background.
 
 ## Text Formatting Codes
 
@@ -62,10 +65,10 @@ Defined in `include/colour.h` for consistent use across game systems:
 
 The colour daemon converts hex codes to 24-bit true colour ANSI sequences:
 
-- Foreground: `\e[38;2;R;G;Bm`
-- Background: `\e[48;2;R;G;Bm`
+- Foreground: `\e[38;2;R;G;Bm` (from `{{RRGGBB}}`)
+- Background: `\e[48;2;R;G;Bm` (from `^^RRGGBB^^`)
 
-For example, `{{FF0000}}` becomes `\e[38;2;255;0;0m`.
+For example, `{{FF0000}}` becomes `\e[38;2;255;0;0m` and `^^0000FF^^` becomes `\e[48;2;0;0;255m`.
 
 ## Daemon Functions
 
@@ -117,9 +120,17 @@ set_short("a {{fc3}}massive hammer{{res}}");
 set_short("A little {{070}}green dragon{{RES}}");
 set_long("Its scales shimmer with {{0F0}}emerald green light{{RES}}.");
 
+// Background colours
+tell(caller, "^^FF0000^^{{FFFFFF}} WARNING {{res}}");  // white on red
+tell(caller, "^^003366^^{{FFCC00}}highlighted text{{res}}");
+
+// Combined foreground and background
+set_short("a {{FFFFFF}}^^CC0000^^danger sign{{res}}");
+
 // Using system constants
 printf("%sError: %s%s\n", SYSTEM_ERROR, message, "{{res}}");
 
 // Dynamic colour building
 colour = "{{" + hex_value + "}}";
+bg_colour = "^^" + hex_value + "^^";
 ```

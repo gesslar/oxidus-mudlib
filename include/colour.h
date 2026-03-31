@@ -8,18 +8,25 @@
 #define ATTRIBUTE_REGEX \
 "\\{\\{(re|it|ul|fl|st|bl|di|ol][0-1])\\}\\}"
 
-// FG: <#000> - <#fff> | BG: [#000] - [#fff]
-// FG: <#000000> - <#ffffff> | BG: [#000000] - [#ffffff]
+// FG: {{000}} - {{fff}} | {{000000}} - {{ffffff}}
 #define TRUE_COLOUR_REGEX    \
-"\\{\\{((?:"                  \
-"[a-fA-F0-9]{6}"       "|" \
-"[a-fA-F0-9]{3}"           \
-"))\\}\\}"                    \
+"\\{\\{((?:"                 \
+"[a-fA-F0-9]{6}"       "|"  \
+"[a-fA-F0-9]{3}"            \
+"))\\}\\}"
+
+// BG: ^^000^^ - ^^fff^^ | ^^000000^^ - ^^ffffff^^
+#define BG_TRUE_COLOUR_REGEX \
+"\\^\\^((?:"                 \
+"[a-fA-F0-9]{6}"       "|"  \
+"[a-fA-F0-9]{3}"            \
+"))\\^\\^"
 
 #define COLOUR_REGEX      \
 RESET_REGEX           "|" \
 ATTRIBUTE_REGEX       "|" \
-TRUE_COLOUR_REGEX
+TRUE_COLOUR_REGEX     "|" \
+BG_TRUE_COLOUR_REGEX
 
 #define HEX_CHECK_3 "^#?[a-fA-F0-9]{3}$"
 #define HEX_CHECK_6 "^#?[a-fA-F0-9]{6}$"

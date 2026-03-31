@@ -27,26 +27,20 @@ void setup() {
 /**
  * Drops loot from the source's loot table into the source.
  *
- * @param {STD_PLAYER} _tp - The player to drop the loot for
+ * @param {STD_BODY} tp - The player to drop the loot for
  * @param {STD_NPC} source - The source of the loot
  */
-void loot_drop(object _tp, object source) {
-  mixed *loot_table;
-  mixed loot;
-
-  loot_table = source->query_loot_table();
+public void loot_drop(object tp, object source) {
+  mixed *loot_table = source->query_loot_table();
 
   if(sizeof(loot_table)) {
-    foreach(loot in loot_table) {
+    foreach(mixed loot in loot_table) {
       mixed item = loot[0];
-      float roll;
-      chance = loot[1];
+      float chance = loot[1];
+      float roll = random_float(100.0);
 
-      roll = random_float(100.0);
-
-      if(roll < chance) {
+      if(roll < chance)
         catch(drop_items(tp, item, source));
-      }
     }
   }
 }
@@ -54,26 +48,20 @@ void loot_drop(object _tp, object source) {
 /**
  * Drops coins from the source's coin table into the source.
  *
- * @param {STD_PLAYER} tp - The player to drop the coins for
+ * @param {STD_BODY} _tp - The player to drop the coins for
  * @param {STD_NPC} source - The source of the coins
  */
-void coin_drop(object tp, object source) {
-  mixed *coin_table;
-  mixed loot;
-  float chance;
-  float roll;
-
-  coin_table = source->query_coin_table();
+public void coin_drop(object _tp, object source) {
+  mixed *coin_table = source->query_coin_table();
 
   if(sizeof(coin_table)) {
-    foreach(loot in coin_table) {
+    foreach(mixed loot in coin_table) {
       mixed item = loot[0..1];
-      chance = loot[2];
-
-      roll = random_float(100.0);
+      float chance = loot[2];
+      float roll = random_float(100.0);
 
       if(roll < chance)
-        catch(drop_coins(tp, item, source));
+        catch(drop_coins(_tp, item, source));
     }
   }
 }
@@ -81,21 +69,19 @@ void coin_drop(object tp, object source) {
 /**
  * Processes and drops a loot item into the source.
  *
- * @param {STD_PLAYER} tp - The player to drop the items for
+ * @param {STD_BODY} tp - The player to drop the items for
  * @param {mixed} item - The item to drop
  * @param {STD_NPC} source - The source to drop the items into
  */
 private void drop_items(object tp, mixed item, object source) {
-  mixed processed_item;
+  mixed processed_item = process_loot_item(item, tp, source);
   object loot_ob;
   string file;
-  mixed args;
-
-  processed_item = process_loot_item(item, tp, source);
 
   if(pointerp(processed_item) && sizeof(processed_item) == 2) {
     file = processed_item[0];
-    args = processed_item[1];
+    mixed args = processed_item[1];
+
     if(pointerp(args))
       loot_ob = new(file, args...);
     else
@@ -103,15 +89,15 @@ private void drop_items(object tp, mixed item, object source) {
   } else if(stringp(processed_item)) {
     file = processed_item;
     loot_ob = new(file);
-  } else
+  } else {
     return;
+  }
 
   if(loot_ob) {
-    int move_result;
-
     autovalue_loot_item(loot_ob, tp, source);
 
-    move_result = loot_ob->move(source);
+    int move_result = loot_ob->move(source);
+
     if(move_result)
       loot_ob->remove();
   }
@@ -122,15 +108,12 @@ private void drop_items(object tp, mixed item, object source) {
  * and weighted mappings into a file path or file/args pair.
  *
  * @param {mixed} item - The item to process
- * @param {STD_PLAYER} tp - The player to process the item for
+ * @param {STD_BODY} tp - The player to process the item for
  * @param {STD_NPC} source - The source to process the item for
  * @returns {mixed} The processed item as a string path, a
  *                  ({ string, mixed }) pair, or 0 on failure
  */
 private mixed process_loot_item(mixed item, object tp, object source) {
-  int size, index;
-  mixed selected;
-
   if(valid_function(item)) {
     function f = item;
 
@@ -138,21 +121,22 @@ private mixed process_loot_item(mixed item, object tp, object source) {
   }
 
   if(pointerp(item)) {
-    size = sizeof(item);
+    int size = sizeof(item);
+
     if(size == 0)
       return 0;
 
-    index = random(size);
-    selected = item[index];
+    int index = random(size);
+    mixed selected = item[index];
 
     if(stringp(selected)) {
-      if(index < size - 1 && pointerp(item[index + 1])) {
+      if(index < size - 1 && pointerp(item[index + 1]))
         return ({ selected, item[index + 1] });
-      } else {
+      else
         return selected;
-      }
-    } else if(pointerp(selected) && index > 0 && stringp(item[index - 1]))
+    } else if(pointerp(selected) && index > 0 && stringp(item[index - 1])) {
       return ({ item[index - 1], selected });
+    }
 
     return 0;
   }
@@ -171,11 +155,10 @@ private mixed process_loot_item(mixed item, object tp, object source) {
  * source's level, if the item's autovalue loot property is set.
  *
  * @param {OBJ_LOOT} item - The item to autovalue
- * @param {STD_PLAYER} _tp - The player to autovalue the item for
+ * @param {STD_BODY} _tp - The player to autovalue the item for
  * @param {STD_NPC} source - The source to autovalue the item for
  */
 private void autovalue_loot_item(object item, object _tp, object source) {
-  // Determine if we have autovalue on this item
   if(item->query_loot_property("autovalue") == true) {
     int value = determine_value_by_level(source->queryLevel());
 
@@ -186,25 +169,19 @@ private void autovalue_loot_item(object item, object _tp, object source) {
 /**
  * Creates a coin object and moves it into the source.
  *
- * @param {STD_PLAYER} _tp - The player to drop the coins for
+ * @param {STD_BODY} _tp - The player to drop the coins for
  * @param {mixed} item - The value array of currency type and number
  * @param {STD_NPC} source - The source to drop the coins into
  */
 private void drop_coins(object _tp, mixed item, object source) {
-  string type;
-  int num;
-  object coin_ob;
-  int move_result;
-
-  if(sizeof(item) == 2) {
-    type = item[0];
-    num = item[1];
-  } else
+  if(sizeof(item) != 2)
     return;
 
-  coin_ob = new(LIB_COIN, type, num);
+  string type = item[0];
+  int num = item[1];
+  object coin_ob = new(LIB_COIN, type, num);
+  int move_result = coin_ob->move(source);
 
-  move_result = coin_ob->move(source);
   if(move_result)
     coin_ob->remove();
 }
@@ -217,18 +194,13 @@ private void drop_coins(object _tp, mixed item, object source) {
  * @returns {int} The calculated coin value
  */
 public int determine_value_by_level(int level) {
-  int value;
-  float config_variance;
-  int value_per_level, ivariance, subtract;
-  float variance;
+  int value_per_level = mudConfig("COIN_VALUE_PER_LEVEL");
+  float config_variance = mudConfig("COIN_VARIANCE");
 
-  value_per_level = mudConfig("COIN_VALUE_PER_LEVEL");
-  config_variance = mudConfig("COIN_VARIANCE");
+  int value = level * value_per_level;
+  int ivariance = to_int(config_variance * to_float(value));
+  int subtract = ivariance / 2;
 
-  value = level * value_per_level;
-  variance = config_variance * to_float(value);
-  ivariance = to_int(variance);
-  subtract = ivariance / 2;
   value -= subtract;
   value += random(ivariance + 1);
 

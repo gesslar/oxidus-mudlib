@@ -48,14 +48,17 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
       if(num < 0 || num > 255)
         return _error(caller, "Invalid colour code.");
 
-      string fg = "{{" + sprintf("0%'0'3d", num) + "}}";
+      int *rgb = COLOUR_D->colourToRgb(num);
+      string hex = COLOUR_D->rgbToHex(rgb);
+      string fg = sprintf("{{%s}}", hex);
+      string bg = sprintf("^^%s^^", hex);
 
       return _info(caller, "\n"
         "%s\'%'0'3d\' will appear like this in the "
         "foreground.{{res}}\n"
-        "{{re1}}%s\'%'0'3d\' will appear like this in the "
+        "%s\'%'0'3d\' will appear like this in the "
         "background.{{res}}",
-        fg, num, fg, num);
+        fg, num, bg, num);
     }
     default:
       if(caller->query_pref("colour") == "on")

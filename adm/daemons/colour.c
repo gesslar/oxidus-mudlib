@@ -159,25 +159,31 @@ public string substituteColour(string text, string mode) {
   if(!text)
     return text;
 
-  parts = pcre_assoc(text, ({COLOUR_REGEX}), ({ 1 }), 0);
+  parts = pcre_assoc(text,
+    ({RESET_REGEX "|" ATTRIBUTE_REGEX "|" TRUE_COLOUR_REGEX,
+      BG_TRUE_COLOUR_REGEX}),
+    ({ 1, 2 }), 0);
   tags = parts[0];
   matches = parts[1];
   sz = sizeof(matches);
 
   if(mode == "on") {
     while(sz--) {
-      string good;
-
       if(!matches[sz])
         continue;
 
-      if(good = cached(tags[sz])) {
-        tags[sz] = good;
-      } else {
-        string sequence = hextToSequence(tags[sz]);
+      string good;
 
-        cache[tags[sz]] = sequence;
-        tags[sz] = sequence;
+      if(matches[sz] == 2) {
+        if(good = cached(tags[sz]))
+          tags[sz] = good;
+        else
+          tags[sz] = cache[tags[sz]] = hextToSequence(tags[sz], 1);
+      } else {
+        if(good = cached(tags[sz]))
+          tags[sz] = good;
+        else
+          tags[sz] = cache[tags[sz]] = hextToSequence(tags[sz]);
       }
     }
   } else {
@@ -440,6 +446,9 @@ private void normalizeHex(string ref hex) {
   hex = all_caps(hex);
 
   match = pcre_extract(hex, TRUE_COLOUR_REGEX);
+
+  if(!sizeof(match))
+    match = pcre_extract(hex, BG_TRUE_COLOUR_REGEX);
 
   if(!sizeof(match))
     return;
