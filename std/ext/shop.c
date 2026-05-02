@@ -39,7 +39,7 @@ void init_shop() {
   create_storage();
 
   add_reset((:reset_shop:));
-  add_destruct((:remove_shop:));
+  addDestruct((:remove_shop:));
 }
 
 protected void remove_shop() {

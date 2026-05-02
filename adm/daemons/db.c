@@ -6,9 +6,11 @@
  * provides synchronous and chunked (lazy) query interfaces.
  *
  * @created 2024-02-27 - Gesslar
- * @last_modified 2026-03-30 - Gesslar
+ * @last_modified 2026-05-02 - Gesslar
  *
  * @history
+ * 2026-05-02 - Gesslar - Quote identifiers, close fd on error/zero-row,
+ *                        skip empty .tbl files
  * 2026-03-30 - Gesslar - Added REST-style query interface
  * 2024-02-27 - Gesslar - Created
  */
@@ -35,6 +37,7 @@ public void lazyQuery(string db, string q, mixed *callback);
 public varargs mixed rest(string method, string url, mapping data, mixed *callback);
 private mapping parseDbUrl(string url);
 private string escapeValue(mixed v);
+private string escapeIdent(string s);
 private string whereFromMapping(mapping m);
 private string setFromMapping(mapping m);
 
@@ -75,6 +78,12 @@ public void setup() {
     // Create databases and tables
     foreach(string dbName, mapping tables in __tableDefinitions) {
       string databaseFile = dbPath + dbName + dbSuffix;
+
+      if(!sizeof(tables)) {
+        log_file("system/db",
+          "Skipping " + dbName + ": no parseable tables in .tbl.\n");
+        continue;
+      }
 
       __databases[dbName] = databaseFile;
 
@@ -161,73 +170,90 @@ private mapping *collateData(mixed *result) {
  * is provided, the result is passed to it asynchronously;
  * otherwise the collated result is returned directly.
  *
+ * All failure cases are logged to /log/system/db. The return is
+ * intentionally narrow so callers don't need to branch on error
+ * shapes — they only ever ask "did I get rows?"
+ *
  * @param {string} db - The name of the database to query
  * @param {string} q - The SQL query to execute
  * @param {mixed*} callback - Optional callback to handle the
  *                            result
- * @returns {mapping* | string | int} Collated query results, an
- *                                    error string, 0 on failure,
- *                                    or 1 if using a callback
+ * @returns {mapping* | int} Collated rows on success, 0 if no
+ *                           usable data (bad input, connection
+ *                           failure, SQL error, or zero rows),
+ *                           or 1 if using a callback
  */
-public mixed query(string db, string q,
-  mixed *callback) {
-  string databaseFile = __databases[db];
+public mixed query(string db, string q, mixed *callback) {
+  string databaseFile;
   int fd;
   int closeResult, i;
   mixed rows, *result = ({});
 
-  if(!db || !q)
-    return "Invalid db or query.";
+  if(!db || !q) {
+    log_file("system/db",
+      "Invalid call: missing db or query.\n");
+    return 0;
+  }
+
+  databaseFile = __databases[db];
 
   q = append(q, ";");
   fd = db_connect("", databaseFile, "", __USE_SQLITE3__);
 
   if(fd == 0) {
-    log_file("system/db",
-      "Error connecting to " + db +
-      " at " + databaseFile + "\n");
+    log_file(
+      "system/db",
+      "Error connecting to " + db + " at " + databaseFile + "\n"
+    );
+
     return 0;
   }
 
   rows = db_exec(fd, q);
 
   if(stringp(rows)) {
-    log_file("system/db",
-      "Error querying " + db +
-      ": " + rows + "\n");
-    return "Error querying " + db +
-      ": " + rows + "\n";
+    log_file(
+      "system/db",
+      "Error querying " + db + ": " + rows + "\n"
+    );
+
+    db_close(fd);
+    return 0;
   }
 
-  if(rows == 0)
+  if(rows == 0) {
+    db_close(fd);
     return 0;
+  }
 
   result = allocate(rows + 1);
+
   catch {
     for(i = 0; i <= rows; i++) {
       mixed info = db_fetch(fd, i);
 
       if(stringp(info))
-        log_file("system/db",
-          "Error fetching row " + i +
-          " in " + db + ": '" + q +
-          "' " + info + "\n");
+        log_file(
+          "system/db",
+          "Error fetching row " + i + " in " + db + ": '" + q + "' " + info + "\n");
       else
         result[i] = info;
     }
   };
 
   closeResult = db_close(fd);
+
   if(closeResult == 0) {
-    log_file("system/db",
-      "Error closing connection to " + db +
-      " at " + databaseFile + "\n");
-    return "Error closing connection to " +
-      db + " at " + databaseFile + "\n";
+    log_file(
+      "system/db",
+      "Error closing connection to " + db + " at " + databaseFile + "\n");
+    // Data is already fetched — the close failure is a separate
+    // resource issue. Log it and return the rows we have.
   }
 
   if(callback) {
     call_back(callback, collateData(result));
+
     return 1;
   }
 
@@ -237,11 +263,13 @@ public mixed query(string db, string q,
 /**
  * Initiates a lazy (chunked) query execution that processes
  * large result sets in batches to avoid blocking the driver.
+ * On failure (logged to /log/system/db), the callback receives 0.
  *
  * @param {string} db - The name of the database to query
  * @param {string} q - The SQL query to execute
  * @param {mixed*} callback - Callback to receive the accumulated
- *                            results when complete
+ *                            results when complete, or 0 on
+ *                            failure
  */
 public void lazyQuery(string db, string q,
   mixed *callback) {
@@ -252,7 +280,9 @@ public void lazyQuery(string db, string q,
 /**
  * Executes a query in chunks using LIMIT/OFFSET, accumulating
  * results across call_out iterations to handle large result sets
- * without blocking.
+ * without blocking. All failures log to /log/system/db; on any
+ * failure the callback receives 0 and accumulated partial data
+ * is discarded.
  *
  * @private
  * @param {string} db - The name of the database to query
@@ -261,7 +291,7 @@ public void lazyQuery(string db, string q,
  * @param {string} queryId - Unique identifier for this query
  *                           execution
  * @param {mixed*} cb - Callback to receive the accumulated
- *                            results when complete
+ *                      results when complete, or 0 on failure
  */
 private void executeQuery(
     string db,
@@ -272,10 +302,9 @@ private void executeQuery(
   ) {
   string databaseFile, modifiedQuery;
   int fd, closeResult, i;
-  mixed rows, *result;
+  mixed rows;
 
   databaseFile = __databases[db];
-  result = ({});
 
   // Modify the query to include LIMIT and OFFSET
   modifiedQuery = q + " LIMIT " + __dbChunkSize + " OFFSET " + offset;
@@ -288,7 +317,7 @@ private void executeQuery(
     );
 
     if(cb)
-      call_back(cb, "Error: Connection failed.");
+      call_back(cb, 0);
 
     map_delete(__handle, queryId);
 
@@ -303,8 +332,10 @@ private void executeQuery(
       "Error querying " + db + ": " + rows + "\n"
     );
 
+    db_close(fd);
+
     if(cb)
-      call_back(cb,"Error: Query failed - " + rows);
+      call_back(cb, 0);
 
     map_delete(__handle, queryId);
 
@@ -313,6 +344,8 @@ private void executeQuery(
 
   if(rows == 0) {
     // No more rows, finalise and invoke callback
+    db_close(fd);
+
     if(cb)
       call_back(cb, __handle[queryId]);
 
@@ -321,7 +354,8 @@ private void executeQuery(
     return;
   }
 
-  result = allocate(rows + 1);
+  mixed *result = allocate(rows + 1);
+
   for(i = 0; i <= rows; i++) {
     mixed info = db_fetch(fd, i);
 
@@ -336,7 +370,7 @@ private void executeQuery(
   }
 
   // Accumulate the results for this chunk
-  if(!arrayp(__handle[queryId]))
+  if(!pointerp(__handle[queryId]))
     __handle[queryId] = ({});
 
   __handle[queryId] += result;
@@ -350,7 +384,7 @@ private void executeQuery(
     );
 
     if(cb)
-      call_back(cb, "Error: Connection close failed.");
+      call_back(cb, 0);
 
     map_delete(__handle, queryId);
 
@@ -410,16 +444,17 @@ public int validDb(string db) {
  * @returns {int} 1 if the table exists, 0 otherwise
  */
 public int validTable(string db, string table) {
-  string statement = sprintf(
-    "SELECT name FROM sqlite_master " +
-    "WHERE type='table' AND name='%s';",
-    table
-  );
-
+  string statement;
   mixed result;
 
   if(!validDb(db))
     return 0;
+
+  statement = sprintf(
+    "SELECT name FROM sqlite_master " +
+    "WHERE type='table' AND name=%s;",
+    escapeValue(table)
+  );
 
   result = query(db, statement, 0);
 
@@ -482,7 +517,7 @@ public string statementFromMapping(mapping data) {
     if(!stringp(k))
       continue;
 
-    array_push(ref columns, k);
+    array_push(ref columns, escapeIdent(k));
     array_push(ref values, escapeValue(v));
   }
 
@@ -561,7 +596,7 @@ public varargs mixed rest(string method, string url,
       if(dir != "ASC" && dir != "DESC")
         dir = "ASC";
 
-      orderClause = " ORDER BY " + col + " " + dir;
+      orderClause = " ORDER BY " + escapeIdent(col) + " " + dir;
       map_delete(params, "_order");
     }
 
@@ -581,7 +616,7 @@ public varargs mixed rest(string method, string url,
 
   switch(method) {
     case "GET":
-      q = "SELECT * FROM " + table + where +
+      q = "SELECT * FROM " + escapeIdent(table) + where +
         orderClause + limitClause + offsetClause;
       break;
     case "POST": {
@@ -593,7 +628,7 @@ public varargs mixed rest(string method, string url,
       if(!values)
         error("Failed to build INSERT statement.");
 
-      q = "INSERT INTO " + table + " " + values;
+      q = "INSERT INTO " + escapeIdent(table) + " " + values;
       break;
     }
     case "PUT": {
@@ -604,14 +639,14 @@ public varargs mixed rest(string method, string url,
         error("PUT requires query params for WHERE clause.");
 
       string set = setFromMapping(data);
-      q = "UPDATE " + table + " " + set + where;
+      q = "UPDATE " + escapeIdent(table) + " " + set + where;
       break;
     }
     case "DELETE": {
       if(!strlen(where))
         error("DELETE requires query params for WHERE clause.");
 
-      q = "DELETE FROM " + table + where;
+      q = "DELETE FROM " + escapeIdent(table) + where;
       break;
     }
     default:
@@ -662,6 +697,18 @@ private string escapeValue(mixed v) {
 }
 
 /**
+ * Escapes a SQL identifier (table or column name) using SQL-standard
+ * double-quote quoting, with embedded double quotes doubled.
+ *
+ * @private
+ * @param {string} s - The identifier to escape
+ * @returns {string} The quoted identifier
+ */
+private string escapeIdent(string s) {
+  return "\"" + replace_string(s, "\"", "\"\"") + "\"";
+}
+
+/**
  * Builds a SQL WHERE clause from a mapping of conditions.
  *
  * @private
@@ -676,7 +723,7 @@ private string whereFromMapping(mapping m) {
   string *conditions = ({});
 
   foreach(string k, mixed v in m)
-    conditions += ({ k + " = " + escapeValue(v) });
+    conditions += ({ escapeIdent(k) + " = " + escapeValue(v) });
 
   return " WHERE " + implode(conditions, " AND ");
 }
@@ -692,7 +739,7 @@ private string setFromMapping(mapping m) {
   string *assignments = ({});
 
   foreach(string k, mixed v in m)
-    assignments += ({ k + " = " + escapeValue(v) });
+    assignments += ({ escapeIdent(k) + " = " + escapeValue(v) });
 
   return "SET " + implode(assignments, ", ");
 }

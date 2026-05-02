@@ -17,7 +17,7 @@
  * Retrieves the base short description and appends any extra short descriptions
  * in parentheses. Filters out null or empty extra descriptions.
  *
- * @param {object} ob - Object to get description from, defaults to previous_object()
+ * @param {STD_OBJECT} ob - Object to get description from, defaults to previous_object()
  * @param {int} [extras=1] - Whether to include extra descriptions (1=yes, 0=no)
  * @returns {string} Formatted short description
  * @example
@@ -61,7 +61,7 @@ varargs string get_short(object ob, int extras) {
  * Retrieves the base long description and appends any extra long descriptions.
  * Handles formatting of newlines and removes trailing whitespace.
  *
- * @param {object} ob - Object to get description from, defaults to previous_object()
+ * @param {STD_OBJECT} ob - Object to get description from, defaults to previous_object()
  * @param {int} [extras=1] - Whether to include extra descriptions (1=yes, 0=no)
  * @returns {string} Formatted long description
  * @example

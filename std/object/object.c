@@ -318,7 +318,7 @@ function *query_reset_functions() {
  * @param {function} f - The function to call
  * @returns {int} 1 if successfully added, 0 if not
  */
-int add_destruct(function f) {
+int addDestruct(function f) {
   assert_arg(valid_function(f), 1, "Invalid argument.");
 
   if(!of(f, _destruct_functions)) {

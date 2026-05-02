@@ -66,7 +66,7 @@ void setup() {
     restore_on_load: true
   ));
 
-  init_storage_room();
+  initStorageRoom();
 
   set_terrain("indoor");
   set_room_type("storage");
