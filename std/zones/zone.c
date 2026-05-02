@@ -13,47 +13,48 @@ private nosave object *rooms;
 private nosave string zone_name;
 
 nomask void mudlib_setup() {
-    rooms = ({});
+  rooms = ({});
 
-    zone_name = query_file_name(this_object());
-    zone_name = replace_string(zone_name, "_", " ");
-    zone_name = cap_significant_words(zone_name, 1);
+  zone_name = query_file_name(this_object());
+  zone_name = replace_string(zone_name, "_", " ");
+  zone_name = cap_significant_words(zone_name, 1);
 }
 
 void add_room(object room) {
-    if(!of(room, rooms)) {
-        rooms += ({ room });
-    }
+  if(!of(room, rooms)) {
+    rooms += ({ room });
+  }
 }
 
 void remove_room(object room) {
-    if(of(member_array(room, rooms))) {
-        rooms -= ({ room });
-    }
+  if(of(member_array(room, rooms))) {
+    rooms -= ({ room });
+  }
 }
 
 object *query_rooms() {
-    rooms -= ({ 0 });
-    return rooms;
+  rooms -= ({ 0 });
+
+  return rooms;
 }
 
 int query_num_rooms() {
-    return sizeof(query_rooms());
+  return sizeof(query_rooms());
 }
 
 string query_zone_name() {
-    return zone_name;
+  return zone_name;
 }
 
 int request_clean_up() {
-    rooms -= ({ 0 });
-    if(sizeof(rooms) == 0) {
-        return 1;
-    }
+  rooms -= ({ 0 });
 
-    return 0;
+  if(sizeof(rooms) == 0)
+    return 1;
+
+  return 0;
 }
 
 int is_zone() {
-    return 1;
+  return 1;
 }

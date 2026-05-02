@@ -10,28 +10,28 @@
  */
 
 private nosave string *_terrain_types = ({
-    "city",
-    "road",
-    "indoor",
-    "outdoor",
-    "forest",
-    "grass",
-    "ocean",
-    "plains",
-    "swamp",
-    "tunnels",
-    "wastes",
+  "city",
+  "road",
+  "indoor",
+  "outdoor",
+  "forest",
+  "grass",
+  "ocean",
+  "plains",
+  "swamp",
+  "tunnels",
+  "wastes",
 });
 
 private nosave string _terrain;
 
 void set_terrain(string terrain) {
-    if(!of(terrain, _terrain_types))
-        return;
+  if(!of(terrain, _terrain_types))
+    return;
 
-    _terrain = terrain;
+  _terrain = terrain;
 }
 
 string query_terrain() {
-    return _terrain;
+  return _terrain;
 }

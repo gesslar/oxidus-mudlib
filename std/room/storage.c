@@ -53,7 +53,7 @@ void init_storage_room() {
  * @errors If custom storage file is not found
  */
 object store() {
-  object store;
+  /** @type {STD_STORAGE_OBJECT} */ object store;
   string org, file;
 
   org = storage_options.storage_org;
@@ -184,7 +184,7 @@ mixed cmd_store(object tp, string arg) {
   if(!sizeof(obs))
     return "You don't possess any such thing to store.";
 
-  foreach(ob in obs) {
+  foreach(/** @type {STD_ITEM} */ ob in /** @type {STD_ITEM*} */ obs) {
     if(result = ob->move(store))
       out += get_short(ob) + " could not be stored.\n";
     else

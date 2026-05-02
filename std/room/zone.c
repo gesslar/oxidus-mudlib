@@ -9,34 +9,36 @@
  * 2024/02/04 - Gesslar - Created
  */
 
+#include "/std/object/include/object.h"
 
-string find_path(string path);
-
-private nosave object zone;
+/** @type {STD_ZONE} */
+private nosave object __zone;
 
 void set_zone(mixed z) {
+  assert_arg((stringp(z) && truthy(z)) || objectp(z), 1, "Zone must be a string or a zone object.");
+
   if(stringp(z)) {
     z = find_path(z);
-    z = load_object(z);
+    __zone = load_object(z);
+  } else {
+    __zone = z;
   }
 
-  if(!objectp(z))
+  if(!objectp(__zone))
     error("Invalid zone object: " + z);
 
-  if(!z->is_zone())
+  if(!__zone->is_zone())
     error("Invalid zone object: " + z);
 
-  zone = z;
-  zone->add_room(this_object());
+  __zone->add_room(this_object());
 }
 
 string query_zone_name() {
-  if(!objectp(zone))
-    return "Unknown";
-
-  return zone->query_zone_name();
+  return objectp(__zone)
+    ? __zone->query_zone_name()
+    : "Unknown";
 }
 
 object query_zone() {
-  return zone;
+  return __zone;
 }

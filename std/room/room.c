@@ -30,9 +30,9 @@ private nosave int *_size = ({1, 1, 1});
  * Configures the container to ignore capacity and mass limits
  * and adds door resetting to the reset handler.
  *
- * @param {mixed} args - Variable arguments passed to setup
+ * @param {mixed*} _args - Variable arguments passed to setup
  */
-void mudlib_setup(mixed args...) {
+void mudlib_setup(mixed _args...) {
   set_ignore_capacity(1);
   set_ignore_mass(1);
   add_reset((: reset_doors :));
