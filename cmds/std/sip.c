@@ -13,7 +13,7 @@
 inherit STD_ACT;
 
 mixed main(object tp, string str) {
-  object ob;
+  /** @type {STD_DRINK} */ object ob;
   int uses;
 
   if(!ob = find_target(tp, str, tp))
@@ -27,7 +27,7 @@ mixed main(object tp, string str) {
   if(uses < 1)
     return "There is nothing left to sip.";
 
-  if(!ob->sip(tp))
+  if(!ob->sip_obj(tp))
     return "You couldn't sip from that.";
 
   return 1;

@@ -130,6 +130,3 @@ mixed try_to_eat(object ob, string arg) {
 
   return 1;
 }
-
-mixed direct_eat_obj(object ob, string arg) { return try_to_eat(ob, arg); }
-mixed direct_nibble_obj(object ob, string arg) { return try_to_eat(ob, arg); }

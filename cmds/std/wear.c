@@ -23,7 +23,7 @@ void setup() {
 }
 
 mixed main(/** @type {STD_BODY} */ object tp, string str) {
-  object ob;
+  /** @type {STD_CLOTHING | STD_ARMOUR} */ object ob;
   string slot;
   mixed result;
 

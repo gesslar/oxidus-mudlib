@@ -34,16 +34,13 @@ private mixed try_to_drink(object ob, string arg, string verb) {
   return 1;
 }
 
-public mixed direct_drink_obj(object ob, string arg) { return try_to_drink(ob, arg, "drink"); }
-public mixed direct_sip_obj(object ob, string arg) { return try_to_drink(ob, arg, "sip"); }
-
 /**
  *
  * @param {STD_BODY} user - The user drinking the object.
  * @param {string} arg - The argument supplied by the user.
  * @returns {int} The result of the drinking.
  */
-public mixed e_drink_obj(object user, string arg) {
+public mixed drink_obj(object user, string arg) {
   mixed result = drink(user);
 
   if(result == 1 && query_uses() < 1) {
@@ -54,7 +51,7 @@ public mixed e_drink_obj(object user, string arg) {
   return result;
 }
 
-public int e_sip_obj(object user, string arg) {
+public int sip_obj(object user, string arg) {
   mixed result = sip(user, 1);
 
   if(result == 1 && query_uses() < 1) {

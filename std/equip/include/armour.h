@@ -3,7 +3,7 @@
 
 #include <clothing.h>
 
-public int equip(string slot, object tp);
+public int equip(object tp, string slot);
 public int unequip(object tp, int silent);
 public void set_defense(mapping def);
 public void add_defense(string type, float amount);
