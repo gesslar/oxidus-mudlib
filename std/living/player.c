@@ -70,11 +70,11 @@ void enter_world(int reconnecting) {
     return;
 
   catch {
-    ch = explode(query_pref("auto_tune"), " ");
-    if(sizeof(ch) > 0)
-      foreach(string channel in ch) {
-        CMD_CHANNEL->tune(channel, query_privs(this_object()), 1, 1);
-      }
+    // ch = explode(query_pref("auto_tune"), " ");
+    // if(sizeof(ch) > 0)
+    //   foreach(string channel in ch) {
+    //     CMD_CHANNEL->tune(channel, query_privs(this_object()), 1, 1);
+    //   }
   };
 
   set_last_login(time());

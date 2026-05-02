@@ -445,7 +445,7 @@ private void grapevineHandleChannelsUnsubscribe(string reff) {
 
 private void grapevineHandleChannelsBroadcast(string _reff, mapping data) {
   _log(1, "Received broadcast on channel: %s", data["channel"]);
-  catch(CHAN_D->grapevine_chat(data));
+  // catch(CHAN_D->grapevine_chat(data));
 }
 
 // TODO: We need to ask them if we could receive a status and
@@ -497,12 +497,12 @@ private void grapevineHandlePlayersSignIn(string reff, mapping data) {
     return;
   }
 
-  catch(CHAN_D->grapevine_chat(([
-    "channel": mudConfig("GRAPEVINE")["notice"],
-    "message": sprintf("%s has signed in to %s", data["name"], data["game"]),
-    "name": "Grapevine",
-    "game": mud_name(),
-  ])));
+  // catch(CHAN_D->grapevine_chat(([
+  //   "channel": mudConfig("GRAPEVINE")["notice"],
+  //   "message": sprintf("%s has signed in to %s", data["name"], data["game"]),
+  //   "name": "Grapevine",
+  //   "game": mud_name(),
+  // ])));
 
   _log(1, "Player signed in: %s@%s", data["name"], data["game"]);
 }
@@ -531,12 +531,12 @@ private void grapevineHandlePlayersSignOut(string reff, mapping data) {
     return;
   }
 
-  catch(CHAN_D->grapevine_chat(([
-    "channel": mudConfig("GRAPEVINE")["notice"],
-    "message": sprintf("%s has signed out of %s", data["name"], data["game"]),
-    "name": "Grapevine",
-    "game": mud_name(),
-  ])));
+  // catch(CHAN_D->grapevine_chat(([
+  //   "channel": mudConfig("GRAPEVINE")["notice"],
+  //   "message": sprintf("%s has signed out of %s", data["name"], data["game"]),
+  //   "name": "Grapevine",
+  //   "game": mud_name(),
+  // ])));
 
   _log(1, "Player signed out: %s@%s", data["name"], data["game"]);
 }
@@ -613,23 +613,23 @@ private void grapevineHandleTellsReceive(string _reff, mapping data) {
 
 // Game
 private void grapevineHandleGamesConnect(string _reff, mapping data) {
-  catch(CHAN_D->grapevine_chat(([
-    "channel": mudConfig("GRAPEVINE")["notice"],
-    "message": sprintf("%s has connected to Grapevine", data["game"]),
-    "name": "Grapevine",
-    "game": mud_name(),
-  ])));
+  // catch(CHAN_D->grapevine_chat(([
+  //   "channel": mudConfig("GRAPEVINE")["notice"],
+  //   "message": sprintf("%s has connected to Grapevine", data["game"]),
+  //   "name": "Grapevine",
+  //   "game": mud_name(),
+  // ])));
 
   _log(1, "Game connected: %s", data["game"]);
 }
 
 private void grapevineHandleGamesDisconnect(string _reff, mapping data) {
-  catch(CHAN_D->grapevine_chat(([
-    "channel": mudConfig("GRAPEVINE")["notice"],
-    "message": sprintf("%s has disconnected from Grapevine", data["game"]),
-    "name": "Grapevine",
-    "game": mud_name(),
-  ])));
+  // catch(CHAN_D->grapevine_chat(([
+  //   "channel": mudConfig("GRAPEVINE")["notice"],
+  //   "message": sprintf("%s has disconnected from Grapevine", data["game"]),
+  //   "name": "Grapevine",
+  //   "game": mud_name(),
+  // ])));
 
   _log(1, "Game disconnected: %s", data["game"]);
 }

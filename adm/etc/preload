@@ -20,9 +20,6 @@
 # COLOUR_D color daemon
 /adm/daemons/colour
 
-# Channel Daemon
-/adm/daemons/channel
-
 # Shutdown Daemon
 /adm/daemons/shutdown
 

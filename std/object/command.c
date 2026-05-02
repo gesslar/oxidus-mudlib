@@ -381,10 +381,11 @@ public int commandHook(string arg) {
       if(SOUL_D->request_emote(verb, arg))
         return 1;
 
-    err = catch(load_object(CHAN_D));
-    if(!err)
-      if(CHAN_D->chat(verb, query_privs(), arg))
-        return 1;
+    // err = catch(load_object(CHAN_D));
+    // if(!err) {
+      // if(CHAN_D->chat(verb, query_privs(), arg))
+      //   return 1;
+    // }
   };
 
   cmds = map(__cmdPaths, (: $1 + $(verb) + ".c" :));

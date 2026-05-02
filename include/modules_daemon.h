@@ -3,6 +3,4 @@
 
 #include <dirs.h>
 
-#define D_MOD_CHANNEL         DIR_DAEMON_MODULES "channel/channelModule"
-
 #endif // __DAEMONS_H__
