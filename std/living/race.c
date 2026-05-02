@@ -25,7 +25,7 @@ public string set_race(string race) {
     return _race;
   }
 
-  if(query_module(modulePath))
+  if(query_module("race"))
     error("Race body module has already been applied");
 
   mod = add_module(modulePath);
@@ -40,7 +40,7 @@ public string set_race(string race) {
 
 public string query_race() {
   return _race ||
-    module("std/modules/race/" + _race, "query_race");
+    module("race", "query_race");
 }
 
 public nomask void set_gender(string g) {

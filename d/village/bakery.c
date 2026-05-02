@@ -72,8 +72,8 @@ void setup() {
 
   init_shop();
 
-  add_menu_item("food", "/obj/food/muffin");
-  add_menu_item("drink", "/obj/drink/strawberry_juice");
+  add_menu_item("food", "/obj/food/muffin.food");
+  add_menu_item("drink", "/obj/drink/strawberry_juice.drink");
 
   set_terrain("indoor");
   set_room_type("food");

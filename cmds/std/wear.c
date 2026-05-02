@@ -22,42 +22,42 @@ void setup() {
    usage_text = "wear <item>";
 }
 
-mixed main(/** @type {STD_BODY} */ object tp,
-    string str) {
-    object ob;
-    string slot;
-    string slots;
-    string *items;
-    mixed result;
-    int i;
+mixed main(/** @type {STD_BODY} */ object tp, string str) {
+  object ob;
+  string slot;
+  mixed result;
 
-    if(!ob = find_target(tp, str, tp))
-        return "You do not have that item.";
+  if(!ob = find_target(tp, str, tp))
+    return "You do not have that item.";
 
-    if(!ob->is_armour() && !ob->is_clothing())
-        return "You can only wear clothing and armour.";
+  if(!ob->is_armour() && !ob->is_clothing())
+    return "You can only wear clothing and armour.";
 
-    slot = ob->query_slot();
-    if(nullp(slot))
-        return "That item cannot be worn.";
+  slot = ob->query_slot();
 
-    if(!tp->module("race", "query_equipment_slots", slot))
-        return "You cannot wear something of that type.";
+  if(nullp(slot))
+    return "That item cannot be worn.";
 
-    if(tp->equipped_on(slot))
-        return "You are already wearing something in that slot.";
+  if(!tp->module("race", "query_equipment_slots", slot))
+    return "You cannot wear something of that type.";
 
-    result = ob->can_equip(slot, tp);
-    if(stringp(result))
-        return result;
-    if(result == 0)
-        return "1 You cannot wear that item.";
+  if(tp->equipped_on(slot))
+    return "You are already wearing something in that slot.";
 
-    result = ob->equip(tp, slot);
-    if(stringp(result))
-        return result;
-    if(result == 0)
-        return "2 You cannot wear that item.";
+  result = ob->can_equip(slot, tp);
+  if(stringp(result))
+    return result;
 
-    return "You wear the "+get_short(ob)+".";
+  if(result == 0)
+    return "You cannot wear that item.";
+
+  result = ob->equip(tp, slot);
+
+  if(stringp(result))
+    return result;
+
+  if(result == 0)
+    return "You cannot wear that item.";
+
+  return "You wear the "+get_short(ob)+".";
 }

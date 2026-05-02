@@ -2,10 +2,10 @@
 #define __OBJECT_MODULE_H__
 
 varargs object add_module(string moduleFile, mixed args...);
-object query_module(string moduleFile);
-int remove_module(string moduleFile);
+mixed query_module(string moduleName);
+int remove_module(string moduleName);
 mapping query_modules();
-varargs mixed module(string moduleFile, string functionName,
+varargs mixed module(string moduleName, string functionName,
   mixed args...);
 void remove_all_modules();
 

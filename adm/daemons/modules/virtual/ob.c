@@ -26,7 +26,7 @@ public nomask object compile_object(string file) {
   // Remove the module extension
   sscanf(obj_name, "%s.%*s", obj_name);
 
-  obj_file = sprintf("/obj/%s/%s.lpml", module, obj_name);
+  obj_file = sprintf("%s/%s.lpml", parts[0], obj_name);
 
   if(file_size(obj_file) < 1)
     return 0;

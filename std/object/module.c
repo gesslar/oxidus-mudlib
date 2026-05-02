@@ -5,31 +5,68 @@
  * detaching cloned module objects that provide additional
  * behaviour.
  *
+ * Modules are registered under their `query_name()` (i.e. the
+ * `moduleName` they advertise in setup), not their file path.
+ * A module may opt into multi-instance attachment by overriding
+ * `allows_multi()` to return 1; in that case the registry value
+ * for that name is an array of objects.
+ *
  * @created 2024-07-29 - Gesslar
- * @last_modified 2026-03-29 - Gesslar
+ * @last_modified 2026-05-01 - Gesslar
  *
  * @history
  * 2024-07-29 - Gesslar - Created
  * 2026-03-29 - Gesslar - Backported from Thresh to object level
+ * 2026-05-01 - Gesslar - Key by query_name(); allow_multi support
  */
 
 #include "include/module.h"
 
 void remove_all_modules();
 
-/** @type {([ string: STD_MODULE_BASE ])} */
+/**
+ * Registry of attached modules keyed by `query_name()`. Values
+ * are either a single module object or an array of objects for
+ * multi-instance modules.
+ *
+ * @type {([ string: STD_MODULE_BASE | STD_MODULE_BASE* ])}
+ */
 private nosave mapping __modules = ([]);
+
+/**
+ * Destruct callback bound via `add_destruct()` so that all
+ * attached modules are detached and removed when this object is
+ * destructed.
+ *
+ * @type {function}
+ */
 private nosave function onDestructFunction =
   (: remove_all_modules :);
 
-private void validModuleFileName(string moduleFile, int index) {
+/**
+ * Asserts that a module name argument is a non-empty string.
+ *
+ * @param {string} moduleName - The candidate module name.
+ * @param {int} index - The argument position used in the
+ *                      `assert_arg` failure message.
+ * @errors If `moduleName` is not a non-empty string.
+ */
+private void validModuleName(string moduleName, int index) {
   assert_arg(
-    stringp(moduleFile) && strlen(moduleFile),
+    stringp(moduleName) && strlen(moduleName),
     index,
-    "`moduleFile` must be a non-empty string."
+    "`moduleName` must be a non-empty string."
   );
 }
 
+/**
+ * Asserts that a function name argument is a non-empty string.
+ *
+ * @param {string} functionName - The candidate function name.
+ * @param {int} index - The argument position used in the
+ *                      `assert_arg` failure message.
+ * @errors If `functionName` is not a non-empty string.
+ */
 private void validFunctionName(
   string functionName, int index
 ) {
@@ -41,8 +78,41 @@ private void validFunctionName(
 }
 
 /**
+ * Detaches a module and destructs it. Both the `detach()` and
+ * `remove()` calls are wrapped in nested catches so that a
+ * failure in either one does not prevent the destruct from
+ * happening.
+ *
+ * @param {STD_MODULE_BASE} mod - The module to detach and
+ *                                destruct. Non-objects are
+ *                                ignored.
+ */
+private void detachAndDestruct(object mod) {
+  if(!objectp(mod))
+    return;
+
+  catch {
+    catch {
+      mod->detach();
+      mod->remove();
+    };
+
+    if(mod)
+      destruct(mod);
+  };
+}
+
+/**
  * Adds a module to this object by cloning the specified module
- * file and attaching it.
+ * file and attaching it. The module is registered under its
+ * `query_name()`, not its file path.
+ *
+ * If no module is registered under that name, the entry is
+ * created as an array when the module's `allows_multi()`
+ * returns true and as a single object otherwise. If a
+ * multi-instance array already exists, the new module is
+ * appended. If a single-instance entry already exists, the new
+ * clone is discarded and 0 is returned.
  *
  * @param {string} moduleFile - Path to the module file, without
  *                              leading "/" or trailing ".c"
@@ -56,10 +126,7 @@ private void validFunctionName(
 public varargs object add_module(
   string moduleFile, mixed args...
 ) {
-  validModuleFileName(moduleFile, 1);
-
-  if(!nullp(__modules[moduleFile]))
-    return ([])[0];
+  validModuleName(moduleFile, 1);
 
   string path = append(moduleFile, ".c");
   path = prepend(path, "/");
@@ -76,6 +143,14 @@ public varargs object add_module(
     error("Module " + moduleFile +
       " failed to load with error: " + e);
 
+  string name = mod->query_name();
+  mixed existing = __modules[name];
+
+  if(!nullp(existing) && !pointerp(existing)) {
+    mod->remove();
+    return 0;
+  }
+
   e = catch {
     int result = mod->attach(this_object(), args...);
 
@@ -90,58 +165,59 @@ public varargs object add_module(
     return 0;
   }
 
-  __modules[moduleFile] = mod;
+  if(pointerp(existing))
+    __modules[name] = array_push(ref __modules, mod);
+  else if(mod->allows_multi())
+    __modules[name] = ({ mod });
+  else
+    __modules[name] = mod;
 
-  this_object()->add_destruct(onDestructFunction);
+  call_if(this_object(), "add_destruct", (:onDestructFunction:));
 
   return mod;
 }
 
 /**
- * Returns the module object for the given module file path.
+ * Returns the module entry for the given module name. For
+ * single-instance modules this is the module object; for
+ * multi-instance modules it is an array of module objects.
  *
- * @param {string} moduleFile - The module file path used when
- *                              adding the module
- * @returns {STD_MODULE_BASE} The module object, or 0 if not
- *                            found
+ * @param {string} moduleName - The module's `query_name()`
+ * @returns {STD_MODULE_BASE | STD_MODULE_BASE *} The module
+ *          entry, or 0 if not found
  */
-public object query_module(string moduleFile) {
-  validModuleFileName(moduleFile, 1);
+public mixed query_module(string moduleName) {
+  validModuleName(moduleName, 1);
 
-  if(!__modules[moduleFile])
+  if(nullp(__modules[moduleName]))
     return 0;
 
-  return __modules[moduleFile];
+  return __modules[moduleName];
 }
 
 /**
- * Removes a module from this object by detaching and
- * destructing it.
+ * Removes all modules registered under the given name by
+ * detaching and destructing each. For multi-instance modules,
+ * every attached instance is removed.
  *
- * @param {string} moduleFile - The module file path used when
- *                              adding the module
+ * @param {string} moduleName - The module's `query_name()`
  * @returns {int} 1 if removed, 0 if not found
  */
-public int remove_module(string moduleFile) {
-  validModuleFileName(moduleFile, 1);
+public int remove_module(string moduleName) {
+  validModuleName(moduleName, 1);
 
-  /** @type {STD_MODULE_BASE} */
-  object mod = query_module(moduleFile);
+  mixed entry = query_module(moduleName);
 
-  if(!mod)
+  if(!entry)
     return 0;
 
-  catch {
-    catch {
-      mod->detach();
-      mod->remove();
-    };
+  if(pointerp(entry))
+    foreach(object mod in entry)
+      detachAndDestruct(mod);
+  else
+    detachAndDestruct(entry);
 
-    if(mod)
-      destruct(mod);
-  };
-
-  map_delete(__modules, moduleFile);
+  map_delete(__modules, moduleName);
 
   return 1;
 }
@@ -149,38 +225,53 @@ public int remove_module(string moduleFile) {
 /**
  * Returns a copy of all attached modules.
  *
- * @returns {([ string: STD_MODULE_BASE ])} Mapping of module
- *          file paths to module objects
+ * @returns {([ string: STD_MODULE_BASE | STD_MODULE_BASE * ])}
+ *          Mapping of module names to module objects (or arrays
+ *          of objects for multi-instance modules)
  */
 public mapping query_modules() {
   return copy(__modules);
 }
 
 /**
- * Calls a function on an attached module and returns the result.
+ * Calls a function on the module(s) registered under the given
+ * name and returns the result. For multi-instance modules, the
+ * function is called on every instance and an array of results
+ * is returned.
  *
- * @param {string} moduleFile - The module file path used when
- *                              adding the module
+ * @param {string} moduleName - The module's `query_name()`
  * @param {string} functionName - The function to call on the
  *                                module
  * @param {mixed} [args] - Arguments to pass to the function
- * @returns {mixed} The result of the function call, or null if
- *                  the module is not found
+ * @returns {mixed} The result of the function call, an array of
+ *                  results for multi-instance modules, or null
+ *                  if no module is registered under that name
  */
 public varargs mixed module(
-  string moduleFile, string functionName, mixed args...
+  string moduleName, string functionName, mixed args...
 ) {
-  validModuleFileName(moduleFile, 1);
+  validModuleName(moduleName, 1);
   validFunctionName(functionName, 2);
 
-  /** @type {STD_MODULE_BASE} */
-  object mod = query_module(moduleFile);
+  mixed entry = query_module(moduleName);
 
-  if(!mod)
+  if(!entry)
     return null;
 
+  if(pointerp(entry)) {
+    mixed *results = ({});
+
+    foreach(object mod in entry) {
+      mixed r;
+      catch(r = call_if(mod, functionName, args...));
+      results += ({ r });
+    }
+
+    return results;
+  }
+
   mixed result;
-  catch(result = call_if(mod, functionName, args...));
+  catch(result = call_if(entry, functionName, args...));
 
   return result;
 }
@@ -190,6 +281,6 @@ public varargs mixed module(
  * object is destructed.
  */
 public void remove_all_modules() {
-  foreach(string moduleName, object _ in __modules)
+  foreach(string moduleName, mixed _ in __modules)
     remove_module(moduleName);
 }

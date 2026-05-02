@@ -89,3 +89,14 @@ public int request_clean_up() {
 public string query_name() {
   return moduleName;
 }
+
+/**
+ * Whether multiple instances of this module may be attached to
+ * the same owner. Override and return 1 in subclasses that
+ * support stacking.
+ *
+ * @returns {int} 1 if multi-instance is allowed, 0 otherwise
+ */
+public int allows_multi() {
+  return 0;
+}

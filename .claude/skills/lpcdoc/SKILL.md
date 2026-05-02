@@ -11,12 +11,18 @@ useful documentation.
 
 ## Documentation Requirements
 
-1. **All `public` functions require an LPCDoc block.** `protected` and
-   `private` functions should be documented when their purpose is not
-   obvious from the name and signature, but it is not mandatory.
-2. **A description is mandatory** on every LPCDoc block. Every doc
+1. **All `public`, `protected`, and `private` functions require an
+   LPCDoc block.** Lifecycle entry points and forward declarations
+   are exempt (see "What Not to Document" below). The LSP relies on
+   `@param` types to resolve parameters in helpers, so private
+   helpers are not optional in this project.
+2. **All file-global variables require an LPCDoc block** with at
+   least `@type` and a short description. The LSP uses `@type` to
+   reason about globals; without it, references cannot be type-
+   checked.
+3. **A description is mandatory** on every LPCDoc block. Every doc
    comment must begin with a description of the element it documents.
-3. **Types are mandatory on `@param` and `@returns`.** The `{type}`
+4. **Types are mandatory on `@param` and `@returns`.** The `{type}`
    annotation is required, not optional — every `@param` must include
    a type and every `@returns` must include a type.
 
@@ -921,7 +927,10 @@ Unless specifically instructed, do not document:
    - `void post_setup_0()` through `void post_setup_4()`
 3. Preprocessor directives (#include, #define, etc.)
 4. Inherit statements
-5. Global variables (unless specifically required)
+
+File-global variables **do** require documentation in this project —
+at minimum a `@type` annotation and a short description — so that
+the LSP can resolve their type at every reference site.
 
 ## Header Documentation
 
