@@ -22,7 +22,6 @@ Created: 2025-11-09
 LPML is built on JSON5, which extends JSON with:
 
 ### Comments
-
 ```lpml
 // Single-line comments
 /* Multi-line
@@ -30,7 +29,6 @@ LPML is built on JSON5, which extends JSON with:
 ```
 
 ### Unquoted Keys
-
 ```lpml
 {
   name: "Gesslar",           // Simple identifier
@@ -43,7 +41,6 @@ LPML is built on JSON5, which extends JSON with:
 **Spacey Keys:** LPML supports YAML-style keys with spaces - just write the key naturally and end it with `:`. The parser reads everything until the colon as the key name.
 
 ### Trailing Commas
-
 ```lpml
 {
   foo: "bar",
@@ -52,13 +49,11 @@ LPML is built on JSON5, which extends JSON with:
 ```
 
 ### Single-Quoted Strings
-
 ```lpml
 name: 'single quotes work too'
 ```
 
 ### Number Formats
-
 ```lpml
 {
   hex: 0xFF,           // Hexadecimal
@@ -86,7 +81,7 @@ Unlike JSON5, LPML allows keys with spaces without requiring quotes:
   two words: "value",
   multiple word key: "value",
   crafting material: "leather",
-
+  
   // Still works with quotes if you need them:
   "key: with colon": "value",
   'single quoted': "value"
@@ -94,20 +89,18 @@ Unlike JSON5, LPML allows keys with spaces without requiring quotes:
 ```
 
 **How it works:**
-
 - The parser reads everything from the start of the key until it finds `:`
 - Leading and trailing whitespace is trimmed
 - Works alongside traditional identifiers and quoted keys
 
 **Examples:**
-
 ```lpml
 {
   // Character data with natural keys
   hit points: 100,
   mana points: 50,
   experience points: 1500,
-
+  
   // Crafting materials
   crafting material: "yes",
   material type: "leather",
@@ -139,7 +132,6 @@ text: "First paragraph."
 ```
 
 **Rules:**
-
 1. If a string ends with `\n`, the next string concatenates **without** adding a space
 2. Otherwise, strings are joined with a single space
 3. Works with any quote style: `"..."`, `'...'`
@@ -157,7 +149,6 @@ description: "This is a long
 ```
 
 **Folding behavior:**
-
 - Actual newlines in the source (pressing Enter) are converted to spaces
 - Escape sequences like `\n` are preserved as actual newlines
 
@@ -180,7 +171,6 @@ Include external files with `"#path"` syntax:
 ```
 
 **Include behavior:**
-
 1. The `#path` pattern is replaced with the file's contents during preprocessing
 2. Included files are recursively preprocessed (supports nested includes)
 3. Relative paths are resolved based on the `base_path` parameter
@@ -188,7 +178,6 @@ Include external files with `"#path"` syntax:
 5. Works with both double and single quotes
 
 **Escaping includes:**
-
 ```lpml
 {
   channel: "\#general"  // → "#general" (literal)
@@ -285,7 +274,6 @@ Standard JSON escape sequences are supported:
 ```
 
 Supported escapes:
-
 - `\"` - Double quote
 - `\'` - Single quote
 - `\\` - Backslash
@@ -315,18 +303,15 @@ mixed data = lpml_decode(
 ```
 
 **Signature:**
-
 ```lpc
 varargs mixed lpml_decode(string text, string base_path)
 ```
 
 **Parameters:**
-
 - `text` - The LPML string to parse
 - `base_path` - (Optional) Base directory for resolving relative includes
 
 **Returns:**
-
 - Parsed LPC data structure (mapping, array, or primitive)
 - `0` if text is null/empty
 
@@ -338,13 +323,11 @@ string text = lpml_encode(data);
 ```
 
 **Signature:**
-
 ```lpc
 string lpml_encode(mixed value)
 ```
 
 **Returns:**
-
 - JSON-formatted string (standard JSON, not LPML extensions)
 
 **Note:** Encoding produces standard JSON. LPML extensions (comments, includes, string concatenation) are **read-only** features.
@@ -368,20 +351,20 @@ Alternative: `.json` or `.json5` for editor syntax highlighting
 {
   name: "Gesslar",
   title: "Wielder of Sharp Things",
-
+  
   // Load external configs
   stats: "#./stats.lpml",
   inventory: "#./inventory.lpml",
-
+  
   // Spacey keys for natural language
   hit points: 100,
   max hit points: 120,
   experience points: 1500,
-
+  
   bio: "A seasoned adventurer from the West."
        "Known for incredible fashion sense."
        "Has a pet dragon named Sparky.",
-
+  
   skills: {
     combat: 85,
     magic: 60,
@@ -439,7 +422,6 @@ Alternative: `.json` or `.json5` for editor syntax highlighting
 ### Modular Configuration
 
 **main.lpml:**
-
 ```lpml
 {
   game: {
@@ -455,7 +437,6 @@ Alternative: `.json` or `.json5` for editor syntax highlighting
 ```
 
 **db-config.lpml:**
-
 ```lpml
 {
   host: "localhost",
@@ -478,7 +459,6 @@ Alternative: `.json` or `.json5` for editor syntax highlighting
 ### UTF-8 Safety
 
 LPML uses buffer-based encoding for UTF-8 safety:
-
 - Source text is converted to buffer via `string_encode(text, "utf-8")`
 - Buffer indexing is O(1) byte access (fast and safe)
 - Final strings are decoded via `string_decode(buffer, "utf-8")`
@@ -493,7 +473,7 @@ LPML uses buffer-based encoding for UTF-8 safety:
 ## Differences from JSON5
 
 | Feature | JSON5 | LPML |
-| --------- | ------- | ------ |
+|---------|-------|------|
 | Comments | ✓ | ✓ |
 | Trailing commas | ✓ | ✓ |
 | Unquoted keys | ✓ | ✓ |
@@ -519,7 +499,7 @@ LPML uses buffer-based encoding for UTF-8 safety:
 
 ## Grammar Summary
 
-```text
+```
 value       ::= object | array | string | number | boolean | null
                 | 'undefined' | 'Infinity' | 'NaN' | 'MAX_INT' | 'MAX_FLOAT'
 object      ::= '{' members? '}'
@@ -543,7 +523,6 @@ comment     ::= '//' [^\n]* | '/*' .*? '*/'
 Created by Gesslar for the Oxidus MUD codebase.
 
 Based on:
-
 - JSON5 specification
 - LPC/FluffOS runtime
 - Lessons learned from YAML complexity

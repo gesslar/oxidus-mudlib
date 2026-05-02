@@ -1,2 +1,0 @@
-Tento nástroj umožňuje zmeniť určité nastavenia Vašej aktuálne zvolenej šablóny.
-Všetky zmeny sú uložené v lokálnom konfiguračnom súbore a zabezpečené v prípade aktualizácie.

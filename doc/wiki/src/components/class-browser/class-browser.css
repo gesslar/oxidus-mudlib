@@ -123,28 +123,11 @@
   font-weight: 700;
 }
 
-.cb-header-tools {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  margin-inline-start: auto;
-  flex-shrink: 0;
-}
-
 .cb-source {
+  margin-inline-start: auto;
   font-family: var(--cb-font-mono);
   font-size: 0.75rem;
   opacity: 0.65;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Hide source text on very narrow screens */
-@media (max-width: 30rem) {
-  .cb-header .cb-source {
-    display: none;
-  }
 }
 
 /* ----------------------------------------------------------
@@ -157,6 +140,7 @@
   width: 1.5rem;
   height: 1.5rem;
   padding: 0;
+  margin-inline-start: 0.5rem;
   background: none;
   border: 1px solid var(--cb-border);
   border-radius: var(--cb-badge-radius);
@@ -192,6 +176,7 @@
   width: 1.5rem;
   height: 1.5rem;
   padding: 0;
+  margin-inline-start: 0.5rem;
   background: none;
   border: 1px solid var(--cb-border);
   border-radius: var(--cb-badge-radius);
@@ -303,9 +288,9 @@
  * Method card
  * ---------------------------------------------------------- */
 .cb-method {
+  border: 1px solid var(--cb-border);
   border-radius: var(--cb-border-radius);
   margin-block: 0.625rem;
-  background: color-mix(in srgb, currentColor 5%, transparent);
 }
 
 .cb-method > summary {
@@ -317,17 +302,9 @@
   cursor: pointer;
   list-style: none;
   user-select: none;
-  border-inline-start: 3px solid var(--cb-hl-function);
+  border-inline-start: 3px solid var(--cb-badge-default);
   border-radius: var(--cb-border-radius);
   position: relative;
-  min-width: 0;
-}
-
-.cb-method > summary > .cb-hl {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
 }
 
 /* ----------------------------------------------------------
@@ -358,13 +335,6 @@
   opacity: 0.8 !important;
 }
 
-/* Touch devices: always show anchors since there's no hover */
-@media (hover: none) {
-  .cb-anchor {
-    opacity: 0.3;
-  }
-}
-
 .cb-anchor:active {
   opacity: 1 !important;
   color: #fff;
@@ -381,13 +351,11 @@
   border-radius: var(--cb-border-radius);
 }
 
-/* Coloured left border based on first modifier badge */
-.cb-method:has(> summary > .cb-badge-public:first-of-type) > summary    { border-inline-start-color: var(--cb-badge-public); }
-.cb-method:has(> summary > .cb-badge-private:first-of-type) > summary   { border-inline-start-color: var(--cb-badge-private); }
-.cb-method:has(> summary > .cb-badge-protected:first-of-type) > summary { border-inline-start-color: var(--cb-badge-protected); }
-.cb-method:has(> summary > .cb-badge-nomask:first-of-type) > summary    { border-inline-start-color: var(--cb-badge-nomask); }
-.cb-method:has(> summary > .cb-badge-static:first-of-type) > summary    { border-inline-start-color: var(--cb-badge-static); }
-.cb-method:has(> summary > .cb-badge-nosave:first-of-type) > summary    { border-inline-start-color: var(--cb-badge-nosave); }
+/* Coloured left border based on visibility */
+.cb-method.cb-vis-public > summary    { border-inline-start-color: var(--cb-badge-public); }
+.cb-method.cb-vis-private > summary   { border-inline-start-color: var(--cb-badge-private); }
+.cb-method.cb-vis-protected > summary { border-inline-start-color: var(--cb-badge-protected); }
+.cb-method.cb-vis-nomask > summary    { border-inline-start-color: var(--cb-badge-nomask); }
 
 .cb-method > summary:hover {
   background: var(--cb-header-bg);
@@ -468,7 +436,7 @@
 
 .cb-param-desc::before,
 .cb-returns-desc::before {
-  content: "\2014\00a0";
+  content: "— ";
   opacity: 0.4;
 }
 

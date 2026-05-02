@@ -1,3 +1,0 @@
-====== Správa ======
-
-Zde najdete možnosti správy a nastavení DokuWiki.

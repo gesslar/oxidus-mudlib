@@ -5,7 +5,7 @@
  * Falls back gracefully if theme files can't be loaded.
  */
 
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
 // --- JSONC parser (strip comments + trailing commas) ----
@@ -93,109 +93,6 @@ const SCOPE_MAP: Record<string, string[]> = {
 let themes: { dark: ThemeData; light: ThemeData } | null = null;
 
 /**
- * Auto-detect Starlight theme plugins that ship syntax themes.
- * Scans node_modules for starlight-theme-* packages containing
- * JSON files with tokenColors.
- */
-function loadPluginThemes(): { dark: ThemeData; light: ThemeData } | null {
-  const require = createRequire(import.meta.url);
-
-  // Find the node_modules directory
-  let nodeModulesDir: string;
-  try {
-    const starlightPath = require.resolve("@astrojs/starlight");
-    nodeModulesDir = starlightPath.replace(/\/@astrojs\/starlight\/.*$/, "/");
-  } catch {
-    return null;
-  }
-
-  // Scan for starlight-theme-* packages
-  let themeDirs: string[];
-  try {
-    themeDirs = readdirSync(nodeModulesDir)
-      .filter((name) => name.startsWith("starlight-theme-"));
-  } catch {
-    return null;
-  }
-
-  for (const pkg of themeDirs) {
-    const pkgDir = nodeModulesDir + pkg + "/";
-
-    // Recursively find JSON files that look like syntax themes
-    const themeFiles = findThemeFiles(pkgDir);
-    if (themeFiles.length === 0) continue;
-
-    // Try to pair them as dark/light
-    const pair = pairThemes(themeFiles);
-    if (pair) return pair;
-
-    // Single theme — use for both
-    if (themeFiles.length === 1) {
-      const theme = themeFiles[0]!;
-      return { dark: theme, light: theme };
-    }
-  }
-
-  return null;
-}
-
-/**
- * Find JSON files containing tokenColors in a directory (shallow + common subdirs).
- */
-function findThemeFiles(dir: string): ThemeData[] {
-  const results: ThemeData[] = [];
-  const searchDirs = [dir];
-
-  // Check common subdirectory names for theme files
-  for (const sub of ["themes", "syntax-themes", "syntax", "dist"]) {
-    searchDirs.push(dir + sub + "/");
-  }
-
-  for (const searchDir of searchDirs) {
-    let files: string[];
-    try {
-      files = readdirSync(searchDir).filter((f) => f.endsWith(".json"));
-    } catch {
-      continue;
-    }
-
-    for (const file of files) {
-      try {
-        const data = JSON.parse(readFileSync(searchDir + file, "utf-8"));
-        if (data.tokenColors && Array.isArray(data.tokenColors)) {
-          results.push(data);
-        }
-      } catch {
-        continue;
-      }
-    }
-  }
-
-  return results;
-}
-
-/**
- * Given theme files, try to pair them as dark/light.
- */
-function pairThemes(themes: ThemeData[]): { dark: ThemeData; light: ThemeData } | null {
-  if (themes.length < 2) return null;
-
-  let dark: ThemeData | null = null;
-  let light: ThemeData | null = null;
-
-  for (const theme of themes) {
-    const type = (theme as any).type as string | undefined;
-    if (type === "dark" && !dark) dark = theme;
-    else if (type === "light" && !light) light = theme;
-  }
-
-  if (dark && light) return { dark, light };
-
-  // Fallback: just use first two
-  return { dark: themes[0]!, light: themes[1]! };
-}
-
-/**
  * Load Starlight's bundled Night Owl themes (the default).
  */
 function loadStarlightThemes(): { dark: ThemeData; light: ThemeData } | null {
@@ -232,7 +129,7 @@ async function loadShikiTheme(name: string): Promise<ThemeData | null> {
 
 async function loadThemes(): Promise<{ dark: ThemeData; light: ThemeData } | null> {
   if (themes) return themes;
-  themes = loadPluginThemes() || loadStarlightThemes();
+  themes = loadStarlightThemes();
   return themes;
 }
 
