@@ -13,50 +13,50 @@ inherit STD_ROOM;
 
 void repopulate();
 
-private nosave string *mob_files = ({});
+/** @type {STD_NPC*} */
 private nosave object *mobs = ({});
+private nosave string *mob_files = ({});
 private nosave float spawn_chance = 8.0;
 
 void setup() {
-    set_light(0);
-    set_terrain("tunnels");
-    // set_room_colour(100);
+  set_light(0);
+  set_terrain("tunnels");
 }
 
 void virtual_setup(mixed args...) {
-    string file = args[0];
-    object ob;
+  string file = args[0];
 
-    set_zone("twisting_tunnels");
+  set_zone("twisting_tunnels");
 
-    __DIR__ "tunnels_daemon"->setup_exits(this_object(), file);
-    __DIR__ "tunnels_daemon"->setup_short(this_object(), file);
-    __DIR__ "tunnels_daemon"->setup_long(this_object(), file);
+  __DIR__ "tunnels_daemon"->setup_exits(this_object(), file);
+  __DIR__ "tunnels_daemon"->setup_short(this_object(), file);
+  __DIR__ "tunnels_daemon"->setup_long(this_object(), file);
 
-    add_reset((: repopulate :));
+  add_reset((: repopulate :));
 
-    mob_files = ({
-        "/mob/rat",
-        "/mob/bat",
-        "/mob/mole",
-        "/mob/centipede",
-    });
+  mob_files = ({
+    "/mob/rat",
+    "/mob/bat",
+    "/mob/mole",
+    "/mob/centipede",
+  });
 }
 
 void repopulate() {
-    string file;
+  string file;
 
-    mobs -= ({ 0 });
-    foreach(object mob in mobs) {
-        if(objectp(mob)) {
-            mob->simple_action("$N $vscurry away into the darkness.");
-            mob->remove();
-        }
-    }
+  mobs -= ({ 0 });
 
-    if(random_float(100.0) < spawn_chance) {
-        file = element_of(mob_files);
-        mobs += ({ add_inventory(file) });
-        mobs->simple_action("$N $vappear from the shadows.");
+  foreach(object mob in mobs) {
+    if(objectp(mob)) {
+      mob->simple_action("$N $vscurry away into the darkness.");
+      mob->remove();
     }
+  }
+
+  if(random_float(100.0) < spawn_chance) {
+    file = element_of(mob_files);
+    mobs += ({ add_inventory(file) });
+    mobs->simple_action("$N $vappear from the shadows.");
+  }
 }

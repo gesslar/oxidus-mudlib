@@ -12,38 +12,42 @@
 
 inherit STD_ACT;
 
-mixed main(/** @type {STD_BODY} */ object tp,
-    string str) {
-    object ob;
-    mixed result;
+mixed main(/** @type {STD_BODY} */ object tp, string str) {
+  /** @type {STD_WEAPON} */
+  object ob;
+  mixed result;
 
-    if(!ob = find_target(tp, str, tp))
-        return "You do not have that item.";
+  if(!ob = find_target(tp, str, tp))
+    return "You do not have that item.";
 
-    if(!ob->is_weapon())
-        return "You can only wield weapons.";
+  if(!ob->is_weapon())
+    return "You can only wield weapons.";
 
-    if(tp->equipped(ob))
-        return "You are already wielding that weapon.";
+  if(tp->equipped(ob))
+    return "You are already wielding that weapon.";
 
-    result = tp->can_equip(ob, "right hand");
-    if(stringp(result))
-        return result;
+  result = tp->can_equip(ob, "right hand");
 
-    if(result == 0)
-        return "1 You cannot wield that weapon.";
+  if(stringp(result))
+    return result;
 
-    result = ob->can_equip(tp);
-    if(!result)
-        return "2 You cannot wield that weapon.";
+  if(result == 0)
+    return "1 You cannot wield that weapon.";
 
-    result = ob->equip(tp, "right hand");
-    if(stringp(result))
-        return result;
-    if(result == 0)
-        return "3 You cannot wield that weapon.";
+  result = ob->can_equip(tp);
 
-    tp->simple_action("$N $vwield $o.", get_short(ob));
+  if(!result)
+    return "2 You cannot wield that weapon.";
 
-    return 1;
+  result = ob->equip(tp, "right hand");
+
+  if(stringp(result))
+    return result;
+
+  if(result == 0)
+    return "3 You cannot wield that weapon.";
+
+  tp->simple_action("$N $vwield $o.", get_short(ob));
+
+  return 1;
 }

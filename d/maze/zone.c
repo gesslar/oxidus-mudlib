@@ -17,6 +17,9 @@ object generate_object(string file) {
 
   if(pcre_match(file, "^\\d+,\\d+,-?\\d+$")) {
     result = new(__DIR__ "maze_base", file);
+
+    result->set_virtual_master(__DIR__ "maze_base");
+
     return result;
   }
 

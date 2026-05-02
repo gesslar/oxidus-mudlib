@@ -208,11 +208,10 @@ varargs int unequip(object tp, int silent) {
   __equipped = 0;
 
   tp ??= environment();
-
   if(!living(tp))
     return 0;
 
-  if(tp->equipped(this_object()))
+  if(!tp->equipped(this_object()))
     return 0;
 
   if(!tp->unequip(this_object()))

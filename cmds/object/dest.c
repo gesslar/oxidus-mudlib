@@ -17,7 +17,12 @@ public mixed main(
   /** @type {STD_PLAYER} */ object caller, string str
 ) {
   string custom, tmp;
-  object ob, env, room;
+  /** @type {STD_ITEM} */
+  object ob;
+  /** @type {STD_ITEM} */
+  object env;
+  /** @type {STD_ROOM} */
+  object room;
   int cloned;
   string shortDesc, callerName;
 
@@ -43,8 +48,7 @@ public mixed main(
     else
       shortDesc = file_name(ob);
 
-    if(caller->query_env("custom_dest") &&
-      wizardp(caller))
+    if(caller->query_env("custom_dest") && wizardp(caller))
       custom = caller->query_env("custom_dest");
 
     if(custom) {
@@ -65,10 +69,7 @@ public mixed main(
         tell_them(capitalize(tmp) + "\n");
     } else {
       if(env == room)
-        tell_them(
-          callerName + " destructs " +
-          shortDesc + ".\n"
-        );
+        tell_them(callerName + " destructs " +shortDesc + ".\n");
     }
 
     return _ok("Destructed %s.", shortDesc);

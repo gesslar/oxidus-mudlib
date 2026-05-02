@@ -71,24 +71,27 @@ varargs string cap_significant_words(string str, int title) {
 /**
  * Creates the possessive form of a noun.
  *
- * @param {string | object STD_ITEM} ob - Noun or object with query_name()
+ * @param {string | STD_ITEM | STD_BODY} ob - Noun or object with query_name()
  * @returns {string} Possessive form ("'s" or "'" depending on ending)
  * @example
  * possessive_noun("James");  // Returns "James'"
  * possessive_noun("cat");    // Returns "cat's"
  */
 string possessive_noun(mixed ob) {
-  if(objectp(ob))
-    ob = ob->query_name();
+  string result;
 
-  if(!stringp(ob))
+  if(stringp(ob))
+    result = ob;
+  else if(objectp(ob))
+    result = ob->query_name();
+  else
     return "its";
 
-  if(ob[<1] == 's')
-    return ob + "'";
+  if(result[<1] == 's')
+    return result + "'";
 
   else
-    return ob + "'s";
+    return result + "'s";
 }
 
 /**
@@ -96,37 +99,44 @@ string possessive_noun(mixed ob) {
  *
  * Always adds "'s" regardless of ending, following proper noun rules.
  *
- * @param {string|object STD_ITEM} ob - Proper noun or object with query_name()
+ * @param {string | STD_ITEM | STD_BODY} ob - Proper noun or object with query_name()
  * @returns {string} Possessive form with "'s"
  * @example
  * possessive_proper_noun("James");  // Returns "James's"
  */
 string possessive_proper_noun(mixed ob) {
-  if(objectp(ob))
-    ob = ob->query_name();
+  string result;
 
-  if(!stringp(ob))
+  if(stringp(ob))
+    result = ob;
+  else if(objectp(ob))
+    result = ob->query_name();
+  else
     return "its";
 
-  return ob + "'s";
+  return result + "'s";
 }
 
 /**
  * Gets the possessive pronoun for a gender.
  *
- * @param {string|object STD_BODY} ob - Gender string or object with query_gender()
+ * @param {"male" | "female" | "other" | "none" | STD_BODY} ob - Gender string or object with query_gender()
  * @returns {string} Possessive pronoun (his/hers/its/theirs)
  * @example
  * possessive_pronoun("female");  // Returns "hers"
  */
 string possessive_pronoun(mixed ob) {
-  if(objectp(ob))
-    ob = ob->query_gender() || "neuter";
+  string gender;
 
-  if(!stringp(ob))
+  if(objectp(ob))
+    gender = ob->query_gender() || "neuter";
+  else
+    gender = (string)ob;
+
+  if(stringp(ob))
     return "its";
 
-  switch(ob) {
+  switch(gender) {
     case "male" : return "his";
     case "female" : return "hers";
     case "other" : return "theirs";
@@ -138,7 +148,7 @@ string possessive_pronoun(mixed ob) {
 /**
  * Gets the possessive adjective for a gender.
  *
- * @param {string|object STD_BODY} ob - Gender string or object with query_gender()
+ * @param {string | STD_BODY} ob - Gender string or object with query_gender()
  * @returns {string} Possessive adjective (his/her/its/their)
  * @example
  * possessive("female");  // Returns "her"
@@ -270,7 +280,7 @@ varargs string article(string str, int definite) {
  * article_of("bear");      // Returns ""
  */
 string article_of(string str) {
-  string article, *matches;
+  string *matches;
 
   assert_arg(stringp(str) && truthy(str), 1, "Invalid string.");
 

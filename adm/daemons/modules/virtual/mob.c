@@ -29,16 +29,22 @@ public nomask object compile_object(string file) {
 
     mob_type = replace_string(mob_type, " ", "_");
     string target_object_file = sprintf(object_file, mob_type);
-    if(!file_exists(object_file))
+
+    if(!file_exists(target_object_file))
       return 0;
 
     e = catch(mob = new(target_object_file, data));
+
     if(e) {
       log_file("VIRTUAL", e);
+
       if(mob)
         mob->remove();
+
       return 0;
     }
+
+    mob->set_virtual_master(target_object_file);
 
     return mob;
   }

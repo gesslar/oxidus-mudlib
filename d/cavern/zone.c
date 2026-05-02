@@ -12,12 +12,15 @@
 inherit STD_VIRTUAL_SERVER;
 
 object generate_object(string file) {
-    object result;
+  object result;
 
-    if(pcre_match(file, "^\\d+,\\d+,-?\\d+$")) {
-        result = new(__DIR__ "cavern_base", file);
-        return result;
-    }
+  if(pcre_match(file, "^\\d+,\\d+,-?\\d+$")) {
+    result = new(__DIR__ "cavern_base", file);
 
-    return 0;
+    result->set_virtual_master(__DIR__ "cavern_base");
+
+    return result;
+  }
+
+  return 0;
 }

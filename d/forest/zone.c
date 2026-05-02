@@ -53,5 +53,9 @@ object generate_object(string file) {
   if(!forest_map[parts[1]])
     return 0;
 
-  return new(__DIR__ "forest_base", parts[1]);
+  object result = new(__DIR__ "forest_base", parts[1]);
+
+  result->set_virtual_master(__DIR__ "forest_base");
+
+  return result;
 }

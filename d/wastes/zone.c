@@ -16,6 +16,9 @@ object generate_object(string file) {
 
   if(pcre_match(file, "^\\d+,\\d+,\\d+$")) {
     result = new(__DIR__ "wastes_base", file);
+
+    result->set_virtual_master(__DIR__ "wastes_base");
+
     return result;
   }
 

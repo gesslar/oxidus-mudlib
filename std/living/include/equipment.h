@@ -10,12 +10,10 @@ public mixed equipped(object ob);
 public int unequip(mixed ob);
 public mixed can_equip(mixed ob, string slot);
 
-protected int equip_weapon(object weapon);
+protected int equip_weapon(object weapon, string slot);
 protected int equip_wearable(object wearable, string slot);
 
 protected int unequip_weapon(object weapon);
 protected int unequip_wearable(object wearable);
-
-public int equipped(object ob);
 
 #endif // __EQUIPMENT_H__

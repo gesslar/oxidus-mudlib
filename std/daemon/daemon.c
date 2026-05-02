@@ -10,9 +10,9 @@ inherit STD_OBJECT;
 inherit EXT_PERSIST_DATA;
 
 void create(mixed _args...) {
-    setup_chain();
+  setup_chain();
 }
 
 int is_daemon() {
-    return 1;
+  return 1;
 }

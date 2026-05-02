@@ -23,7 +23,8 @@ private string *deepCollectInherits(
 public mixed main(
   /** @type {STD_PLAYER} */ object caller, string arg
 ) {
-  object obj, room;
+  /** @type {STD_ROOM|STD_OBJECT} */ object obj;
+  object room;
   string *parts, start, file;
   string *interactives;
   string e;

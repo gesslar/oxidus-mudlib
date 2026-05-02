@@ -41,16 +41,17 @@ mapping get_tunnels_map() {
 }
 
 object generate_object(string file) {
-    string *parts;
-    int x, y, z;
+  string *parts;
+  int x, y, z;
 
-    parts = dir_file(file);
+  parts = dir_file(file);
 
-    if(sscanf(parts[1], "%d,%d,%d", x, y, z) != 3)
-        return 0;
+  if(sscanf(parts[1], "%d,%d,%d", x, y, z) != 3)
+      return 0;
 
-    // if(!tunnels_map[parts[1]])
-    //     return 0;
+  object result = new(__DIR__ "tunnels_base", parts[1]);
 
-    return new(__DIR__ "tunnels_base", parts[1]);
+  result->set_virtual_master(__DIR__ "tunnels_base");
+
+  return result;
 }

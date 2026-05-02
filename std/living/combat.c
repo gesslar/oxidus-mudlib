@@ -98,7 +98,7 @@ void swing(int count, int multi) {
   object enemy = highest_threat();
   object weapon;
   string *slots = query_weapon_slots();
-  mapping wielded;
+  mapping _wielded;
   int num;
 
   if(nullp(count))
@@ -118,18 +118,18 @@ void swing(int count, int multi) {
     return;
   }
 
-  wielded = query_wielded();
-  wielded = filter(wielded, (: objectp($2) :));
-  if(sizeof(wielded)) {
+  _wielded = query_wielded();
+  _wielded = filter(_wielded, (: objectp($2) :));
+  if(sizeof(_wielded)) {
     string main_slot = slots[0];
     if(multi) {
       object *poss;
-      poss = filter(wielded, (: $1 != $(main_slot) :));
-      poss = distinct_array(values(wielded));
+      poss = filter(_wielded, (: $1 != $(main_slot) :));
+      poss = distinct_array(values(_wielded));
       weapon = element_of(poss);
       multi = 0;
     } else {
-      weapon = wielded[main_slot];
+      weapon = _wielded[main_slot];
       if(random(100) < 5 + query_skill("combat.melee"))
         multi = 1;
     }
@@ -567,8 +567,8 @@ float query_defense_amount(string type) {
 }
 
 mapping adjust_protection() {
-  mapping equipment = query_equipped();
-  object *obs = values(equipment), ob;
+  mapping _equipment = query_equipped();
+  object *obs = values(_equipment), ob;
 
   { // Defenses
     _defense = ([]);

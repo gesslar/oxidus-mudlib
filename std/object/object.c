@@ -101,11 +101,11 @@ int remove() {
 
   catch(call_if(this_object(), "removing", env));
 
-  /** @type {STD_ITEM} */ object ob = first_inventory();
+  /** @type {STD_OBJECT} */ object ob = first_inventory();
   while(ob) {
     int result;
 
-    /** @type {STD_ITEM} */ object next = next_inventory(ob);
+    /** @type {STD_OBJECT} */ object next = next_inventory(ob);
 
     if(env) {
       result = ob->move(env);
@@ -117,6 +117,7 @@ int remove() {
 
     if(!userp(ob)) {
       ob->remove();
+
       if(objectp(ob))
         destruct(ob);
     }

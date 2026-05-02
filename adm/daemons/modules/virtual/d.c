@@ -2,15 +2,13 @@ inherit STD_DAEMON;
 
 public nomask object compile_object(string file) {
   string
-   *path_components,
    *dir_parts,
     top_level_zone,
     zone_path,
     relative_path,
     e;
-  object
-    result,
-    zone_daemon;
+  /** @type {STD_OBJECT} */ object result;
+  /** @type {STD_VIRTUAL_SERVER} */ object zone_daemon;
 
   dir_parts = explode(file, "/");
   top_level_zone = dir_parts[1];
