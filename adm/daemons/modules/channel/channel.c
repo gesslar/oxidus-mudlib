@@ -146,7 +146,8 @@ int incomingTransmission(string chan, string usr, string msg) {
   if(result) {
     string commandFunction = "command"+capitalize(command);
 
-    arg ??= undefined
+    arg ??= undefined;
+
     if(has(this_object(), commandFunction))
       return call_other(commandFunction, chan, usr, arg ?? undefined);
   }
