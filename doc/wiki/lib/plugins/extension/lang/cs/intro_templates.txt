@@ -1,0 +1,1 @@
+Toto jsou šablony, které jsou momentálně nainstalovány v této DokuWiki. Aktuálně používanou šablonu lze vybrat ve [[?do=admin&page=config|Správci rozšíření]].

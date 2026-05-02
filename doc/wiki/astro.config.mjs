@@ -3,7 +3,8 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightScrollToTop from 'starlight-scroll-to-top';
 import starlightHeadingBadges from 'starlight-heading-badges';
-import starlightCodeblockFullscreen from 'starlight-codeblock-fullscreen';
+// import starlightCodeblockFullscreen from 'starlight-codeblock-fullscreen';
+import { ion } from 'starlight-ion-theme';
 import { readFileSync } from 'node:fs';
 
 const loadGrammar = (/** @type {string} */ file) => JSON.parse(
@@ -14,9 +15,15 @@ const lpcGrammar = loadGrammar('lpc.tmLanguage.json');
 
 // https://astro.build/config
 export default defineConfig({
+	vite: {
+		resolve: {
+			preserveSymlinks: true,
+		},
+	},
 	integrations: [
 		starlight({
 			plugins: [
+				ion(),
 				starlightScrollToTop(),
 				starlightHeadingBadges(),
 				// starlightCodeblockFullscreen(), // TODO: duplicate export default bug with scroll-to-top — https://github.com/frostybee/starlight-codeblock-fullscreen/issues/2

@@ -30,19 +30,21 @@ const themeCSS = await generateThemeCSS();
   <header class="cb-header">
     {type && <span class={badgeClass}>{type}</span>}
     <span class="cb-header-name">{name}</span>
-    {source && <span class="cb-source">{source}</span>}
-    {target && <TargetLink target={target} />}
-    <button class="cb-copy-json" title="Copy as JSON" aria-label="Copy class data as JSON">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
-        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2" fill="none"/>
-      </svg>
-    </button>
-    <button class="cb-toggle-all" title="Expand / collapse all" aria-label="Expand or collapse all methods">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path class="cb-toggle-expand" d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-      </svg>
-    </button>
+    <span class="cb-header-tools">
+      {source && <span class="cb-source">{source}</span>}
+      {target && <TargetLink target={target} />}
+      <button class="cb-copy-json" title="Copy as JSON" aria-label="Copy class data as JSON">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2" fill="none"/>
+        </svg>
+      </button>
+      <button class="cb-toggle-all" title="Expand / collapse all" aria-label="Expand or collapse all methods">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path class="cb-toggle-expand" d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </button>
+    </span>
   </header>
   <div class="cb-body">
     <slot />
