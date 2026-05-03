@@ -297,9 +297,6 @@ varargs mixed array_pad(mixed *arr, int size, mixed value, int beginning) {
 
   work = allocate(size - len, value);
 
-  while(size--)
-    work[size] = value;
-
   if(beginning)
     return work + arr;
   else
@@ -527,7 +524,7 @@ mixed pop(mixed ref *arr) {
 }
 
 mixed array_pop(mixed ref *arr) {
-  return pop(arr);
+  return pop(ref arr);
 }
 
 /**
@@ -563,7 +560,7 @@ mixed shift(mixed ref *arr) {
 }
 
 mixed array_shift(mixed ref *arr) {
-  return shift(arr);
+  return shift(ref arr);
 }
 
 /**
@@ -580,7 +577,7 @@ int unshift(mixed ref *arr, mixed value) {
 }
 
 int array_unshift(mixed ref *arr, mixed value) {
-  return unshift(arr, value);
+  return unshift(ref arr, value);
 }
 
 /**
@@ -594,7 +591,7 @@ int set_push(mixed ref *arr, mixed value) {
   if(member_array(value, arr) != -1)
     return sizeof(arr);
 
-  return push(arr, value);
+  return push(ref arr, value);
 }
 
 /**
@@ -608,7 +605,7 @@ int set_unshift(mixed ref *arr, mixed value) {
   if(member_array(value, arr) != -1)
     return sizeof(arr);
 
-  return unshift(arr, value);
+  return unshift(ref arr, value);
 }
 
 /**
@@ -828,7 +825,7 @@ mixed eject(mixed ref *arr, int index) {
 }
 
 mixed array_eject(mixed ref *arr, int index) {
-  return eject(arr, index);
+  return eject(ref arr, index);
 }
 
 /**
@@ -866,7 +863,7 @@ varargs int eject_value(mixed ref *arr, mixed value) {
 }
 
 varargs int array_remove(mixed ref *arr, mixed value) {
-  return eject_value(arr, value);
+  return eject_value(ref arr, value);
 }
 
 /**
@@ -897,14 +894,14 @@ varargs int array_remove(mixed ref *arr, mixed value) {
 varargs int eject_value_all(mixed ref *arr, mixed value) {
   int cnt = 0;
 
-  while(eject_value(arr, value) != -1)
+  while(eject_value(ref arr, value) != -1)
     cnt++;
 
   return cnt;
 }
 
 varargs void array_remove_all(mixed ref *arr, mixed value) {
-  eject_value_all(arr, value);
+  eject_value_all(ref arr, value);
 }
 
 /**
@@ -918,7 +915,7 @@ varargs void array_remove_all(mixed ref *arr, mixed value) {
 mixed insert(mixed ref *arr, mixed value, int index) {
   if(index == 0)
     return unshift(ref arr, value);
-  else if(index == sizeof(arr)-1)
+  else if(index >= sizeof(arr))
     return push(ref arr, value);
 
   arr = arr[0..index-1] + ({value}) + arr[index..];
@@ -927,7 +924,7 @@ mixed insert(mixed ref *arr, mixed value, int index) {
 }
 
 mixed array_insert(mixed ref *arr, mixed value, int index) {
-  return insert(arr, value, index);
+  return insert(ref arr, value, index);
 }
 
 /**
@@ -973,7 +970,7 @@ varargs int find_index(mixed *arr, function fun, mixed extra...) {
   assert_arg(valid_function(fun), 2, "Function is required");
 
   for(i = 0, sz = sizeof(arr); i < sz; i++) {
-    if(extra ? fun(arr[i], extra...) : fun(arr[i]) == 1) {
+    if(extra ? fun(arr[i], extra...) : fun(arr[i])) {
       return i;
     }
   }
@@ -1072,6 +1069,8 @@ varargs mixed eval_first(mixed *src, function fun, mixed extra...) {
         return result;
     }
   }
+
+  return undefined;
 }
 
 /**
@@ -1098,5 +1097,5 @@ varargs mixed eval_last(mixed *src, function fun, mixed extra...) {
   assert_arg(pointerp(src), 1, "Array is required.");
   assert_arg(valid_function(fun), 2, "Function is required.");
 
-  return eval_first(reverse_array(src), fun, extra);
+  return eval_first(reverse_array(src), fun, extra...);
 }

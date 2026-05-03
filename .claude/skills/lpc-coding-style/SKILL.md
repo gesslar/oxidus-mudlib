@@ -299,10 +299,28 @@ int queryValue() {
 ## Type Handling
 
 - Use explicit type checks where necessary (e.g., `objectp()`, `stringp()`, etc.).
+- For array type checks, **prefer `pointerp()` over `arrayp()`** — both work and are aliases in FluffOS, but `pointerp` is the project convention.
 - Prefer null-safe code using `nullp()` checks rather than relying on implicit conversions.
 - When working with potentially missing or undefined values, check with `nullp()` before use.
-- Remember that null/undefined values are ints and are 0, but they are not the same as 0, and can be tested with `nullp()`.
 - After testing for null, you can then use `intp()` to check if the value is an int, particularly when validating call_other function arguments.
+
+### `0` is not "undefined"
+
+LPC distinguishes between the integer `0` and a genuinely **undefined** value. They're both falsy, but only the latter satisfies `nullp()`:
+
+| Value | `nullp()` returns |
+|---|---|
+| `0` (integer) | `0` |
+| `""` (empty string) | `0` |
+| `({})` (empty array) | `0` |
+| `undefined` (the macro from `global.h`: `([])[0]`) | `1` |
+| An unset/uninitialised local | `1` |
+
+This matters in two places:
+
+1. **When you write a function that has "no answer" to return**, prefer `return undefined;` over letting the function fall through to an implicit `0`. Callers can then test `nullp(result)` reliably to distinguish "no answer" from "the answer is zero". Implicit fall-through returns 0, which is *also* a valid integer, so callers can't tell them apart.
+
+2. **When you write or document a function**, describe the return value as **"returns undefined"** when that's what it does — not "returns 0". They're not interchangeable. A caller doing `if(!result)` accepts both, but `if(nullp(result))` only accepts genuine undefined. Precision in the description sets the right caller expectations.
 
 ### Inline Type Annotations for Object Parameters
 
@@ -337,6 +355,7 @@ needs without adding a redundant doc comment.
 
 - Each file should have a header comment describing its purpose and author.
 - Header includes come first.
+- **Don't include headers that are already auto-included via `<global.h>`** — the driver config sets `<global.h>` as the global include, and `/include/global.h` pulls in `<mudlib.h>`, `<dirs.h>`, `<colour.h>`, `<daemons.h>`, and several others. Re-including any of these is noise. If unsure whether a header is already in scope, grep `/include/global.h`.
 - Inherit statements, if necessary, follow header includes.
 - Forward declarations come next.
 - Global variables follow forward declarations.

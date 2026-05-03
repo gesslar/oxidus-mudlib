@@ -20,6 +20,47 @@ inherit __DIR__ "master/valid";
 /* Functions */
 
 private nosave mapping errors = ([]);
+// Deadline timestamp (epoch seconds) until which caught errors are suppressed
+// in error_handler(). 0 means inactive. Auto-expires so a crashed/missing
+// clear_test_mode() call can never leave the master permanently squelched.
+private nosave int testing_in_progress = 0;
+
+/**
+ * Enable test-mode error suppression for `duration` seconds. May only be
+ * called by an object inheriting STD_TEST_RUNNER. Pass 0 (or negative) to
+ * disable.
+ *
+ * @param {int} duration - Seconds to suppress caught-error logging.
+ * @return {int} 1 on success, 0 if caller is not authorized.
+ */
+int set_test_mode(int duration) {
+  object po = previous_object();
+
+  if(!po || !inherits(STD_TEST_RUNNER, po))
+    return 0;
+
+  testing_in_progress = duration > 0 ? time() + duration : 0;
+  return 1;
+}
+
+/**
+ * Disable test-mode error suppression. Same priv-check as set_test_mode().
+ */
+void clear_test_mode() {
+  object po = previous_object();
+
+  if(!po || !inherits(STD_TEST_RUNNER, po))
+    return;
+
+  testing_in_progress = 0;
+}
+
+/**
+ * @return {int} 1 if test-mode error suppression is currently active.
+ */
+int query_test_mode() {
+  return testing_in_progress > time();
+}
 
 void create() {
   // In master/valid.c
@@ -170,9 +211,16 @@ private nosave string catch_log = "/log/catch";
 private nosave string runtime_log = "/log/runtime";
 
 void error_handler(mapping mp, int caught) {
-  string logfile = caught ? catch_log : runtime_log;
+  string logfile;
   string ret;
 
+  // During a test-runner sweep, caught errors are intentional (sad-path
+  // tests). Skip both logging and dev notification. Uncaught errors still
+  // surface. Suppression auto-expires via the testing_in_progress deadline.
+  if(caught && testing_in_progress > time())
+    return;
+
+  logfile = caught ? catch_log : runtime_log;
   ret = "---\n" + standard_trace(mp, 1);
   write_file(logfile, ret);
 

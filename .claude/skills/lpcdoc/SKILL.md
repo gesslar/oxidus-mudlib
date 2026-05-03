@@ -16,10 +16,16 @@ useful documentation.
    are exempt (see "What Not to Document" below). The LSP relies on
    `@param` types to resolve parameters in helpers, so private
    helpers are not optional in this project.
-2. **All file-global variables require an LPCDoc block** with at
-   least `@type` and a short description. The LSP uses `@type` to
-   reason about globals; without it, references cannot be type-
-   checked.
+2. **File-global variables require an LPCDoc block only when the
+   `@type` annotation gives the LSP shape information it cannot
+   already infer.** Document globals whose type is an object
+   (`STD_*` macros or file paths), a structured mapping
+   (`([ string: int ])`), a class/struct, an array of any of those,
+   or a union of such types. Plain primitives (`int`, `string`,
+   `float`) and untyped containers do not need an LPCDoc block —
+   the type is already obvious from the declaration and adds no
+   LSP value. The point of documenting variables is to feed the
+   LSP, not to narrate the obvious.
 3. **A description is mandatory** on every LPCDoc block. Every doc
    comment must begin with a description of the element it documents.
 4. **Types are mandatory on `@param` and `@returns`.** The `{type}`
@@ -928,9 +934,14 @@ Unless specifically instructed, do not document:
 3. Preprocessor directives (#include, #define, etc.)
 4. Inherit statements
 
-File-global variables **do** require documentation in this project —
-at minimum a `@type` annotation and a short description — so that
-the LSP can resolve their type at every reference site.
+File-global variables only require documentation when the `@type`
+annotation gives the LSP shape information it cannot already infer
+from the declaration. Document globals that are objects (`STD_*`
+macros or file paths), structured mappings, classes, or arrays of
+those — anywhere the type narrowing helps reference sites. Plain
+primitives (`int`, `string`, `float`) and untyped containers do not
+need a doc block; the declaration already tells the LSP everything
+it needs.
 
 ## Header Documentation
 

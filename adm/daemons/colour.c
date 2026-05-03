@@ -572,7 +572,7 @@ int *colourToRgb(int colourCode) {
 
   if(colourCode < 16) { // ANSI basic colors
     return ansi_rgb[colourCode]; // Assuming you have a predefined array like before
-  } else if(clamped(colourCode, 16, 232)) { // 6x6x6 color cube (216 colors)
+  } else if(clamped(colourCode, 16, 231)) { // 6x6x6 color cube (216 colors)
     colourCode -= 16;
     r = (colourCode / 36) * 51; // 6 levels (0, 51, 102, 153, 204, 255)
     g = ((colourCode / 6) % 6) * 51;

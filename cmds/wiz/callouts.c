@@ -34,7 +34,7 @@ mixed main(object tp, string arg) {
   return 1;
 }
 
-string help(object caller) {
+string help(object _caller) {
   return(" SYNTAX: callouts\n\n"
     "This command will return information about currently active callouts.\n"
     "When you call this command, it will inform you of each object with\n"

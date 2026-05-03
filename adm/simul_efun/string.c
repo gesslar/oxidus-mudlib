@@ -101,6 +101,18 @@ string no_ansi(string str) {
 }
 
 /**
+ * @simul_efun colour
+ * @description Resolves colour codes in a string to ANSI escape sequences.
+ *              Inverse of no_ansi(). Use when output bypasses the body
+ *              messaging pipeline (printf, debug_message, etc.).
+ * @param {string} str - The string with colour codes.
+ * @returns {string} - The string with colour codes replaced by ANSI escapes.
+ */
+string colour(string str) {
+    return COLOUR_D->substituteColour(str, "on");
+}
+
+/**
  * @simul_efun simple_list
  * @description Returns a string that is a simple list of the elements of an array,
  *              joined by a conjunction.

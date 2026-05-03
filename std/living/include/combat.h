@@ -3,12 +3,12 @@
 
 void combat_round() ;
 int start_attack(object victim) ;
-void swing() ;
+varargs void swing(int count, int multi) ;
 int next_round() ;
-public varargs int can_strike(object enemy, object weapon) ;
+public int can_strike(object enemy, mixed weapon) ;
 private fail_strike(object enemy, object weapon) ;
-varargs void strike_enemy(object enemy, object weapon) ;
-varargs mapping query_weapon_info(object weapon) ;
+void strike_enemy(object enemy, object weapon) ;
+mapping query_weapon_info(object weapon) ;
 int attacking(object victim) ;
 varargs int stop_attack(object victim, int seen) ;
 void stop_all_attacks() ;
@@ -44,5 +44,8 @@ string set_weapon_name(string str) ;
 string query_weapon_name() ;
 string set_weapon_type(string str) ;
 string query_weapon_type() ;
+mixed prevent_combat(object victim) ;
+void set_no_combat(int x) ;
+int query_no_combat() ;
 
 #endif // __COMBAT_H__

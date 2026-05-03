@@ -1,12 +1,14 @@
 /**
  * @file /adm/daemons/modules/gmcp/Char.c
- * @description Module to handle Char.* GMCP packages
+ *
+ * GMCP module to handle Char.* packages.
  *
  * @created 2024-02-23 - Gesslar
- * @last_modified 2024-02-23 - Gesslar
+ * @last_modified 2026-05-02 - Gesslar
  *
  * @history
  * 2024-02-23 - Gesslar - Created
+ * 2026-05-02 - Gesslar - Cleaned up file header
  */
 
 #include <gmcp_defines.h>
@@ -125,7 +127,8 @@ private string get_item_location(object who, object item);
  */
 void Items(object who, string submodule, mixed arg) {
   object container;
-  object *items, item;
+  /** @type {STD_OBJECT*} */ object *items;
+  /** @type {STD_OBJECT} */ object item;
   mapping data;
   mixed item_data;
   string location;
@@ -206,7 +209,7 @@ void Items(object who, string submodule, mixed arg) {
       break;
   }
 
-  who->do_gmcp(package, data, 1);
+  who->do_gmcp(package, data);
 }
 
 /**

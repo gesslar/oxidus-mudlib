@@ -25,6 +25,8 @@
 private int data_index(string *lines, string key) {
   int i, sz;
 
+  key = append(key, "|");
+
   for(i = 0, sz = sizeof(lines); i < sz; i++) {
     if(strsrch(lines[i], key) == 0)
       return i;
@@ -52,7 +54,7 @@ private int data_index(string *lines, string key) {
 varargs mixed data_value(string file, string key, mixed def) {
   string *lines, line;
   mixed *parts;
-  int i, sz;
+  int i;
 
   if(nullp(file) || nullp(key))
     return null;
@@ -111,6 +113,8 @@ varargs void data_write(string file, string key, mixed data...) {
     implode_file(file, lines, 1);
     return;
   }
+
+  push(ref lines, out);
 
   implode_file(file, lines, 1);
 }
@@ -193,4 +197,6 @@ varargs int data_inc(string file, string key, int inc) {
   val += inc;
   lines[i] = key + val;
   implode_file(file, lines, 1);
+
+  return val;
 }

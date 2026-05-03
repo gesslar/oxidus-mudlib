@@ -25,5 +25,6 @@
 #define DIR_STD_LIVING          DIR_STD "living/"
 #define DIR_STD_MODULES         DIR_STD "modules/"
 #define DIR_STD_OBJECT          DIR_STD "object/"
+#define DIR_STD_TEST            DIR_STD "test/"
 
 #endif // __DIRS_H__
