@@ -12,8 +12,14 @@
 
 inherit STD_ACT;
 
+/**
+ *
+ * @param {STD_BODY} tp - The player
+ * @param {string} str - The item to be drunk.
+ * @returns {string | int} 1 if successful, an error message otherwise.
+ */
 mixed main(object tp, string str) {
-  object ob;
+  /** @type {STD_DRINK} */ object ob;
   int uses;
 
   if(!ob = find_target(tp, str, tp))
@@ -27,7 +33,7 @@ mixed main(object tp, string str) {
   if(uses < 1)
     return "There is nothing left to drink.";
 
-  if(!ob->drink(tp))
+  if(!ob->drink_obj(tp))
     return "You couldn't drink that.";
 
   return 1;

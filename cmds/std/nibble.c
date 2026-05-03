@@ -27,7 +27,7 @@ mixed main(object tp, string str) {
   if(uses < 1)
     return "There is nothing left to nibble on.";
 
-  if(!ob->nibble(tp))
+  if(!ob->nibble_obj(tp))
     return "You couldn't nibble on that.";
 
   return 1;

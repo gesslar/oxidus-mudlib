@@ -11,12 +11,14 @@ You are helping work with the Oxidus consumable system. Follow the `lpc-coding-s
 
 ```
 EXT_USES (std/ext/uses.c)         — base use-count tracking
-  ├── EXT_EDIBLE (std/ext/edible.c)  — eat/nibble mechanics
-  └── EXT_POTABLE (std/ext/potable.c) — drink/sip mechanics
+  ├── EXT_EDIBLE (std/ext/edible.c)  — eat/nibble mechanics (protected)
+  └── EXT_POTABLE (std/ext/potable.c) — drink/sip mechanics (protected)
 
-STD_ITEM + EXT_EDIBLE  → STD_FOOD (std/consume/food.c)
-STD_ITEM + EXT_POTABLE → STD_DRINK (std/consume/drink.c)
+STD_ITEM + EXT_EDIBLE  → STD_FOOD (std/consume/food.c)   — adds public *_obj wrappers
+STD_ITEM + EXT_POTABLE → STD_DRINK (std/consume/drink.c) — adds public *_obj wrappers
 ```
+
+The consumption verbs themselves (`eat`, `nibble`, `drink`, `sip`) are `protected` on the EXT_* modules — outside callers must go through the public `*_obj` wrappers on STD_FOOD/STD_DRINK.
 
 ## EXT_USES — `std/ext/uses.c`
 
@@ -47,44 +49,43 @@ Inherits `EXT_USES`. Adds eat/nibble mechanics with customizable action messages
 ### Properties
 
 - `int _edible` — flag (1 = edible)
-- `mapping _actions` — custom action messages per action type
+- `mapping _actions` — custom action messages, keyed by `"eat"` and `"nibble"`
 
 ### Functions
 
-| Function | Signature | Purpose |
-|---|---|---|
-| `set_edible` | `int set_edible(int edible)` | Mark as edible |
-| `is_edible` | `int is_edible()` | Check edibility |
-| `consume` | `int consume(object tp)` | Eat entirely — depletes all remaining uses |
-| `nibble` | `int nibble(object tp, int amount)` | Eat specified amount |
-| `reset_edible` | `void reset_edible()` | Calls `reset_uses()` |
+| Function | Signature | Visibility | Purpose |
+|---|---|---|---|
+| `set_edible` | `int set_edible(int edible)` | public | Mark as edible |
+| `is_edible` | `int is_edible()` | public | Check edibility |
+| `eat` | `mixed eat(object user)` | **protected** | Eat entirely — depletes all remaining uses. Call via `eat_obj()` on STD_FOOD. |
+| `nibble` | `mixed nibble(object user, int amount)` | **protected** | Eat specified amount. Call via `nibble_obj()` on STD_FOOD. |
+| `reset_edible` | `void reset_edible()` | public | Calls `reset_uses()` |
 
-**Validation hooks** (called by command system):
-- `try_to_eat(object ob, string arg)` — checks object is in user's environment
-- `direct_eat_obj(object ob, string arg)` — command validation for `eat`
-- `direct_nibble_obj(object ob, string arg)` — command validation for `nibble`
+**Error returns** from `eat`/`nibble`:
+- `"You can't eat that."` / `"You can't nibble that."` — not edible
+- `"There is nothing left to eat."` / `"There is nothing left to nibble."` — no uses remaining
 
 ### Action Message Customization
 
-Each action type (`"consume"`, `"nibble"`) supports three message slots:
+Each action type (`"eat"`, `"nibble"`) supports three message slots:
 
 | Setter | Purpose |
 |---|---|
-| `set_consume_action(string)` | Combined message (overrides self + room) |
-| `set_self_consume_action(string)` | Message to the consumer only |
-| `set_room_consume_action(string)` | Message to the room only |
+| `set_eat_action(string)` | Combined message (overrides self + room) |
+| `set_self_eat_action(string)` | Message to the eater only |
+| `set_room_eat_action(string)` | Message to the room only |
 | `set_nibble_action(string)` | Combined nibble message |
-| `set_self_nibble_action(string)` | Nibble message to consumer |
+| `set_self_nibble_action(string)` | Nibble message to eater |
 | `set_room_nibble_action(string)` | Nibble message to room |
 
 **Default messages:**
-- Consume: `"$N $veat a $o."`
+- Eat: `"$N $veat a $o."`
 - Nibble: `"$N $vnibble on a $o."`
 
 **Display logic:**
-- If combined `action` is set → `tp->simple_action(action)`
-- If both self and room are null → `tp->simple_action(default)`
-- Otherwise → `tp->my_action(self_msg)` + `tp->other_action(room_msg)`
+- If combined `action` is set → `user->simple_action(action)`
+- If both self and room are null → `user->simple_action(default)`
+- Otherwise → `user->simple_action(self_msg)` for the eater, `user->simple_action(room_msg)` for room
 
 ## EXT_POTABLE — `std/ext/potable.c`
 
@@ -92,13 +93,17 @@ Inherits `EXT_USES`. Adds drink/sip mechanics. Mirrors EXT_EDIBLE's structure.
 
 ### Functions
 
-| Function | Signature | Purpose |
-|---|---|---|
-| `set_potable` | `int set_potable(int potable)` | Mark as drinkable |
-| `is_potable` | `int is_potable()` | Check potability |
-| `drink` | `mixed drink(object user)` | Drink entirely |
-| `sip` | `mixed sip(object user, int amount)` | Sip specified amount |
-| `reset_potable` | `void reset_potable()` | Calls `reset_uses()` |
+| Function | Signature | Visibility | Purpose |
+|---|---|---|---|
+| `set_potable` | `int set_potable(int potable)` | public | Mark as drinkable |
+| `is_potable` | `int is_potable()` | public | Check potability |
+| `drink` | `mixed drink(object user)` | **protected** | Drink entirely. Call via `drink_obj()` on STD_DRINK. |
+| `sip` | `mixed sip(object user, int amount)` | **protected** | Sip specified amount. Call via `sip_obj()` on STD_DRINK. |
+| `reset_potable` | `void reset_potable()` | public | Calls `reset_uses()` |
+
+**Error returns** from `drink`/`sip`:
+- `"You can't drink that."` / `"You can't sip that."` — not potable
+- `"There is nothing left to drink."` / `"There is nothing left to sip."` — no uses remaining
 
 ### Action Message Customization
 
@@ -115,10 +120,6 @@ Inherits `EXT_USES`. Adds drink/sip mechanics. Mirrors EXT_EDIBLE's structure.
 - Drink: `"$N $vdrink a $o."`
 - Sip: `"$N $vsip from a $o."`
 
-**Error returns:**
-- `"You can't drink that."` — not potable
-- `"There is nothing left to drink."` — no uses remaining
-
 ## STD_FOOD — `std/consume/food.c`
 
 Inherits `STD_ITEM` + `EXT_EDIBLE`. Ready-to-use food inheritable.
@@ -128,7 +129,15 @@ Inherits `STD_ITEM` + `EXT_EDIBLE`. Ready-to-use food inheritable.
 - Marks `_uses`, `_max_uses`, `_use_status_message` for persistence via `save_var()`
 - Auto-adds `"food"` to IDs when `set_id()` is called
 - Adds a `"consume"` extra_long description showing consumption status
-- Auto-removes item when uses reach 0
+- Auto-removes item when uses reach 0 (after the wrapping `*_obj` call)
+
+**Public wrappers** (call these from commands/external code, not the protected EXT_EDIBLE versions):
+
+| Function | Signature | Purpose |
+|---|---|---|
+| `eat_obj` | `mixed eat_obj(object user)` | Calls protected `eat()`; on success and `query_uses() < 1`, emits "$N $vhave eaten the last of the $o." and removes the object. |
+| `nibble_obj` | `int nibble_obj(object user)` | Calls protected `nibble(user, 1)`; same depletion handling. |
+| `is_food` | `int is_food()` | Always returns 1 — type check. |
 
 **Status messages** (based on remaining percentage):
 - 100%: `"This [name] hasn't been touched."`
@@ -146,7 +155,15 @@ Inherits `STD_ITEM` + `EXT_POTABLE`. Ready-to-use drink inheritable.
 - Marks `_uses`, `_max_uses`, `_use_status_message` for persistence via `save_var()`
 - Auto-adds `"drink"` to IDs when `set_id()` is called
 - Adds a `"consume"` extra_long description showing consumption status
-- Auto-removes item when uses reach 0
+- Auto-removes item when uses reach 0 (after the wrapping `*_obj` call)
+
+**Public wrappers** (call these from commands/external code):
+
+| Function | Signature | Purpose |
+|---|---|---|
+| `drink_obj` | `mixed drink_obj(object user)` | Calls protected `drink()`; on success and `query_uses() < 1`, emits "$N $vhave drunk the last of the $o." and removes the object. |
+| `sip_obj` | `int sip_obj(object user)` | Calls protected `sip(user, 1)`; same depletion handling. |
+| `is_drink` | `int is_drink()` | Always returns 1 — type check. |
 
 **Status messages** (based on remaining percentage):
 - 100%: `"This [name] is full."`
@@ -155,15 +172,18 @@ Inherits `STD_ITEM` + `EXT_POTABLE`. Ready-to-use drink inheritable.
 - 25–49%: `"Most of this [name] has been drunk."`
 - 0–24%: `"There is very little left of this [name]."`
 
-**Additional validation:**
-- `direct_drink_obj` / `direct_sip_obj` — checks item is in user's inventory
-- `e_drink_obj` / `e_sip_obj` — execute drink/sip; show "have drunk the last" message if depleted
-
 ## Commands
 
-**Eat** (`cmds/std/eat.c`): Finds target in inventory, checks `is_edible()`, checks uses, calls `consume()`.
+All four player commands live under `cmds/std/` and follow the same shape: resolve the target with `find_target`, type-check it, check `query_uses()`, then call the public `*_obj` wrapper.
 
-**Drink** (`cmds/std/drink.c`): Finds target in inventory, checks `is_drink()`, checks uses, calls `drink()`.
+| Command | Type check | Wrapper called |
+|---|---|---|
+| `cmds/std/eat.c` | `is_edible()` | `eat_obj(tp)` |
+| `cmds/std/nibble.c` | `is_food()` | `nibble_obj(tp)` |
+| `cmds/std/drink.c` | `is_drink()` | `drink_obj(tp)` |
+| `cmds/std/sip.c` | `is_drink()` | `sip_obj(tp)` |
+
+Never call the protected `eat`/`nibble`/`drink`/`sip` directly via `->` — it will fail at runtime.
 
 ## Creating Consumables
 
@@ -218,10 +238,6 @@ void setup() {
 }
 ```
 
-### Virtual Food (LPML Data File)
-
-Food items can also be created as virtual objects via `.food` LPML files (see the `virtual-object-creation` skill). Supported fields: `id`, `adj`, `name`, `short`, `long`, `mass`, `value`, `uses`, `additional_ids`.
-
 ## Defines
 
 ```lpc
@@ -234,8 +250,9 @@ Food items can also be created as virtual objects via `.food` LPML files (see th
 
 ## Important Notes
 
+- The verbs `eat`, `nibble`, `drink`, `sip` on the EXT_* modules are `protected`. External callers must use the public `eat_obj` / `nibble_obj` / `drink_obj` / `sip_obj` wrappers on STD_FOOD/STD_DRINK.
 - `set_uses()` initializes `_max_uses` on the first call. Subsequent calls only change `_uses`.
 - `adjust_uses()` returns null (not 0) on boundary violation — check with `nullp()`.
-- STD_FOOD/STD_DRINK auto-remove the object when uses hit 0. If you don't want this, inherit EXT_EDIBLE/EXT_POTABLE directly instead.
+- STD_FOOD/STD_DRINK auto-remove the object when uses hit 0 (inside the `*_obj` wrappers). If you don't want this, inherit EXT_EDIBLE/EXT_POTABLE directly and write your own wrapper.
 - Action messages use the `$-token` system (see `action-messages` skill): `$N` = actor, `$v` = verb conjugation, `$o` = object.
 - Uses are persisted via `save_var()` — they survive storage in containers and player inventory saves.

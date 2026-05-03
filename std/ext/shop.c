@@ -23,13 +23,14 @@ protected void remove_shop();
 protected void reset_shop();
 private nomask object create_storage();
 
-protected nosave int shop_open = 1;
-protected nosave int allow_npcs = 0;
-protected nosave float sell_factor = 0.5; // when a player sells, use this
-                                          // factor to determine the price
-protected nosave string shop_keep_file;
-protected nosave object store;
-private nosave mixed *shop_inventory = ({});
+protected nosave int __shop_open = 1;
+protected nosave int __allow_npcs = 0;
+protected nosave float __sell_factor = 0.5; // when a player sells, use this
+                                            // factor to determine the price
+protected nosave string __shop_keep_file;
+/** @type {STD_STORAGE_OBJECT} */
+protected nosave object __store;
+private nosave mixed *__shop_inventory = ({});
 
 void init_shop() {
   addCommand("buy", "cmd_buy");
@@ -43,8 +44,8 @@ void init_shop() {
 }
 
 protected void remove_shop() {
-  if(objectp(store))
-    store->remove();
+  if(objectp(__store))
+    __store->remove();
 }
 
 void add_shop_inventory(mixed args...) {
@@ -61,14 +62,14 @@ protected void reset_shop() {
   mixed arg;
 
   create_storage();
-  store->clean_contents();
-return;
-  foreach(arg in shop_inventory) {
+  __store->clean_contents();
+
+  foreach(arg in __shop_inventory) {
     string file;
     int number;
     mixed *clone_args;
     int sz;
-    object ob;
+    /** @type {STD_ITEM} */ object ob;
 
     if(!pointerp(arg))
       arg = ({ arg });
@@ -107,23 +108,22 @@ return;
       if(!objectp(ob))
         continue;
 
-      if(ob->move(store))
+      if(ob->move(__store))
         ob->remove();
     }
   }
 }
 
-mixed cmd_list(object tp) {
+mixed cmd_list() {
   object *items, item;
   string *lines = ({});
   string line;
-  object ob;
   string short;
   int cost;
 
   create_storage();
 
-  items = all_inventory(store);
+  items = all_inventory(__store);
 
   lines = ({ get_short(), "" });
 
@@ -138,6 +138,7 @@ mixed cmd_list(object tp) {
 }
 
 mixed cmd_buy(object tp, string str) {
+  /** @type {STD_ITEM} */
   object ob;
   mixed result;
   string action;
@@ -147,16 +148,16 @@ mixed cmd_buy(object tp, string str) {
 
   create_storage();
 
-  if(!allow_npcs && !userp(tp))
+  if(!__allow_npcs && !userp(tp))
     return 0;
 
-  if(!shop_open)
+  if(!__shop_open)
     return "The shop is closed.";
 
   if(!userp(tp))
     return "Only players can buy from the shop.";
 
-  if(!ob = present(str, store))
+  if(!ob = present(str, __store))
     return "The shop does not have that item.";
 
   cost = query_cost(tp, ob, "buy");
@@ -194,16 +195,17 @@ mixed cmd_buy(object tp, string str) {
 }
 
 mixed cmd_sell(object tp, string str) {
-  object ob, *obs;
+  /** @type {STD_ITEM | STD_ARMOUR | STD_CLOTHING | STD_WEAPON} */ object ob;
+  /** @type {STD_ITEM*} */ object *obs;
   int sz;
   int use_mass = mudConfig("USE_MASS");
 
   create_storage();
 
-  if(!allow_npcs && !userp(tp))
+  if(!__allow_npcs && !userp(tp))
     return 0;
 
-  if(!shop_open)
+  if(!__shop_open)
     return "The shop is closed.";
 
   if(!userp(tp))
@@ -243,8 +245,8 @@ mixed cmd_sell(object tp, string str) {
       continue;
 
     if(use_mass) {
-            int fill = tp->query_fill();
-            int cap = tp->query_capacity();
+      int fill = tp->query_fill();
+      int cap = tp->query_capacity();
 
       if(fill - item_mass + coins > cap) {
         tell(tp, "You are overburdened and cannot carry the coins.\n");
@@ -252,7 +254,7 @@ mixed cmd_sell(object tp, string str) {
       }
     }
 
-    if(ob->move(store)) {
+    if(ob->move(__store)) {
       tell(tp, "The shop refuses to buy your " + short + ".\n");
       continue;
     }
@@ -276,14 +278,19 @@ mixed cmd_sell(object tp, string str) {
   return 1;
 }
 
-int query_cost(object tp, object ob, int transaction) {
+/**
+ *
+ * @param {STD_ITEM} ob
+ * @param {string} transaction
+ */
+int query_cost(object ob, string transaction) {
   int value = ob->query_value();
 
   switch(transaction) {
     case "buy":
       return value;
     case "sell":
-      return to_int(to_float(value) * sell_factor);
+      return to_int(to_float(value) * __sell_factor);
     case "list":
       return value;
   }
@@ -294,17 +301,17 @@ int query_cost(object tp, object ob, int transaction) {
 private nomask object create_storage() {
   class StorageOptions storage_options;
 
-  if(objectp(store))
-    return store;
+  if(objectp(__store))
+    return __store;
 
   storage_options = new(class StorageOptions,
     storage_type: "public",
     storage_org: "olum_general_store"
   );
 
-  store = load_object(sprintf("storage/%s", storage_options.storage_org));
-  store->set_storage_options(storage_options);
-  store->set_no_clean(1);
+  __store = load_object(sprintf("storage/%s", storage_options.storage_org));
+  __store->set_storage_options(storage_options);
+  __store->set_no_clean(1);
 
-  return store;
+  return __store;
 }
