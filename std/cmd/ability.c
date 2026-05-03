@@ -195,10 +195,10 @@ private string find_cooldown_key(string arg) {
     key = cles[0];
     test = cooldowns[key][0];
 
-    if(test == "")
+    if(test == "" || arg == test || pcre_match(arg, test))
       return key;
 
-    return test;
+    return null;
   }
 
   foreach(key in cles) {

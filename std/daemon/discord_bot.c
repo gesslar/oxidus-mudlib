@@ -65,7 +65,6 @@ void mudlib_setup() {
 }
 
 void start_bot() {
-    int id;
     string err;
 
     if(!is_setup())
@@ -106,8 +105,6 @@ void gateway_api_callback(mapping response) {
     mapping status;
     int code;
     string mess;
-    object bot;
-    mixed *cb;
 
     _log(2, "Received HTTP response");
 
@@ -242,9 +239,7 @@ void websocket_handle_shutdown() {
     }
 }
 
-void websocket_handle_close_frame(mixed payload) {
-    mapping handle;
-
+void websocket_handle_close_frame() {
     _log(2, "Received close frame");
 
     if(server["discord"]["ready"]) {
@@ -343,7 +338,6 @@ void discord_handle_hello(mapping payload) {
 }
 
 void discord_send_identify() {
-    buffer frame;
     int result;
     string identify_payload;
     int intents;
@@ -351,13 +345,13 @@ void discord_send_identify() {
 
     if(!stringp(token = query_token())) {
         _log(2, "No bot token for fd");
-        shutdown_websocket(WS_CLOSE_INTERNAL_SERVER_ERROR, "No bot token for fd");
+        shutdown_websocket();
         return;
     }
 
     if(nullp(intents = query_intents())) {
         _log(2, "No bot intents for fd");
-        shutdown_websocket(WS_CLOSE_INTERNAL_SERVER_ERROR, "No bot intents for fd");
+        shutdown_websocket();
         return;
     }
 
@@ -441,14 +435,12 @@ void discord_handle_heartbeat_ack(mapping payload) {
 
 // Process the ready frame
 private nomask void discord_handle_ready(mapping data) {
-    mapping d;
     mixed *matches;
     string url;
-    mapping application;
 
     if(!mapp(data)) {
         _log(2, "Received invalid ready frame");
-        shutdown_websocket(WS_CLOSE_INVALID_FRAME_PAYLOAD_DATA, "Invalid ready frame");
+        shutdown_websocket();
         return;
     }
 
@@ -475,13 +467,12 @@ private nomask void discord_handle_ready(mapping data) {
  */
 
 nomask void discord_send_text(string event_name, mapping info) {
-    mapping payload;
     int type;
-    string url, path, endpoint;
+    string url, endpoint;
     string method;
     string body;
     string dest_id;
-    mapping request;
+    int request;
     mapping headers;
     mixed *callback;
     string err;
@@ -557,8 +548,6 @@ public nomask string query_bot_name() {
 }
 
 private nomask string query_token() {
-    object ob;
-
     _log(4, "query_token() called from %O", previous_object());
 
     if(origin() != ORIGIN_LOCAL) {
@@ -577,6 +566,10 @@ private nomask void set_token(string token) {
     bot_data["token"] = token;
 }
 
+/**
+ *
+ * @param {string*} intents
+ */
 varargs private nomask void set_intents(mixed intents...) {
     string intent_string;
     int intent_value;

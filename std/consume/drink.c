@@ -1,12 +1,14 @@
 /**
  * @file /std/consume/drink.c
- * @description Drink inheritable for objects that can be consumed.
+ *
+ * Drink inheritable for objects that can be consumed.
  *
  * @created 2024-08-06 - Gesslar
- * @last_modified 2024-08-06 - Gesslar
+ * @last_modified 2026-05-03 - Gesslar
  *
  * @history
  * 2024-08-06 - Gesslar - Created
+ * 2026-05-03 - Gesslar - Documented public/private functions
  */
 
 inherit STD_ITEM;
@@ -21,26 +23,28 @@ void mudlib_setup() {
   add_extra_long("consume", (: consume_message :));
 }
 
-void set_id(mixed str) {
+/**
+ * Sets the object's identifiers and adds "drink" as an additional id
+ * so the drink command can target it generically.
+ *
+ * @param {string | string*} str - The id or array of ids to assign.
+ */
+protected void set_id(mixed str) {
   ::set_id(str);
 
   add_id("drink");
 }
 
-private mixed try_to_drink(object ob, string arg, string verb) {
-  if(environment() != previous_object())
-    return "You must be holding something to " + verb + " it.";
-
-  return 1;
-}
-
 /**
+ * Drinks the entire contents of the object on behalf of the user.
+ * Wraps EXT_POTABLE::drink and removes the object once depleted,
+ * announcing that the user has drunk the last of it.
  *
- * @param {STD_BODY} user - The user drinking the object.
- * @param {string} arg - The argument supplied by the user.
- * @returns {int} The result of the drinking.
+ * @param {STD_BODY} user - The body drinking the object.
+ * @returns {int | string} 1 on success, or an error string from the
+ *                         underlying drink() call.
  */
-public mixed drink_obj(object user, string arg) {
+public mixed drink_obj(object user) {
   mixed result = drink(user);
 
   if(result == 1 && query_uses() < 1) {
@@ -51,7 +55,15 @@ public mixed drink_obj(object user, string arg) {
   return result;
 }
 
-public int sip_obj(object user, string arg) {
+/**
+ * Takes a single sip from the object on behalf of the user. Wraps
+ * EXT_POTABLE::sip with an amount of 1 and removes the object once
+ * depleted, announcing that the user has drunk the last of it.
+ *
+ * @param {STD_BODY} user - The body sipping the object.
+ * @returns {int} 1 on success, 0 otherwise.
+ */
+public int sip_obj(object user) {
   mixed result = sip(user, 1);
 
   if(result == 1 && query_uses() < 1) {
@@ -62,6 +74,14 @@ public int sip_obj(object user, string arg) {
   return result;
 }
 
+/**
+ * Returns a status message describing how much of this drink remains,
+ * based on the percentage of uses left. Wired up as the "consume"
+ * extra_long description so players can examine the fill level.
+ *
+ * @returns {string} A descriptive sentence about the remaining
+ *                   contents.
+ */
 public string consume_message() {
   int left;
   string mess;
@@ -88,4 +108,10 @@ public string consume_message() {
   return mess;
 }
 
+/**
+ * Identifies this object as a drink. Used by the drink command and
+ * other systems to test whether a target is potable.
+ *
+ * @returns {int} Always 1.
+ */
 public int is_drink() { return 1; }

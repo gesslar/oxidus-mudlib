@@ -30,7 +30,11 @@ int start(int minutes, int type_in) {
   string mess;
 
   type = type_in;
-  if(!caller_is(CMD_SHUTDOWN) && !caller_is(CMD_REBOOT))
+
+  if(!caller_is(CMD_SHUTDOWN)
+    && !caller_is(CMD_REBOOT)
+    && !caller_is(master())
+  )
     return 0;
 
   if(find_call_out(running) > -1)

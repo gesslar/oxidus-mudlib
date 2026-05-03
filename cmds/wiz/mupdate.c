@@ -17,19 +17,19 @@ inherit STD_CMD;
 
 inherit CLASS_ROOMINFO;
 
-void move_to_room(object tp, string *rooms, mapping data);
+varargs void move_to_room(object tp, string *rooms, mapping data, int it);
 
 private nosave int done, sz;
 private nosave float delay = 0.05;
 
-mixed main(object tp, string arg) {
+mixed main(object tp, string _arg) {
   mapping rooms = COORD_D->get_coordinate_data();
   string *room_names = keys(rooms);
 
   sz = sizeof(room_names);
   done = 0;
 
-  // room_names = sort_array(room_names, 1);
+  /** @lpc-ignore - LSP is wrong here. @see https://github.com/jlchmura/lpc-language-server/pull/316 */
   room_names = sort_array(room_names, function(string a, string b, mapping data) {
     if(data[a].coords[2] != data[b].coords[2])
       return data[b].coords[2] - data[a].coords[2]; // Sort z from highest to lowest
@@ -45,9 +45,9 @@ mixed main(object tp, string arg) {
   return 1;
 }
 
-void move_to_room(object tp, string *rooms, mapping data, int it) {
+void move_to_room(object tp, string *rooms, mapping data, int it: (: 0 :)) {
+  /** @type {STD_ROOM} */ object room;
   string room_file;
-  object room;
   int *coords;
 
   room_file = pop(ref rooms);

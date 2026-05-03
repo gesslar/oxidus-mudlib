@@ -12,6 +12,7 @@
 
 #include <localtime.h>
 #include <logs.h>
+#include <shutdown.h>
 
 /* inherits */
 
@@ -314,7 +315,7 @@ private void crash(string crash_message, object command_giver, object current_ob
   if(current_object)
     log_file("crashes", "this_object: " + file_name(current_object) + "\n");
 
-  shutdown_d()->shutdown(0);
+  shutdown_d()->start(0, SYS_SHUTDOWN);
 }
 
 // This doesn't actually seem to work and generates *Too long evaluation.
@@ -378,13 +379,14 @@ mixed compile_object(string file) {
 }
 
 string make_path_absolute(string file) {
-  file = resolve_path(this_body()->query_cwd(), file);
+  file = resolve_path(this_body()->query_env("cwd"), file);
 
   return file;
 }
 
 varargs void log_file(string file, string msg, mixed arg...) {
   int size;
+  /** @lpc-ignore - idk what's up with this */
   int max_size = percent_of(80, get_config(__MAX_READ_FILE_SIZE__));
   string *matches;
   string source;

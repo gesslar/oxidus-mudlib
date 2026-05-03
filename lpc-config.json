@@ -28,6 +28,9 @@
     },
     {
       "__SAVE_EXTENSION__": ".o"
+    },
+    {
+      "__MAX_READ_FILE_SIZE__":"20000"
     }
   ],
   "diagnostics": "on"

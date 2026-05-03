@@ -1,15 +1,18 @@
 /**
  * @file /std/consume/food.c
- * @description Food inheritable for objects that can be consumed.
+ *
+ * Food inheritable for objects that can be consumed.
  *
  * @created 2024-08-06 - Gesslar
- * @last_modified 2024-08-06 - Gesslar
+ * @last_modified 2026-05-03 - Gesslar
  *
  * @history
  * 2024-08-06 - Gesslar - Created
+ * 2026-05-03 - Gesslar - Documented public/private functions
  */
 
 inherit STD_ITEM;
+
 inherit EXT_EDIBLE;
 
 string consume_message();
@@ -20,35 +23,65 @@ void mudlib_setup() {
   add_extra_long("consume", (: consume_message :));
 }
 
-void set_id(mixed str) {
+/**
+ * Sets the object's identifiers and adds "food" as an additional id
+ * so the eat command can target it generically.
+ *
+ * @param {string | string*} str - The id or array of ids to assign.
+ */
+protected void set_id(mixed str) {
   ::set_id(str);
+
   add_id("food");
 }
 
-int consume(object user) {
-  int consumed;
-  string mess;
+/**
+ * Eats the entire food item on behalf of the user. Wraps
+ * EXT_EDIBLE::consume and removes the object once depleted.
+ *
+ * @param {STD_BODY} user - The body consuming the food.
+ * @returns {int} 1 on success, 0 otherwise.
+ */
+public mixed eat_obj(object user) {
+  mixed result = eat(user);
 
-  if(!::consume(user, 1))
-    return 0;
-
-  if(query_uses() < 1)
+  if(result == 1 && query_uses() < 1) {
+    this_body()->my_action("$N $vhave eaten the last of the $o.", this_object());
     remove();
+  }
 
-  return 1;
+  return result;
 }
 
-int nibble(object user) {
-  if(!::nibble(user, 1))
-    return 0;
+/**
+ * Takes a single nibble from the food on behalf of the user. Wraps
+ * EXT_EDIBLE::nibble with an amount of 1 and removes the object
+ * once depleted.
+ *
+ * @param {STD_BODY} user - The body nibbling the food.
+ * @returns {int} 1 on success, 0 otherwise.
+ */
+public int nibble_obj(object user) {
+  mixed result = nibble(user, 1);
 
-  if(query_uses() < 1)
+  if(result == 1 && query_uses() < 1) {
+    this_body()->my_action("$N $vhave eaten the last of the $o.", this_object());
     remove();
+  }
 
-  return 1;
+  return result;
 }
 
-string consume_message() {
+
+/**
+ * Returns a status message describing how much of this food remains,
+ * based on the percentage of uses left. Wired up as the "consume"
+ * extra_long description so players can examine the remaining
+ * portion.
+ *
+ * @returns {string} A descriptive sentence about the remaining food.
+ */
+public string consume_message() {
   int left;
   string mess;
 
@@ -74,4 +107,10 @@ string consume_message() {
   return mess;
 }
 
-int is_food() { return 1 ; }
+/**
+ * Identifies this object as food. Used by the eat command and other
+ * systems to test whether a target is edible.
+ *
+ * @returns {int} Always 1.
+ */
+public int is_food() { return 1 ; }
