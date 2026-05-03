@@ -32,6 +32,7 @@ void set_debug_clean(int i) {
 }
 
 /*protected*/ int clean_up(int refs) {
+  /** @type {STD_OBJECT*} */
   object *contents;
   int check;
 
@@ -136,6 +137,10 @@ int query_no_clean() {
   return no_clean_up;
 }
 
+/**
+ *
+ * @param {STD_OBJECT*} obs - The objects
+ */
 private int clean_up_check(mixed obs) {
   int result;
 

@@ -64,7 +64,7 @@ void setup_body() {
  * @param {int} reconnecting - Whether this is a reconnection to an existing body
  */
 void enter_world(int reconnecting) {
-  string *ch;
+  // string *ch;
 
   if(!is_member(query_privs(previous_object()), "admin"))
     return;

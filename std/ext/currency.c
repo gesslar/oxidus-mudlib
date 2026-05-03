@@ -1,14 +1,20 @@
 /**
  * @file /std/ext/currency.c
- * @description Currency module that can be inherited for money handling
+ *
+ * Currency module that can be inherited for money handling. Provides
+ * the transaction engine used by shops and other commerce modules,
+ * with support for multi-denomination payment selection, change
+ * making, transaction reversal, and capacity checking. All costs and
+ * amounts are expressed in base (lowest denomination) units.
  *
  * @created 2024-08-01 - Gesslar
- * @last_modified 2024-09-03 - Gesslar
+ * @last_modified 2026-05-03 - Gesslar
  *
  * @history
  * 2024-08-01 - Gesslar - Created
  * 2024-09-03 - Gesslar - Converted currency to use an integer representing
  *                          the lowest denomination.
+ * 2026-05-03 - Gesslar - Documented all functions.
  */
 
 #include <daemons.h>
@@ -21,7 +27,22 @@ private mixed complex_transaction(object tp, int cost);
 private mixed *format_return_currency(mapping m);
 public mapping least_coins(int total_amount);
 
-// Main transaction function
+/**
+ * Entry point for processing a purchase against a buyer's wealth.
+ * Validates the buyer object and delegates to complex_transaction
+ * for denomination selection and change making.
+ *
+ * @param {STD_BODY} tp - The buyer whose wealth will be debited.
+ * @param {int} cost - The total cost in base (lowest denomination)
+ *                     units.
+ * @returns {string | mixed*} An error message on failure, or a
+ *                            two-element array
+ *                            ({ paid_array, change_array }) on
+ *                            success, where each entry is itself a
+ *                            ({ currency_name, amount }) pair
+ *                            ordered from highest to lowest
+ *                            denomination.
+ */
 varargs mixed handle_transaction(object tp, int cost) {
     if(!tp || !objectp(tp)) {
         return "Invalid player object.";
@@ -30,6 +51,24 @@ varargs mixed handle_transaction(object tp, int cost) {
     return complex_transaction(tp, cost);
 }
 
+/**
+ * Performs the multi-denomination transaction algorithm for a
+ * purchase. Iterates denominations from highest to lowest, taking
+ * the minimum number of coins of each that covers the remaining
+ * cost, then computes change from any overpayment using the fewest
+ * coins possible. Verifies the buyer can carry the net coin change
+ * before applying any wealth adjustments.
+ *
+ * @param {STD_BODY} tp - The buyer whose wealth will be debited.
+ * @param {int} cost - The total cost in base units. Must be
+ *                     positive.
+ * @returns {string | mixed*} An error message on failure (non-
+ *                            positive cost, insufficient funds, no
+ *                            valid coin combination, or insufficient
+ *                            carry capacity), or a two-element array
+ *                            ({ paid_array, change_array }) on
+ *                            success.
+ */
 mixed complex_transaction(object tp, int cost) {
     mapping wealth;
     string *currencies;
@@ -155,6 +194,15 @@ mixed complex_transaction(object tp, int cost) {
     return ({ format_return_currency(to_subtract), format_return_currency(change) });
 }
 
+/**
+ * Converts a currency mapping into an ordered array of pairs,
+ * sorted from highest to lowest denomination. Entries with zero or
+ * missing values are omitted.
+ *
+ * @param {([ string: int ])} m - Mapping of currency name to count.
+ * @returns {mixed*} An array of ({ currency_name, count }) pairs in
+ *                   descending denomination order.
+ */
 private mixed *format_return_currency(mapping m) {
     mixed *result = ({});
     string *currencies = reverse_array(CURRENCY_D->currency_list());
@@ -168,6 +216,24 @@ private mixed *format_return_currency(mapping m) {
     return result;
 }
 
+/**
+ * Undoes a previously completed transaction. Removes the change
+ * coins from the buyer (failing if they no longer have them) and
+ * returns the originally-paid coins to the buyer's wealth. Used
+ * when a follow-up step (such as moving the purchased item to the
+ * buyer) fails after payment has already been processed.
+ *
+ * @param {STD_BODY} tp - The buyer whose transaction is being
+ *                        reversed.
+ * @param {mixed*} transaction_result - The two-element result
+ *                                      previously returned by
+ *                                      handle_transaction.
+ * @returns {string | mixed*} An error message on failure, or a
+ *                            two-element array
+ *                            ({ added_array, removed_array })
+ *                            describing the net adjustments
+ *                            applied during the reversal.
+ */
 mixed reverse_transaction(object tp, mixed transaction_result) {
     mixed *subtracted;
     mixed *change;
@@ -208,6 +274,16 @@ mixed reverse_transaction(object tp, mixed transaction_result) {
     return ({ format_return_currency(to_add), format_return_currency(to_subtract) });
 }
 
+/**
+ * Renders a currency-pair array into a human-readable string for
+ * display, joining entries with commas.
+ *
+ * @param {mixed*} currency_array - Array of ({ currency_name,
+ *                                  amount }) pairs.
+ * @returns {string} A comma-separated string such as
+ *                   "2 gold, 3 silver", or "None" if the array is
+ *                   empty.
+ */
 string format_return_currency_string(mixed *currency_array) {
     string result = "";
 
@@ -229,7 +305,16 @@ string format_return_currency_string(mixed *currency_array) {
     return result;
 }
 
-// Check if the player has enough funds
+/**
+ * Verifies the buyer has sufficient total wealth to cover an
+ * amount expressed in base units.
+ *
+ * @param {STD_BODY} tp - The buyer to check.
+ * @param {int} amount - The required amount in base (lowest
+ *                       denomination) units.
+ * @returns {int | string} 1 if the buyer can afford the amount, or
+ *                         an error message otherwise.
+ */
 private mixed check_funds(object tp, int amount) { // Remove currency parameter
     int total_wealth = tp->query_total_wealth(); // Get total wealth in base currency
     if(total_wealth < amount) {
@@ -238,7 +323,18 @@ private mixed check_funds(object tp, int amount) { // Remove currency parameter
     return 1;
 }
 
-// Check if the player can handle the change in capacity
+/**
+ * Verifies the buyer can carry the net coin change implied by
+ * adjusting their holdings of a single denomination to a target
+ * amount.
+ *
+ * @param {STD_BODY} tp - The buyer to check.
+ * @param {string} currency - The denomination being adjusted.
+ * @param {int} amount - The target post-transaction count of the
+ *                       denomination.
+ * @returns {int | string} 1 if the buyer can carry the change, or
+ *                         an error message otherwise.
+ */
 private mixed check_capacity(object tp, string currency, int amount) {
     int current_fill = tp->query_fill();
     int capacity = tp->query_capacity();
@@ -250,7 +346,18 @@ private mixed check_capacity(object tp, string currency, int amount) {
     return 1;
 }
 
-// Transfer funds from one object to another
+/**
+ * Moves a single denomination of currency from one object's wealth
+ * to another. If the destination cannot accept the funds, the
+ * source is automatically refunded so the operation is atomic.
+ *
+ * @param {STD_BODY} from - The object losing funds.
+ * @param {STD_BODY} to - The object receiving funds.
+ * @param {string} currency - The denomination to transfer.
+ * @param {int} amount - The number of coins to transfer.
+ * @returns {int | string} 1 on success, or an error message if
+ *                         either side of the transfer fails.
+ */
 private mixed transfer_funds(object from, object to, string currency, int amount) {
     int from_result, to_result;
 
@@ -269,32 +376,61 @@ private mixed transfer_funds(object from, object to, string currency, int amount
     return 1;
 }
 
-// Convert currency for a transaction
+/**
+ * Converts a buyer's wealth from one denomination to another in
+ * order to satisfy a transaction. Validates both currencies, that
+ * the buyer can afford the cost, and that they can carry the
+ * resulting coins before performing the conversion.
+ *
+ * @param {STD_BODY} tp - The buyer whose wealth is converted.
+ * @param {int} cost - The amount to convert, expressed in
+ *                     from_currency units.
+ * @param {string} from_currency - The source denomination.
+ * @param {string} to_currency - The destination denomination.
+ * @returns {int | string} The converted amount in to_currency units
+ *                         on success, or an error message on
+ *                         failure.
+ */
 mixed convert_for_transaction(object tp, int cost, string from_currency, string to_currency) {
     int converted_amount;
     mixed result;
 
-    if(!CURRENCY_D->valid_currency_type(from_currency) ||
-        !CURRENCY_D->valid_currency_type(to_currency)) {
+    if(!CURRENCY_D->valid_currency_type(from_currency)
+      || !CURRENCY_D->valid_currency_type(to_currency))
         return "Invalid currency type.";
-    }
 
     converted_amount = CURRENCY_D->convert_currency(cost, from_currency, to_currency);
 
     result = check_funds(tp, cost);
-    if(stringp(result)) return result;
+    if(stringp(result))
+      return result;
 
     result = check_capacity(tp, to_currency, converted_amount);
-    if(stringp(result)) return result;
+    if(stringp(result))
+      return result;
 
-    if(tp->convert_wealth(from_currency, to_currency, cost)) {
+    if(intp(tp->adjust_wealth(from_currency, -cost))) {
+      if(intp(tp->adjust_wealth(to_currency, converted_amount))) {
         return converted_amount;
+      } else {
+        tp->adjust_wealth(from_currency, cost);
+      }
     }
 
     return "Currency conversion failed.";
 }
 
-// Function to check if an object can afford a transaction
+/**
+ * Checks whether an object holds enough of a specific denomination
+ * to cover a cost. Single-denomination only — does not consider
+ * conversion or change-making across denominations.
+ *
+ * @param {STD_BODY} ob - The object to check.
+ * @param {int} cost - The required count of the denomination.
+ * @param {string} currency - The denomination to check against.
+ * @returns {int | string} 1 if the object can afford the cost, or
+ *                         an error message otherwise.
+ */
 mixed can_afford(object ob, int cost, string currency) {
     if(!ob || !objectp(ob)) {
         return "Invalid object.";
@@ -307,11 +443,29 @@ mixed can_afford(object ob, int cost, string currency) {
     return "Not enough funds.";
 }
 
-// Function to format currency for display
+/**
+ * Builds a simple "<amount> <currency>" display string for a
+ * single denomination.
+ *
+ * @param {int} amount - The number of coins.
+ * @param {string} currency - The denomination name.
+ * @returns {string} The formatted string.
+ */
 string format_currency(int amount, string currency) {
     return amount + " " + currency;
 }
 
+/**
+ * Decomposes a base-unit amount into the minimum number of coins
+ * across all denominations, taking from highest to lowest. Performs
+ * pure calculation only — does not touch any wealth.
+ *
+ * @param {int} total_amount - The amount in base (lowest
+ *                             denomination) units to decompose.
+ * @returns {([ string: int ])} A mapping of currency name to coin
+ *                              count, omitting denominations that
+ *                              would have zero coins.
+ */
 public mapping least_coins(int total_amount) {
     string *currencies;
     mapping result = ([]);
