@@ -54,7 +54,7 @@ void repopulate() {
 
   if(random_float(100.0) < spawn_chance) {
     file = element_of(mob_files);
-    /** @lpc-ignore - I have no {@see https://github.com/jlchmura/lpc-language-server/issues/317} */
+    /** @lpc-ignore - I have no idea {@see https://github.com/jlchmura/lpc-language-server/issues/317} */
     mobs += ({ /** @type {STD_NPC} */ (add_inventory(file)) });
     mobs->simple_action("$N $varrive.");
   }
