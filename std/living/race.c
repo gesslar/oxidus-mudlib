@@ -13,16 +13,16 @@
 #include <module.h>
 
 private nosave string racialBodies = DIR_STD_MODULES "race/";
-private nomask nosave string _race;
-private string gender;
+private nomask nosave string __race;
+private string __gender;
 
 public string set_race(string race) {
   string modulePath = "std/modules/race/" + race;
   object mod;
 
   if(!file_exists(racialBodies + race + ".c")) {
-    _race = race;
-    return _race;
+    __race = race;
+    return __race;
   }
 
   if(query_module("race"))
@@ -33,22 +33,23 @@ public string set_race(string race) {
   if(!objectp(mod))
     error("Failed to add race module.");
 
-  _race = mod->query_race();
+  /** @lpc-ignore - idk how to resolve this one yet */
+  __race = mod->query_race();
 
-  return _race;
+  return __race;
 }
 
 public string query_race() {
-  return _race ||
+  return __race ||
     module("race", "query_race");
 }
 
 public nomask void set_gender(string g) {
-    gender = g;
+  __gender = g;
 }
 
 public nomask string query_gender() {
-    return gender;
+  return __gender;
 }
 
 public nomask void adjust_living() {

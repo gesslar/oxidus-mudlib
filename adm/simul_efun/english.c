@@ -120,23 +120,25 @@ string possessive_proper_noun(mixed ob) {
 /**
  * Gets the possessive pronoun for a gender.
  *
- * @param {"male" | "female" | "other" | "none" | STD_BODY} ob - Gender string or object with query_gender()
+ * @param {string | STD_BODY} ob - Gender string or object with query_gender()
  * @returns {string} Possessive pronoun (his/hers/its/theirs)
  * @example
  * possessive_pronoun("female");  // Returns "hers"
  */
 string possessive_pronoun(mixed ob) {
-  string gender;
+  assert_arg(stringp(ob) || objectp(ob), 1, "Object must be a string or an object.");
 
-  if(objectp(ob))
-    gender = ob->query_gender() || "neuter";
+  string __gender;
+
+  if(stringp(ob))
+    __gender = ob;
   else
-    gender = (string)ob;
+    __gender = ob->query_gender() || "neuter";
 
   if(stringp(ob))
     return "its";
 
-  switch(gender) {
+  switch(__gender) {
     case "male" : return "his";
     case "female" : return "hers";
     case "other" : return "theirs";
@@ -154,13 +156,19 @@ string possessive_pronoun(mixed ob) {
  * possessive("female");  // Returns "her"
  */
 string possessive(mixed ob) {
-  if(objectp(ob))
-    ob = ob->query_gender() || "neuter";
+  assert_arg(stringp(ob) || objectp(ob), 1, "Object must be a string or an object.");
 
-  if(!stringp(ob))
+  string __gender;
+
+  if(stringp(ob))
+    __gender = ob;
+  else if(objectp(ob))
+    __gender = ob->query_gender() || "neuter";
+
+  if(!stringp(__gender))
     return "its";
 
-  switch(ob) {
+  switch(__gender) {
     case "male" : return "his";
     case "female" : return "her";
     case "other" : return "their";
@@ -178,13 +186,19 @@ string possessive(mixed ob) {
  * reflexive("female");  // Returns "herself"
  */
 string reflexive(mixed ob) {
-  if(objectp(ob))
-    ob = ob->query_gender() || "neuter";
+  assert_arg(stringp(ob) || objectp(ob), 1, "Object must be a string or an object.");
 
-  if(!stringp(ob))
+  string __gender;
+
+  if(stringp(ob))
+    __gender = ob;
+  else if(objectp(ob))
+    __gender = ob->query_gender() || "neuter";
+
+  if(!stringp(__gender))
     return "itself";
 
-  switch(ob) {
+  switch(__gender) {
     case "male" : return "himself";
     case "female" : return "herself";
     case "other" : return "themself";
@@ -196,19 +210,25 @@ string reflexive(mixed ob) {
 /**
  * Gets the objective pronoun for a gender.
  *
- * @param {string|object} ob - Gender string or object with query_gender()
+ * @param {string | STD_BODY} ob - Gender string or object with query_gender()
  * @returns {string} Objective pronoun (him/her/it/them)
  * @example
  * objective("female");  // Returns "her"
  */
 string objective(mixed ob) {
-  if(objectp(ob))
-    ob = ob->query_gender() || "neuter";
+  assert_arg(stringp(ob) || objectp(ob), 1, "Object must be a string or an object.");
 
-  if(!stringp(ob))
+  string __gender;
+
+  if(stringp(ob))
+    __gender = ob;
+  else if(objectp(ob))
+    __gender = ob->query_gender() || "neuter";
+
+  if(!stringp(__gender))
     return "it";
 
-  switch(ob) {
+  switch(__gender) {
     case "male" : return "him";
     case "female" : return "her";
     case "other" : return "them";
@@ -220,14 +240,20 @@ string objective(mixed ob) {
 /**
  * Gets the subjective pronoun for a gender.
  *
- * @param {string|object} ob - Gender string or object with query_gender()
+ * @param {string | STD_BODY} ob - Gender string or object with query_gender()
  * @returns {string} Subjective pronoun (he/she/it/they)
  * @example
  * subjective("female");  // Returns "she"
  */
 string subjective(mixed ob) {
-  if(objectp(ob))
-    ob = ob->query_gender() || "neuter";
+  assert_arg(stringp(ob) || objectp(ob), 1, "Object must be a string or an object.");
+
+  string __gender;
+
+  if(stringp(ob))
+    __gender = ob;
+  else if(objectp(ob))
+    __gender = ob->query_gender() || "neuter";
 
   if(!stringp(ob))
     return "it";

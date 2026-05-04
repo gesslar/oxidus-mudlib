@@ -21,13 +21,13 @@
   ],
   "defines": [
     {
-      "__PACKAGE_DB__": "kakadoodoo",
+      "__PACKAGE_DB__": "\"kakadoodoo\"",
     },
     {
       "__USE_SQLITE3__": "3",
     },
     {
-      "__SAVE_EXTENSION__": ".o"
+      "__SAVE_EXTENSION__": "\".o\""
     },
     {
       "__MAX_READ_FILE_SIZE__":"20000"

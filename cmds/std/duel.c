@@ -15,7 +15,6 @@ inherit STD_ACT;
 mixed main(/** @type {STD_BODY} */ object tp, string arg) {
   /** @type {STD_BODY} */ object victim;
   string name, vname;
-  object room = environment(tp);
 
   if(!arg)
     return "Duel whom?";

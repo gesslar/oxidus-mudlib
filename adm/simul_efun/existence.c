@@ -67,7 +67,7 @@ int cfile_exists(string file) {
  * @returns {int} 1 if save file exists, 0 otherwise
  * @example
  * if(ofile_exists("/save/players/" + name)) {
- *     restore_object("/save/players/" + name);
+ *   restore_object("/save/players/" + name);
  * }
  */
 int ofile_exists(string file) {
