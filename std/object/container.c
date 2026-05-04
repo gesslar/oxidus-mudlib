@@ -136,8 +136,6 @@ void event_base_received(object ob, object previous_env) {
 }
 
 void event_gmcp_item_received(object ob, object new_env) {
-  _debug("ob %O, new_env %O", ob, new_env);
-
   if(!new_env)
     return;
 
