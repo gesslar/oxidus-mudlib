@@ -45,8 +45,7 @@ private nosave int _opaque = 1;
  * @returns {int} 1 if accessible, otherwise 0.
  */
 varargs int is_content_accessible(object pov) {
-  int result;
-  object env, env_pov;
+  object env;
 
   if(is_closeable() && is_closed())
     return 0;
@@ -72,10 +71,10 @@ int inventory_visible() { return is_content_accessible(); }
  * This function can be overridden by inheriting objects to add
  * restrictions on what objects can enter the container.
  *
- * @param {object} ob - The object attempting to enter
+ * @param {object} _ob - The object attempting to enter
  * @returns {int} 1 if the object can be received, 0 if not
  */
-int can_receive(object ob) {
+int can_receive(object _ob) {
   return 1;
 }
 
@@ -85,10 +84,10 @@ int can_receive(object ob) {
  * This function can be overridden to add restrictions on what
  * objects can leave the container.
  *
- * @param {object} ob - The object attempting to leave
+ * @param {object} _ob - The object attempting to leave
  * @returns {int} 1 if the object can be released, 0 if not
  */
-int can_release(object ob) {
+int can_release(object _ob) {
   return 1;
 }
 

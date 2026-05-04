@@ -23,60 +23,33 @@
 #include <module.h>
 #include <skills.h>
 #include <vitals.h>
+#include "/std/object/include/object.h"
 
 inherit __DIR__ "damage";
 
-// Functions from other objects
-string query_name();
-
 // Variables
-/**
- * Active threat table — enemies currently engaged with this body,
- * keyed by the enemy object and valued by accumulated threat.
- *
- * @type {([ STD_BODY: float ])}
- */
-private nosave mapping _current_enemies = ([]);
+/** @type {([ STD_BODY: float ])}  */
+private nosave mapping __current_enemies = ([]);
 
-/**
- * Recently-seen threat table — enemies this body has fought or
- * observed, retained after disengagement so memory persists
- * between encounters.
- *
- * @type {([ STD_BODY: float ])}
- */
-private nosave mapping _seen_enemies = ([]);
+/** @type {([ STD_BODY: float ])} */
+private nosave mapping __seen_enemies = ([]);
 
-private nosave float _attack_speed = 2.0;
-private nosave int _next_combat_round = 0;
+private nosave float __attack_speed = 2.0;
+private nosave int __next_combat_round = 0;
 
-/**
- * Aggregate defence values by damage type, recomputed from
- * equipped items in adjust_protection().
- *
- * @type {([ string: float ])}
- */
-private nosave mapping _defense = ([]);
+/** @type {([ string: float ])} */
+private nosave mapping __defense = ([]);
 
-private nosave float _ac = 0.0;
+private nosave float __ac = 0.0;
+private nosave float __spell_ac = 0.0;
 
-/**
- * The last body to deliver damage to this one. Used by the
- * damage and death pipeline to attribute kills.
- *
- * @type {STD_BODY}
- */
-private nosave object _last_damager;
+/** @type {STD_BODY} */
+private nosave object __last_damager;
 
-/**
- * The body credited with killing this one, if killed.
- *
- * @type {STD_BODY}
- */
-private nosave object _killed_by_ob;
+/** @type {STD_BODY} */
+private nosave object __killed_by_ob;
 
-private nosave string *_combat_memory = ({ });
-private nosave int _no_combat = 0;
+private nosave int __no_combat = 0;
 
 /**
  * Per-tick combat heartbeat. Stops the loop if dead or
@@ -98,7 +71,7 @@ void combat_round() {
   clean_up_enemies();
 
   if(!in_combat()) {
-    _next_combat_round = 0;
+    __next_combat_round = 0;
     return;
   }
 
@@ -112,10 +85,10 @@ void combat_round() {
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_STATUS, ([
     GMCP_LBL_CHAR_STATUS_CURRENT_ENEMY: victim->query_name(),
     GMCP_LBL_CHAR_STATUS_CURRENT_ENEMY_HEALTH: sprintf("%.2f", victim->hp_ratio()),
-    GMCP_LBL_CHAR_STATUS_CURRENT_ENEMIES: keys(_current_enemies),
+    GMCP_LBL_CHAR_STATUS_CURRENT_ENEMIES: keys(__current_enemies),
   ]));
 
-  if(find_call_out(_next_combat_round) == -1)
+  if(find_call_out(__next_combat_round) == -1)
     next_round();
 }
 
@@ -133,18 +106,19 @@ int start_attack(object victim) {
   if(!victim)
     return 0;
 
-  if(_current_enemies[victim])
+  if(__current_enemies[victim])
     return 0;
 
-  _current_enemies[victim] = 1.0;
+  __current_enemies[victim] = 1.0;
 
-  if(!_seen_enemies[victim])
-    _seen_enemies[victim] = 1.0;
+  if(!__seen_enemies[victim])
+    __seen_enemies[victim] = 1.0;
 
   if(!userp())
     module("combat_memory", "add_to_memory", victim);
 
-  _next_combat_round = call_out_walltime("combat_round", _attack_speed);
+  if(!__next_combat_round || find_call_out(__next_combat_round) == -1)
+    next_round();
 
   victim->start_attack(this_object());
 
@@ -163,7 +137,9 @@ int start_attack(object victim) {
  * @param {int} [multi] - Non-zero if this iteration should pick
  *                        an off-hand weapon instead of the main.
  */
-void swing(int count, int multi) {
+varargs void swing(int count, int multi) {
+  multi = !!multi;
+
   object enemy = highest_threat();
   object weapon;
   string *slots = query_weapon_slots();
@@ -203,9 +179,9 @@ void swing(int count, int multi) {
     }
   }
 
-  if(can_strike(enemy, weapon))
+  if(can_strike(enemy, weapon)) {
     strike_enemy(enemy, weapon);
-  else {
+  } else {
     enemy->use_skill("combat.defense.dodge");
     fail_strike(enemy, weapon);
   }
@@ -221,13 +197,13 @@ void swing(int count, int multi) {
  * @returns {int} The call_out handle for the scheduled round.
  */
 int next_round() {
-  float speed = _attack_speed;
+  float speed = __attack_speed;
 
   speed += random_float(1.5);
 
-  _next_combat_round = call_out_walltime("combat_round", speed);
+  __next_combat_round = call_out_walltime("combat_round", speed);
 
-  return _next_combat_round;
+  return __next_combat_round;
 }
 
 /**
@@ -309,7 +285,6 @@ public int can_strike(object enemy, mixed weapon) {
 private fail_strike(object enemy, object weapon) {
   string wname, wtype;
   string *messes, mess;
-  float skill;
   mapping weapon_info = query_weapon_info(weapon);
 
   wname = weapon_info["name"];
@@ -334,7 +309,7 @@ private fail_strike(object enemy, object weapon) {
  * weapon proc.
  *
  * @param {STD_BODY} enemy - The body being struck.
- * @param {object} weapon - The weapon used, or null for unarmed
+ * @param {STD_WEAPON} [weapon] - The weapon used, or null for unarmed
  *                          or NPC defaults.
  */
 void strike_enemy(object enemy, object weapon) {
@@ -379,10 +354,6 @@ void strike_enemy(object enemy, object weapon) {
     - enemy->query_skill_level("combat.defense")
   ;
 
-  // tell(enemy, sprintf("Base: %f, Skill: %f, Level: %f, Enemy Level: %f, Enemy Defense: %f, Enemy Skill: %f\n",
-  //     base, skill, query_effective_level(), enemy->query_effective_level(), enemy->query_defense_amount(wtype), enemy->query_skill_level("combat.defense")));
-  // tell(enemy, "Damage: " + dam + "\n");
-
   use_skill(skill_name);
 
   if(dam < 0.0)
@@ -401,8 +372,8 @@ void strike_enemy(object enemy, object weapon) {
   add_seen_threat(enemy, dam);
 
   if(weapon && weapon->is_weapon())
-    if(stringp(proc = weapon->can_proc()))
-      weapon->proc(proc, this_object(), enemy);
+    if(stringp(proc = call_if(weapon, "can_proc")))
+      call_if(weapon, "proc", proc, this_object(), enemy);
 }
 
 /**
@@ -414,7 +385,7 @@ void strike_enemy(object enemy, object weapon) {
  * configured weapon name and type are used along with the
  * NPC's base damage.
  *
- * @param {object} weapon - The weapon object, or null for
+ * @param {STD_WEAPON} weapon - The weapon object, or null for
  *                          unarmed or NPC defaults.
  * @returns {([ string: mixed ])} Mapping with keys "name"
  *          (string), "type" (string), "skill" (string), and
@@ -462,7 +433,7 @@ int attacking(object victim) {
   if(!victim)
     return 0;
 
-  if(_current_enemies[victim])
+  if(__current_enemies[victim])
     return 1;
 
   return 0;
@@ -483,16 +454,16 @@ varargs int stop_attack(object victim, int seen) {
   if(!victim)
     return -1;
 
-  if(!_current_enemies[victim])
+  if(!__current_enemies[victim])
     return -1;
 
-  if(_current_enemies[victim]) {
-    map_delete(_current_enemies, victim);
+  if(__current_enemies[victim]) {
+    map_delete(__current_enemies, victim);
     return 1;
   }
 
-  if(seen && _seen_enemies[victim]) {
-    map_delete(_seen_enemies, victim);
+  if(seen && __seen_enemies[victim]) {
+    map_delete(__seen_enemies, victim);
     return 1;
   }
 
@@ -505,10 +476,11 @@ varargs int stop_attack(object victim, int seen) {
  * empty GMCP combat status, and runs a final cleanup pass.
  */
 void stop_all_attacks() {
-  if(find_call_out(_next_combat_round) != -1)
-    remove_call_out(_next_combat_round);
+  if(find_call_out(__next_combat_round) != -1)
+    remove_call_out(__next_combat_round);
 
-  _current_enemies = ([]);
+  __next_combat_round = 0;
+  __current_enemies = ([]);
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_STATUS, ([
     GMCP_LBL_CHAR_STATUS_CURRENT_ENEMY: "",
@@ -528,7 +500,7 @@ void stop_all_attacks() {
  *                otherwise.
  */
 int in_combat() {
-  return sizeof(_current_enemies) > 0;
+  return sizeof(__current_enemies) > 0;
 }
 
 /**
@@ -543,7 +515,7 @@ int seen_enemy(object victim) {
   if(!victim)
     return 0;
 
-  if(_seen_enemies[victim])
+  if(__seen_enemies[victim])
     return 1;
 
   return 0;
@@ -559,7 +531,7 @@ int current_enemy(object victim) {
   if(!victim)
     return 0;
 
-  if(_current_enemies[victim])
+  if(__current_enemies[victim])
     return 1;
 
   return 0;
@@ -572,7 +544,7 @@ int current_enemy(object victim) {
  *          mapping, keyed by enemy and valued by threat.
  */
 mapping current_enemies() {
-  return copy(_current_enemies);
+  return copy(__current_enemies);
 }
 
 /**
@@ -586,16 +558,16 @@ object highest_threat() {
   object highest;
   int highest_threat = 0;
 
-  if(!sizeof(_current_enemies))
+  if(!sizeof(__current_enemies))
     return 0;
 
-  enemies = keys(_current_enemies);
+  enemies = keys(__current_enemies);
   highest = enemies[0];
 
   foreach(object enemy in enemies) {
-    if(_current_enemies[enemy] > highest_threat) {
+    if(__current_enemies[enemy] > highest_threat) {
       highest = enemy;
-      highest_threat = _current_enemies[enemy];
+      highest_threat = __current_enemies[enemy];
     }
   }
 
@@ -608,14 +580,14 @@ object highest_threat() {
  * @returns {STD_BODY} The lowest-threat enemy.
  */
 object lowest_threat() {
-  object *enemies = keys(_current_enemies);
+  object *enemies = keys(__current_enemies);
   object lowest = enemies[0];
   int lowest_threat = MAX_INT;
 
   foreach(object enemy in enemies) {
-    if(_current_enemies[enemy] < lowest_threat) {
+    if(__current_enemies[enemy] < lowest_threat) {
       lowest = enemy;
-      lowest_threat = _current_enemies[enemy];
+      lowest_threat = __current_enemies[enemy];
     }
   }
 
@@ -628,14 +600,14 @@ object lowest_threat() {
  * @returns {STD_BODY} The highest-threat seen enemy.
  */
 object highest_seen_threat() {
-  object *enemies = keys(_seen_enemies);
+  object *enemies = keys(__seen_enemies);
   object highest = enemies[0];
   int highest_threat = 0;
 
   foreach(object enemy in enemies) {
-    if(_seen_enemies[enemy] > highest_threat) {
+    if(__seen_enemies[enemy] > highest_threat) {
       highest = enemy;
-      highest_threat = _seen_enemies[enemy];
+      highest_threat = __seen_enemies[enemy];
     }
   }
 
@@ -648,14 +620,14 @@ object highest_seen_threat() {
  * @returns {STD_BODY} The lowest-threat seen enemy.
  */
 object lowest_seen_threat() {
-  object *enemies = keys(_seen_enemies);
+  object *enemies = keys(__seen_enemies);
   object lowest = enemies[0];
   int lowest_threat = MAX_INT;
 
   foreach(object enemy in enemies) {
-    if(_seen_enemies[enemy] < lowest_threat) {
+    if(__seen_enemies[enemy] < lowest_threat) {
       lowest = enemy;
-      lowest_threat = _seen_enemies[enemy];
+      lowest_threat = __seen_enemies[enemy];
     }
   }
 
@@ -675,10 +647,10 @@ void clean_up_enemies() {
   if(!in_combat())
     return;
 
-  _current_enemies = filter(_current_enemies, (: valid_enemy :));
+  __current_enemies = filter(__current_enemies, (: valid_enemy :));
 
   if(!in_combat()) {
-    _next_combat_round = 0;
+    __next_combat_round = 0;
 
     if(query_hp() > 0.0)
       tell(this_object(), "You are no longer in combat.\n");
@@ -716,7 +688,7 @@ varargs int valid_enemy(object enemy) {
  * valid (objects that are not dead).
  */
 void clean_up_seen_enemies() {
-  _seen_enemies = filter(_seen_enemies, (: valid_seen_enemy :));
+  __seen_enemies = filter(__seen_enemies, (: valid_seen_enemy :));
 }
 
 /**
@@ -726,11 +698,9 @@ void clean_up_seen_enemies() {
  * across rooms.
  *
  * @param {STD_BODY} enemy - The candidate seen enemy.
- * @param {int} [threat] - The associated threat value, supplied
- *                         when used as a mapping filter callback.
  * @returns {int} 1 if the entry should be retained, 0 otherwise.
  */
-varargs int valid_seen_enemy(object enemy, int threat) {
+varargs int valid_seen_enemy(object enemy) {
   if(!objectp(enemy))
     return 0;
 
@@ -753,9 +723,9 @@ float add_threat(object enemy, float amount) {
   if(!valid_enemy(enemy))
     return 0.0;
 
-  _current_enemies[enemy] += amount;
+  __current_enemies[enemy] += amount;
 
-  return _current_enemies[enemy];
+  return __current_enemies[enemy];
 }
 
 /**
@@ -772,9 +742,9 @@ float add_seen_threat(object enemy, float amount) {
   if(!valid_seen_enemy(enemy))
     return 0.0;
 
-  _seen_enemies[enemy] += amount;
+  __seen_enemies[enemy] += amount;
 
-  return _seen_enemies[enemy];
+  return __seen_enemies[enemy];
 }
 
 /**
@@ -785,11 +755,11 @@ float add_seen_threat(object enemy, float amount) {
  * @returns {float} The new clamped attack speed.
  */
 float add_attack_speed(float amount) {
-  _attack_speed += amount;
+  __attack_speed += amount;
 
-  _attack_speed = clamp(0.5, 10.0, _attack_speed);
+  __attack_speed = clamp(0.5, 10.0, __attack_speed);
 
-  return _attack_speed;
+  return __attack_speed;
 }
 
 /**
@@ -799,7 +769,7 @@ float add_attack_speed(float amount) {
  * @param {float} speed - The new attack speed in seconds.
  */
 void set_attack_speed(float speed) {
-  _attack_speed = speed;
+  __attack_speed = speed;
 }
 
 /**
@@ -808,7 +778,7 @@ void set_attack_speed(float speed) {
  * @returns {float} The configured attack speed.
  */
 float query_attack_speed() {
-  return _attack_speed;
+  return __attack_speed;
 }
 
 /**
@@ -819,7 +789,7 @@ float query_attack_speed() {
  *                                    by damage type.
  */
 void set_defense(mapping def) {
-  _defense = def;
+  __defense = def;
 
   adjust_protection();
 }
@@ -832,10 +802,10 @@ void set_defense(mapping def) {
  * @param {float} amount - Defence value for that type.
  */
 void add_defense(string type, float amount) {
-  if(!_defense)
-    _defense = ([ ]);
+  if(!__defense)
+    __defense = ([ ]);
 
-  _defense[type] = amount;
+  __defense[type] = amount;
 
   adjust_protection();
 }
@@ -847,7 +817,7 @@ void add_defense(string type, float amount) {
  *          mapping.
  */
 mapping query_defense() {
-  return copy(_defense);
+  return copy(__defense);
 }
 
 /**
@@ -857,10 +827,10 @@ mapping query_defense() {
  * @returns {float} The defence value, or 0.0 if not configured.
  */
 float query_defense_amount(string type) {
-  if(!_defense)
+  if(!__defense)
     return 0.0;
 
-  return _defense[type];
+  return __defense[type];
 }
 
 /**
@@ -875,7 +845,7 @@ mapping adjust_protection() {
   object *obs = values(_equipment), ob;
 
   { // Defenses
-    _defense = ([]);
+    __defense = ([]);
     foreach(ob in obs) {
       mapping def = ob->query_defense();
 
@@ -883,21 +853,21 @@ mapping adjust_protection() {
         continue;
 
       foreach(string type, float amount in def) {
-        if(!_defense[type])
-          _defense[type] = 0.0;
+        if(!__defense[type])
+          __defense[type] = 0.0;
 
-        _defense[type] += amount;
+        __defense[type] += amount;
       }
     }
   }
 
   { // Armor Class
-    _ac = 0.0;
+    __ac = 0.0;
     foreach(ob in obs)
-      _ac += ob->query_ac();
+      __ac += ob->query_ac();
   }
 
-  return _defense;
+  return __defense;
 }
 
 /**
@@ -907,7 +877,17 @@ mapping adjust_protection() {
  * @returns {float} The current total AC.
  */
 float query_ac() {
-  return _ac;
+  return __ac;
+}
+
+/**
+ * Returns the cached total armour class aggregated across all
+ * equipped items by adjust_protection().
+ *
+ * @returns {float} The current total AC.
+ */
+float query_spell_ac() {
+  return __spell_ac;
 }
 
 /**
@@ -916,7 +896,7 @@ float query_ac() {
  * @returns {STD_BODY} The last damager, or 0 if none recorded.
  */
 object last_damaged_by() {
-  return _last_damager;
+  return __last_damager;
 }
 
 /**
@@ -927,8 +907,8 @@ object last_damaged_by() {
  * @returns {STD_BODY} The same body that was set.
  */
 object set_last_damaged_by(object ob) {
-  _last_damager = ob;
-  return _last_damager;
+  __last_damager = ob;
+  return __last_damager;
 }
 
 /**
@@ -937,7 +917,7 @@ object set_last_damaged_by(object ob) {
  * @returns {STD_BODY} The killer, or 0 if not killed.
  */
 object killed_by() {
-  return _killed_by_ob;
+  return __killed_by_ob;
 }
 
 /**
@@ -948,8 +928,8 @@ object killed_by() {
  * @returns {STD_BODY} The same body that was set.
  */
 object set_killed_by(object ob) {
-  _killed_by_ob = ob;
-  return _killed_by_ob;
+  __killed_by_ob = ob;
+  return __killed_by_ob;
 }
 
 // The following are generally used by NPCs, but are available for special
@@ -1068,7 +1048,7 @@ mixed prevent_combat(object victim) {
  * @param {int} x - Truthy to enable, zero to disable.
  */
 void set_no_combat(int x) {
-  _no_combat = !!x;
+  __no_combat = !!x;
 }
 
 /**
@@ -1077,5 +1057,5 @@ void set_no_combat(int x) {
  * @returns {int} 1 if no-combat is enabled, 0 otherwise.
  */
 int query_no_combat() {
-  return _no_combat;
+  return __no_combat;
 }

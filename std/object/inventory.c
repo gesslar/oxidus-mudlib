@@ -15,7 +15,8 @@
 void set_spawn_info(mapping info);
 
 // Elements have the format of: ([ "object" : string, "number" : int|function, "args" : array ])
-private nosave mapping inventory;
+/** @type {([ string: mapping ])} */
+private nosave mapping __inventory;
 
 /**
  * Adds or clones an object to the inventory of this object.
@@ -23,41 +24,47 @@ private nosave mapping inventory;
  * If the file parameter is an object, it will be moved to this object.
  * If it's a string, a new object will be cloned and moved to this object.
  *
- * @param {object|string} file - Object to add or path of file to clone
- * @param {mixed} args... - Optional arguments to pass to the object
+ * @param {STD_OBJECT|string} file - Object to add or path of file to clone
+ * @param {mixed...} args - Optional arguments to pass to the object
  * @returns {object|null} The object that was added, or null/0 if failed
  */
-object add_inventory(mixed file, mixed args...) {
+varargs object add_inventory(mixed file, mixed *args...) {
   object ob;
   string e;
   int result;
   int new_ob;
+  /** @type {STD_OBJECT} */ object f;
+  string fname;
 
   if(nullp(file))
     return null;
 
-  e = catch {
-    if(objectp(file)) {
-      if(environment(file) == this_object())
-        return file;
+  if(objectp(file))
+    f = file;
+  else if(stringp(file))
+    fname = file;
+  else
+    return 0;
 
-      result = file->move(this_object());
+  e = catch {
+    if(f) {
+      if(environment(f) == this_object())
+        return f;
+
+      result = f->move(this_object());
 
       if(result)
         return 0;
 
-      return file;
+      return f;
     }
-
-    if(!stringp(file))
-      return 0;
 
     new_ob = 1;
 
     if(sizeof(args))
-      ob = new(file, args...);
+      ob = new(fname, args...);
     else
-      ob = new(file);
+      ob = new(fname);
   };
 
   if(e) {
@@ -68,7 +75,7 @@ object add_inventory(mixed file, mixed args...) {
     }
 
     log_file("OBJECT", "%s %s add_inventory clone error: %s\n  file: %s\n",
-      ctime(), file_name(), e, stringp(file) ? file : file_name(file));
+      ctime(), file_name(), e, fname || file_name(f));
   }
 
   if(!ob)
@@ -99,45 +106,48 @@ object add_inventory(mixed file, mixed args...) {
 /**
  * Registers an object to be automatically spawned during reset.
  *
- * @param {string} arg[0] - Object path to clone
- * @param {int|function} [arg[1]=1] - Number of objects to create or function that returns count
- * @param {mixed} [arg[2..]] - Optional arguments to pass to the object constructor
+ * Positional args are: path (string), count (int|function, default 1),
+ * then any extra arguments to pass to the object constructor.
+ *
+ * @param {mixed...} args - Positional argument list.
  * @returns {string|void} UUID of the registered object, or void if invalid
  */
-string add_object(mixed arg...) {
+varargs string add_object(mixed args...) {
   mapping element;
   string uuid;
   int sz;
 
-  if(!inventory)
-    inventory = ([]);
+  if(!__inventory)
+    __inventory = ([]);
 
   // Count the number of arguments
-  sz = sizeof(arg);
+  sz = sizeof(args);
 
   if(sz == 0)
     return;
 
   // Double-check we don't already have this object in our inventory mapping
-  foreach(element in values(inventory))
-    if(element["object"] == arg[0])
+  foreach(uuid, element in values(__inventory)) {
+    if(element["object"] == args[0]) {
       return;
+    }
+  }
 
   element = ([]);
-  element["object"] = arg[0];
+  element["object"] = args[0];
 
   if(sz >= 2)
-    element["number"] = arg[1];
+    element["number"] = args[1];
   else
     element["number"] = 1;
 
   if(sz >= 3)
-    element["args"] = arg[2..];
+    element["args"] = args[2..];
   else
     element["args"] = ({});
 
   uuid = generate_uuid();
-  inventory[uuid] = element;
+  __inventory[uuid] = element;
 
   return uuid;
 }
@@ -148,11 +158,11 @@ string add_object(mixed arg...) {
  * @param {string} uuid - UUID of the object to remove
  */
 void remove_object(string uuid) {
-  if(!inventory) return;
+  if(!__inventory) return;
   if(!uuid) return;
-  if(!inventory[uuid]) return;
+  if(!__inventory[uuid]) return;
 
-  map_delete(inventory, uuid);
+  map_delete(__inventory, uuid);
 }
 
 /**
@@ -164,16 +174,12 @@ void remove_object(string uuid) {
  */
 void reset_objects() {
   string uuid;
-  int sz, i;
-  int result;
   mapping element;
-  object ob;
-  string e;
 
-  if(!inventory)
+  if(!__inventory)
     return;
 
-  foreach(uuid, element in inventory) {
+  foreach(uuid, element in __inventory) {
     object *clones = present_clones(element["object"], this_object());
     int num_clones = sizeof(clones);
     int diff;
@@ -182,7 +188,7 @@ void reset_objects() {
       diff = element["number"] - num_clones;
 
       while(diff--) {
-        ob = add_inventory(element["object"], element["args"]);
+        object ob = add_inventory(element["object"], element["args"]);
         if(ob) {
           ob->add_spawn_info("belongs_to", file_name());
           ob->add_spawn_info("object_uuid", uuid);
@@ -200,5 +206,5 @@ void reset_objects() {
  * @returns {mapping} Copy of the inventory object mapping
  */
 mapping query_all_objects() {
-  return copy(inventory);
+  return copy(__inventory);
 }

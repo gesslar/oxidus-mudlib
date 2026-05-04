@@ -137,15 +137,12 @@ void adjust_proc_chance(float chance) {
 
 /**
  * @brief Check if a proc can occur.
- * @param {object} attacker - The attacker.
- * @param {object} defender - The defender.
  * @returns {string} The name of the proc that can occur, or false if no proc can occur.
  */
 string can_proc() {
   mapping procs = ([]);
   int now = time();
   string result;
-  float roll;
 
   debug("can_proc: Checking for procs.");
   // If there are no procs, return false

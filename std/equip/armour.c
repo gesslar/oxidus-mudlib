@@ -16,8 +16,8 @@
 
 inherit STD_CLOTHING;
 
-private mapping _defense = ([ ]);
-private float _ac = 0.0;
+private mapping __defense = ([ ]);
+private float __ac = 0.0;
 
 void mudlib_setup() {
   set_name("armour");
@@ -91,7 +91,7 @@ varargs int unequip(object tp, int silent) {
  *                                    damage type
  */
 public void set_defense(mapping def) {
-  _defense = def;
+  __defense = def;
 }
 
 /**
@@ -101,8 +101,8 @@ public void set_defense(mapping def) {
  * @param {float} amount - The defence value
  */
 public void add_defense(string type, float amount) {
-    if(!_defense) _defense = ([ ]);
-    _defense[type] = amount;
+    if(!__defense) __defense = ([ ]);
+    __defense[type] = amount;
 }
 
 /**
@@ -112,7 +112,7 @@ public void add_defense(string type, float amount) {
  *                                damage type
  */
 public mapping query_defense() {
-    return _defense;
+    return __defense;
 }
 
 /**
@@ -122,8 +122,8 @@ public mapping query_defense() {
  * @returns {float} The defence value, or 0.0 if not set
  */
 public float query_defense_amount(string type) {
-    if(!_defense) return 0.0;
-    return _defense[type];
+    if(!__defense) return 0.0;
+    return __defense[type];
 }
 
 /**
@@ -132,7 +132,7 @@ public float query_defense_amount(string type) {
  * @param {float} ac - The armour class value
  */
 public void set_ac(float ac) {
-    _ac = ac;
+    __ac = ac;
 }
 
 /**
@@ -141,7 +141,7 @@ public void set_ac(float ac) {
  * @returns {float} The armour class value
  */
 public float query_ac() {
-    return _ac;
+    return __ac;
 }
 
 /**
@@ -152,8 +152,8 @@ public float query_ac() {
  * @returns {float} The new armour class value
  */
 public float add_ac(float ac) {
-    _ac += ac;
-    return _ac;
+    __ac += ac;
+    return __ac;
 }
 
 /**
