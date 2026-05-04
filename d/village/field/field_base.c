@@ -14,16 +14,16 @@ inherit STD_ROOM;
 void repopulate();
 
 private nosave string *mob_files = ({});
+/** @type {STD_NPC} */
 private nosave object *mobs = ({});
 private nosave float spawn_chance = 15.0;
 
 void virtual_setup(mixed args...) {
   string file = args[0];
-  object ob;
 
   set_zone("lush_field");
 
-  __DIR__ "field_daemon"->setup_exits(this_object(), file);
+  __DIR__ "field_daemon"->setup_exits(this_object());
   __DIR__ "field_daemon"->setup_short(this_object(), file);
   __DIR__ "field_daemon"->setup_long(this_object(), file);
 
@@ -40,10 +40,12 @@ void virtual_setup(mixed args...) {
 }
 
 void repopulate() {
+  /** @type {STD_NPC} */ object mob;
   string file;
 
-  mobs -= ({ 0 });
-  foreach(object mob in mobs) {
+  mobs = filter(mobs, (: nullp :));
+
+  foreach(mob in mobs) {
     if(objectp(mob)) {
       mob->simple_action("$N $vwander away.");
       mob->remove();
@@ -52,7 +54,7 @@ void repopulate() {
 
   if(random_float(100.0) < spawn_chance) {
     file = element_of(mob_files);
-    mobs += ({ add_inventory(file) });
+    mobs += ({ /** @type {STD_NPC} */ (add_inventory(file)) });
     mobs->simple_action("$N $varrive.");
   }
 }

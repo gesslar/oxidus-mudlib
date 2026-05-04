@@ -1,1 +1,0 @@
-/git/uglier-lpc/bin/uglier-lpc.js

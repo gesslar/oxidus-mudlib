@@ -23,7 +23,11 @@ void setup() {
   setup_field_longs();
 }
 
-void setup_exits(object room) {
+/**
+ *
+ * @param {STD_ROOM} room
+ */
+public void setup_exits(object room) {
   int *coords = room->get_virtual_coordinates();
   mapping exits = ([]);
 
@@ -58,7 +62,7 @@ void setup_exits(object room) {
 
 private nosave string *field_shorts;
 
-string setup_field_shorts() {
+void setup_field_shorts() {
   field_shorts = ({
     "Open Field",
     "Grassy Meadow",
@@ -67,14 +71,19 @@ string setup_field_shorts() {
   });
 }
 
-void setup_short(object room, string file) {
+/**
+ *
+ * @param {STD_ROOM} room
+ * @param {string} _file
+ */
+public void setup_short(object room, string _file) {
   room->set_short(element_of(field_shorts) + " ("+query_file_name(room)+")");
 }
 
 private nosave int rotation = 0;
 private nosave string *field_longs;
 
-string setup_field_longs() {
+public void setup_field_longs() {
   field_longs = ({
     "North of the village, an open grassy field spreads out, the tall "
     "blades of grass swaying gently in the breeze. The field is a vibrant "
@@ -110,7 +119,13 @@ string setup_field_longs() {
     "solitude and a connection with nature.",
   });
 }
-void setup_long(object room, string file) {
+
+/**
+ *
+ * @param {STD_ROOM} room
+ * @param {string} _file
+ */
+public void setup_long(object room, string _file) {
   room->set_long(field_longs[rotation]);
 
   if(++rotation == sizeof(field_longs))
