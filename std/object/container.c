@@ -103,12 +103,57 @@ int can_release(object ob) {
  * @param {object} new_env - The new environment the object is moving to
  */
 void event_base_released(object ob, object new_env) {
-  event(this_object(), "released", ob, new_env);
-  event(this_object(), "gmcp_item_removed", ob);
+  call_if(this_object(), "event_released", ob, new_env);
+  call_if(this_object(), "event_gmcp_item_removed", ob, this_object());
 
   // If we are empty, notify ONLY this object...
   if(!sizeof(all_inventory()))
-    event(({this_object()}), "container_empty", ob);
+    call_if(this_object(), "event_container_empty", ob);
+}
+
+void event_gmcp_item_removed(object ob, object previous_env) {
+  if(!previous_env)
+    return;
+
+  if(pcp(previous_env)) {
+    GMCP_D->send_gmcp(previous_env, GMCP_PKG_CHAR_ITEMS_REMOVE, ({ ob, previous_env }));
+    return;
+  }
+
+  if(roomp(previous_env)) {
+    object player;
+    object *players = present_players(previous_env);
+
+    foreach(player in players) {
+      GMCP_D->send_gmcp(player, GMCP_PKG_CHAR_ITEMS_REMOVE, ({ ob, previous_env }));
+    }
+  }
+}
+
+void event_base_received(object ob, object previous_env) {
+  call_if(this_object(), "event_received", ob, previous_env);
+  call_if(this_object(), "event_gmcp_item_received", ob, this_object());
+}
+
+void event_gmcp_item_received(object ob, object new_env) {
+  _debug("ob %O, new_env %O", ob, new_env);
+
+  if(!new_env)
+    return;
+
+  if(pcp(new_env)) {
+    GMCP_D->send_gmcp(new_env, GMCP_PKG_CHAR_ITEMS_ADD, ({ ob, new_env }));
+    return;
+  }
+
+  if(roomp(new_env)) {
+    object player;
+    object *players = present_players(new_env);
+
+    foreach(player in players) {
+      GMCP_D->send_gmcp(player, GMCP_PKG_CHAR_ITEMS_ADD, ({ ob, new_env }));
+    }
+  }
 }
 
 /**

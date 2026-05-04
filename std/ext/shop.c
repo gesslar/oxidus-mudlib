@@ -1,12 +1,19 @@
 /**
  * @file /std/ext/shop.c
- * @description Module to be inherited by shops
+ *
+ * Inventory-based shop module. Inherited by rooms that wish to buy
+ * and sell items via a persistent storage object. Provides the
+ * `buy`, `sell`, and `list` commands and integrates with
+ * EXT_CURRENCY for transaction handling. Items registered through
+ * add_shop_inventory() are restocked into the storage object on
+ * each reset.
  *
  * @created 2024-08-01 - Gesslar
- * @last_modified 2024-08-01 - Gesslar
+ * @last_modified 2026-05-03 - Gesslar
  *
  * @history
  * 2024-08-01 - Gesslar - Created
+ * 2026-05-03 - Gesslar - Added LPCDoc documentation
  */
 
 #include <classes.h>
@@ -28,10 +35,30 @@ protected nosave int __allow_npcs = 0;
 protected nosave float __sell_factor = 0.5; // when a player sells, use this
                                             // factor to determine the price
 protected nosave string __shop_keep_file;
-/** @type {STD_STORAGE_OBJECT} */
+/**
+ * The persistent storage object holding the shop's inventory for
+ * sale. Created lazily by create_storage().
+ *
+ * @type {STD_STORAGE_OBJECT}
+ */
 protected nosave object __store;
+
+/**
+ * Registered restock entries replayed by reset_shop(). Each entry
+ * is either a blueprint file path (string) or an array of the form
+ * ({ file, count, ...clone_args }) where count defaults to 1 and
+ * clone_args are forwarded to new().
+ *
+ * @type {mixed*}
+ */
 private nosave mixed *__shop_inventory = ({});
 
+/**
+ * Initialises the shop module. Adds the buy, sell, and list
+ * commands, creates the storage object, and registers reset and
+ * destruct callbacks. Call from setup() after the inventory has
+ * been registered with add_shop_inventory().
+ */
 void init_shop() {
   addCommand("buy", "cmd_buy");
   addCommand("sell", "cmd_sell");
@@ -43,11 +70,24 @@ void init_shop() {
   addDestruct((:remove_shop:));
 }
 
+/**
+ * Destruct callback that removes the shop's storage object when
+ * the shop itself is destroyed.
+ */
 protected void remove_shop() {
   if(objectp(__store))
     __store->remove();
 }
 
+/**
+ * Adds entries to the shop's restock list. Each call may pass one
+ * or more entries. Each entry is either a blueprint file path or
+ * an array of the form ({ file, count, ...clone_args }) where
+ * count defaults to 1 and clone_args are forwarded to new() when
+ * the item is restocked.
+ *
+ * @param {mixed*} args - One or more inventory entries.
+ */
 void add_shop_inventory(mixed args...) {
   mixed arg;
 
@@ -55,9 +95,14 @@ void add_shop_inventory(mixed args...) {
     args = ({ args });
 
   foreach(arg in args)
-    shop_inventory += ({ arg });
+    __shop_inventory += ({ arg });
 }
 
+/**
+ * Reset callback that wipes the storage object and restocks it
+ * from __shop_inventory. Errors raised while cloning an entry are
+ * logged to "shop_errors" and the entry is skipped.
+ */
 protected void reset_shop() {
   mixed arg;
 
@@ -66,7 +111,7 @@ protected void reset_shop() {
 
   foreach(arg in __shop_inventory) {
     string file;
-    int number;
+    int number = 1;
     mixed *clone_args;
     int sz;
     /** @type {STD_ITEM} */ object ob;
@@ -80,15 +125,10 @@ protected void reset_shop() {
     if(!stringp(file))
       continue;
 
-    sz = 0;
-
-    if(sz > 1) {
+    if(sz > 1)
       number = arg[1];
-      if(sz > 2)
-        clone_args = clone_args[2..];
-      else
-        number = 1;
-    }
+    if(sz > 2)
+      clone_args = arg[2..];
 
     while(number--) {
       string e;
@@ -114,7 +154,16 @@ protected void reset_shop() {
   }
 }
 
-mixed cmd_list() {
+/**
+ * Implements the `list` command. Returns the shop's storefront
+ * heading followed by one line per item in storage, each formatted
+ * as "<short> (<cost>)".
+ *
+ * @param {STD_BODY} tp - The acting body (unused).
+ * @param {string} _str - The command argument (unused).
+ * @returns {string*} The lines to display.
+ */
+mixed cmd_list(object tp, string _str) {
   object *items, item;
   string *lines = ({});
   string line;
@@ -137,6 +186,18 @@ mixed cmd_list() {
   return lines;
 }
 
+/**
+ * Implements the `buy` command. Locates the named item in the
+ * storage object, charges the buyer via handle_transaction(), and
+ * moves the item into the buyer's inventory. On move failure the
+ * payment is reversed via reverse_transaction().
+ *
+ * @param {STD_BODY} tp - The buyer.
+ * @param {string} str - The argument identifying the item.
+ * @returns {int | string} 1 on success, 0 if the buyer is an NPC
+ *                         and NPCs are not allowed, or an error
+ *                         message on failure.
+ */
 mixed cmd_buy(object tp, string str) {
   /** @type {STD_ITEM} */
   object ob;
@@ -194,6 +255,21 @@ mixed cmd_buy(object tp, string str) {
   return 1;
 }
 
+/**
+ * Implements the `sell` command. Accepts a single target, "all",
+ * or "all <id>". For each matching item the seller is paid via
+ * least_coins() based on query_cost(..., "sell"), the item is
+ * moved into storage, and the seller's wealth is adjusted per
+ * denomination. Equipped items and items the shop refuses to
+ * value (cost == null) are skipped, as are items that would
+ * overburden the seller when USE_MASS is enabled.
+ *
+ * @param {STD_BODY} tp - The seller.
+ * @param {string} str - The argument identifying items to sell.
+ * @returns {int | string} 1 if at least one item was sold, 0 if
+ *                         the seller is an NPC and NPCs are not
+ *                         allowed, or an error message on failure.
+ */
 mixed cmd_sell(object tp, string str) {
   /** @type {STD_ITEM | STD_ARMOUR | STD_CLOTHING | STD_WEAPON} */ object ob;
   /** @type {STD_ITEM*} */ object *obs;
@@ -241,7 +317,7 @@ mixed cmd_sell(object tp, string str) {
       continue;
     }
 
-    if(ob->equipped())
+    if(/** @type {STD_ARMOUR|STD_CLOTHING|STD_WEAPON} */ (ob)->equipped())
       continue;
 
     if(use_mass) {
@@ -279,11 +355,18 @@ mixed cmd_sell(object tp, string str) {
 }
 
 /**
+ * Returns the price of an item for a given transaction context.
+ * For "buy" and "list" the item's value is returned unchanged. For
+ * "sell" the value is multiplied by __sell_factor. Override in a
+ * subclass to implement haggling, faction pricing, or shop refusal
+ * (return null to refuse to buy a sold item).
  *
- * @param {STD_ITEM} ob
- * @param {string} transaction
+ * @param {STD_BODY} _tp - The acting body (unused by default).
+ * @param {STD_ITEM} ob - The item being priced.
+ * @param {string} transaction - One of "buy", "sell", or "list".
+ * @returns {int} The price in base (copper) units.
  */
-int query_cost(object ob, string transaction) {
+int query_cost(object _tp, object ob, string transaction) {
   int value = ob->query_value();
 
   switch(transaction) {
@@ -298,6 +381,13 @@ int query_cost(object ob, string transaction) {
   return ob->query_value();
 }
 
+/**
+ * Lazily loads and configures the storage object that holds the
+ * shop's inventory. Returns the existing object on subsequent
+ * calls.
+ *
+ * @returns {STD_STORAGE_OBJECT} The shop's storage object.
+ */
 private nomask object create_storage() {
   class StorageOptions storage_options;
 

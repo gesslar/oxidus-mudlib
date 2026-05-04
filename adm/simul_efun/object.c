@@ -304,7 +304,9 @@ varargs object find_ob(mixed ob, mixed cont) {
  * @param {object} ob - The object to get the top-level environment of.
  * @returns {object} The top-level environment of the object. Usually STD_ROOM.
  */
-object top_environment(object ob) {
+varargs object top_environment(object ob) {
+  ob ??= previous_object();
+
   object test, env;
 
   if(!objectp(ob))
@@ -337,14 +339,16 @@ object top_environment(object ob) {
  * @param {object} ob - The object to get the environments of.
  * @returns {object*} An array of environments of the object.
  */
-object *all_environment(object ob) {
+varargs object *all_environment(object ob) {
+  ob ??= previous_object();
+
   object *envs = ({});
 
   while(ob = environment(ob)) {
+    push(ref envs, ob);
+
     if(call_if(ob, "is_room"))
       break;
-
-    envs += ({ ob });
   }
 
   return envs;

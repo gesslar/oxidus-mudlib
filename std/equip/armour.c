@@ -71,7 +71,9 @@ int equip(object tp, string slot) {
  * @param {int} silent - Whether to suppress messages
  * @returns {int} 1 on success, 0 on failure
  */
-int unequip(object tp: (: environment() :), int silent: (: 0 :)) {
+varargs int unequip(object tp, int silent) {
+  tp ??= environment();
+
   if(!::unequip(tp, silent))
     return 0;
 
@@ -89,7 +91,7 @@ int unequip(object tp: (: environment() :), int silent: (: 0 :)) {
  *                                    damage type
  */
 public void set_defense(mapping def) {
-    _defense = def;
+  _defense = def;
 }
 
 /**

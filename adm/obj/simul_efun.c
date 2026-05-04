@@ -30,6 +30,7 @@
 #include "/adm/simul_efun/number.c"
 #include "/adm/simul_efun/object.c"
 #include "/adm/simul_efun/override.c"
+#include "/adm/simul_efun/predicates.c"
 #include "/adm/simul_efun/prompt.c"
 #include "/adm/simul_efun/random.c"
 #include "/adm/simul_efun/resolve_path.c"

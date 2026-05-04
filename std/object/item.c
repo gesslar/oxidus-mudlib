@@ -71,7 +71,7 @@ int allow_move(mixed dest) {
   /** @type {STD_CONTAINER} */
   object ob;
   /** @type {STD_CONTAINER} */
-  object env;
+  object env = environment();
 
   if(stringp(dest))
     catch(ob = load_object(dest));
@@ -88,8 +88,8 @@ int allow_move(mixed dest) {
     return MOVE_NOT_ALLOWED;
 
   if(mudConfig("USE_MASS"))
-    if(!dest->ignore_capacity())
-      if(query_mass() + dest->query_fill() > dest->query_capacity())
+    if(!ob->ignore_capacity())
+      if(query_mass() + ob->query_fill() > ob->query_capacity())
         return MOVE_TOO_HEAVY;
 
   if(env)
@@ -171,7 +171,7 @@ int move(mixed dest) {
     rollback[0][1] = allocate(2, 0);
     if(prev) {
       if(!prev_ignore_mass) {
-        if(prev->adjust_mass(-mass))
+        if((/** @type {STD_ITEM} */ (prev))->adjust_mass(-mass))
           rollback[0][1][0] = mass;
         else
           return MOVE_TOO_HEAVY;
@@ -193,7 +193,7 @@ int move(mixed dest) {
     rollback[1][0] = dest;
     rollback[1][1] = allocate(2, 0);
     if(!dest_ignore_mass) {
-      if(dest->adjust_mass(mass))
+      if((/** @type {STD_ITEM} */ (dest))->adjust_mass(mass))
         rollback[1][1][0] = -mass;
       else {
         roll_back(rollback);
@@ -202,7 +202,7 @@ int move(mixed dest) {
     }
 
     if(!dest_ignore_capacity) {
-      if(dest->adjust_fill(mass))
+      if((/** @type {STD_CONTAINER} */ (dest))->adjust_fill(mass))
         rollback[1][1][1] = -mass;
       else {
         roll_back(rollback);
@@ -217,13 +217,13 @@ int move(mixed dest) {
   move_object(dest);
 
   // Notifications for everybody!
-  event(this_object(), "moved", prev);
+  call_if(this_object(), "event_moved", this_object(), prev);
 
   if(prev && this_object())
-    event(prev, "base_released", environment());
+    call_if(prev, "event_base_released", this_object(), environment());
 
   if(this_object())
-    event(environment(), "base_received", prev);
+    call_if(environment(), "event_base_received", this_object(), prev);
 
   if(userp())
     GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_ITEMS_LIST, GMCP_LIST_ROOM);

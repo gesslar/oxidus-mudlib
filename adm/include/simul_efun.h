@@ -181,7 +181,8 @@ object *present_npcs(object room);
 object get_living(string name, object room);
 object get_player(string name, object room);
 object this_body();
-object top_environment(object ob);
+varargs object top_environment(object ob);
+varargs object *all_environment(object ob);
 varargs mixed get_objects(string str, object player, int no_arr);
 varargs object find_ob(mixed ob, mixed cont);
 varargs object get_object(string str, object player);
@@ -294,6 +295,8 @@ string account_path(string name);
 string accountFile(string name);
 int validAccount(string name);
 int ghostp(object user);
+int pcp(object user);
+int npcp(object user);
 varargs int valid_user(mixed user);
 
 // File: util.c

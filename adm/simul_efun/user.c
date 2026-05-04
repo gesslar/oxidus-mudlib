@@ -134,6 +134,26 @@ int ghostp(object ob) {
 }
 
 /**
+ * Returns 1 if the object is a player, 0 if not.
+ *
+ * @param {STD_PLAYER} ob - The object to check.
+ * @returns {ob is STD_PLAYER} 1 if the object is a player, otherwise 0.
+ */
+int pcp(object ob) {
+  return ob->is_pc();
+}
+
+/**
+ * Returns 1 if the object is an npc, 0 if not.
+ *
+ * @param {STD_NPC} ob - The object to check.
+ * @returns {ob is STD_PLAYER} 1 if the object is an npc, otherwise 0.
+ */
+int npcp(object ob) {
+  return ob->is_npc();
+}
+
+/**
  * Returns 1 if the object is a valid user, 0 if not.
  *
  * @param {mixed} ob - The object to check.
