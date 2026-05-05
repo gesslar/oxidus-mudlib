@@ -1,6 +1,9 @@
 /**
- * @file /d/village/tunnels/tunnels_base.c
- * @description This is the inheritable for the virtual tunnels rooms.
+ * @file /d/tunnels/tunnels_base.c
+ *
+ * Inheritable base for the virtual tunnel rooms. Sets up terrain
+ * and zone, delegates room population to the tunnels daemon, and
+ * handles per-room mob respawn on reset.
  *
  * @created 2024-08-25 - Gesslar
  * @last_modified 2024-08-25 - Gesslar
@@ -11,52 +14,50 @@
 
 inherit STD_ROOM;
 
-void repopulate();
+public void repopulate();
 
 /** @type {STD_NPC*} */
-private nosave object *mobs = ({});
-private nosave string *mob_files = ({});
+private nosave mapping *__mobs = ({});
 private nosave float spawn_chance = 8.0;
-
-void setup() {
-  set_light(0);
-  set_terrain("tunnels");
-}
 
 void virtual_setup(mixed args...) {
   string file = args[0];
 
+  set_light(0);
+  set_terrain("tunnels");
   set_zone("twisting_tunnels");
 
   __DIR__ "tunnels_daemon"->setup_exits(this_object(), file);
-  __DIR__ "tunnels_daemon"->setup_short(this_object(), file);
-  __DIR__ "tunnels_daemon"->setup_long(this_object(), file);
+  __DIR__ "tunnels_daemon"->setup_short(this_object());
+  __DIR__ "tunnels_daemon"->setup_long(this_object());
 
   add_reset((: repopulate :));
-
-  mob_files = ({
-    "/mob/rat",
-    "/mob/bat",
-    "/mob/mole",
-    "/mob/centipede",
-  });
 }
 
-void repopulate() {
-  string file;
+public void repopulate() {
+  /** @type {STD_NPC} */ object mob;
 
-  mobs -= ({ 0 });
+  __mobs -= ({ 0 });
 
-  foreach(object mob in mobs) {
+  foreach(mob in __mobs) {
     if(objectp(mob)) {
       mob->simple_action("$N $vscurry away into the darkness.");
-      mob->remove();
+      mob->clean_remove();
     }
   }
 
   if(random_float(100.0) < spawn_chance) {
-    file = element_of(mob_files);
-    mobs += ({ add_inventory(file) });
-    mobs->simple_action("$N $vappear from the shadows.");
+    mapping mob_data = element_of_weighted(
+      __DIR__ "tunnels_daemon"->query_mob_files()
+    );
+    string file = mob_data["path"];
+    int level = random_clamp(mob_data["level"][0], mob_data["level"][1]);
+
+    mob = add_inventory(file);
+    mob->setLevel(level);
+
+    __mobs += ({ mob });
+
+    mob->simple_action("$N $vappear from the shadows.");
   }
 }

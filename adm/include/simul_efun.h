@@ -118,6 +118,7 @@ varargs string *valid_dir_file(string path, int file_too);
 varargs string tail(string path, int line_count);
 varargs string temp_file(mixed arg);
 varargs void implode_file(string file, string *lines, int overwrite);
+varargs mixed load_lpml(string file, string root);
 void assure_file(string file);
 
 // File: function.c
@@ -143,7 +144,7 @@ mixed json_decode(string str);
 mapping json_encode(mixed arg);
 
 // File: lpml.c
-mixed lpml_decode(string text, string path);
+varargs mixed lpml_decode(string text, string path);
 mixed lpml_encode(string text);
 
 // File: mapping.c

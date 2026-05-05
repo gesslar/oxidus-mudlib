@@ -256,16 +256,17 @@ public int can_strike(object enemy, mixed weapon) {
 
   skill = query_skill_level(skill_name);
 
-  if(enemy->query_mp() < 0.0)
-    chance += 25.0;
+  if(enemy->query_mp() <= 0.0)
+    chance += 50.0;
 
   chance = chance
           + (lvl - vlvl)
           + skill
           - (ac * 2.0)
           - enemy->query_skill_level(defense_skill)
-;
+  ;
 
+  debug("Chance = %O", chance);
   result = random_float(100.0);
 
   enemy->use_skill(defense_skill);
@@ -372,8 +373,10 @@ void strike_enemy(object enemy, object weapon) {
   add_seen_threat(enemy, dam);
 
   if(weapon && weapon->is_weapon())
-    if(stringp(proc = call_if(weapon, "can_proc")))
+    if(stringp(proc = call_if(weapon, "can_proc"))) {
+      _debug("Proccing %O", proc);
       call_if(weapon, "proc", proc, this_object(), enemy);
+    }
 }
 
 /**

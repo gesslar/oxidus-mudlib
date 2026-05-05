@@ -1,6 +1,7 @@
 /**
  * @file /d/village/field/field_base.c
- * @description This is the inheritable for the virtual field rooms.
+ *
+ *  This is the inheritable for the virtual field rooms.
  *
  * @created 2024-02-04 - Gesslar
  * @last_modified 2024-02-04 - Gesslar
@@ -11,16 +12,16 @@
 
 inherit STD_ROOM;
 
-void repopulate();
+public void repopulate();
 
-private nosave string *mob_files = ({});
-/** @type {STD_NPC} */
-private nosave object *mobs = ({});
+/** @type {STD_NPC*} */
+private nosave object *__mobs = ({});
 private nosave float spawn_chance = 15.0;
 
 void virtual_setup(mixed args...) {
   string file = args[0];
 
+  set_terrain("grass");
   set_zone("lush_field");
 
   __DIR__ "field_daemon"->setup_exits(this_object());
@@ -28,34 +29,32 @@ void virtual_setup(mixed args...) {
   __DIR__ "field_daemon"->setup_long(this_object(), file);
 
   add_reset((: repopulate :));
-
-  set_terrain("grass");
-
-  mob_files = ({
-    "/mob/wild_boar",
-    "/mob/field_mouse",
-    "/mob/grasshopper",
-    "/mob/field_rabbit",
-  });
 }
 
-void repopulate() {
+public void repopulate() {
   /** @type {STD_NPC} */ object mob;
-  string file;
 
-  mobs = filter(mobs, (: nullp :));
+  __mobs -= ({ 0 });
 
-  foreach(mob in mobs) {
+  foreach(mob in __mobs) {
     if(objectp(mob)) {
-      mob->simple_action("$N $vwander away.");
-      mob->remove();
+      mob->simple_action("$N $vwander off through the grass.");
+      mob->clean_remove();
     }
   }
 
   if(random_float(100.0) < spawn_chance) {
-    file = element_of(mob_files);
-    /** @lpc-ignore - I have no idea {@see https://github.com/jlchmura/lpc-language-server/issues/317} */
-    mobs += ({ /** @type {STD_NPC} */ (add_inventory(file)) });
-    mobs->simple_action("$N $varrive.");
+    mapping mob_data = element_of_weighted(
+      __DIR__ "field_daemon"->query_mob_files()
+    );
+    string file = mob_data["path"];
+    int level = random_clamp(mob_data["level"][0], mob_data["level"][1]);
+
+    mob = add_inventory(file);
+    mob->setLevel(level);
+
+    __mobs += ({ mob });
+
+    mob->simple_action("$N $vemerge from the tall grass.");
   }
 }

@@ -12,7 +12,7 @@ public nomask object compile_object(string file) {
 
   dir_parts = explode(file, "/");
   top_level_zone = dir_parts[1];
-  zone_path = "/d/" + top_level_zone + "/zone";
+  zone_path = "/d/" + top_level_zone + "/controller";
 
   e = catch(zone_daemon = load_object(zone_path));
   if(e) {

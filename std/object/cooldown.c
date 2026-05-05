@@ -12,7 +12,7 @@
 
 #include <cooldown.h>
 
-private mapping _cooldowns = ([]);
+private mapping __cooldowns = ([]);
 
 /**
  * Removes expired cooldowns from the cooldown mapping.
@@ -20,10 +20,10 @@ private mapping _cooldowns = ([]);
  * Should be called periodically to clean up old entries.
  */
 void cooldown() {
-  _cooldowns = _cooldowns || ([]);
-  foreach(string id, int time in _cooldowns)
+  __cooldowns = __cooldowns || ([]);
+  foreach(string id, int time in __cooldowns)
     if(time < time())
-      map_delete(_cooldowns, id);
+      map_delete(__cooldowns, id);
 }
 
 /**
@@ -32,7 +32,7 @@ void cooldown() {
  * @returns {mapping} Copy of the cooldowns mapping (ID to expiry time)
  */
 mapping query_cooldowns() {
-  return copy(_cooldowns);
+  return copy(__cooldowns);
 }
 
 /**
@@ -42,7 +42,7 @@ mapping query_cooldowns() {
  * @param {int} cooldown - The absolute time when cooldown expires
  */
 void set_cooldown(string id, int cooldown) {
-  _cooldowns[id] = cooldown;
+  __cooldowns[id] = cooldown;
 }
 
 /**
@@ -58,7 +58,7 @@ int add_cooldown(string id, int cooldown) {
   if(time > 0)
     return null;
 
-  _cooldowns[id] = time() + cooldown;
+  __cooldowns[id] = time() + cooldown;
 
   return query_cooldown(id);
 }
@@ -73,7 +73,7 @@ int remove_cooldown(string id) {
   if(!nullp(query_cooldown(id)))
     return null;
 
-  map_delete(_cooldowns, id);
+  map_delete(__cooldowns, id);
 
   return 1;
 }
@@ -85,9 +85,9 @@ int remove_cooldown(string id) {
  * @returns {int} The absolute time when cooldown expires
  */
 int query_cooldown(string id) {
-  _cooldowns = _cooldowns || ([]);
+  __cooldowns = __cooldowns || ([]);
 
-  return _cooldowns[id];
+  return __cooldowns[id];
 }
 
 /**
@@ -118,7 +118,7 @@ int adjust_cooldown(string id, int amount) {
   if(time < 0)
     return null;
 
-  _cooldowns[id] = time + amount;
+  __cooldowns[id] = time + amount;
 
   return query_cooldown(id);
 }
@@ -129,7 +129,7 @@ int adjust_cooldown(string id, int amount) {
  * @returns {int} Always returns 1
  */
 int wipe_cooldowns() {
-  _cooldowns = ([]);
+  __cooldowns = ([]);
 
   return 1;
 }

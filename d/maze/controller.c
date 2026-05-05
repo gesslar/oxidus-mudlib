@@ -1,6 +1,8 @@
 /**
- * @file /d/maze/zone.c
- * @description Zone for the maze
+ *
+ * @file /d/maze/controller.c
+ *
+ * Virtual controller for the maze
  *
  * @created 2024-09-04 - Gesslar
  * @last_modified 2024-09-04 - Gesslar
@@ -8,7 +10,6 @@
  * @history
  * 2024-09-04 - Gesslar - Created
  */
-
 
 inherit STD_VIRTUAL_SERVER;
 

@@ -251,6 +251,29 @@ varargs void implode_file(string file, string *lines, int overwrite) {
 }
 
 /**
+ * Loads and decodes an LPML file.
+ *
+ * Reads the file and parses it via lpml_decode(). The optional root
+ * argument is forwarded to lpml_decode() as the base path used for
+ * resolving relative #-includes within the LPML text.
+ *
+ * @param {string} file - Path to the LPML file to load
+ * @param {string} [root] - Base path for resolving relative includes
+ * @returns {mixed} Decoded LPML value, or "" if the file is missing or empty
+ * @errors If file is not a non-zero length string
+ * @example
+ * mapping cfg = load_lpml("/d/village/spawn.lpml");
+ */
+varargs mixed load_lpml(string file, string root) {
+  assert_arg(stringp(file) && truthy(file), 1, "File must be a non-zero length string.");
+
+  if(!file_exists(file) || file_size(file) == 0)
+    return "";
+
+  return lpml_decode(read_file(file), root);
+}
+
+/**
  * Gets filename portion of an object's path.
  *
  * @param {object} [ob] - Object to query, defaults to previous_object()

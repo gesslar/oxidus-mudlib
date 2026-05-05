@@ -1,30 +1,49 @@
 /**
- * @file /d/village/tunnels/tunnels_daemon.c
- * @description Daemon for managing the underground tunnels area
+ * @file /d/tunnels/tunnels_daemon.c
+ *
+ * Virtual map daemon for the underground tunnels area. Loads the
+ * tunnels map file and supplies short, long, and exit data to the
+ * virtual rooms generated from it.
  *
  * @created 2024-08-25 - Gesslar
- * @last_modified 2024-08-25 - Gesslar
+ * @last_modified 2026-05-04 - Gesslar
  *
  * @history
  * 2024-08-25 - Gesslar - Created
+ * 2026-05-04 - Gesslar - Documented
  */
 
 inherit STD_VIRTUAL_MAP;
 
 private void setup_tunnel_shorts();
 private void setup_tunnel_longs();
+private void load_mobs();
 
 private nosave string *tunnel_shorts;
 private nosave string *tunnel_longs;
 private nosave string cavern_long;
 private nosave int rot = 0;
 
+/**
+ * Weighted spawn pool for tunnel mobs, keyed by a mapping containing
+ * the mob path and level range, with the value being the relative
+ * spawn weight.
+ *
+ * @type {([ ([ string: mixed ]): int ])}
+ */
+private nosave mapping mob_files = ([]);
+
 void setup() {
   apply_map_file(__DIR__ "tunnels_map.txt");
   setup_tunnel_shorts();
   setup_tunnel_longs();
+  load_mobs();
 }
 
+/**
+ * Populates the rotation pool of short descriptions used by ordinary
+ * tunnel rooms.
+ */
 private void setup_tunnel_shorts() {
   tunnel_shorts = ({
     "Narrow Tunnel",
@@ -34,6 +53,10 @@ private void setup_tunnel_shorts() {
   });
 }
 
+/**
+ * Populates the rotation pool of long descriptions used by ordinary
+ * tunnel rooms, along with the single shared long for cavern rooms.
+ */
 private void setup_tunnel_longs() {
   tunnel_longs = ({
     "The tunnel here is narrow and claustrophobic, with rough dirt walls "
@@ -66,7 +89,14 @@ private void setup_tunnel_longs() {
   "several tunnel openings visible along its perimeter.";
 }
 
-public void setup_short(object room, string file) {
+/**
+ * Virtual-map apply that assigns a short description to a generated
+ * room. Tunnel rooms ("O") receive a random entry from
+ * tunnel_shorts; cavern rooms ("X") receive a fixed short.
+ *
+ * @param {STD_ROOM} room - The virtual room being populated.
+ */
+public void setup_short(object room) {
   int *coords = room->get_virtual_coordinates();
   string room_type;
 
@@ -78,7 +108,15 @@ public void setup_short(object room, string file) {
     room->set_short("Underground Cavern");
 }
 
-public void setup_long(object room, string file) {
+/**
+ * Virtual-map apply that assigns a long description to a generated
+ * room. Tunnel rooms ("O") cycle through tunnel_longs in order via
+ * the rot index, wrapping around at the end of the array. Cavern
+ * rooms ("X") receive the shared cavern_long.
+ *
+ * @param {STD_ROOM} room - The virtual room being populated.
+ */
+public void setup_long(object room) {
   int *coords = room->get_virtual_coordinates();
   string room_type;
 
@@ -95,6 +133,16 @@ public void setup_long(object room, string file) {
     room->set_long(cavern_long);
 }
 
+/**
+ * Virtual-map apply that assigns exits to a generated room. Uses
+ * the map's computed exits for the room's coordinates, with a
+ * special-case "up" exit at coordinate (0,0,-1) leading out to the
+ * village square.
+ *
+ * @param {STD_ROOM} room - The virtual room being populated.
+ * @param {string} file - The virtual file identifier for the room
+ *                        (in "x,y,z" form).
+ */
 public void setup_exits(object room, string file) {
   int *coords = room->get_virtual_coordinates();
   string room_type;
@@ -110,4 +158,37 @@ public void setup_exits(object room, string file) {
     exits["up"] = "../village/square";
 
   room->set_exits(exits);
+}
+
+/**
+ * Loads the tunnels spawn pool from spawn.lpml into mob_files.
+ * Each entry is keyed by a mapping containing the mob's file path
+ * and level range, with the LPML weight as the value.
+ */
+private void load_mobs() {
+  mapping spawn = load_lpml(__DIR__ "spawn.lpml");
+
+  mob_files = ([]);
+
+  each(spawn, function(mapping mob) {
+    mapping mob_data = ([
+        "path": mob["path"],
+        "level": mob["level"]
+      ]);
+
+    mob_files[mob_data] = mob["weight"];
+  });
+
+  debug("mob_files %O", mob_files);
+}
+
+/**
+ * Returns the loaded spawn pool for tunnel rooms to use when
+ * deciding which mob to spawn.
+ *
+ * @returns {([ ([ string: mixed ]): int ])} The weighted spawn
+ *                                           pool mapping.
+ */
+public mapping query_mob_files() {
+  return mob_files;
 }

@@ -1,0 +1,13 @@
+[
+  {
+    path: "mob/waste_rat",
+    level: [3, 4],
+    weight: 5,
+  },
+
+  {
+    path: "mob/wasterel",
+    level: [3, 5],
+    weight: 3,
+  },
+]

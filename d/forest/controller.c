@@ -1,6 +1,7 @@
 /**
- * @file /d/forest/zone.c
- * @description The zone object for the forest.
+ * @file /d/forest/controller.c
+ *
+ * Virtual controller  The zone object for the forest.
  *
  * @created 2024-08-21 - Gesslar
  * @last_modified 2024-08-21 - Gesslar
@@ -8,7 +9,6 @@
  * @history
  * 2024-08-21 - Gesslar - Created
  */
-
 
 inherit STD_VIRTUAL_SERVER;
 

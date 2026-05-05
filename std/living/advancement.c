@@ -14,10 +14,10 @@
 
 private float _level = 1.0;
 private float _level_mod = 0.0;
-private int _xp = 0;
+private int __xp = 0;
 
 int queryXp() {
-  return _xp;
+  return __xp;
 }
 
 float query_tnl() {
@@ -37,7 +37,7 @@ float setLevel(float l) {
 
   if(userp()) {
     GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_STATUS, ([
-      GMCP_LBL_CHAR_STATUS_XP: _xp,
+      GMCP_LBL_CHAR_STATUS_XP: __xp,
       GMCP_LBL_CHAR_STATUS_TNL: query_tnl(),
       GMCP_LBL_CHAR_STATUS_LEVEL: _level,
     ]));
@@ -51,7 +51,7 @@ float add_level(float l) {
 
   if(userp()) {
     GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_STATUS, ([
-      GMCP_LBL_CHAR_STATUS_XP: _xp,
+      GMCP_LBL_CHAR_STATUS_XP: __xp,
       GMCP_LBL_CHAR_STATUS_TNL: query_tnl(),
       GMCP_LBL_CHAR_STATUS_LEVEL: _level,
     ]));
@@ -75,23 +75,23 @@ float adjust_level_mod(float l) {
 }
 
 int adjustXp(int amount) {
-  _xp += amount;
+  __xp += amount;
 
   if(userp()) {
     GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_STATUS, ([
-      GMCP_LBL_CHAR_STATUS_XP: _xp,
+      GMCP_LBL_CHAR_STATUS_XP: __xp,
       GMCP_LBL_CHAR_STATUS_TNL: query_tnl(),
       GMCP_LBL_CHAR_STATUS_LEVEL: _level,
     ]));
   }
 
-  return _xp;
+  return __xp;
 }
 
 int setXp(int amount) {
   int delta;
 
-  if(_xp < 1)
+  if(__xp < 0)
     delta = amount;
   else
     delta = amount;

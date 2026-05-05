@@ -11,11 +11,11 @@
 
 #include <proc.h>
 
-private nosave mapping _procs = ([]);
-private nosave mapping _cooldowns = ([]);
-private nosave float _proc_chance = 15.0;
-private nosave int _proc_cooldown = 1;
-private nosave int _proc_weight = 100;
+private nosave mapping __procs = ([]);
+private nosave mapping __cooldowns = ([]);
+private nosave float __proc_chance = 15.0;
+private nosave int __proc_cooldown = 1;
+private nosave int __proc_weight = 100;
 
 /**
  * @module_function set_procs
@@ -57,8 +57,9 @@ void set_procs(mixed *procs) {
  */
 void add_proc(string name, mixed proc) {
   assert((:stringp($(name)) || valid_function($(name)):), "Name must be a string or valid function.");
-  assert((:nullp(_procs[$(name)]):), "Proc already exists.");
+  assert((:nullp(__procs[$(name)]):), "Proc already exists.");
   assert((:mapp($(proc)) || stringp($(proc)) || valid_function($(proc)):), "Proc must be a mapping, string, or valid function.");
+
   if(mapp(proc))
     assert((:!nullp($(proc["function"])):), "Proc must have a function.");
 
@@ -66,12 +67,12 @@ void add_proc(string name, mixed proc) {
     proc = ([ "function": proc ]);
 
   if(nullp(proc["cooldown"]))
-    proc["cooldown"] = _proc_cooldown;
+    proc["cooldown"] = __proc_cooldown;
 
   if(nullp(proc["weight"]))
-    proc["weight"] = _proc_weight;
+    proc["weight"] = __proc_weight;
 
-  _procs[name] = proc;
+  __procs[name] = proc;
 }
 
 /**
@@ -81,7 +82,7 @@ void add_proc(string name, mixed proc) {
 void remove_proc(string name) {
   assert((:stringp($(name)):), "Name must be a string.");
 
-  map_delete(_procs, name);
+  map_delete(__procs, name);
 }
 
 /**
@@ -92,7 +93,7 @@ void remove_proc(string name) {
 mapping query_proc(string name) {
   assert((:stringp($(name)):), "Name must be a string.");
 
-  return _procs[name];
+  return __procs[name];
 }
 
 /**
@@ -100,7 +101,7 @@ mapping query_proc(string name) {
  * @returns {mapping} The procs.
  */
 mapping query_all_procs() {
-  return copy(_procs);
+  return copy(__procs);
 }
 
 /**
@@ -111,7 +112,7 @@ void set_proc_chance(float chance) {
   assert((:floatp($(chance)):), "Chance must be a float.");
   assert((:$(chance) >= 0.0 && $(chance) <= 100.0:), "Chance must be between 0.0 and 100.0.");
 
-  _proc_chance = chance;
+  __proc_chance = chance;
 }
 
 /**
@@ -119,7 +120,7 @@ void set_proc_chance(float chance) {
  * @returns {float} The proc chance.
  */
 float query_proc_chance() {
-  return _proc_chance;
+  return __proc_chance;
 }
 
 /**
@@ -129,10 +130,10 @@ float query_proc_chance() {
 void adjust_proc_chance(float chance) {
   assert((:floatp($(chance)):), "Chance must be a float.");
   assert((:$(chance) >= 0.0 && $(chance) <= 100.0:), "Chance must be between 0.0 and 100.0.");
-  assert((:_proc_chance + $(chance) <= 100.0:), "Proc chance must not exceed 100.0.");
-  assert((:_proc_chance + $(chance) >= 0.0:), "Proc chance must not be less than 0.0.");
+  assert((:__proc_chance + $(chance) <= 100.0:), "Proc chance must not exceed 100.0.");
+  assert((:__proc_chance + $(chance) >= 0.0:), "Proc chance must not be less than 0.0.");
 
-  _proc_chance += chance;
+  __proc_chance += chance;
 }
 
 /**
@@ -146,26 +147,36 @@ string can_proc() {
 
   debug("can_proc: Checking for procs.");
   // If there are no procs, return false
-  if(!sizeof(_procs))
+  if(!sizeof(__procs))
     return false;
-  debug("can_proc: There are %d procs.", sizeof(_procs));
+
+  debug("can_proc: There are %d procs.", sizeof(__procs));
 
   // If the proc chance is 0, return false
-  if(_proc_chance <= 0.0)
+  if(__proc_chance <= 0.0)
     return false;
-  debug("can_proc: Proc chance is %f.", _proc_chance);
+  debug("can_proc: Proc chance is %f.", __proc_chance);
+
+  float roll = random_float(100.0);
+  debug("can_proc: Proc roll %f.", roll);
+  if(roll > __proc_chance)
+    return false;
 
   // Iterate through all procs and check if they can proc, if they have
   // a cooldown
-  foreach(string name, mapping proc in _procs) {
-    if(proc["cooldown"] > 0)
-      if(now - _cooldowns[name] > proc["cooldown"])
+  foreach(string name, mapping proc in __procs) {
+    if(proc["cooldown"] > 0) {
+      if(now - __cooldowns[name] > proc["cooldown"]) {
         procs[name] = proc["chance"] || 100;
+      }
+    }
   }
+
   debug("can_proc: Procs: %O", procs);
 
   if(!sizeof(procs))
     return false;
+
   debug("can_proc: Final procs: %O", procs);
   // Now let's check which proc can occur. This is based on the weight of
   // the proc.
@@ -191,14 +202,14 @@ varargs void proc(string name, mixed args...) {
 
   func = proc["function"];
 
-  if(stringp(func))
+  if(stringp(func)) {
     catch(call_other(this_object(), func, args...));
-  else if(valid_function(func)) {
+  } else if(valid_function(func)) {
     function f = func;
     catch(f(args...));
   }
   else
     return;
 
-  _cooldowns[name] = time();
+  __cooldowns[name] = time();
 }

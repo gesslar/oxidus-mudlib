@@ -1,12 +1,18 @@
 /**
- * @file /d/village/forest/forest_daemon.c
- * @description Daemon for managing the forest area
+ * @file /d/forest/forest_daemon.c
+ *
+ * Virtual-map daemon for the forest area. Loads the forest map file
+ * and supplies short descriptions, long descriptions, and exits for
+ * each generated room based on its room-type code and coordinates.
+ * Also wires up the cross-area connections to the village, the
+ * wastes, and the maze entrance/exit.
  *
  * @created 2024-08-23 - Gesslar
- * @last_modified 2024-08-23 - Gesslar
+ * @last_modified 2026-05-04 - Gesslar
  *
  * @history
  * 2024-08-23 - Gesslar - Created
+ * 2026-05-04 - Gesslar - Documented
  */
 
 inherit STD_VIRTUAL_MAP;
@@ -28,6 +34,10 @@ void setup() {
   setup_forest_longs();
 }
 
+/**
+ * Populates the pool of short descriptions used for ordinary forest
+ * rooms ("O" tiles). One entry is selected at random per room.
+ */
 private void setup_forest_shorts() {
   forest_shorts = ({
     "Shadowy Forest",
@@ -37,6 +47,11 @@ private void setup_forest_shorts() {
   });
 }
 
+/**
+ * Populates the rotating pool of long descriptions for ordinary
+ * forest rooms ("O" tiles) and the dedicated description used for
+ * forest clearings ("X" tiles).
+ */
 private void setup_forest_longs() {
   forest_longs = ({
     "You are surrounded by tall trees, their branches intertwining above "
@@ -68,7 +83,14 @@ private void setup_forest_longs() {
   "peaceful sanctuary within the woods.";
 }
 
-public void setup_short(object room, string file) {
+/**
+ * Virtual-map callback that assigns a short description to a forest
+ * room. Ordinary tiles receive a randomly chosen description from
+ * the forest_shorts pool; clearing tiles receive "Forest Clearing".
+ *
+ * @param {STD_ROOM} room - The virtual room being set up.
+ */
+public void setup_short(object room) {
   int *coords = room->get_virtual_coordinates();
   int x, y, z;
   string room_type;
@@ -85,7 +107,15 @@ public void setup_short(object room, string file) {
     room->set_short("Forest Clearing");
 }
 
-public void setup_long(object room, string file) {
+/**
+ * Virtual-map callback that assigns a long description to a forest
+ * room. Ordinary tiles cycle through the forest_longs pool via the
+ * shared rot counter so neighbouring rooms differ; clearing tiles
+ * receive the dedicated clearing description.
+ *
+ * @param {STD_ROOM} room - The virtual room being set up.
+ */
+public void setup_long(object room) {
   int *coords = room->get_virtual_coordinates();
   int x, y, z;
   string room_type;
@@ -104,7 +134,17 @@ public void setup_long(object room, string file) {
     room->set_long(clearing_long);
 }
 
-public void setup_exits(object room, string file) {
+/**
+ * Virtual-map callback that wires exits for a forest room. Starts
+ * from the map-derived exits, then injects the cross-area links:
+ * the village path to the north at (0,0,2), the wastes to the east
+ * at (0,11,27), and a south exit into the maze at whatever tile the
+ * maze daemon currently designates as its north entrance (with the
+ * exit pointing at the matching maze north exit tile).
+ *
+ * @param {STD_ROOM} room - The virtual room being set up.
+ */
+public void setup_exits(object room) {
   int *coords = room->get_virtual_coordinates();
   int x, y, z;
   string room_type;

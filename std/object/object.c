@@ -29,14 +29,14 @@ inherit __DIR__ "weight";
 inherit EXT_CLEAN;
 inherit EXT_MESSAGING;
 
-private nomask nosave function *_destruct_functions = ({});
-private nomask nosave function *_reset_functions = ({});
+private nomask nosave function *__destruct_functions = ({});
+private nomask nosave function *__reset_functions = ({});
 private string real_name, short, long;
-private nosave string _name;
-protected nosave mixed *_create_args = ({});
-private nosave string _virtual_master = 0;
-private nosave object _last_location = 0;
-private string _last_location_string = "";
+private nosave string __name;
+protected nosave mixed *__create_args = ({});
+private nosave string __virtual_master = 0;
+private nosave object __last_location = 0;
+private string __last_location_string = "";
 
 /** @type {int | function} */
 private nosave mixed _prevent_get = 0;
@@ -52,15 +52,15 @@ private nosave mixed _prevent_get = 0;
 private varargs void create(mixed args...) {
   set_notify_destruct(1);
 
-  _create_args = args;
+  __create_args = args;
   if(!real_name) {
-    if(_name)
-      set_real_name(_name);
+    if(__name)
+      set_real_name(__name);
     else
-      _name = null;
+      __name = null;
   }
 
-  setup_chain(_create_args...);
+  setup_chain(__create_args...);
   reset();
 }
 
@@ -71,7 +71,7 @@ private varargs void create(mixed args...) {
  * properties and runs the virtual setup chain.
  */
 void virtual_start() {
-  virtual_setup_chain(_create_args...);
+  virtual_setup_chain(__create_args...);
   reset();
 }
 
@@ -93,10 +93,8 @@ varargs void reset() {
  * Handles recursive inventory management, moving contained objects
  * to the environment when possible, or destructing them otherwise.
  * Non-player objects are removed completely.
- *
- * @returns {int} Always returns 1
  */
-int remove() {
+void remove() {
   object *obs, env = environment();
 
   catch(call_if(this_object(), "removing", env));
@@ -116,7 +114,7 @@ int remove() {
     }
 
     if(!userp(ob)) {
-      ob->remove();
+      /** @type {STD_PLAYER} */ (ob)->remove();
 
       if(objectp(ob))
         destruct(ob);
@@ -132,8 +130,44 @@ int remove() {
     filter(obs, (: destruct :));
 
   destruct();
+}
 
-  return 1;
+/**
+ * Removes this object from the game, destructing all contents recursively.
+ *
+ * Unlike remove(), contained objects are not moved to the environment —
+ * they are clean_removed in turn so the entire subtree is torn down.
+ * Player objects are spared and moved to the environment when one exists.
+ */
+void clean_remove() {
+  object *obs, env = environment();
+
+  catch(call_if(this_object(), "removing", env));
+
+  /** @type {STD_OBJECT} */ object ob = first_inventory();
+  while(ob) {
+    /** @type {STD_OBJECT} */ object next = next_inventory(ob);
+
+    if(userp(ob)) {
+      if(env)
+        (/** @type {STD_PLAYER} */ (ob))->move(env);
+    } else {
+      (/** @type {STD_OBJECT} */ (ob))->clean_remove();
+
+      if(objectp(ob))
+        destruct(ob);
+    }
+
+    ob = next;
+  }
+
+  obs = all_inventory(this_object());
+  obs = filter(obs, (: !userp($1) :));
+
+  if(sizeof(obs))
+    filter(obs, (: destruct :));
+
+  destruct();
 }
 
 /**
@@ -187,12 +221,12 @@ string set_name(string str) {
   assert_arg(stringp(str) && truthy(str), 1, "Invalid argument");
 
   if(valid_user(lower_case(str)))
-    _name = capitalize(lower_case(str));
+    __name = capitalize(lower_case(str));
   else
-    _name = str;
+    __name = str;
 
   if(!real_name) {
-    result = set_real_name(_name);
+    result = set_real_name(__name);
 
     if(!result)
       return 0;
@@ -200,7 +234,7 @@ string set_name(string str) {
 
   rehash_ids();
 
-  return _name;
+  return __name;
 }
 
 /**
@@ -209,7 +243,7 @@ string set_name(string str) {
  * @returns {string} The name
  */
 string query_name() {
-  return _name;
+  return __name;
 }
 
 /**
@@ -232,7 +266,7 @@ string find_path(string path) {
  */
 void set_virtual_master(string str) {
   assert_arg(stringp(str) && truthy(str), 1, "Invalid argument");
-  _virtual_master = str;
+  __virtual_master = str;
 }
 
 /**
@@ -241,7 +275,7 @@ void set_virtual_master(string str) {
  * @returns {string} The virtual master path
  */
 string query_virtual_master() {
-  return _virtual_master;
+  return __virtual_master;
 }
 
 /**
@@ -277,8 +311,8 @@ void on_destruct() {
 void add_reset(function f) {
   assert_arg(valid_function(f), 1, "Invalid argument");
 
-  if(!of(f, _reset_functions))
-    _reset_functions += ({ f });
+  if(!of(f, __reset_functions))
+    __reset_functions += ({ f });
 }
 
 /**
@@ -289,8 +323,8 @@ void add_reset(function f) {
 void remove_reset(function f) {
   assert_arg(valid_function(f), 1, "Invalid argument");
 
-  if(of(f, _reset_functions))
-    _reset_functions -= ({ f });
+  if(of(f, __reset_functions))
+    __reset_functions -= ({ f });
 }
 
 /**
@@ -299,7 +333,7 @@ void remove_reset(function f) {
  * Called during object reset.
  */
 void process_reset() {
-  foreach(function f in _reset_functions)
+  foreach(function f in __reset_functions)
     if(valid_function(f))
       catch(f());
 }
@@ -310,7 +344,7 @@ void process_reset() {
  * @returns {function*} Array of reset functions
  */
 function *query_reset_functions() {
-  return _reset_functions;
+  return __reset_functions;
 }
 
 /**
@@ -319,11 +353,11 @@ function *query_reset_functions() {
  * @param {function} f - The function to call
  * @returns {int} 1 if successfully added, 0 if not
  */
-int addDestruct(function f) {
+int add_destruct(function f) {
   assert_arg(valid_function(f), 1, "Invalid argument.");
 
-  if(!of(f, _destruct_functions)) {
-    _destruct_functions += ({ f });
+  if(!of(f, __destruct_functions)) {
+    __destruct_functions += ({ f });
     return 1;
   }
 
@@ -339,8 +373,8 @@ int addDestruct(function f) {
 int remove_destruct(function f) {
   assert_arg(valid_function(f), 1, "Invalid argument.");
 
-  if(of(f, _destruct_functions)) {
-    _destruct_functions -= ({ f });
+  if(of(f, __destruct_functions)) {
+    __destruct_functions -= ({ f });
     return 1;
   }
 
@@ -357,8 +391,8 @@ int remove_destruct(function f) {
 void set_last_location(object ob) {
   assert_arg(objectp(ob), 1, "Invalid argument.");
 
-  _last_location = ob;
-  _last_location_string = file_name(ob);
+  __last_location = ob;
+  __last_location_string = file_name(ob);
 }
 
 /**
@@ -367,7 +401,7 @@ void set_last_location(object ob) {
  * @returns {object} The last location object
  */
 object last_location() {
-  return _last_location;
+  return __last_location;
 }
 
 /**
@@ -376,7 +410,7 @@ object last_location() {
  * @returns {string} The last location filename
  */
 string query_last_location() {
-  return _last_location_string;
+  return __last_location_string;
 }
 
 /**
@@ -385,7 +419,7 @@ string query_last_location() {
  * Called during object destruction.
  */
 void process_destruct() {
-  foreach(function f in _destruct_functions)
+  foreach(function f in __destruct_functions)
     catch(f());
 }
 

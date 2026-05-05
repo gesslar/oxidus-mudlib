@@ -14,7 +14,7 @@ inherit STD_ROOM;
 void repopulate();
 
 private nosave string *mob_files = ({});
-private nosave object *mobs = ({});
+/** @type {STD_NPC*} */ private nosave object *__mobs = ({});
 private nosave float spawn_chance = 10.0;
 
 void setup() {
@@ -22,15 +22,12 @@ void setup() {
   set_terrain("forest");
 }
 
-void virtual_setup(mixed args...) {
-  string file = args[0];
-  object ob;
-
+void virtual_setup(mixed _args...) {
   set_zone("shadowy_forest");
 
-  __DIR__ "forest_daemon"->setup_exits(this_object(), file);
-  __DIR__ "forest_daemon"->setup_short(this_object(), file);
-  __DIR__ "forest_daemon"->setup_long(this_object(), file);
+  __DIR__ "forest_daemon"->setup_exits(this_object());
+  __DIR__ "forest_daemon"->setup_short(this_object());
+  __DIR__ "forest_daemon"->setup_long(this_object());
 
   add_reset((: repopulate :));
 
@@ -44,10 +41,11 @@ void virtual_setup(mixed args...) {
 }
 
 void repopulate() {
+  /** @type {STD_NPC} */ object mob;
   string file;
 
-  mobs -= ({ 0 });
-  foreach(object mob in mobs) {
+  __mobs -= ({ 0 });
+  foreach(mob in __mobs) {
     if(objectp(mob)) {
       mob->simple_action("$N $vscamper away into the forest.");
       mob->remove();
@@ -56,7 +54,7 @@ void repopulate() {
 
   if(random_float(100.0) < spawn_chance) {
     file = element_of(mob_files);
-    mobs += ({ add_inventory(file) });
-    mobs->simple_action("$N $vappear from the undergrowth.");
+    __mobs += ({ add_inventory(file) });
+    __mobs->simple_action("$N $vappear from the undergrowth.");
   }
 }

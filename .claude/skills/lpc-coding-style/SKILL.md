@@ -192,11 +192,11 @@ elsewhere.
 
 ### Renaming Functions
 
-When renaming a function (e.g., converting from `snake_case` to `camelCase`), you **must** search the entire codebase for all call-sites and update them. This includes:
+When renaming a function (e.g., converting from `camelCase` to `snake_case`), you **must** search the entire codebase for all call-sites and update them. This includes:
 
-- Direct calls: `functionName()`
-- `call_other` string references: `call_other(ob, "functionName")`
-- Arrow calls: `ob->functionName()`
+- Direct calls: `function_name()`
+- `call_other` string references: `call_other(ob, "function_name")`
+- Arrow calls: `ob->function_name()`
 - String literals used as function names in mappings, callbacks, `call_out`, `evaluate`, signal slots, etc.
 
 Use Grep to find all occurrences of the old name before making the change. A renamed function with stale call-sites will cause runtime errors.

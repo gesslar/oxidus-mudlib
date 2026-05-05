@@ -1,6 +1,7 @@
 /**
- * @file /d/wastes/zone.c
- * @description Zone for the wastes
+ * @file /d/wastes/controller.c
+ *
+ * Virtual controller for the wastes
  *
  * @created 2024-08-30 - Gesslar
  * @last_modified 2024-08-30 - Gesslar

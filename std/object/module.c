@@ -34,7 +34,7 @@ void remove_all_modules();
 private nosave mapping __modules = ([]);
 
 /**
- * Destruct callback bound via `addDestruct()` so that all
+ * Destruct callback bound via `add_destruct()` so that all
  * attached modules are detached and removed when this object is
  * destructed.
  *
@@ -172,7 +172,7 @@ public varargs object add_module(
   else
     __modules[name] = mod;
 
-  call_if(this_object(), "addDestruct", (:onDestructFunction:));
+  call_if(this_object(), "add_destruct", (:onDestructFunction:));
 
   return mod;
 }

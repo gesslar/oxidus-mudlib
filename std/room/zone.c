@@ -1,20 +1,40 @@
 /**
  * @file /std/room/zone.c
- * @description Room zone module
  *
- * @created 2024/02/04 - Gesslar
- * @last_modified 2024/02/04 - Gesslar
+ * Room-side zone module. Lets a room declare which zone it belongs
+ * to via set_zone(); the room is then registered with that zone
+ * daemon and unregistered automatically when destructed (via the
+ * room's destruct chain calling remove_from_zone).
+ *
+ * @created 2024-02-04 - Gesslar
+ * @last_modified 2026-05-04 - Gesslar
  *
  * @history
- * 2024/02/04 - Gesslar - Created
+ * 2024-02-04 - Gesslar - Created
+ * 2026-05-04 - Gesslar - Added remove_from_zone; documented
  */
 
 #include "/std/object/include/object.h"
+#include "include/zone.h"
 
-/** @type {STD_ZONE} */
+/**
+ * The zone daemon this room is registered with, or 0 if the room
+ * has not been assigned to a zone.
+ *
+ * @type {STD_ZONE}
+ */
 private nosave object __zone;
 
-void set_zone(mixed z) {
+/**
+ * Assigns this room to a zone, registering it with the zone
+ * daemon. The argument may be a string path to the zone daemon
+ * (which will be loaded) or a live zone object.
+ *
+ * @param {mixed} z - Zone daemon path (string) or zone object.
+ * @errors If z is neither a non-empty string nor an object.
+ * @errors If the resolved object is not a valid zone daemon.
+ */
+public void set_zone(mixed z) {
   assert_arg((stringp(z) && truthy(z)) || objectp(z), 1, "Zone must be a string or a zone object.");
 
   if(stringp(z)) {
@@ -33,12 +53,36 @@ void set_zone(mixed z) {
   __zone->add_room(this_object());
 }
 
-string query_zone_name() {
+/**
+ * Unregisters this room from its zone. Called from the room's
+ * destruct chain so the zone's room roster does not retain stale
+ * references. No-op if no zone is bound.
+ */
+public void remove_from_zone() {
+  if(!objectp(__zone))
+    return;
+
+  __zone->remove_room(this_object());
+}
+
+/**
+ * Returns the human-readable name of this room's zone, or the
+ * literal "Unknown" if no zone is bound.
+ *
+ * @returns {string} The zone name or "Unknown".
+ */
+public string query_zone_name() {
   return objectp(__zone)
     ? __zone->query_zone_name()
     : "Unknown";
 }
 
-object query_zone() {
+/**
+ * Returns the zone daemon this room is registered with, or 0 if
+ * no zone is bound.
+ *
+ * @returns {STD_ZONE} The zone daemon, or 0.
+ */
+public object query_zone() {
   return __zone;
 }

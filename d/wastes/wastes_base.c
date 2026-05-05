@@ -11,51 +11,58 @@
 
 inherit STD_ROOM;
 
-void repopulate();
+public void repopulate();
 
-private nosave string *mob_files = ({});
-private nosave object *mobs = ({});
-private nosave float spawn_chance = 15.0;
+/** @type {STD_NPC*} */
+private nosave object *__mobs = ({});
+private nosave float spawn_chance = 20.0;
 
 void setup() {
   set_light(0);
   set_terrain("wastes");
 }
 
-void virtual_setup(mixed args...) {
-  string file = args[0];
-  object ob;
-
+void virtual_setup(mixed _args...) {
   set_zone("barren_wasteland");
-  // debug("Setting up room type for %O", this_object());
+
   __DIR__ "wastes_daemon"->setup_room_type(this_object());
-  __DIR__ "wastes_daemon"->setup_room_subtype(this_object());
-  __DIR__ "wastes_daemon"->setup_exits(this_object(), file);
-  __DIR__ "wastes_daemon"->setup_short(this_object(), file);
-  __DIR__ "wastes_daemon"->setup_long(this_object(), file);
-  // debug("Room type for %O is %O", this_object(), query_room_environment());
+  __DIR__ "wastes_daemon"->setup_exits(this_object());
+  __DIR__ "wastes_daemon"->setup_short(this_object());
+  __DIR__ "wastes_daemon"->setup_long(this_object());
 
   add_reset((: repopulate :));
-
-  mob_files = ({
-    "/mob/waste_rat",
-    "/mob/wasterel",
-  });
 }
 
-void repopulate() {
-  mobs -= ({ 0 });
-  foreach(object mob in mobs) {
+public void repopulate() {
+  /** @type {STD_NPC} */ object mob;
+
+  __mobs -= ({ 0 });
+
+  foreach(mob in __mobs) {
     if(objectp(mob)) {
       mob->simple_action("$N $vscurry away across the barren wasteland.");
-      mob->remove();
+      mob->clean_remove();
     }
   }
 
   if(random_float(100.0) < spawn_chance) {
-    string file = element_of(mob_files);
+    mapping mob_data = element_of_weighted(
+      __DIR__ "wastes_daemon"->query_mob_files()
+    );
+    string file = mob_data["path"];
+    int level = random_clamp(mob_data["level"][0], mob_data["level"][1]);
 
-    mobs += ({ add_inventory(file) });
-    mobs->simple_action("$N $varrive.");
+    mob = add_inventory(file);
+    mob->setLevel(level);
+
+    __mobs += ({ mob });
+
+    mob->simple_action("$N $vemerge from behind a pile of rubble.");
+  }
+}
+
+void event_object_spawned(object _caller, object ob) {
+  if(npcp(ob)) {
+    query_zone()->add_mob(ob);
   }
 }

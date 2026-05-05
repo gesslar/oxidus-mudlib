@@ -18,14 +18,12 @@ void setup() {
   set_terrain("road");
 }
 
-void virtual_setup(mixed args...) {
-  string file = args[0];
-
+void virtual_setup(mixed _args...) {
   set_zone("winding_caverns");
+
   CAVERN_DAEMON->setup_room_type(this_object());
   CAVERN_DAEMON->setup_room_subtype(this_object());
   CAVERN_DAEMON->setup_exits(this_object());
   CAVERN_DAEMON->setup_short(this_object());
   CAVERN_DAEMON->setup_long(this_object());
-  // debug("Room type for %O is %O", this_object(), query_room_environment());
 }

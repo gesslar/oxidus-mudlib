@@ -14,7 +14,7 @@ string set_real_name(string str);
 string find_path(string path);
 void set_virtual_master(string str);
 string query_virtual_master();
-int addDestruct(function f);
+int add_destruct(function f);
 int remove_destruct(function f);
 void process_destruct();
 void add_reset(function f);

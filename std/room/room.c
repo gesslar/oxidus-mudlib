@@ -36,6 +36,7 @@ void mudlib_setup(mixed _args...) {
   set_ignore_capacity(1);
   set_ignore_mass(1);
   add_reset((: reset_doors :));
+  add_destruct((: remove_from_zone :));
 }
 
 private nosave string room_type = "room";

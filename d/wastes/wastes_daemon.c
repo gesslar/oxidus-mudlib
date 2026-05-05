@@ -1,12 +1,18 @@
 /**
  * @file /d/wastes/wastes_daemon.c
- * @description Virtual map daemon for the wastes
+ *
+ * Virtual map daemon for the wastes. Generates a procedural terrain
+ * map using simplex noise, carves a river through it, classifies
+ * each cell into a terrain type, and provides per-room setup hooks
+ * (shorts, longs, exits, environment) for the virtual server. Also
+ * loads the wastes mob spawn pool and offers a debug map printer.
  *
  * @created 2024-08-30 - Gesslar
- * @last_modified 2024-08-30 - Gesslar
+ * @last_modified 2026-05-04 - Gesslar
  *
  * @history
  * 2024-08-30 - Gesslar - Created
+ * 2026-05-04 - Gesslar - Documented
  */
 
 inherit STD_VIRTUAL_MAP;
@@ -21,9 +27,19 @@ private mixed *generate_river(mixed *map);
 varargs string determine_room_type(int z, int y, int x);
 private void setup_dimensions();
 private void print_row(int y);
+private void load_mobs();
 
 private nosave mapping short_descriptions;
 private nosave mapping long_descriptions;
+
+/**
+ * Weighted spawn pool for wastes mobs. Each key is a mapping
+ * containing the mob's file path and level range; the value is the
+ * relative spawn weight pulled from spawn.lpml.
+ *
+ * @type {([ ([ string: mixed ]): int ])}
+ */
+private nosave mapping mob_files = ([]);
 
 private nosave int *dimensions;
 // private nosave mixed *dimension_config = ({ ({ 25, 1 }), ({ 25, 1 }),  });
@@ -56,9 +72,47 @@ void setup() {
   // Setup the short and long descriptions.
   setup_wastes_shorts();
   setup_wastes_longs();
+
+  load_mobs();
 }
 
-// Set the dimensions of the map, using the seed to generate the dimensions.
+/**
+ * Loads the wastes spawn pool from spawn.lpml into mob_files.
+ * Each entry is keyed by a mapping containing the mob's file path
+ * and level range, with the LPML weight as the value.
+ */
+private void load_mobs() {
+  mapping spawn = load_lpml(__DIR__ "spawn.lpml");
+
+  mob_files = ([]);
+
+  each(spawn, function(mapping mob) {
+    mapping mob_data = ([
+        "path": mob["path"],
+        "level": mob["level"]
+      ]);
+
+    mob_files[mob_data] = mob["weight"];
+  });
+}
+
+/**
+ * Returns the loaded spawn pool for wastes rooms to use when
+ * deciding which mob to spawn.
+ *
+ * @returns {([ ([ string: mixed ]): int ])} The weighted spawn
+ *                                           pool mapping.
+ */
+public mapping query_mob_files() {
+  return mob_files;
+}
+
+/**
+ * Sets the width and height of the map by drawing two pseudo-random
+ * values from the current seed and adding them to the per-axis base
+ * sizes in dimension_config. The seed is advanced by each draw so
+ * subsequent calls to noise functions stay deterministic.
+ */
 private void setup_dimensions() {
   mixed *result;
 
@@ -74,7 +128,13 @@ private void setup_dimensions() {
   dimensions[HEIGHT] = result[1] + dimension_config[HEIGHT][0];
 }
 
-// Generate and return the map to the parent virtual_map.
+/**
+ * Builds the full map for the wastes by generating the base terrain
+ * and then carving the river through it. Returned to the parent
+ * virtual_map for storage in map_data.
+ *
+ * @returns {mixed*} The completed 3D map array.
+ */
 protected mixed *generate_map() {
   mixed *map = generate_terrain();
   map = generate_river(map);
@@ -82,8 +142,16 @@ protected mixed *generate_map() {
   return map;
 }
 
-// Generates the terrain of the map and returns it to the generate_map function.
-// This function uses simplex noise to generate the terrain.
+/**
+ * Generates the base terrain layer using simplex noise. Each cell's
+ * raw noise value is dampened by its distance from the centre of
+ * the map (so the edges become more impassable) and then shifted
+ * into the 0.0 - 2.0 range. The min/max range is recorded via
+ * update_noise_range for later normalization.
+ *
+ * @returns {mixed*} A 3D map array (single z-layer) of float noise
+ *                   values.
+ */
 private mixed *generate_terrain() {
   mixed map;
   int centre_x = dimensions[WIDTH] / 2;
@@ -98,7 +166,6 @@ private mixed *generate_terrain() {
     for(int y = 0; y < dimensions[HEIGHT]; y++) {
       map[z][y] = allocate(dimensions[WIDTH]);
       for(int x = 0; x < dimensions[WIDTH]; x++) {
-        mixed *result;
         float noise_value;
 
         // Dampening function to make the terrain more natural.
@@ -134,8 +201,18 @@ private mixed *generate_terrain() {
   return map;
 }
 
-// Generates a river in the map and returns it to the generate_map function.
-// This function uses simplex noise to generate the river.
+/**
+ * Carves a vertically-flowing river into the supplied map. The
+ * river is positioned in the right-hand third of the map and is
+ * shaped by simplex noise plus a vertical bias, producing three
+ * depth tiers (shallow, regular, deep) encoded as negative cell
+ * values. A second pass walks each row from both edges and converts
+ * the outermost deep cells to regular water so the river never has
+ * deep water touching the bank.
+ *
+ * @param {mixed*} map - The terrain map to mutate in place.
+ * @returns {mixed*} The same map with the river carved in.
+ */
 private mixed *generate_river(mixed map) {
   int river_width = dimensions[WIDTH] / 6;
   int river_height = dimensions[HEIGHT];
@@ -208,6 +285,10 @@ private mixed *generate_river(mixed map) {
   return map;
 }
 
+/**
+ * Populates short_descriptions with the per-terrain-type pools of
+ * short room titles used by setup_short.
+ */
 private void setup_wastes_shorts() {
   short_descriptions = ([
     "wastes" : ({
@@ -230,6 +311,10 @@ private void setup_wastes_shorts() {
   ]);
 }
 
+/**
+ * Populates long_descriptions with the per-terrain-type pools of
+ * long room descriptions used by setup_long.
+ */
 private void setup_wastes_longs() {
   long_descriptions = ([
     "wastes" : ({
@@ -291,7 +376,16 @@ private void setup_wastes_longs() {
   ]);
 }
 
-public void setup_short(object room, string file) {
+/**
+ * Sets a short title on the given room by reading its virtual
+ * coordinates, classifying the cell, and picking a random entry
+ * from the matching short_descriptions pool. Water terrain types
+ * use their own pools; everything else falls back to the generic
+ * "wastes" pool.
+ *
+ * @param {STD_ROOM} room - The virtual room being set up.
+ */
+public void setup_short(object room) {
   int *coords = room->get_virtual_coordinates();
   string room_type = determine_room_type(coords...);
 
@@ -305,7 +399,16 @@ public void setup_short(object room, string file) {
   }
 }
 
-public void setup_long(object room, string file) {
+/**
+ * Sets a long description on the given room by reading its virtual
+ * coordinates, classifying the cell, and picking a random entry
+ * from the matching long_descriptions pool. Water terrain types
+ * use their own pools; everything else falls back to the generic
+ * "wastes" pool.
+ *
+ * @param {STD_ROOM} room - The virtual room being set up.
+ */
+public void setup_long(object room) {
   int *coords = room->get_virtual_coordinates();
   string room_type = determine_room_type(coords...);
 
@@ -319,15 +422,25 @@ public void setup_long(object room, string file) {
   }
 }
 
-// Setup the exits for the room. This is used to connect the rooms together.
-// This is really not that complicated.
+/**
+ * Adds cardinal, intercardinal, and special exits to the given
+ * room based on its virtual coordinates. Each neighbouring cell is
+ * classified and an exit is added only if the neighbour is
+ * passable. Special exits include the forest connection at the
+ * map's origin, the maze entrance/exit hand-off (when the current
+ * cell matches the maze daemon's east entrance), and the cavern
+ * "down" exit (when the current cell matches the cavern daemon's
+ * entrance). Returns early without adding exits if the current
+ * cell itself is impassable.
+ *
+ * @param {STD_ROOM} room - The virtual room being set up.
+ */
 public void setup_exits(object room) {
   int *coords = room->get_virtual_coordinates();
   int x, y, z;
   int max_x, max_y;
   string current_room_type;
   string room_type;
-  mapping exits;
   string maze_entrance_file, maze_exit_file;
   int *maze_entrance, *maze_exit;
   int *cavern_entrance, *cavern_exit;
@@ -429,6 +542,15 @@ public void setup_exits(object room) {
 }
 
 private nosave string *terrain_types = ({ "rocky", "sandy", "impassable", });
+
+/**
+ * Ordered cutoff table used by determine_room_type to bucket a
+ * raw noise value into a terrain string. Each entry is a pair of
+ * ({ upper-bound float, terrain-name string }); the first bucket
+ * the value fits into wins.
+ *
+ * @type {mixed*}
+ */
 private nosave mixed *thresholds = ({
   ({ 0.3, "impassable" }),   //  0 -  30%
   ({ 1.2, "sandy" }),        // 30 -  60%
@@ -436,7 +558,18 @@ private nosave mixed *thresholds = ({
   ({ 2.0, "impassable" }),   // 85 - 100%
 });
 
-// Determine the room type based on the noise value.
+/**
+ * Classifies the cell at (z, y, x) into a terrain-type string.
+ * River cells (encoded as negative noise values) map directly to
+ * "deep water", "water", or "shallow water"; everything else is
+ * matched against the thresholds table. Returns 0 if the
+ * coordinate is out of bounds.
+ *
+ * @param {int} z - The z (layer) coordinate.
+ * @param {int} y - The y (row) coordinate.
+ * @param {int} x - The x (column) coordinate.
+ * @returns {string} The terrain-type name, or 0 if out of bounds.
+ */
 varargs string determine_room_type(int z, int y, int x) {
   int value;
   string room_type;
@@ -469,8 +602,13 @@ varargs string determine_room_type(int z, int y, int x) {
   return room_type;
 }
 
-// Setup the room type for the room. This is used to set the environment of the
-// room.
+/**
+ * Sets the room's environment to the terrain type derived from its
+ * virtual coordinates. No-op if the cell does not classify into a
+ * known terrain type.
+ *
+ * @param {STD_ROOM} room - The virtual room being set up.
+ */
 public void setup_room_type(object room) {
   int *coords = room->get_virtual_coordinates();
   string room_type;
@@ -482,7 +620,10 @@ public void setup_room_type(object room) {
   room->set_room_environment(room_type);
 }
 
-// Print the map
+/**
+ * Debug helper that prints the entire map (z-layer 0) to the
+ * caller, one row at a time, using colour and symbol tables.
+ */
 void print_map() {
   int y;
   mixed *map = query_map_data()[0];
@@ -491,7 +632,12 @@ void print_map() {
     print_row(y);
 }
 
-// Print a row of the map.
+/**
+ * Maps each terrain-type name to a colour code (resolved from
+ * COLOUR_D) used by the debug map printer.
+ *
+ * @type {([ string: string ])}
+ */
 private nosave mapping colour_map = ([
   "impassable" : COLOUR_D->rgbToColour(0, 0, 0),
   "sandy" : COLOUR_D->rgbToColour(255, 223, 186),
@@ -500,6 +646,13 @@ private nosave mapping colour_map = ([
   "water" : COLOUR_D->rgbToColour(35, 90, 186),
   "deep water" : COLOUR_D->rgbToColour(24, 63, 130),
 ]);
+
+/**
+ * Maps each terrain-type name to the single-character glyph used
+ * by the debug map printer.
+ *
+ * @type {([ string: string ])}
+ */
 private nosave mapping symbols_map = ([
   "impassable" : "#",
   "sandy" : ".",
@@ -509,6 +662,12 @@ private nosave mapping symbols_map = ([
   "deep water" : "~",
 ]);
 
+/**
+ * Debug helper that prints a single row of the map (z-layer 0,
+ * row y) to the caller, using colour_map and symbols_map.
+ *
+ * @param {int} y - The row index to print.
+ */
 void print_row(int y) {
   int x;
   mixed *map = query_map_data()[0][y];

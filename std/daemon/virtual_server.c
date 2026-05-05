@@ -10,31 +10,33 @@ inherit STD_DAEMON;
 protected object generate_object(string path);
 
 object compile_object(string path) {
-    string subzone, subzone_path;
-    string *current_dir;
-    string *path_parts;
+  string subzone, subzone_path;
+  string *current_dir;
+  string *path_parts;
 
-    path_parts = explode(path, "/");
-    if(sizeof(path_parts) < 1) return 0;
+  path_parts = explode(path, "/");
 
-    current_dir = dir_file(this_object());
-    subzone = path_parts[0];
-    subzone_path = current_dir[0] + subzone + "/zone";
+  if(sizeof(path_parts) < 1)
+    return 0;
 
-    if(file_size(subzone_path + ".c") > 0) {
-        /** @type {STD_VIRTUAL_SERVER} */object subzone_daemon = load_object(subzone_path);
-        if(!subzone_daemon) {
-            return 0;
-        }
+  current_dir = dir_file(this_object());
+  subzone = path_parts[0];
+  subzone_path = current_dir[0] + subzone + "/controller";
 
-        return subzone_daemon->compile_object(implode(path_parts[1..], "/"));
+  if(file_size(subzone_path + ".c") > 0) {
+    /** @type {STD_VIRTUAL_SERVER} */object subzone_daemon = load_object(subzone_path);
+    if(!subzone_daemon) {
+      return 0;
     }
 
-    // No subzone found, handle the request
-    return generate_object(path);
+    return subzone_daemon->compile_object(implode(path_parts[1..], "/"));
+  }
+
+  // No subzone found, handle the request
+  return generate_object(path);
 }
 
 // To be overridden by specific zone daemons
 protected object generate_object(string _path) {
-    return 0;  // Default behavior: don't generate anything
+  return 0;  // Default behavior: don't generate anything
 }

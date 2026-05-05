@@ -1,12 +1,17 @@
 /**
- * @file /d/village/field_daemon.c
- * @description Daemon for handling the field stuff
+ * @file /d/village/field/field_daemon.c
+ *
+ * Daemon backing the village field virtual area. Provides the room
+ * setup helpers (exits, shorts, longs) used by the field's virtual
+ * server and owns the weighted spawn pool that field rooms consult
+ * when picking a mob to spawn.
  *
  * @created 2024-07-24 - Gesslar
- * @last_modified 2024-07-24 - Gesslar
+ * @last_modified 2026-05-04 - Gesslar
  *
  * @history
  * 2024-07-24 - Gesslar - Created
+ * 2026-05-04 - Gesslar - Documented
  */
 
 inherit STD_DAEMON;
@@ -14,18 +19,35 @@ inherit STD_DAEMON;
 // Functions
 private void setup_field_shorts();
 private void setup_field_longs();
+private void load_mobs();
 
 // Variables
 private nosave mapping field_exits = ([]);
 
+/**
+ * Weighted spawn pool for field mobs, keyed by a mapping containing
+ * the mob path and level range, with the value being the relative
+ * spawn weight.
+ *
+ * @type {([ ([ string: mixed ]): int ])}
+ */
+private nosave mapping mob_files = ([]);
+
 void setup() {
   setup_field_shorts();
   setup_field_longs();
+  load_mobs();
 }
 
 /**
+ * Builds and applies the eight cardinal/ordinal exits for a field
+ * room based on its virtual coordinates. Coordinates are received
+ * in (z, y, x) order from the room and converted to (x, y, z) for
+ * the exit destinations. The bottom-left corner (0, 9, 0) is given
+ * a special south exit leading back to the village path. No-op if
+ * the room has no virtual coordinates.
  *
- * @param {STD_ROOM} room
+ * @param {STD_ROOM} room - The field room to configure exits on.
  */
 public void setup_exits(object room) {
   int *coords = room->get_virtual_coordinates();
@@ -62,6 +84,10 @@ public void setup_exits(object room) {
 
 private nosave string *field_shorts;
 
+/**
+ * Populates the field_shorts pool with the rotation of short
+ * descriptions used to randomize field room titles.
+ */
 void setup_field_shorts() {
   field_shorts = ({
     "Open Field",
@@ -72,9 +98,11 @@ void setup_field_shorts() {
 }
 
 /**
+ * Sets a randomized short description on a field room, picked from
+ * the field_shorts pool and tagged with the room's file name.
  *
- * @param {STD_ROOM} room
- * @param {string} _file
+ * @param {STD_ROOM} room - The field room to apply the short to.
+ * @param {string} _file - Unused; the room's source file path.
  */
 public void setup_short(object room, string _file) {
   room->set_short(element_of(field_shorts) + " ("+query_file_name(room)+")");
@@ -83,6 +111,10 @@ public void setup_short(object room, string _file) {
 private nosave int rotation = 0;
 private nosave string *field_longs;
 
+/**
+ * Populates the field_longs pool with the rotation of long
+ * descriptions used to vary the look of field rooms.
+ */
 public void setup_field_longs() {
   field_longs = ({
     "North of the village, an open grassy field spreads out, the tall "
@@ -121,13 +153,47 @@ public void setup_field_longs() {
 }
 
 /**
+ * Sets a long description on a field room, cycling sequentially
+ * through the field_longs pool so adjacent rooms get different
+ * descriptions. Wraps back to the start when the pool is exhausted.
  *
- * @param {STD_ROOM} room
- * @param {string} _file
+ * @param {STD_ROOM} room - The field room to apply the long to.
+ * @param {string} _file - Unused; the room's source file path.
  */
 public void setup_long(object room, string _file) {
   room->set_long(field_longs[rotation]);
 
   if(++rotation == sizeof(field_longs))
     rotation = 0;
+}
+
+/**
+ * Loads the field spawn pool from spawn.lpml into mob_files.
+ * Each entry is keyed by a mapping containing the mob's file path
+ * and level range, with the LPML weight as the value.
+ */
+private void load_mobs() {
+  mapping spawn = load_lpml(__DIR__ "spawn.lpml");
+
+  mob_files = ([]);
+
+  each(spawn, function(mapping mob) {
+    mapping mob_data = ([
+        "path": mob["path"],
+        "level": mob["level"]
+      ]);
+
+    mob_files[mob_data] = mob["weight"];
+  });
+}
+
+/**
+ * Returns the loaded spawn pool for field rooms to use when
+ * deciding which mob to spawn.
+ *
+ * @returns {([ ([ string: mixed ]): int ])} The weighted spawn
+ *                                           pool mapping.
+ */
+public mapping query_mob_files() {
+  return mob_files;
 }

@@ -1,6 +1,7 @@
 /**
- * @file /d/cavern/zone.c
- * @description Zone for the caverns
+ * @file /d/cavern/controller.c
+ *
+ * Virtual controller for the caverns
  *
  * @created 2024-09-18 - Gesslar
  * @last_modified 2024-09-18 - Gesslar

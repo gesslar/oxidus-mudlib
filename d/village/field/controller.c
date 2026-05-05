@@ -1,6 +1,7 @@
 /**
- * @file /d/village/field/zone.c
- * @description Zone for the field
+ * @file /d/village/field/controller.c
+ *
+ * Virtual controller for the field
  *
  * @created 2024-02-04 - Gesslar
  * @last_modified 2024-02-04 - Gesslar
@@ -8,7 +9,6 @@
  * @history
  * 2024-02-04 - Gesslar - Created
  */
-
 
 inherit STD_VIRTUAL_SERVER;
 

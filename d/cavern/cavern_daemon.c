@@ -1,6 +1,29 @@
+/**
+ * @file /d/cavern/cavern_daemon.c
+ *
+ * Cavern zone daemon. Procedurally generates a multi-layer cavern
+ * map using a drunkard's-walk carver over a wall-filled grid, links
+ * the layers together with up/down connections, then drives virtual
+ * room creation by handing back the generated map and answering
+ * per-room setup callbacks (short, long, exits, room type and
+ * subtype). Also locates the entry from the wastes and the exit
+ * back up to the surface.
+ *
+ * @created 2024-01-13 - Gesslar
+ * @last_modified 2026-05-04 - Gesslar
+ *
+ * @history
+ * 2024-01-13 - Gesslar - Created
+ * 2026-05-04 - Gesslar - Documented
+ */
+
 #include "include/index.h"
 
 inherit STD_VIRTUAL_MAP;
+
+/**
+ * @typedef {"/d/wastes/wastes_daemon"} WastesDaemon
+ */
 
 // Forward declarations
 private void setup_cavern_shorts();
@@ -9,7 +32,7 @@ public string setup_room_type(object room);
 public string setup_room_subtype(object room);
 private mixed *generate_map();
 private int surrounding_cells_are_walls(int z, int y, int x, int px, int py);
-private int any_surrounding_cell_is_a_path(int z, int y, int x);
+private mixed *any_surrounding_cell_is_a_path(int z, int y, int x);
 private void generate_layer(int z);
 private void connect_layers();
 private mixed *find_layer_connections(int z);
@@ -41,8 +64,13 @@ private nosave int MIN_Z, MAX_Z, MIN_Y, MAX_Y, MIN_X, MAX_X;
 private nosave int WALL = 1, PATH = 2, UP = 3, DOWN = 4;
 private nosave int MIN_PATH = 2;
 
-// The directions for the maze. Used to calculate the coordinates of the
-// neighbouring cells.
+/**
+ * Direction lookup keyed by direction name. Each entry is a mapping
+ * of axis deltas (dz/dy/dx) used to compute the coordinates of the
+ * neighbouring cell when walking the cavern grid.
+ *
+ * @type {([ string: ([ string: int ]) ])}
+ */
 private nosave mapping DIRECTIONS = ([
   "north"    : (["dz":  0, "dy": -1, "dx":  0]),
   "south"    : (["dz":  0, "dy":  1, "dx":  0]),
@@ -91,7 +119,9 @@ void setup() {
 }
 
 /**
- * Setup the dimensions of the cavern. This sets depth, height, and width.
+ * Rolls the cavern's depth, height, and width using the seeded RNG
+ * and the dimension_config min/range values, then derives the
+ * MIN_/MAX_ bounds for each axis.
  */
 private void setup_dimensions() {
   mixed *result;
@@ -125,10 +155,14 @@ private void setup_dimensions() {
 }
 
 /**
- * Generate the map using simplex2 for tunnels.
+ * Builds the full cavern map. Allocates the depth/height/width grid,
+ * fills every cell with a wall, then carves a layer at a time and
+ * connects layers vertically. Returned to STD_VIRTUAL_MAP via the
+ * map-generator callback registered in setup().
+ *
+ * @returns {mixed*} The freshly generated 3D cavern map.
  */
 protected mixed *generate_map() {
-  mixed *result;
   int x, y, z;
 
   cavern_map = allocate(dimensions[DEPTH]);
@@ -154,10 +188,22 @@ protected mixed *generate_map() {
   return cavern_map;
 }
 
+/**
+ * Returns the number of path tiles the carver targets per layer,
+ * computed as width * height * coverage_percentage.
+ *
+ * @returns {int} Target tile count for one layer.
+ */
 int query_target_tiles() {
   return to_int((dimensions[WIDTH] * dimensions[HEIGHT]) * coverage_percentage);
 }
 
+/**
+ * Counts the path tiles actually carved on the top layer (z = 0).
+ * Useful for sanity-checking carver coverage after generation.
+ *
+ * @returns {int} Number of carved path tiles on layer 0.
+ */
 int query_tiles_carved() {
   int count = 0;
     for(int y = 0; y < dimensions[HEIGHT]; y++) {
@@ -171,7 +217,14 @@ int query_tiles_carved() {
 }
 
 /**
- * Generate tunnels using cellular automata.
+ * Carves tunnels into a single layer using a drunkard's-walk style
+ * carver with backtracking. Picks a random starting cell, carves
+ * outward into wall cells whose orthogonal neighbours are also
+ * walls, and on dead-ends backtracks then jumps to a wall adjacent
+ * to one or two existing paths to re-seed the walk. Stops when the
+ * target tile count is reached or the stack is empty.
+ *
+ * @param {int} z - Layer (depth index) to carve.
  */
 private void generate_layer(int z) {
   int target_tiles = to_int((dimensions[WIDTH] * dimensions[HEIGHT]) * coverage_percentage);
@@ -233,7 +286,6 @@ private void generate_layer(int z) {
 
     if(sizeof(valid_dirs) > 0) {
       int nx, ny;
-      mixed *excludes = ({});
 
       // Randomly select a valid direction
       dir = valid_dirs[0]; // Already shuffled, take the first
@@ -243,10 +295,8 @@ private void generate_layer(int z) {
       // Move to the new cell
       stack += ({ ({ nx, ny }) });
     } else {
-      int *new_start;
       string *dirs_to_check = keys(DIRECTIONS) - ({ "up", "down" });
       mixed *walls = copy(all_walls[z]);
-      int xx = 0;
 
       // No valid moves, backtrack
       stack = stack[0..<2];
@@ -281,6 +331,19 @@ private void generate_layer(int z) {
   }
 }
 
+/**
+ * Tests whether all four cardinal neighbours of (z,y,x) are walls,
+ * skipping the parent cell (px,py) the carver came from. Used to
+ * keep tunnels one cell wide as the drunkard's walk advances.
+ *
+ * @param {int} z - Layer of the cell to test.
+ * @param {int} y - Row of the cell to test.
+ * @param {int} x - Column of the cell to test.
+ * @param {int} px - Row of the parent cell to ignore.
+ * @param {int} py - Column of the parent cell to ignore.
+ * @returns {int} 1 if every other orthogonal neighbour is a wall
+ *                (or out of bounds), 0 otherwise.
+ */
 private int surrounding_cells_are_walls(int z, int y, int x, int px, int py) {
   // Define arrays for cardinal direction offsets
   int *dxs = ({ -1, 0, 1, 0 });
@@ -302,6 +365,18 @@ private int surrounding_cells_are_walls(int z, int y, int x, int px, int py) {
   return 1; // All orthogonal adjacent cells are walls
 }
 
+/**
+ * Returns the orthogonal neighbours of (z,y,x) that are paths, but
+ * only when there are exactly two such neighbours. Otherwise
+ * returns an empty array. Used as a candidate filter when picking
+ * cells to re-seed the carver against.
+ *
+ * @param {int} z - Layer of the cell to test.
+ * @param {int} y - Row of the cell to test.
+ * @param {int} x - Column of the cell to test.
+ * @returns {mixed*} Array of two ({z,y,x}) coordinates, or an
+ *                   empty array.
+ */
 private mixed *any_surrounding_cell_is_a_path(int z, int y, int x) {
   // Define arrays for cardinal direction offsets
   int *dxs = ({ -1, 0, 1, 0 });
@@ -325,9 +400,14 @@ private mixed *any_surrounding_cell_is_a_path(int z, int y, int x) {
     return ({});
 }
 
-// Connect the layers together. This will connect the layers together by
-// setting the down and up bits for the current layer and the layer below in
-// the connections returned by find_layer_connections.
+/**
+ * Walks the cavern from the top layer down to the second-from-bottom
+ * layer, asks find_layer_connections() for the descent points
+ * between each adjacent pair, then sets the DOWN bit on each cell
+ * in the upper layer and the UP bit on each cell in the lower
+ * layer. Stores the per-layer connection table on all_connections
+ * so setup_exits() can wire the rooms together later.
+ */
 private void connect_layers() {
   int z;
   int i, sz;
@@ -392,6 +472,17 @@ mixed *find_layer_connections(int z) {
   return connections;
 }
 */
+/**
+ * Picks one random path tile on layer z and one random path tile on
+ * layer z+1 and returns them as a single connection pair. Each
+ * connection is ({ down_coord, up_coord }) where down_coord is on
+ * the upper layer (gets DOWN set) and up_coord is on the lower
+ * layer (gets UP set).
+ *
+ * @param {int} z - Upper layer to find a connection from.
+ * @returns {mixed*} A single-element array containing one
+ *                   ({ down_coord, up_coord }) pair.
+ */
 mixed *find_layer_connections(int z) {
   int *path_on_this_floor = find_a_path(z);
   int *path_on_next_floor = find_a_path(z+1);
@@ -399,7 +490,11 @@ mixed *find_layer_connections(int z) {
   return ({ ({ path_on_this_floor, path_on_next_floor }) });
 }
 
-// Setup short descriptions for the cavern rooms
+/**
+ * Populates the short_descriptions table with the pool of room
+ * shorts to choose from per cavern room type. Called once during
+ * setup().
+ */
 private void setup_cavern_shorts() {
   short_descriptions = ([
     "cavern" : ({
@@ -411,7 +506,11 @@ private void setup_cavern_shorts() {
   ]);
 }
 
-// Setup long descriptions for the cavern rooms
+/**
+ * Populates the long_descriptions table with the pool of room
+ * longs to choose from per cavern room type. Called once during
+ * setup().
+ */
 private void setup_cavern_longs() {
   long_descriptions = ([
     "cavern" : ({
@@ -423,8 +522,14 @@ private void setup_cavern_longs() {
   ]);
 }
 
-// Setup the short description for a room.
-public void setup_short(object room, string file) {
+/**
+ * Picks a random short description for the given virtual room based
+ * on its room type and tags the level (depth) onto the end. Called
+ * by the virtual room base during room setup.
+ *
+ * @param {STD_ROOM} room - The virtual cavern room to describe.
+ */
+public void setup_short(object room) {
   int *coords = room->get_virtual_coordinates();
   string room_type;
 
@@ -434,8 +539,14 @@ public void setup_short(object room, string file) {
   room->set_short(element_of(short_descriptions[room_type]) + " (Level "+(abs(coords[0])+1)+")");
 }
 
-// Setup the long description for a room.
-public void setup_long(object room, string file) {
+/**
+ * Picks a random long description for the given virtual room based
+ * on its room type. Called by the virtual room base during room
+ * setup.
+ *
+ * @param {STD_ROOM} room - The virtual cavern room to describe.
+ */
+public void setup_long(object room) {
   int *coords = room->get_virtual_coordinates();
   string room_type;
 
@@ -445,16 +556,21 @@ public void setup_long(object room, string file) {
   room->set_long(element_of(long_descriptions[room_type]));
 }
 
-// Setup the exits for the cavern. This will setup the exits for the maze by
-// adding the exits to the room.
+/**
+ * Wires the exits for one virtual cavern room. Walls have no exits.
+ * Cardinal exits are added when the neighbouring cell is a path.
+ * Up and down exits are pulled from all_connections so they target
+ * the matching path tile on the adjacent layer. If the room is the
+ * cavern's exit cell, an additional "up" exit is added that hops
+ * back into the wastes daemon at the cached entrance coordinate.
+ *
+ * @param {STD_ROOM} room - The virtual cavern room being set up.
+ */
 public void setup_exits(object room) {
   int *coords = room->get_virtual_coordinates();
   int x, y, z, layer;
-  int *adjacent;
   int max_x, max_y, max_z;
-  string file = query_file_name(room);
   string room_type;
-  string test;
   mixed *layer_connections;
 
   x = coords[2];
@@ -472,7 +588,7 @@ public void setup_exits(object room) {
 
   room_type = cavern_map[layer][y][x];
 
-  foreach(string dir, mapping info in DIRECTIONS) {
+  foreach(string dir, mapping _ in DIRECTIONS) {
     if(dir == "up") {
       if(!is_up(layer, y, x))
         continue;
@@ -517,22 +633,51 @@ public void setup_exits(object room) {
     room->add_exit("up", sprintf("/d/wastes/%d,%d,%d", entrance[2], entrance[1], entrance[0]));
 }
 
+/**
+ * Returns the cavern-side exit coordinate (the room that connects
+ * up to the wastes), as a ({ z, y, x }) array.
+ *
+ * @returns {int*} The exit coordinate, or 0 before generation.
+ */
 int *query_exit() {
   return exit;
 }
 
+/**
+ * Returns the wastes-side entrance coordinate (the wastes room
+ * that connects down to the cavern), as a ({ z, y, x }) array.
+ *
+ * @returns {int*} The entrance coordinate, or 0 before generation.
+ */
 int *query_entrance() {
   return entrance;
 }
 
-// Check if the coordinates are out of bounds.
+/**
+ * Tests whether (z,y,x) lies outside the cavern's bounds on any
+ * axis.
+ *
+ * @param {int} z - Layer index to check.
+ * @param {int} y - Row index to check.
+ * @param {int} x - Column index to check.
+ * @returns {int} 1 if out of bounds, 0 otherwise.
+ */
 public int oob(int z, int y, int x) {
   return z < MIN_Z || z > MAX_Z ||
          y < MIN_Y || y > MAX_Y ||
          x < MIN_X || x > MAX_X;
 }
 
-// Clear a wall at the given coordinates.
+/**
+ * Clears the WALL bit at (z,y,x) on the cavern map and removes the
+ * cell from the all_walls roster for that layer.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {string} The new bit-string for the cell, or 0 if the
+ *                   coordinate is out of bounds.
+ */
 private string clear_wall(int z, int y, int x) {
   string result;
 
@@ -551,6 +696,17 @@ private string clear_wall(int z, int y, int x) {
   return result;
 }
 
+/**
+ * Sets the WALL bit at (z,y,x) on the cavern map, clears any PATH
+ * bit on the same cell, and adds the cell to the all_walls roster
+ * for that layer.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {string} The new bit-string for the cell, or 0 if the
+ *                   coordinate is out of bounds.
+ */
 private string set_wall(int z, int y, int x) {
   string result;
 
@@ -565,7 +721,15 @@ private string set_wall(int z, int y, int x) {
   return result;
 }
 
-// Check if the coordinates are a wall.
+/**
+ * Tests whether the cell at (z,y,x) has the WALL bit set.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {int} 1 if the cell is a wall, 0 if not or if out of
+ *                bounds.
+ */
 public int is_wall(int z, int y, int x) {
   if(oob(z, y, x))
     return 0;
@@ -573,7 +737,16 @@ public int is_wall(int z, int y, int x) {
   return test_bit(cavern_map[z][y][x], WALL);
 }
 
-// Clear a path at the given coordinates.
+/**
+ * Clears the PATH bit at (z,y,x) on the cavern map and removes the
+ * cell from the all_paths roster for that layer.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {string} The new bit-string for the cell, or 0 if the
+ *                   coordinate is out of bounds.
+ */
 private string clear_path(int z, int y, int x) {
   string result;
 
@@ -592,6 +765,17 @@ private string clear_path(int z, int y, int x) {
   return result;
 }
 
+/**
+ * Sets the PATH bit at (z,y,x) on the cavern map, clears any WALL
+ * bit on the same cell, and adds the cell to the all_paths roster
+ * for that layer.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {string} The new bit-string for the cell, or 0 if the
+ *                   coordinate is out of bounds.
+ */
 private string set_path(int z, int y, int x) {
   string result;
 
@@ -606,7 +790,15 @@ private string set_path(int z, int y, int x) {
   return result;
 }
 
-// Check if the coordinates are a path.
+/**
+ * Tests whether the cell at (z,y,x) has the PATH bit set.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {int} 1 if the cell is a path, 0 if not or if out of
+ *                bounds.
+ */
 public int is_path(int z, int y, int x) {
   if(oob(z, y, x))
     return 0;
@@ -614,7 +806,16 @@ public int is_path(int z, int y, int x) {
   return test_bit(cavern_map[z][y][x], PATH);
 }
 
-// Clear a down connection at the given coordinates.
+/**
+ * Clears the DOWN bit at (z,y,x), removing the descend-from-here
+ * marker on the cavern map.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {string} The new bit-string for the cell, or 0 if the
+ *                   coordinate is out of bounds.
+ */
 private string clear_down(int z, int y, int x) {
   string result;
 
@@ -626,7 +827,16 @@ private string clear_down(int z, int y, int x) {
   return result;
 }
 
-// Set a down connection at the given coordinates.
+/**
+ * Sets the DOWN bit at (z,y,x), marking the cell as a place where
+ * the player may descend to the next layer.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {string} The new bit-string for the cell, or 0 if the
+ *                   coordinate is out of bounds.
+ */
 private string set_down(int z, int y, int x) {
   string result;
 
@@ -638,7 +848,15 @@ private string set_down(int z, int y, int x) {
   return result;
 }
 
-// Check if the coordinates are a down connection.
+/**
+ * Tests whether the cell at (z,y,x) has the DOWN bit set.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {int} 1 if the cell allows descent, 0 if not or if out
+ *                of bounds.
+ */
 public int is_down(int z, int y, int x) {
   if(oob(z, y, x))
     return 0;
@@ -646,7 +864,16 @@ public int is_down(int z, int y, int x) {
   return test_bit(cavern_map[z][y][x], DOWN);
 }
 
-// Clear an up connection at the given coordinates.
+/**
+ * Clears the UP bit at (z,y,x), removing the ascend-from-here
+ * marker on the cavern map.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {string} The new bit-string for the cell, or 0 if the
+ *                   coordinate is out of bounds.
+ */
 private string clear_up(int z, int y, int x) {
   string result;
 
@@ -658,7 +885,16 @@ private string clear_up(int z, int y, int x) {
   return result;
 }
 
-// Set an up connection at the given coordinates.
+/**
+ * Sets the UP bit at (z,y,x), marking the cell as a place where
+ * the player may ascend to the previous layer.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {string} The new bit-string for the cell, or 0 if the
+ *                   coordinate is out of bounds.
+ */
 private string set_up(int z, int y, int x) {
   string result;
 
@@ -670,7 +906,15 @@ private string set_up(int z, int y, int x) {
   return result;
 }
 
-// Check if the coordinates are an up connection.
+/**
+ * Tests whether the cell at (z,y,x) has the UP bit set.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {int} 1 if the cell allows ascent, 0 if not or if out
+ *                of bounds.
+ */
 public int is_up(int z, int y, int x) {
   if(oob(z, y, x))
     return 0;
@@ -678,7 +922,17 @@ public int is_up(int z, int y, int x) {
   return test_bit(cavern_map[z][y][x], UP);
 }
 
-// Determine the room type based on the noise value.
+/**
+ * Classifies the cell at (z,y,x) by inspecting the cavern map. A
+ * carved cell is "cavern", a wall cell is "wall". Used by
+ * setup_short, setup_long, and external callers (e.g. the wastes
+ * daemon) that need to know what to render at a coordinate.
+ *
+ * @param {int} z - Layer index.
+ * @param {int} y - Row index.
+ * @param {int} x - Column index.
+ * @returns {string} "cavern", "wall", or 0 if neither bit is set.
+ */
 varargs string determine_room_type(int z, int y, int x) {
   if(is_path(z, y, x))
     return "cavern";
@@ -687,9 +941,15 @@ varargs string determine_room_type(int z, int y, int x) {
 }
 
 private nosave string wastes_daemon = "/d/wastes/wastes_daemon";
-// Determine the exits and entrances for the maze. This will determine the
-// exits and entrances for the maze by finding a valid entrance from the
-// forest and a valid entrance from the wastes.
+
+/**
+ * Picks the cavern's outbound exit and the matching wastes-side
+ * entrance. The cavern exit is any random path on layer 0; the
+ * wastes entrance is rolled until it lands on a "rocky" room in
+ * the wastes daemon's map. Both coordinates are cached on the
+ * exit/entrance globals for use by setup_exits and the wastes
+ * daemon's own exit wiring.
+ */
 void determine_exit_and_entrance() {
   mixed *result;
   int height, width;
@@ -698,8 +958,8 @@ void determine_exit_and_entrance() {
   exit = find_a_path(0);
 
   // Find a random place in the wastes to set the entrance.
-  height = wastes_daemon->get_map_height();
-  width = wastes_daemon->get_map_width();
+  height = /** @type {WastesDaemon} */ (wastes_daemon)->get_map_height();
+  width = /** @type {WastesDaemon} */ (wastes_daemon)->get_map_width();
 
   // Pick a random room in the wastes and set a down exit to the cavern
   while(true) {
@@ -714,7 +974,7 @@ void determine_exit_and_entrance() {
     seed = result[0];
     x = result[1];
 
-    room_type = wastes_daemon->determine_room_type(0, y, x);
+    room_type = /** @type {WastesDaemon} */ (wastes_daemon)->determine_room_type(0, y, x);
 
     if(room_type == "rocky") {
       entrance = ({ 0, y, x });
@@ -723,7 +983,11 @@ void determine_exit_and_entrance() {
   }
 }
 
-// Display the cavern.
+/**
+ * Prints every layer of the cavern to the calling user as ASCII
+ * art ("#" for paths, " " for walls). Diagnostic helper used while
+ * tuning the carver.
+ */
 void display_cavern() {
   int x, y, z;
   string out = "";
@@ -743,7 +1007,15 @@ void display_cavern() {
   }
 }
 
-// Display a layer of the cavern.
+/**
+ * Prints a single layer of the cavern to the calling user as ASCII
+ * art ("#" for paths, " " for walls). Diagnostic helper used while
+ * tuning the carver.
+ *
+ * @param {int} z - Layer index to render.
+ * @errors If the layer's height or width does not match the cavern
+ *         dimensions.
+ */
 void display_layer(int z) {
   int x, y;
   string out = "";
@@ -768,10 +1040,25 @@ void display_layer(int z) {
   }
 }
 
+/**
+ * Returns the full path roster for a single layer. Each entry is a
+ * ({ y, x }) pair recording where the carver placed a path tile.
+ *
+ * @param {int} z - Layer index to query.
+ * @returns {mixed*} Array of ({ y, x }) coordinates for that layer.
+ */
 mixed *find_all_paths(int z) {
   return all_paths[z];
 }
 
+/**
+ * Picks one random path tile from the given layer using the
+ * deterministic seeded RNG, and returns it as a ({ z, y, x })
+ * coordinate.
+ *
+ * @param {int} z - Layer index to pick from.
+ * @returns {int*} The chosen ({ z, y, x }) coordinate.
+ */
 int *find_a_path(int z) {
   mixed *result;
   int i;
@@ -783,6 +1070,14 @@ int *find_a_path(int z) {
   return ({ z, all_paths[z][i]... });
 }
 
+/**
+ * Picks one random wall tile from the given layer using the
+ * deterministic seeded RNG, and returns it as a ({ z, y, x })
+ * coordinate.
+ *
+ * @param {int} z - Layer index to pick from.
+ * @returns {int*} The chosen ({ z, y, x }) coordinate.
+ */
 int *find_a_wall(int z) {
   mixed *result;
   int i;
@@ -795,21 +1090,24 @@ int *find_a_wall(int z) {
 }
 
 /**
- * Sets the room's type. Called from CAVERN_BASE
+ * Stamps the cavern room type onto a virtual room. Called from
+ * CAVERN_BASE during room setup.
  *
- * @param {STD_ROOM} room - The cavern room to set the type
- * @returns {string} If successful, returns the same value that was set, or
- *  the value that it is currently.
+ * @param {STD_ROOM} room - The cavern room to set the type on.
+ * @returns {string} The room type that was set, or the existing
+ *                   value if the room already had one.
  */
 public string setup_room_type(object room) {
   return room->set_room_type("cavern");
 }
 
 /**
+ * Stamps the cavern room subtype onto a virtual room. Called from
+ * CAVERN_BASE during room setup.
  *
- * @param {STD_ROOM} room - The cavern room to set the subtype
- * @returns {string} If successful, returns the same value that was set, or
- *  the value that it is currently.
+ * @param {STD_ROOM} room - The cavern room to set the subtype on.
+ * @returns {string} The room subtype that was set, or the existing
+ *                   value if the room already had one.
  */
 public string setup_room_subtype(object room) {
   return room->set_room_subtype("cavern"); // 🤷🏻

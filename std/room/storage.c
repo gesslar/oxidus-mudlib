@@ -36,7 +36,7 @@ void initStorageRoom() {
   addCommand("store", cmd_store);
   addCommand("take", cmd_take);
 
-  addDestruct(destructing);
+  add_destruct(destructing);
 }
 
 /**
