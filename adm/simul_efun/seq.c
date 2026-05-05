@@ -30,7 +30,7 @@ varargs int valid_seq(mixed map, int non_empty) {
  * Sets a key-value pair in a sequential map. Creates new entry or updates
  * existing. This mirrors JavaScript Map.set() behavior - always succeeds.
  *
- * @param {mixed ref*} map - The sequential map to modify (array of {key, value} pairs)
+ * @param {mixed*} map - The sequential map to modify (array of {key, value} pairs)
  * @param {mixed} key - The key to set
  * @param {mixed} value - The value to associate with the key
  * @return {int} The size of the sequential map after the operation
@@ -119,7 +119,7 @@ int seq_has(mixed *map, mixed key) {
  * Removes a key-value pair from a sequential map.
  * This mirrors JavaScript Map.delete() behavior.
  *
- * @param {mixed ref*} map - The sequential map to modify
+ * @param {mixed*} map - The sequential map to modify
  * @param {mixed} key - The key to remove
  * @return {int} 1 if key was found and removed, 0 if key didn't exist
  *
@@ -149,7 +149,7 @@ int seq_delete(mixed ref *map, mixed key) {
  * Removes all key-value pairs from a sequential map.
  * This mirrors JavaScript Map.clear() behavior.
  *
- * @param {mixed ref*} map - The sequential map to clear
+ * @param {mixed} map - The sequential map to clear
  *
  * @example
  * ```c
@@ -258,4 +258,3 @@ mapping seq_to_mapping(mixed *map) {
 
   return allocate_mapping(seq_keys(map), seq_values(map));
 }
-

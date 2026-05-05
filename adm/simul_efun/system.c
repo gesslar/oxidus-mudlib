@@ -132,7 +132,7 @@ mixed mudConfig(string str) {
  * @returns {string} The log directory.
  */
 string log_dir() {
-  return get_config(__LOG_DIR__);
+  return (string)get_config(__LOG_DIR__);
 }
 
 /**

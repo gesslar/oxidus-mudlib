@@ -200,7 +200,7 @@ void prompt_password(object user, int attempts, mixed *cb);
 
 // File: random.c
 int *prandom(int seed, int max);
-mixed *prandom_float(int seed);
+mixed *prandom_float(mixed seed, float size);
 int *prandom_clamp(int seed, int min, int max);
 mixed *pelement_of(int seed, mixed *arr);
 mixed *pelement_of_weighted(int seed, mapping weights);

@@ -14,9 +14,9 @@
  * @simul_efun resolve_path
  * @description Resolves a given path relative to the current path, handling
  *              special cases such as user directories and relative paths.
- * @param {string} Current - The current path.
- * @param {string} Next - The next path to resolve.
- * @returns {string} - The resolved absolute path.
+ * @param {string} base_dir - The current path.
+ * @param {string} path - The next path to resolve.
+ * @returns {string} The resolved absolute path.
  */
 string resolve_path(string base_dir, string path) {
   int index;
@@ -28,7 +28,7 @@ string resolve_path(string base_dir, string path) {
 
   if(path[0] == '~') {
     if((path[1] == '/') || (sizeof(path) == 1))
-      path = home_path(this_body()->query_real_name()) + path[1..];
+      path = home_path(/** @type {STD_PLAYER} */ (this_body())->query_real_name()) + path[1..];
     else {
       index = strsrch(path, "/");
       if(index == -1) return home_path(path[1..]);

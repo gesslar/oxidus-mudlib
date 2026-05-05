@@ -585,15 +585,15 @@ varargs int same_env_check(object one, object two, int top_env) {
 }
 
 private object *filter_by_id(object *obs, string arg) {
-  return filter(obs, (: $1->id($(arg)) :));
+  return (object *)filter(obs, (: $1->id($(arg)) :));
 }
 
 private object *filter_by_visibility(/** @type {STD_BODY} */ object tp, object *obs) {
-  return filter(obs, (: $(tp)->can_see($1) :));
+  return (object *)filter(obs, (: $(tp)->can_see($1) :));
 }
 
 private object *apply_custom_filter(object *obs, function f, object tp) {
-  return filter(obs, (: (*$(f))($1, $(tp)) :));
+  return (object *)filter(obs, (: (*$(f))($1, $(tp)) :));
 }
 
 private object *get_all_inventory(object env) {
