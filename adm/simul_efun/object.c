@@ -358,7 +358,7 @@ varargs object *all_environment(object ob) {
  * Retrieves all living objects present in the specified room.
  *
  * @param {object STD_ROOM} room - The room to search for living objects in.
- * @returns {object*} An array of living objects present in the room.
+ * @returns {STD_BODY*} An array of living objects present in the room.
  */
 object *present_livings(object room) {
   if(!room)

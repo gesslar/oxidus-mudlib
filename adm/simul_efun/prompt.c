@@ -1,5 +1,36 @@
+/**
+ * @file /adm/simul_efun/prompt.c
+ *
+ * Player input prompts driven by callbacks. Provides interactive,
+ * input_to-based flows for collecting passwords (with attempt limits
+ * and echo suppression) and colour selections (with named, indexed,
+ * hex, plain, and quit handling). Each prompt resolves through the
+ * standard call_back pipeline, letting callers chain into arbitrary
+ * follow-up logic without coupling to the prompt itself.
+ *
+ * @created 2024-07-21 - Gesslar
+ * @last_modified 2026-03-29 - Gesslar
+ *
+ * @history
+ * 2024-07-21 - Gesslar - Created
+ * 2026-03-29 - Gesslar - Documented
+ */
+
 #include <simul_efun.h>
 
+/**
+ * Continuation of prompt_password() — handles each input_to pass for
+ * password entry. Validates the input against the stored hash via
+ * ACCOUNT_D, re-prompts on empty or wrong input, and decrements the
+ * remaining attempts. On exhausted attempts the callback fires with
+ * 0; on a successful match it fires with 1.
+ *
+ * @param {string} input - The line entered by the user.
+ * @param {STD_PLAYER} body - The player being prompted.
+ * @param {int} attempts - Total attempts allowed for this prompt.
+ * @param {int} count - The current attempt number (1-based).
+ * @param {mixed*} cb - Callback array assembled by the caller.
+ */
 private nomask void _password(string input, object body, int attempts, int count, mixed *cb) {
   string current_password;
 
@@ -43,14 +74,20 @@ private nomask void _password(string input, object body, int attempts, int count
 }
 
 /**
- * Prompt the user for a password.
+ * Prompts a player for a password and verifies it against the stored
+ * hash via ACCOUNT_D. Echo and escape sequences are suppressed during
+ * input. The result is delivered through the callback: 1 on a match,
+ * 0 if the player exhausts their attempts.
  *
- * @param {STD_PLAYER} body - The user's body object.
- * @param {int} attempts - The number of attempts allowed.
- * @param {mixed*} cb - The callback array.
+ * @param {STD_PLAYER} body - The player to prompt.
+ * @param {int} attempts - Number of tries allowed before the
+ *                         callback fires with 0.
+ * @param {mixed*} cb - Callback array (assembled via
+ *                      assemble_call_back) invoked with 1 on success
+ *                      or 0 on exhausted attempts.
  * @example
- * prompt_password(this_body(), 3, assemble_callback(
- *    this_object(), "password_callback", this_body()
+ * prompt_password(this_body(), 3, assemble_call_back(
+ *     this_object(), "password_callback", this_body()
  * ));
  */
 void prompt_password(object body, int attempts, mixed *cb) {
@@ -60,17 +97,32 @@ void prompt_password(object body, int attempts, mixed *cb) {
 }
 
 /**
- * Prompt the user for a colour. The user will be presented with a list of
- * colours to choose from. The user can also enter a number corresponding
- * to a colour, or the word "plain" to select no colour.
+ * Prompts a player to choose a colour. Presents the configured base
+ * palette and accepts:
  *
- * Upon selection, the callback function will be called with the selected
- * colour as the argument.
+ * - A named colour from the palette
+ * - A numeric index 0-255
+ * - A hex code prefixed with `#`
+ * - `c` to display the full colour list
+ * - `p` or `plain` for no colour
+ * - `q` or `quit` to cancel
  *
- * @param {STD_PLAYER} body - The user's body object.
- * @param {mixed*} cb - The callback array.
- * @param {string} prompt - The prompt message.
- * @example prompt_colour(this_body(), assemble_callback(this_object(), "colour_callback", this_body()), "Select a colour from the following list:");
+ * The chosen value is delivered through the callback.
+ *
+ * @param {STD_PLAYER} body - The player to prompt.
+ * @param {mixed*} cb - Callback array (assembled via
+ *                      assemble_call_back) invoked with the chosen
+ *                      colour code in `{{...}}` form for hex or named
+ *                      selections, the literal `"plain"` for no
+ *                      colour, or `"cancel"` if the player quit.
+ * @param {string} [prompt] - Custom prompt header. Defaults to
+ *                            "Select a colour from the following
+ *                            list:".
+ * @errors If body is not a player, or cb is not an array.
+ * @example
+ * prompt_colour(this_body(), assemble_call_back(
+ *     this_object(), "colour_callback", this_body()
+ * ));
  */
 varargs void prompt_colour(object body, mixed *cb, string prompt) {
   string mess;
@@ -109,9 +161,21 @@ varargs void prompt_colour(object body, mixed *cb, string prompt) {
   input_to("_prompt_colour", I_NOESC, mess, body, base, cb);
 }
 
+/**
+ * Continuation of prompt_colour() — handles each input_to pass for
+ * colour entry. Re-prompts on empty or invalid input, branches on the
+ * menu commands (`c`, `p`/`plain`, `q`/`quit`), validates hex codes
+ * via colourp(), and otherwise looks the input up in the cached base
+ * palette. The resolved value is delivered through cb.
+ *
+ * @param {string} input - The line entered by the user.
+ * @param {string} prompt - The prompt header used on re-display.
+ * @param {STD_PLAYER} body - The player being prompted.
+ * @param {mixed*} base - Cached COLOUR_D base palette as
+ *                        ({ ({ code, name }), ... }).
+ * @param {mixed*} cb - Callback array assembled by the caller.
+ */
 private void _prompt_colour(string input, string prompt, object body, mixed *base, mixed *cb) {
-  string *colours;
-
   if(!input || input == "") {
     _error(body, "Invalid selection.");
     tell(body, prompt);

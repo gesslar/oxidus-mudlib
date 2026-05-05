@@ -805,11 +805,11 @@ With default values:
 #### Undefined
 
 Use `undefined` to distinguish between a legitimate `0` return and a
-"not found" result. Use comma syntax for multiple possible return
-types:
+"not found" result. Combine it with the pipe union operator for
+multiple possible return types:
 
 ```c
-@returns {int, undefined} The score, or undefined if not found.
+@returns {int | undefined} The score, or undefined if not found.
 ```
 
 #### Any Type (`*`)

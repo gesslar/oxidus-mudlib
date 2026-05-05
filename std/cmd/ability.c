@@ -15,6 +15,9 @@
 
 inherit STD_ACT;
 
+/** @typedef {STD_ITEM | STD_BODY} AnyTarget */
+/** @typedef {STD_BODY} LivingTarget */
+
 // Functions
 int condition_check(object tp, string arg);
 mixed use(object _tp, string _arg) {}
@@ -95,9 +98,8 @@ string query_ability_type() {
  *
  * @param {STD_BODY} tp - The player using the ability
  * @param {string} arg - The target identifier string
- * @param {function} [f] - Optional filter function for
- *                         target validation
- * @returns {object | int} The target if found, 0 if not
+ * @param {function} [f] - Optional filter function for target validation
+ * @returns {AnyTarget | 0} The target if found, 0 if not
  * @errors If tp is not a valid object
  */
 varargs object local_target(object tp, string arg, function f) {

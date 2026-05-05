@@ -141,7 +141,7 @@ string identify(mixed arg);
 
 // File: json.c
 mixed json_decode(string str);
-mapping json_encode(mixed arg);
+varargs string json_encode(mixed value, mixed* pointers);
 
 // File: lpml.c
 varargs mixed lpml_decode(string text, string path);

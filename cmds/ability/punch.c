@@ -19,7 +19,7 @@ void setup() {
   mp_cost = 5.0;
 
   cooldowns = ([
-      "punch" : ({ "", 10 }),
+    "punch" : ({ "", 10 }),
   ]);
 
   usage_text = "punch <target>";
@@ -31,7 +31,7 @@ void setup() {
 }
 
 mixed use(/** @type {STD_BODY} */ object tp, string arg) {
-  object victim;
+  /** @type {STD_BODY} */ object victim;
   mixed result;
 
   if(!victim = local_target(tp, arg, (: living($1) && $1 != $(tp) :)))
@@ -43,20 +43,20 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
       /** @type {STD_BODY} */ object victim
     ) {
       if(!status)
-          return;
+        return;
 
       if(!same_env_check(tp, victim))
-          return;
+        return;
 
       if(tp->can_strike(victim)) {
-          float damage = percent_of(25.0, tp->query_damage());
+        float damage = percent_of(25.0, tp->query_damage());
 
-          tp->targetted_action("$N $vpunch $t!", victim);
-          tp->deliver_damage(victim, damage, "bludgeoning");
-          tp->use_skill("combat.melee.unarmed");
+        tp->targetted_action("$N $vpunch $t!", victim);
+        tp->deliver_damage(victim, damage, "bludgeoning");
+        tp->use_skill("combat.melee.unarmed");
       } else {
-          tp->targetted_action("$N $vtry to punch $t, but $vmiss.", victim);
-          victim->use_skill("combat.defense.dodge");
+        tp->targetted_action("$N $vtry to punch $t, but $vmiss.", victim);
+        victim->use_skill("combat.defense.dodge");
       }
 
       victim->start_attack(tp);

@@ -85,7 +85,7 @@ private nosave string *traceColours = ({
  */
 varargs string call_trace(int colour) {
   string res;
-  int i, n;
+  int n;
   object *objects;
   string *programs;
   string *functions;
@@ -119,7 +119,7 @@ varargs string call_trace(int colour) {
 
     // We don't want to include the call_trace() function itself
     res += reduce(objects[1..],
-      function(string acc, object obj, int index, object *objs,
+      function(string acc, object obj, int index,object *_objs,
         string *programs, string *lines, string *functions, string *origins, string *cols, function match_body) {
           return sprintf("%s[%s%s{{res}}] %s%s{{res}}:%s%s{{res}}->%s%s{{res}}() (%s%s{{res}})\n",
             acc,
@@ -149,11 +149,17 @@ varargs string call_trace(int colour) {
  * Builds a standardized callback array that can be stored and executed later.
  * Supports both object methods and function pointers with arguments.
  *
- * @param {object|function} target - Object or function to callback to
- * @param {string} [method] - Method name if target is an object
- * @param {...mixed} arg - Additional arguments to pass to callback
- * @returns {mixed*} Assembled callback array
- * @errors If arguments are invalid or method doesn't exist
+ * @overload
+ * @param {object} ob - Target object to call a method on.
+ * @param {string} method - Method name to invoke on ob.
+ * @param {...mixed} [arg] - Additional arguments to forward to the method.
+ *
+ * @overload
+ * @param {function} f - Function pointer to invoke.
+ * @param {...mixed} [arg] - Additional arguments to forward to the function.
+ *
+ * @returns {mixed*} Assembled callback array.
+ * @errors If arguments are invalid or method doesn't exist.
  * @see call_back
  * @see delay_act
  * @example
@@ -322,7 +328,7 @@ varargs mixed call_if(mixed ob, string func, mixed arg...) {
  * delay_act("casting", 3.0, assemble_call_back(this_object(), "cast_spell"));
  */
 varargs int delay_act(string act, float delay, mixed *cb) {
-  object user = this_body();
+  object user = /** @type {STD_BODY} */ (this_body());
 
   if(!user)
     return null;
@@ -391,6 +397,24 @@ void assert_arg(mixed condition, int arg_num, string message) {
   assert(condition, message);
 }
 
+/**
+ * Threads a value through a left-to-right pipeline of functions.
+ *
+ * Each function receives the previous result and returns the next.
+ * With no functions supplied, the initial value is evaluated and
+ * returned (so a bare function pointer is invoked, while a plain
+ * value passes through unchanged).
+ *
+ * @param {mixed} result - Initial value to thread through the
+ *                         pipeline.
+ * @param {...function} [funcs] - Functions applied in order; each
+ *                                receives the running result and
+ *                                returns the next.
+ * @returns {mixed} The final transformed value.
+ * @errors If any element in funcs is not a valid function.
+ * @example
+ * int n = pipe(5, (: $1 * 2 :), (: $1 + 1 :));  // 11
+ */
 mixed pipe(mixed result, function *funcs...) {
   if(sizeof(funcs) < 1)
     return evaluate(result);
