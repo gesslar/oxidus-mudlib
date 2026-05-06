@@ -11,6 +11,6 @@
 
 inherit __DIR__ "monster";
 
-void monster_setup(mixed args...) {
-    set_race("insect");
+void monster_setup(mixed _args...) {
+  set_race("insect");
 }

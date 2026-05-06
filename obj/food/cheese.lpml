@@ -12,6 +12,7 @@
   value: 15,
   uses: 1,
   properties: {
+    autovalue: true,
     edible: true,
   },
 }

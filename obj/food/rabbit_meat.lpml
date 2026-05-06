@@ -10,6 +10,7 @@
   value: 20,
   uses: 1,
   properties: {
+    autovalue: true,
     raw: true,
   },
 }

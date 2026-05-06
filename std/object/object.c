@@ -93,8 +93,10 @@ varargs void reset() {
  * Handles recursive inventory management, moving contained objects
  * to the environment when possible, or destructing them otherwise.
  * Non-player objects are removed completely.
+ *
+ * @returns {1}
  */
-void remove() {
+int remove() {
   object *obs, env = environment();
 
   catch(call_if(this_object(), "removing", env));
@@ -130,6 +132,8 @@ void remove() {
     filter(obs, (: destruct :));
 
   destruct();
+
+  return 1;
 }
 
 /**

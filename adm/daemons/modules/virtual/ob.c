@@ -12,24 +12,21 @@
 inherit STD_DAEMON;
 
 public nomask object compile_object(string file) {
-  string *parts;
-  string obj_name, obj_file;
-  mapping data;
-  string e;
   string module = query_file_name();
-  object obj;
   string base_file;
-
-  parts = dir_file(file);
-  obj_name = parts[1];
+  string *parts = dir_file(file);
+  string obj_name = parts[1];
 
   // Remove the module extension
   sscanf(obj_name, "%s.%*s", obj_name);
 
-  obj_file = sprintf("%s/%s.lpml", parts[0], obj_name);
+  string obj_file = sprintf("%s/%s.lpml", parts[0], obj_name);
 
   if(file_size(obj_file) < 1)
     return 0;
+
+  string e;
+  mapping data;
 
   e = catch(data = lpml_decode(read_file(obj_file)));
   if(e) {
@@ -41,11 +38,17 @@ public nomask object compile_object(string file) {
     return 0;
 
   base_file = sprintf("/obj/%s/%s.c", module, module);
+  assert(file_size(base_file) > 0, "No such virtual base '"+base_file+"'");
+
+  object obj;
+
   e = catch(obj = new(base_file, data));
   if(e) {
     log_file("VIRTUAL", e);
+
     if(obj)
       obj->remove();
+
     return 0;
   }
 

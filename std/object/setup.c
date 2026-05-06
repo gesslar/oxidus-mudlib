@@ -23,7 +23,7 @@
  * 6. restore_data and post_restore - For persistent objects
  * 7. mudlib_complete_setup - Final setup completion
  *
- * @param {mixed} args... - Variable arguments to pass to setup functions
+ * @param {mixed...} args - Variable arguments to pass to setup functions
  */
 varargs void setup_chain(mixed args...) {
   int x;
@@ -103,7 +103,7 @@ void unsetup_chain() {
  * Similar to setup_chain() but calls virtual-specific setup functions.
  * Used for dynamically created objects like procedurally generated rooms.
  *
- * @param {mixed} args... - Variable arguments to pass to setup functions
+ * @param {mixed...} args - Variable arguments to pass to setup functions
  */
 varargs void virtual_setup_chain(mixed args...) {
   int x;

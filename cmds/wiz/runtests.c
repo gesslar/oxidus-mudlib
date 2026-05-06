@@ -1,5 +1,6 @@
 /**
  * @file /cmds/wiz/runtests.c
+ *
  * Run unit tests under /tests/. With no argument, walks /tests/
  * recursively and invokes every runner.c found. With an argument,
  * invokes /tests/<arg>/runner directly.
@@ -9,9 +10,9 @@
  *   runtests adm/simul_efun
  */
 
-#include <mudlib.h>
-
 inherit STD_CMD;
+
+/** @typedef {STD_TEST_RUNNER} TestRunner */
 
 private void invoke_runner(object tp, string runner_path);
 private void walk(object tp, string dir);
@@ -38,10 +39,17 @@ mixed main(object tp, string arg) {
   return 1;
 }
 
+/**
+ *
+ * @param {STD_PLAYER} tp - The wizard running the tests.
+ * @param {string} runner_path - The Test Runner object.
+ */
 private void invoke_runner(object tp, string runner_path) {
-  string err = catch(runner_path->run_tests());
+  string err = catch(/** @type {TestRunner} */ (runner_path)->run_tests());
   if(err)
     tell(tp, sprintf("Runner %s failed: %s\n", runner_path, err));
+
+  /** @type {TestRunner} */ (find_object(runner_path))->remove();
 }
 
 private void walk(object tp, string dir) {
