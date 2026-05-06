@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/gr
- * @description Grapevine command
+ * Grapevine command
  *
  * @created 2024-07-18 - Gesslar
  * @last_modified 2024-07-18 - Gesslar

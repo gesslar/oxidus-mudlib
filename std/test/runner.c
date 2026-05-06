@@ -1,11 +1,11 @@
 /**
  * @file /std/test/runner.c
- * @description Base for area test runners. An area runner inherits this and
- *              has no other obligation — run_tests() globs *.test.c siblings
- *              of the inheriting runner, clones each, calls run(), and
- *              prints an aggregate summary.
+ * Base for area test runners. An area runner inherits this and
+ * has no other obligation — run_tests() globs *.test.c siblings
+ * of the inheriting runner, clones each, calls run(), and
+ * prints an aggregate summary.
  *
- *              Direct usage: TEST_RUNNER_FOR_AREA->run_tests()
+ * Direct usage: TEST_RUNNER_FOR_AREA->run_tests()
  */
 
 inherit STD_DAEMON;

@@ -1,6 +1,6 @@
 /**
  * @file /std/ext/uses.c
- * @description This module is inherited in order to provide consumabling.
+ * This module is inherited in order to provide consumabling.
  *
  * @created 2024-08-06 - Gesslar
  * @last_modified 2024-08-06 - Gesslar

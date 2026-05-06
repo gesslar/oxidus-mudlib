@@ -1,6 +1,6 @@
 /**
  * @file /std/user/damage.c
- * @description Damage object for livings
+ * Damage object for livings
  *
  * @created 2024-07-25 - Gesslar
  * @last_modified 2024-07-25 - Gesslar
@@ -29,12 +29,13 @@ float deliver_damage(object victim, float damage, string type) {
 }
 
 /**
- * @description Calculates the damage received by the victim based on the attacker's level,
- *              defense amount, and a damage level modifier.
+ * Calculates the damage received by the victim based on the attacker's level,
+ * defense amount, and a damage level modifier.
+ *
  * @param {object} attacker - The attacker object.
  * @param {float} damage - The initial damage value.
  * @param {string} type - The type of damage.
- * @returns {float} - The final damage after applying reductions and level-based modifications.
+ * @returns {float} The final damage after applying reductions and level-based modifications.
  */
 float receive_damage(object attacker, float damage, string type) {
     float def, red, mod, level, alevel, level_difference;

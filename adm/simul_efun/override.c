@@ -86,8 +86,9 @@ void set_privs(object ob, string privs) {
 
 /**
  * @efun_override shout
- * @description This function is an override of the shout() efun. It will
- *              write a message to all users using the message() efun.
+ * This function is an override of the shout() efun. It will
+ * write a message to all users using the message() efun.
+ *
  * @param {string} msg - The message to write.
  * @param {mixed} exclude - The object or array of objects to exclude from
  *                          the message.
@@ -98,8 +99,9 @@ void set_privs(object ob, string privs) {
 
 /**
  * @efun_override tell_object
- * @description This function is an override of the tell_object() efun. It will
- *              write a message to the object using the message() efun.
+ * This function is an override of the tell_object() efun. It will
+ * write a message to the object using the message() efun.
+ *
  * @param {object} ob - The object to write the message to.
  * @param {string} msg - The message to write.
  * @param {string} type - The message class of message to write.
@@ -110,8 +112,9 @@ void set_privs(object ob, string privs) {
 
 /**
  * @efun_override tell_room
- * @description This function is an override of the tell_room() efun. It will
- *              write a message to the room using the message() efun.
+ * This function is an override of the tell_room() efun. It will
+ * write a message to the room using the message() efun.
+ *
  * @param {mixed} room - The room to write the message to.
  * @param {string} msg - The message to write.
  * @param {mixed} exclude - The object or array of objects to exclude from
@@ -123,9 +126,10 @@ void set_privs(object ob, string privs) {
 
 /**
  * @efun_override userp
- * @description This function is an override of the userp() efun. Unlike the
- *              efun, this function accepts a null argument and will check
- *              if the previous object is a user if no argument is provided.
+ * This function is an override of the userp() efun. Unlike the
+ * efun, this function accepts a null argument and will check
+ * if the previous object is a user if no argument is provided.
+ *
  * @param {object} ob - The object to check.
  * @returns {ob is STD_PLAYER} 1 if the object is a user, otherwise
  *                             0.
@@ -140,11 +144,12 @@ varargs int userp(object ob) {
 
 /**
  * @efun_override query_num
- * @description This function is an override of query_num(). It will return
- *              the number in string form.
+ * This function is an override of query_num(). It will return
+ * the number in string form.
+ *
  * @param {int} x - The number to convert to a string.
  * @param {int} many - If true, the number will be returned in plural form.
- * @returns {string} - The number in string form.
+ * @returns {string} The number in string form.
  */
 varargs string query_num(int x, int many) {
   string sign;

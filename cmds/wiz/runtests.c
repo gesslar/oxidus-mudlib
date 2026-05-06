@@ -1,12 +1,12 @@
 /**
  * @file /cmds/wiz/runtests.c
- * @description Run unit tests under /tests/. With no argument, walks /tests/
- *              recursively and invokes every runner.c found. With an argument,
- *              invokes /tests/<arg>/runner directly.
+ * Run unit tests under /tests/. With no argument, walks /tests/
+ * recursively and invokes every runner.c found. With an argument,
+ * invokes /tests/<arg>/runner directly.
  *
- *              SYNTAX:
- *                runtests
- *                runtests adm/simul_efun
+ * SYNTAX:
+ *   runtests
+ *   runtests adm/simul_efun
  */
 
 #include <mudlib.h>

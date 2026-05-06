@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/manor.c
- * @description Inheritable for the opulent manor.
+ * Inheritable for the opulent manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

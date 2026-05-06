@@ -1,6 +1,6 @@
 /**
  * @file /std/user/include/equipment.c
- * @description Equipment system for livings
+ * Equipment system for livings
  *
  * @created 2024-07-29 - Gesslar
  * @last_modified 2024-07-29 - Gesslar

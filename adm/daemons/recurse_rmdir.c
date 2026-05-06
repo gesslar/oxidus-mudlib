@@ -1,8 +1,8 @@
 /**
  * @file /adm/daemons/recurse_rmdir.c
- * @description This daemon is used to recursively remove directories.
- *              BE VERY CAREFUL WITH THIS DAEMON. IT WILL IRRETRIEVABLY DELETE
- *              EVERYTHING IN THE DIRECTORY YOU SPECIFY.
+ * This daemon is used to recursively remove directories.
+ * BE VERY CAREFUL WITH THIS DAEMON. IT WILL IRRETRIEVABLY DELETE
+ * EVERYTHING IN THE DIRECTORY YOU SPECIFY.
  *
  * @created 2024-07-28 - Gesslar
  * @last_modified 2024-07-28 - Gesslar

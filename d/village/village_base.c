@@ -1,6 +1,6 @@
 /**
  * @file /d/village/village_base.c
- * @description General inherit for the village area
+ * General inherit for the village area
  *
  * @created 2024-02-04 - Gesslar
  * @last_modified 2024-02-04 - Gesslar

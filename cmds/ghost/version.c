@@ -1,6 +1,6 @@
 /**
  * @file /cmds/ghost/version.c
- * @description Version command displaying mudlib and driver information.
+ * Version command displaying mudlib and driver information.
  *
  * @created 2006-05-05 - Tacitus
  * @last_modified 2006-05-05 - Tacitus

@@ -1,9 +1,9 @@
 /**
  * @file /std/object/heartbeat.c
- * @description Provides event management that synchronizes with an object's
- *              heartbeat cycle. Events can be attached to execute during
- *              heartbeats, which may vary in frequency due to buffs or status
- *              effects.
+ * Provides event management that synchronizes with an object's
+ * heartbeat cycle. Events can be attached to execute during
+ * heartbeats, which may vary in frequency due to buffs or status
+ * effects.
  *
  * @created 2024-03-03 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

@@ -1,10 +1,11 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/array.predicate.test.c
- * @description Tests for boolean-query simul_efuns in
- *              /adm/simul_efun/array.c — uniform_array(), includes(),
- *              in_array(), same_array(), same_array_precisely(),
- *              every(), some(), intersects(), and in_range().
+ *
+ * Tests for boolean-query simul_efuns in
+ * /adm/simul_efun/array.c — uniform_array(), includes(),
+ * in_array(), same_array(), same_array_precisely(),
+ * every(), some(), intersects(), and in_range().
  */
 
 #include <test.h>

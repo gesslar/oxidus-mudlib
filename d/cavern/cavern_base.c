@@ -1,6 +1,6 @@
 /**
  * @file /d/cavern/cavern_base.c
- * @description The base room for the caverns
+ * The base room for the caverns
  *
  * @created 2024-09-18 - Gesslar
  * @last_modified 2024-09-18 - Gesslar

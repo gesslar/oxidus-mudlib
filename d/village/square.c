@@ -1,6 +1,6 @@
 /**
  * @file /d/village/square.c
- * @description Square of the village of Olum
+ * Square of the village of Olum
  *
  * @created 2024-02-04 - Gesslar
  * @last_modified 2024-02-04 - Gesslar

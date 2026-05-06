@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/hall1.c
- * @description The first hall in the manor.
+ * The first hall in the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

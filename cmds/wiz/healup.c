@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/healup.c
- * @description Command for wizards to heal themselves and others.
+ * Command for wizards to heal themselves and others.
  *
  * @created 2024-07-31 - Gesslar
  * @last_modified 2024-07-31 - Gesslar

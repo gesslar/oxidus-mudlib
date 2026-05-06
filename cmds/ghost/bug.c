@@ -1,6 +1,6 @@
 /**
  * @file /cmds/ghost/bug.c
- * @description Bug command for reporting bugs.
+ * Bug command for reporting bugs.
  *
  * @created 2024-07-07 - Gesslar
  * @last_modified 2024-07-07 - Gesslar

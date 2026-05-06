@@ -1,6 +1,6 @@
 /**
  * @file /std/living/env.c
- * @description Environment variables and preferences, etc.
+ * Environment variables and preferences, etc.
  *
  * @created 2024-08-17 - Gesslar
  * @last_modified 2024-08-17 - Gesslar

@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/boot.c
- * @description Daemon to manage incrementing boot number and calling the
+ * Daemon to manage incrementing boot number and calling the
  * boot alarm.
  *
  * @created 2024-03-05 - Gesslar
@@ -26,7 +26,7 @@ void setup() {
 
 /**
  * @function boot
- * @description Called from the master object when the mud boots up.
+ * Called from the master object when the mud boots up.
  */
 void boot() {
   if(previous_object() != signal_d())
@@ -39,8 +39,9 @@ void boot() {
 
 /**
  * @daemon_function query_boot_number
- * @description Get the current boot number.
- * @returns {int} - current boot number
+ * Get the current boot number.
+ *
+ * @returns {int} current boot number
  */
 int query_boot_number() {
   return boot_number;

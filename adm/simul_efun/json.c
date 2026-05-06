@@ -61,8 +61,9 @@ private varargs mixed json_decode_parse_string(mixed* parse, int initiator_check
 
 /**
  * @function json_decode_parse_next_char
- * @description Advances the parse position by one character.
- * @param {mixed[]} parse - The parse state array.
+ * Advances the parse position by one character.
+ *
+ * @param {mixed*} parse - The parse state array.
  */
 private void json_decode_parse_next_char(mixed* parse) {
     parse[JSON_DECODE_PARSE_POS]++;
@@ -71,8 +72,9 @@ private void json_decode_parse_next_char(mixed* parse) {
 
 /**
  * @function json_decode_parse_next_chars
- * @description Advances the parse position by the specified number of characters.
- * @param {mixed[]} parse - The parse state array.
+ * Advances the parse position by the specified number of characters.
+ *
+ * @param {mixed*} parse - The parse state array.
  * @param {int} num - The number of characters to advance.
  */
 private void json_decode_parse_next_chars(mixed* parse, int num) {
@@ -82,8 +84,9 @@ private void json_decode_parse_next_chars(mixed* parse, int num) {
 
 /**
  * @function json_decode_parse_next_line
- * @description Advances the parse position to the next line.
- * @param {mixed[]} parse - The parse state array.
+ * Advances the parse position to the next line.
+ *
+ * @param {mixed*} parse - The parse state array.
  */
 private void json_decode_parse_next_line(mixed* parse) {
     parse[JSON_DECODE_PARSE_POS]++;
@@ -93,8 +96,9 @@ private void json_decode_parse_next_line(mixed* parse) {
 
 /**
  * @function json_decode_skip_whitespaces
- * @description Skips whitespace characters in the parse state.
- * @param {mixed[]} parse - The parse state array.
+ * Skips whitespace characters in the parse state.
+ *
+ * @param {mixed*} parse - The parse state array.
  */
 private void json_decode_skip_whitespaces(mixed* parse) {
     int ch;
@@ -111,9 +115,10 @@ private void json_decode_skip_whitespaces(mixed* parse) {
 
 /**
  * @function json_decode_hexdigit
- * @description Converts a hexadecimal character to its integer value.
+ * Converts a hexadecimal character to its integer value.
+ *
  * @param {int} ch - The hexadecimal character.
- * @returns {int} - The integer value of the hexadecimal character.
+ * @returns {int} The integer value of the hexadecimal character.
  */
 private int json_decode_hexdigit(int ch) {
     switch(ch) {
@@ -153,11 +158,12 @@ private int json_decode_hexdigit(int ch) {
 
 /**
  * @function json_decode_parse_at_token
- * @description Checks if the parse position matches the specified token.
- * @param {mixed[]} parse - The parse state array.
+ * Checks if the parse position matches the specified token.
+ *
+ * @param {mixed*} parse - The parse state array.
  * @param {string} token - The token to check for.
  * @param {int} [start=0] - The starting position to check from.
- * @returns {int} - 1 if the token matches, otherwise 0.
+ * @returns {int} 1 if the token matches, otherwise 0.
  */
 private varargs int json_decode_parse_at_token(mixed* parse, string token, int start) {
     int i, j;
@@ -169,8 +175,9 @@ private varargs int json_decode_parse_at_token(mixed* parse, string token, int s
 
 /**
  * @function json_decode_parse_error
- * @description Raises a parse error with the specified message and character.
- * @param {mixed[]} parse - The parse state array.
+ * Raises a parse error with the specified message and character.
+ *
+ * @param {mixed*} parse - The parse state array.
  * @param {string} msg - The error message.
  * @param {int} [ch] - The character causing the error.
  */
@@ -183,9 +190,10 @@ private varargs void json_decode_parse_error(mixed* parse, string msg, int ch) {
 
 /**
  * @function json_decode_parse_object
- * @description Parses a JSON object from the given parse state.
- * @param {mixed[]} parse - The parse state array.
- * @returns {mapping} - The parsed JSON object.
+ * Parses a JSON object from the given parse state.
+ *
+ * @param {mixed*} parse - The parse state array.
+ * @returns {mapping} The parsed JSON object.
  */
 private mixed json_decode_parse_object(mixed* parse) {
     mapping out = ([]);
@@ -276,9 +284,10 @@ private mixed json_decode_parse_object(mixed* parse) {
 
 /**
  * @function json_decode_parse_array
- * @description Parses a JSON array from the given parse state.
- * @param {mixed[]} parse - The parse state array.
- * @returns {mixed[]} - The parsed JSON array.
+ * Parses a JSON array from the given parse state.
+ *
+ * @param {mixed*} parse - The parse state array.
+ * @returns {mixed*} The parsed JSON array.
  */
 private mixed json_decode_parse_array(mixed* parse) {
     mixed* out = ({});
@@ -325,10 +334,11 @@ private mixed json_decode_parse_array(mixed* parse) {
 
 /**
  * @function json_decode_parse_string
- * @description Parses a JSON string from the given parse state.
- * @param {mixed[]} parse - The parse state array.
+ * Parses a JSON string from the given parse state.
+ *
+ * @param {mixed*} parse - The parse state array.
  * @param {int} [initiator_checked=0] - Whether the initiator has been checked.
- * @returns {string} - The parsed JSON string.
+ * @returns {string} The parsed JSON string.
  */
 private varargs mixed json_decode_parse_string(mixed* parse, int initiator_checked) {
     int from, to, esc_state, esc_active;
@@ -440,9 +450,10 @@ private varargs mixed json_decode_parse_string(mixed* parse, int initiator_check
 
 /**
  * @function json_decode_parse_number
- * @description Parses a JSON number from the given parse state.
- * @param {mixed[]} parse - The parse state array.
- * @returns {mixed} - The parsed JSON number.
+ * Parses a JSON number from the given parse state.
+ *
+ * @param {mixed*} parse - The parse state array.
+ * @returns {mixed} The parsed JSON number.
  */
 private mixed json_decode_parse_number(mixed* parse) {
     int from = parse[JSON_DECODE_PARSE_POS];
@@ -534,9 +545,10 @@ private mixed json_decode_parse_number(mixed* parse) {
 
 /**
  * @function json_decode_parse_value
- * @description Parses a JSON value from the given parse state.
- * @param {mixed[]} parse - The parse state array.
- * @returns {mixed} - The parsed JSON value.
+ * Parses a JSON value from the given parse state.
+ *
+ * @param {mixed*} parse - The parse state array.
+ * @returns {mixed} The parsed JSON value.
  */
 private mixed json_decode_parse_value(mixed* parse) {
     for(;;) {
@@ -601,9 +613,10 @@ private mixed json_decode_parse_value(mixed* parse) {
 
 /**
  * @function json_decode_parse
- * @description Parses a JSON value from the given parse state.
- * @param {mixed[]} parse - The parse state array.
- * @returns {mixed} - The parsed JSON value.
+ * Parses a JSON value from the given parse state.
+ *
+ * @param {mixed*} parse - The parse state array.
+ * @returns {mixed} The parsed JSON value.
  */
 private mixed json_decode_parse(mixed* parse) {
     mixed out = json_decode_parse_value(parse);
@@ -629,10 +642,10 @@ private mixed json_decode_parse(mixed* parse) {
 }
 
 /**
- * @simul_efun json_decode
- * @description Deserializes a JSON string into an LPC value.
+ * Deserializes a JSON string into an LPC value.
+ *
  * @param {string} text - The JSON string to deserialize.
- * @returns {mixed} - The deserialized LPC value.
+ * @returns {mixed} The deserialized LPC value.
  */
 mixed json_decode(string text) {
     mixed* parse;
@@ -654,12 +667,12 @@ mixed json_decode(string text) {
 private nosave nomask string unicode_pattern = "([\\x{80}-\\x{10FFFF}])";
 
 /**
- * @simul_efun json_encode
- * @description Serializes an LPC value into a JSON string.
+ * Serializes an LPC value into a JSON string.
+ *
  * @param {mixed} value - The LPC value to serialize.
- * @param {mixed[]} [pointers] - An optional array of pointers to handle
+ * @param {mixed*} [pointers] - An optional array of pointers to handle
  *                               circular references.
- * @returns {string} - The JSON string representation of the LPC value.
+ * @returns {string} The JSON string representation of the LPC value.
  */
 varargs string json_encode(mixed value, mixed* pointers) {
 

@@ -1,6 +1,6 @@
 /**
  * @file /d/village/financier.c
- * @description Financier's office
+ * Financier's office
  *
  * @created 2024-02-29 - Gesslar
  * @last_modified 2024-02-29 - Gesslar

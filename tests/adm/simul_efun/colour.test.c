@@ -1,7 +1,8 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/colour.test.c
- * @description Tests for the gradient_hex() simul_efun.
+ *
+ * Tests for the gradient_hex() simul_efun.
  */
 
 #include <test.h>

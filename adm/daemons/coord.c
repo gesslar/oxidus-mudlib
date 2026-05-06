@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/coord.c
- * @description Coordinate daemon to hold room data
+ * Coordinate daemon to hold room data
  *
  * @created 2024-08-18 - Gesslar
  * @last_modified 2024-08-18 - Gesslar

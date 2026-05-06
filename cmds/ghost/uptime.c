@@ -1,6 +1,6 @@
 /**
  * @file /cmds/ghost/uptime.c
- * @description Uptime command displaying how long the mud has been running.
+ * Uptime command displaying how long the mud has been running.
  *
  * @created 2005-04-08 - Tacitus
  * @last_modified 2005-10-20 - Tacitus

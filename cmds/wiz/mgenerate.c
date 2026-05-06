@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/mgenerate.c
- * @description Generates an area map file.
+ * Generates an area map file.
  *
  * @created 2024-07-24 - Gesslar
  * @last_modified 2024-07-24 - Gesslar

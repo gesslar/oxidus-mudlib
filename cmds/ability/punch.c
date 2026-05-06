@@ -1,6 +1,6 @@
 /**
  * @file /cmds/ability/punch.c
- * @description Punch command
+ * Punch command
  *
  * @created 2024-08-08 - Gesslar
  * @last_modified 2024-08-08 - Gesslar

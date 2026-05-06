@@ -1,6 +1,6 @@
 /**
  * @file /std/user/visibility.c
- * @description Object for determining whether a living can see things
+ * Object for determining whether a living can see things
  *
  * @created 2024-07-23 - Gesslar
  * @last_modified 2024-07-23 - Gesslar

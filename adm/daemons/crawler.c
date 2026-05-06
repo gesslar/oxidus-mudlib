@@ -1,7 +1,7 @@
 /**
  * @file /adm/daemons/crawler.c
- * @description This daemon will crawl the game and setup coordinates in the
- *              coordinates daemon.
+ * This daemon will crawl the game and setup coordinates in the
+ * coordinates daemon.
  *
  * @created 2024-08-21 - Gesslar
  * @last_modified 2024-08-21 - Gesslar

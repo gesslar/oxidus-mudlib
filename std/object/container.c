@@ -1,6 +1,6 @@
 /**
  * @file /std/object/container.c
- * @description Container inheritable for objects that can hold other objects.
+ * Container inheritable for objects that can hold other objects.
  *
  * @created 2024-07-23 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

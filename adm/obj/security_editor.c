@@ -38,11 +38,12 @@ void setup() {
 }
 
 /**
- * @description Parses a raw file string into an array of non-comment,
- *              whitespace-stripped lines. Null entries replace comment
- *              lines.
+ * Parses a raw file string into an array of non-comment,
+ * whitespace-stripped lines. Null entries replace comment
+ * lines.
+ *
  * @param {string} str - The raw file contents.
- * @returns {string *} - Array of parsed lines (with nulls for
+ * @returns {string *} Array of parsed lines (with nulls for
  *                        comments).
  */
 private string *parse(string str) {
@@ -173,10 +174,11 @@ private void parseAccess() {
 }
 
 /**
- * @description Creates a new group with the given members.
+ * Creates a new group with the given members.
+ *
  * @param {string} group - The group name.
  * @param {string *} members - Array of member names.
- * @returns {int} - 1 on success, 0 on failure.
+ * @returns {int} 1 on success, 0 on failure.
  */
 public int createGroup(string group, string *members) {
   integrityCheck();
@@ -193,9 +195,10 @@ public int createGroup(string group, string *members) {
 }
 
 /**
- * @description Deletes a group.
+ * Deletes a group.
+ *
  * @param {string} group - The group name.
- * @returns {int} - 1 on success, 0 if group does not exist.
+ * @returns {int} 1 on success, 0 if group does not exist.
  */
 public int deleteGroup(string group) {
   integrityCheck();
@@ -209,10 +212,11 @@ public int deleteGroup(string group) {
 }
 
 /**
- * @description Adds a user to a group.
+ * Adds a user to a group.
+ *
  * @param {string} user - The user name.
  * @param {string} group - The group name.
- * @returns {int} - 1 on success, 0 if group does not exist or
+ * @returns {int} 1 on success, 0 if group does not exist or
  *                  user is already a member.
  */
 public int enableMembership(string user, string group) {
@@ -230,10 +234,11 @@ public int enableMembership(string user, string group) {
 }
 
 /**
- * @description Removes a user from a group.
+ * Removes a user from a group.
+ *
  * @param {string} user - The user name.
  * @param {string} group - The group name.
- * @returns {int} - 1 on success, 0 if group does not exist or
+ * @returns {int} 1 on success, 0 if group does not exist or
  *                  user is not a member.
  */
 public int disableMembership(string user, string group) {
@@ -251,10 +256,11 @@ public int disableMembership(string user, string group) {
 }
 
 /**
- * @description Toggles a user's membership in a group.
+ * Toggles a user's membership in a group.
+ *
  * @param {string} user - The user name.
  * @param {string} group - The group name.
- * @returns {int} - 1 on success, 0 if group does not exist.
+ * @returns {int} 1 on success, 0 if group does not exist.
  */
 public int toggleMembership(string user, string group) {
   integrityCheck();
@@ -271,12 +277,13 @@ public int toggleMembership(string user, string group) {
 }
 
 /**
- * @description Sets access permissions for an identity on a
- *              directory.
+ * Sets access permissions for an identity on a
+ * directory.
+ *
  * @param {string} dir - The directory path.
  * @param {string} id - The identity (user or group).
  * @param {string *} akeys - Array of permission keys.
- * @returns {int} - 1 on success, 0 if no keys provided.
+ * @returns {int} 1 on success, 0 if no keys provided.
  */
 public int setAccess(string dir, string id, string *akeys) {
   integrityCheck();
@@ -293,8 +300,9 @@ public int setAccess(string dir, string id, string *akeys) {
 }
 
 /**
- * @description Returns the list of all group names.
- * @returns {string *} - Array of group names.
+ * Returns the list of all group names.
+ *
+ * @returns {string *} Array of group names.
  */
 public string *listGroups() {
   integrityCheck();

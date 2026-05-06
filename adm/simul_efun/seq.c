@@ -8,7 +8,7 @@
  *
  * @param {mixed} map The array to validate
  * @param {int} non_empty If true, requires all elements to be key-value pairs
- * @return {map is mixed*} 1 if valid, 0 otherwise
+ * @returns {map is mixed*} 1 if valid, 0 otherwise
  *
  * @example
  * ```c
@@ -33,7 +33,7 @@ varargs int valid_seq(mixed map, int non_empty) {
  * @param {mixed*} map - The sequential map to modify (array of {key, value} pairs)
  * @param {mixed} key - The key to set
  * @param {mixed} value - The value to associate with the key
- * @return {int} The size of the sequential map after the operation
+ * @returns {int} The size of the sequential map after the operation
  *
  * @example
  * ```c
@@ -62,7 +62,7 @@ int seq_set(mixed ref *map, mixed key, mixed value) {
  *
  * @param {mixed*} map - The sequential map to search
  * @param {mixed} key - The key to look for
- * @return {mixed} The value associated with the key, or null if not found
+ * @returns {mixed} The value associated with the key, or null if not found
  *
  * @example
  * ```c
@@ -91,7 +91,7 @@ mixed seq_get(mixed *map, mixed key) {
  *
  * @param {mixed*} map - The sequential map to search
  * @param {mixed} key - The key to look for
- * @return {int} 1 if key exists, 0 otherwise
+ * @returns {int} 1 if key exists, 0 otherwise
  *
  * @example
  * ```c
@@ -121,7 +121,7 @@ int seq_has(mixed *map, mixed key) {
  *
  * @param {mixed*} map - The sequential map to modify
  * @param {mixed} key - The key to remove
- * @return {int} 1 if key was found and removed, 0 if key didn't exist
+ * @returns {int} 1 if key was found and removed, 0 if key didn't exist
  *
  * @example
  * ```c
@@ -168,7 +168,7 @@ void seq_clear(mixed ref *map) {
  * This mirrors JavaScript Map.keys() behavior.
  *
  * @param {mixed*} map - The sequential map to extract keys from
- * @return {mixed*} Array of all keys
+ * @returns {mixed*} Array of all keys
  *
  * @example
  * ```c
@@ -187,7 +187,7 @@ mixed *seq_keys(mixed *map) {
  * This mirrors JavaScript Map.values() behavior.
  *
  * @param {mixed*} map - The sequential map to extract values from
- * @return {mixed*} Array of all values
+ * @returns {mixed*} Array of all values
  *
  * @example
  * ```c
@@ -209,7 +209,7 @@ mixed *seq_values(mixed *map) {
  * functions.
  *
  * @param {mapping} m The mapping to convert
- * @return {mixed*} A sequential map containing all key-value pairs from the mapping
+ * @returns {mixed*} A sequential map containing all key-value pairs from the mapping
  *
  * @example
  * ```c
@@ -240,7 +240,7 @@ mixed *seq_from_mapping(mapping m) {
  * mappings.
  *
  * @param {mixed*} map The sequential map to convert (array of key-value pairs)
- * @return {mapping} A mapping containing all key-value pairs from the sequential map
+ * @returns {mapping} A mapping containing all key-value pairs from the sequential map
  *
  * @example
  * ```c

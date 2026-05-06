@@ -1,7 +1,7 @@
 /**
  * @file /std/object/id.c
- * @description Manages object identifiers and adjectives for item recognition
- *              and command parsing.
+ * Manages object identifiers and adjectives for item recognition
+ * and command parsing.
  *
  * @created 2024-01-31 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

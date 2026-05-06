@@ -8,7 +8,7 @@
  *
  * @deprecated Prefer element_of()
  * @param {mixed*} haystack The array to select from
- * @return {mixed} A random element from the array
+ * @returns {mixed} A random element from the array
  */
 mixed array_item(mixed *haystack) {
   assert_arg(pointerp(haystack), 1, "Array is required.");
@@ -46,7 +46,7 @@ varargs mixed *distinct_array(mixed *arr, int same_order) {
  * preserving their first-seen order.
  *
  * @param {mixed*} arr The array to deduplicate
- * @return {mixed*} New array containing only unique elements
+ * @returns {mixed*} New array containing only unique elements
  */
 mixed *uniq_array(mixed *arr) {
   return distinct_array(arr, 1);
@@ -78,7 +78,7 @@ varargs mixed *remove_array_element(mixed *arr, int start, int end) {
  * @param {mixed*} array The source array
  * @param {int} from Starting index to exclude from
  * @param {int} [to=from] Ending index to exclude to (inclusive)
- * @return {mixed*} New array with specified elements excluded
+ * @returns {mixed*} New array with specified elements excluded
  */
 varargs mixed *exclude_array(mixed *array, int from, int to) {
   return remove_array_element(array, from, to);
@@ -90,7 +90,7 @@ varargs mixed *exclude_array(mixed *array, int from, int to) {
  * @param {mixed*} array The original array
  * @param {mixed*} new_array The array to insert
  * @param {int} at The position to insert at
- * @return {mixed*} New combined array
+ * @returns {mixed*} New combined array
  */
 varargs mixed *merge_array(mixed *array, mixed *new_array, int at) {
   mixed *bottom, *top;
@@ -148,7 +148,7 @@ varargs mixed *splice(mixed *arr, int start, int delete_count, mixed *items_to_a
  *
  * @param {mixed*} elements - Array to reverse
  * @param {int} [in_place] - Whether to mutate the original array.
- * @return {mixed*} New array with elements in reverse order
+ * @returns {mixed*} New array with elements in reverse order
  *
  * @example
  * ```c
@@ -183,7 +183,7 @@ varargs mixed* reverse_array(mixed *elements, int in_place) {
  * shuffle algorithm.
  *
  * @param {mixed*} items The array to shuffle
- * @return {mixed*} New array with elements in random order
+ * @returns {mixed*} New array with elements in random order
  */
 mixed *array_shuffle(mixed *items) {
   mixed *arr, temp;
@@ -226,7 +226,7 @@ int uniform_array(mixed *arr, string type) {
  * Calculates the sum of all integers in an array.
  *
  * @param {int*} nums Array of integers to sum
- * @return {int} The sum of all elements
+ * @returns {int} The sum of all elements
  */
 int array_sum(int *nums) {
   assert_arg(pointerp(nums), 1, "Invalid array");
@@ -309,7 +309,7 @@ varargs mixed array_pad(mixed *arr, int size, mixed value, int beginning) {
  * @param {mixed*} arr Array to pad
  * @param {int} sz Target size
  * @param {mixed} [val=UNDEFINED] Value to pad with
- * @return {mixed*} Padded array
+ * @returns {mixed*} Padded array
  */
 varargs mixed *pad_array(mixed *arr, int sz, mixed val) {
   int diff, len;
@@ -335,7 +335,7 @@ varargs mixed *pad_array(mixed *arr, int sz, mixed val) {
  * @param {string*} items Array of strings to display
  * @param {int} [col=2] Number of columns to display
  * @param {int} [width=79] Total width available for all columns
- * @return {string} Text formatted into the requested number of columns
+ * @returns {string} Text formatted into the requested number of columns
  */
 varargs string array_columns(string *items, int col, int width) {
   int colwidth, rows, size, pos, i, j;
@@ -414,7 +414,7 @@ float *reverse_sort_float(float *list) {
  * @param {mixed*} arr1 First array to compare
  * @param {mixed*} arr2 Second array to compare
  * @param {function} [f] Optional comparison function taking (array_element, search_element)
- * @return {mixed*} New array containing elements found in both input arrays
+ * @returns {mixed*} New array containing elements found in both input arrays
  *
  * @example
  * ```c
@@ -468,7 +468,7 @@ varargs mixed *intersection(mixed *arr1, mixed *arr2, function f) {
  * @param {mixed*} arr1 - First array to check
  * @param {mixed*} arr2 - Second array to check
  * @param {function} [compare] - Optional comparison function taking (array_element, search_element)
- * @return {int} 1 if arrays have at least one element in common, 0 otherwise
+ * @returns {int} 1 if arrays have at least one element in common, 0 otherwise
  *
  * @example
  * ```c
@@ -585,7 +585,7 @@ int array_unshift(mixed ref *arr, mixed value) {
  *
  * @param {mixed} arr The array to modify
  * @param {mixed} value The value to add uniquely
- * @return {int} The size of the array after the operation
+ * @returns {int} The size of the array after the operation
  */
 int set_push(mixed ref *arr, mixed value) {
   if(member_array(value, arr) != -1)
@@ -599,7 +599,7 @@ int set_push(mixed ref *arr, mixed value) {
  *
  * @param {mixed} arr - The array to modify
  * @param {mixed} value - The value to add uniquely
- * @return {int} The size of the array after the operation
+ * @returns {int} The size of the array after the operation
  */
 int set_unshift(mixed ref *arr, mixed value) {
   if(member_array(value, arr) != -1)
@@ -728,7 +728,7 @@ varargs int includes(mixed *arr, mixed elem, function f) {
  * @param {mixed} needle The value to search for
  * @param {mixed*} haystack The array to search in
  * @param {function} [f] Comparison function taking (elem, needle)
- * @return {int} Returns 1 if found, 0 if not found
+ * @returns {int} Returns 1 if found, 0 if not found
  */
 varargs int in_array(mixed needle, mixed *haystack, function f) {
   return includes(haystack, needle, f);
@@ -1051,7 +1051,7 @@ varargs void each(mixed src, function fun, mixed extra...) {
  * @param {function} fun - The function to apply to each element (called as
  *                         fun(element, index, array, size, ...extra))
  * @param {mixed...} [extra] - Optional extra arguments passed to the function
- * @return {mixed} The first non-null result, or UNDEFINED if none found
+ * @returns {mixed} The first non-null result, or UNDEFINED if none found
  */
 varargs mixed eval_first(mixed *src, function fun, mixed extra...) {
   int i, sz;
@@ -1084,7 +1084,7 @@ varargs mixed eval_first(mixed *src, function fun, mixed extra...) {
  * @param {mixed*} src The array to search
  * @param {function} fun The function to apply to each element (called as fun(element, index, array, size, ...extra))
  * @param {mixed...} [extra] Optional extra arguments passed to the function
- * @return {mixed} The last non-null result, or UNDEFINED if none found
+ * @returns {mixed} The last non-null result, or UNDEFINED if none found
  *
  * @example
  * ```c

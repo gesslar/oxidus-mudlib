@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/summon.c
- * @description Command to summon a player to your location.
+ * Command to summon a player to your location.
  *
  * @created 2024-08-17 - Gesslar
  * @last_modified 2024-08-17 - Gesslar

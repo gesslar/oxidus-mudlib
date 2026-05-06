@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/modules/chatter.c
- * @description Chatter Discord Bot Example
+ * Chatter Discord Bot Example
  *
  * @created 2024-07-08 - Gesslar
  * @last_modified 2024-07-08 - Gesslar

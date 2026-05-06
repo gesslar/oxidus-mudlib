@@ -1,6 +1,6 @@
 /**
  * @file /std/ext/edible.c
- * @description This module is inherited in order to make something edible.
+ * This module is inherited in order to make something edible.
  *
  * @created 2024-08-06 - Gesslar
  * @last_modified 2024-08-06 - Gesslar

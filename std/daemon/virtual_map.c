@@ -1,7 +1,7 @@
 /**
  * @file /std/daemon/virtual_map.c
- * @description Daemon responsible for managing virtual maps for a zone.
- *              All coordinates are in the format of z,y,x.
+ * Daemon responsible for managing virtual maps for a zone.
+ * All coordinates are in the format of z,y,x.
  *
  * @created 2024-08-23 - Gesslar
  * @last_modified 2024-08-23 - Gesslar

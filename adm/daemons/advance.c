@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/advance.c
- * @description Daemon to handle XP and leveling
+ * Daemon to handle XP and leveling
  *
  * @created 2024-07-28 - Gesslar
  * @last_modified 2024-07-28 - Gesslar
@@ -111,7 +111,7 @@ public int earnXp(object tp, int amount) {
  * @public
  * @param {STD_PLAYER} killer - The object that killed the opponent.
  * @param {STD_NPC | STD_PLAYER} killed - The object that was killed.
- * @returns {int} - The amount of XP awarded, or 0 if either object is null.
+ * @returns {int} The amount of XP awarded, or 0 if either object is null.
  */
 int killXp(object killer, object killed) {
   if(nullp(killer) || nullp(killed))

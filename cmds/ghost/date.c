@@ -1,6 +1,6 @@
 /**
  * @file /cmds/ghost/date.c
- * @description Date command displaying the current mud time.
+ * Date command displaying the current mud time.
  *
  * @created 2005-11-10 - Tacitus
  * @last_modified 2005-11-10 - Tacitus

@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/gimme.c
- * @description Command to give coins to the wizard
+ * Command to give coins to the wizard
  *
  * @created 2024-08-01 - Gesslar
  * @last_modified 2024-08-01 - Gesslar

@@ -1,7 +1,8 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/simple_list.test.c
- * @description Tests for the simple_list() simul_efun.
+ *
+ * Tests for the simple_list() simul_efun.
  */
 
 #include <test.h>

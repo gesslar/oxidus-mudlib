@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/conservatory.c
- * @description A conservatory in the manor.
+ * A conservatory in the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

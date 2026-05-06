@@ -1,6 +1,6 @@
 /**
  * @file /std/living/attributes.c
- * @description Player attributes.
+ * Player attributes.
  *
  * @created 2024-07-30 - Gesslar
  * @last_modified 2024-07-30 - Gesslar

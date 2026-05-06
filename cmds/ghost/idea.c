@@ -1,6 +1,6 @@
 /**
  * @file /cmds/ghost/idea.c
- * @description Command for reporting ideas.
+ * Command for reporting ideas.
  *
  * @created 2024-07-13 - Gesslar
  * @last_modified 2024-07-13 - Gesslar

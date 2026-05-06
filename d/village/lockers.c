@@ -1,6 +1,6 @@
 /**
  * @file /d/village/lockers.c
- * @description A place for villagers to store their personal belongings.
+ * A place for villagers to store their personal belongings.
  *
  * @created 2024-08-13 - Gesslar
  * @last_modified 2024-08-13 - Gesslar

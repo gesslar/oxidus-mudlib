@@ -1,6 +1,6 @@
 /**
  * @file /cmds/object/clone.c
- * @description Command to clone objects into the game world.
+ * Command to clone objects into the game world.
  *
  * @created 2005-10-31 - Tacitus@LPUniversity
  * @last_modified 2006-07-19 - Parthenon

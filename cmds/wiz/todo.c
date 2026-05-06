@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/todo.c
- * @description Command for reporting todos
+ * Command for reporting todos
  *
  * @created 2024-07-13 - Gesslar
  * @last_modified 2024-07-13 - Gesslar

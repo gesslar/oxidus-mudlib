@@ -1,6 +1,6 @@
 /**
  * @file /std/object/value.c
- * @description Handles monetary value tracking for physical objects.
+ * Handles monetary value tracking for physical objects.
  *
  * @created 2024-08-01 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

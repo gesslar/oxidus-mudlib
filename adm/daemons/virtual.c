@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/virtual.c
- * @description Daemon for virtual objects
+ * Daemon for virtual objects
  *
  * @created 2024-02-04 - Gesslar
  * @last_modified 2024-08-22 - Gesslar

@@ -1,8 +1,8 @@
 /**
  * @file /adm/daemons/autodoc.c
- * @description Autodocumentation system that parses JSDoc-style comments in
- *              LPC source files and generates documentation in a structured
- *              format.
+ * Autodocumentation system that parses JSDoc-style comments in
+ * LPC source files and generates documentation in a structured
+ * format.
  *
  * @created 2024-02-18 - Gesslar
  * @last_modified 2024-07-19 - Gesslar
@@ -80,19 +80,20 @@ void setup() {
 
 /**
  * @daemon_function autodoc_scan
- * @description Start the autodoc scan process. This will trigger the daemon to
- *              scan the directories specified in the AUTODOC_SOURCE_DIRS
- *              configuration variable for LPC source files and parse the
- *              JSDoc-style comments in those files.
+ * Start the autodoc scan process. This will trigger the daemon to
+ * scan the directories specified in the AUTODOC_SOURCE_DIRS
+ * configuration variable for LPC source files and parse the
+ * JSDoc-style comments in those files.
  *
- *              The parsed documentation will be written to the
- *              AUTODOC_ROOT directory in a structured format for use in
- *              generating documentation for the mudlib.
+ * The parsed documentation will be written to the
+ * AUTODOC_ROOT directory in a structured format for use in
+ * generating documentation for the mudlib.
  *
- *              The parsed documentation will also be written to the
- *              WIKI_DOC_ROOT directory in a structured format for use in
- *              generating documentation for the wiki.
- * @returns {mixed} - 1 if the scan was started successfully, an error message
+ * The parsed documentation will also be written to the
+ * WIKI_DOC_ROOT directory in a structured format for use in
+ * generating documentation for the wiki.
+ *
+ * @returns {mixed} 1 if the scan was started successfully, an error message
  *                    if the scan is already running.
  */
 public nomask mixed autodoc_scan() {

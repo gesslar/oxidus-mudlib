@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/time.c
- * @description This is the game's time daemon. It is responsible for keeping
+ * This is the game's time daemon. It is responsible for keeping
  * track of the game's time and date. It also provides functions for converting
  * the game's time to real time and vice versa.
  *

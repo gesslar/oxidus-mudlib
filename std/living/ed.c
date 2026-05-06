@@ -1,6 +1,6 @@
 /**
  * @file /std/user/ed.c
- * @description Object to handle interacting with basic or advanced editor.
+ * Object to handle interacting with basic or advanced editor.
  *
  * @created 2024-07-20 - Gesslar
  * @last_modified 2024-07-20 - Gesslar

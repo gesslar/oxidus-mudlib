@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/autodoc.c
- * @description Command to interface with the autodoc system.
+ * Command to interface with the autodoc system.
  *
  * @created 2024-07-14 - Gesslar
  * @last_modified 2024-07-14 - Gesslar

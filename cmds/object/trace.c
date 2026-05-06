@@ -1,7 +1,7 @@
 /**
  * @file /cmds/object/trace.c
- * @description Command to locate any object and its active clones,
- *              with optional destruction.
+ * Command to locate any object and its active clones,
+ * with optional destruction.
  *
  * @created 1993-03-04 - Watcher@TMI
  * @last_modified 2024-02-04 - Gesslar

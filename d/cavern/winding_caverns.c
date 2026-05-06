@@ -1,6 +1,6 @@
 /**
  * @file /d/cavern/winding_caverns.c
- * @description Zone for the winding caverns
+ * Zone for the winding caverns
  *
  * @created 2024-09-18 - Gesslar
  * @last_modified 2024-09-18 - Gesslar

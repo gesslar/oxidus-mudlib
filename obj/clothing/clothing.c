@@ -1,6 +1,6 @@
 /**
  * @file /obj/clothing/clothing.c
- * @description Base clothing inheritable for virtual clothing items
+ * Base clothing inheritable for virtual clothing items
  *
  * @created 2026-05-01 - Gesslar
  * @last_modified 2026-05-01 - Gesslar

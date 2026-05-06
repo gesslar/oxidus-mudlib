@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/zoho.c
- * @description This daemon is used to interact with the Zoho API.
+ * This daemon is used to interact with the Zoho API.
  *
  * @created 2024-07-25 - Gesslar
  * @last_modified 2024-07-25 - Gesslar

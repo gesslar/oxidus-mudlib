@@ -1,6 +1,6 @@
 /**
  * @file /std/ext/clean.c
- * @description Clean up routine
+ * Clean up routine
  *
  * @created 2022/08/24 - Gesslar
  * @last_modified 2022/08/24 - Gesslar

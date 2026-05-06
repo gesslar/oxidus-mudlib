@@ -1,6 +1,6 @@
 /**
  * @file /cmds/ghost/go.c
- * @description Command for moving around in the game as a ghost.
+ * Command for moving around in the game as a ghost.
  *
  * @created 2024-02-03 - Gesslar
  * @last_modified 2024-02-03 - Gesslar

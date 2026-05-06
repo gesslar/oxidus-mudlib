@@ -1,6 +1,6 @@
 /**
  * @file /obj/container/iron_chest.c
- * @description A sturdy iron chest that can be locked and unlocked. This
+ * A sturdy iron chest that can be locked and unlocked. This
  * container provides secure storage for valuable items and can be placed in
  * rooms or carried, though its significant weight makes transport challenging.
  *

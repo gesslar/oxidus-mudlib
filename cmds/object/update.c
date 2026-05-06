@@ -1,7 +1,7 @@
 /**
  * @file /cmds/object/update.c
- * @description Command for updating (reloading) objects, with optional
- *              recursive inheritance updating.
+ * Command for updating (reloading) objects, with optional
+ * recursive inheritance updating.
  *
  * @created 2005-04-05 - Byre@LPUniversity
  * @last_modified 2024-02-04 - Gesslar

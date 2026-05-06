@@ -1,6 +1,6 @@
 /**
  * @file /std/living/body.c
- * @description Body object that is shared by players and NPCs.
+ * Body object that is shared by players and NPCs.
  *
  * @created 2024-07-29 - Gesslar
  * @last_modified 2024-07-29 - Gesslar

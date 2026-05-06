@@ -2,9 +2,9 @@
 #include <daemons.h>
 
 /**
- * @simul_efun emit
- * @description Emit a signal to all objects that have registered a slot for
- *              the signal.
+ * Emit a signal to all objects that have registered a slot for
+ * the signal.
+ *
  * @param {string} sig - string signal identifier (use `SIG_*` macros)
  * @param {mixed...} arg - arguments to pass to the signal handlers
  * @throws If `sig` is not a string this function calls `error()` and
@@ -35,8 +35,8 @@ int slot(string sig, string func) {
 }
 
 /**
- * @simul_efun unslot
- * @description Unregister a slot for a signal.
+ * Unregister a slot for a signal.
+ *
  * @param {string} sig - string signal identifier (use `SIG_*` macros)
  * @returns {int} `SIG_SLOT_OK` if the slot was unregistered successfully.
  * @throws If `sig` is not a string this function calls `error()` and
@@ -50,9 +50,9 @@ int unslot(string sig) {
 }
 
 /**
- * @simul_efun signal_d
- * @description Get the signal daemon object.
- * @returns {object} - signal daemon object
+ * Get the signal daemon object.
+ *
+ * @returns {object} signal daemon object
  */
 object signal_d() {
     return load_object(SIGNAL_D);

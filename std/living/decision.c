@@ -1,6 +1,6 @@
 /**
  * @file /std/living/decision.c
- * @description Decision making for living objects.
+ * Decision making for living objects.
  *
  * Converted from: https://www.npmjs.com/package/utility-ai
  *

@@ -1,6 +1,6 @@
 /**
  * @file /std/ext/potable.c
- * @description This module is inherited in order to make something potable.
+ * This module is inherited in order to make something potable.
  *
  * @created 2024-08-06 - Gesslar
  * @last_modified 2024-08-06 - Gesslar

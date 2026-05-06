@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/vnum.c
- * @description Daemon to store room vnums
+ * Daemon to store room vnums
  *
  * @created 2024-08-18 - Gesslar
  * @last_modified 2024-08-18 - Gesslar

@@ -1,6 +1,6 @@
 /**
  * @file /std/object/stats.c
- * @description Tracks creation time, age, and creator information for objects.
+ * Tracks creation time, age, and creator information for objects.
  *
  * @created 2024-02-04 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

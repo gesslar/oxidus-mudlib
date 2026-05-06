@@ -1,10 +1,10 @@
 #include <simul_efun.h>
 
 /**
- * @simul_efun random_float
- * @description Generates a random float between 0 and upper_bound.
+ * Generates a random float between 0 and upper_bound.
+ *
  * @param {mixed} upper_bound - The upper bound for the random float.
- * @returns {float} - The random float between 0 and upper_bound.
+ * @returns {float} The random float between 0 and upper_bound.
  */
 float random_float(mixed upper_bound) {
   if(upper_bound < 0.0)
@@ -18,11 +18,11 @@ float random_float(mixed upper_bound) {
 }
 
 /**
- * @simul_efun element_of_weighted
- * @description Selects an element from a weighted mapping based on their weights.
+ * Selects an element from a weighted mapping based on their weights.
+ *
  * @param {mapping} m - The weighted mapping to select from, where keys are the
  *                      elements and values are their weights.
- * @returns {mixed} - The selected element.
+ * @returns {mixed} The selected element.
  */
 mixed element_of_weighted(mapping m) {
   int total;
@@ -44,11 +44,11 @@ mixed element_of_weighted(mapping m) {
 }
 
 /**
- * @simul_efun random_clamp
- * @description Generates a random integer within a specified range.
+ * Generates a random integer within a specified range.
+ *
  * @param {int} min - The lower bound (inclusive) of the range.
  * @param {int} max - The upper bound (inclusive) of the range.
- * @returns {int} - A random number in the specified range.
+ * @returns {int} A random number in the specified range.
  */
 int random_clamp(int min, int max) {
   if(min >= max)
@@ -59,12 +59,12 @@ int random_clamp(int min, int max) {
 
 /* PRANDOM 128 */
 /**
- * @simul_efun sanitize_seed
- * @description Sanitizes the seed for the random number generator. Ensuring
- *              that the seed is a non-zero integer and within the range of
- *              a 64-bit unsigned integer.
+ * Sanitizes the seed for the random number generator. Ensuring
+ * that the seed is a non-zero integer and within the range of
+ * a 64-bit unsigned integer.
+ *
  * @param {mixed} seed - The seed to sanitize.
- * @returns {int[]} - The sanitized seed.
+ * @returns {int*} The sanitized seed.
  */
 public int *sanitize_seed(mixed seed) {
   int s0, s1;
@@ -89,12 +89,12 @@ public int *sanitize_seed(mixed seed) {
 }
 
 /**
- * @simul_efun prandom
- * @description Generates a random number within a specified range using the
- *              xorshift128+ algorithm.
+ * Generates a random number within a specified range using the
+ * xorshift128+ algorithm.
+ *
  * @param {mixed} seed - The seed for the random number generator.
  * @param {int} size - The upper bound for the random number.
- * @returns {int[]} - A two element array where the first element is the
+ * @returns {int*} A two element array where the first element is the
  *                   updated seed and the second is the random number.
  */
 int *prandom(mixed seed, int size) {
@@ -130,12 +130,12 @@ int *prandom(mixed seed, int size) {
 }
 
 /**
- * @simul_efun prandom_float
- * @description Generates a random float within a specified range using the
- *              xorshift128+ algorithm.
+ * Generates a random float within a specified range using the
+ * xorshift128+ algorithm.
+ *
  * @param {mixed} seed - The seed for the random number generator.
  * @param {float} size - The upper bound for the random float.
- * @returns {mixed[]} - A two element array where the first element is the
+ * @returns {mixed*} A two element array where the first element is the
  *                      updated seed and the second is the random float.
  */
 mixed *prandom_float(mixed seed, float size) {
@@ -170,11 +170,11 @@ mixed *prandom_float(mixed seed, float size) {
 }
 
 /**
- * @simul_efun pshuffle
- * @description Shuffles an array using the xorshift128+ algorithm.
+ * Shuffles an array using the xorshift128+ algorithm.
+ *
  * @param {mixed} seed - The seed for the random number generator.
- * @param {mixed[]} arr - The array to shuffle.
- * @returns {mixed[]} - A two element array where the first element is the
+ * @param {mixed*} arr - The array to shuffle.
+ * @returns {mixed*} A two element array where the first element is the
  *                      updated seed and the second is the shuffled array.
  */
 mixed *pshuffle(mixed seed, mixed *arr) {
@@ -213,12 +213,12 @@ mixed *pshuffle(mixed seed, mixed *arr) {
 }
 
 /**
- * @simul_efun pelement_of
- * @description Selects an element from an array using the xorshift128+
- *              algorithm.
+ * Selects an element from an array using the xorshift128+
+ * algorithm.
+ *
  * @param {mixed} seed - The seed for the random number generator.
- * @param {mixed[]} arr - The array to select an element from.
- * @returns {mixed[]} - A two element array where the first element is the
+ * @param {mixed*} arr - The array to select an element from.
+ * @returns {mixed*} A two element array where the first element is the
  *                      updated seed and the second is the selected element.
  */
 mixed *pelement_of(mixed seed, mixed *arr) {
@@ -238,13 +238,13 @@ mixed *pelement_of(mixed seed, mixed *arr) {
 }
 
 /**
- * @simul_efun prandom_clamp
- * @description Generates a random number within a specified range using the
- *              xorshift128+ algorithm.
+ * Generates a random number within a specified range using the
+ * xorshift128+ algorithm.
+ *
  * @param {mixed} seed - The seed for the random number generator.
  * @param {int} min - The lower bound (inclusive) of the range.
  * @param {int} max - The upper bound (inclusive) of the range.
- * @returns {mixed[]} - A two element array where the first element is the
+ * @returns {mixed*} A two element array where the first element is the
  *                      updated seed and the second is the random number.
  */
 mixed *prandom_clamp(mixed seed, int min, int max) {
@@ -260,13 +260,13 @@ mixed *prandom_clamp(mixed seed, int min, int max) {
 }
 
 /**
- * @simul_efun pelement_of_weighted
- * @description Selects an element from a weighted mapping using the
- *              xorshift128+ algorithm.
+ * Selects an element from a weighted mapping using the
+ * xorshift128+ algorithm.
+ *
  * @param {mixed} seed - The seed for the random number generator.
  * @param {mapping} weights - The weighted mapping to select from, where keys
  *                            are the elements and values are their weights.
- * @returns {mixed[]} - A two element array where the first element is the
+ * @returns {mixed*} A two element array where the first element is the
  *                      updated seed and the second is the selected element.
  */
 mixed *pelement_of_weighted(mixed seed, mapping weights) {

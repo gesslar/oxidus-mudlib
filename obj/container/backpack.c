@@ -1,6 +1,6 @@
 /**
  * @file /obj/container/backpack.c
- * @description A small wearable container that allows players to store and carry
+ * A small wearable container that allows players to store and carry
  * items. The backpack functions both as a piece of clothing that can be worn and
  * as a container that can hold various objects. It comes with a closure mechanism
  * to secure items inside.

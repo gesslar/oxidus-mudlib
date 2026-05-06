@@ -1,6 +1,6 @@
 /**
  * @file /std/area/corpse/corpse.c
- * @description Corpses oooOooOooOooO
+ * Corpses oooOooOooOooO
  *
  * @created 2024-07-27 - Gesslar
  * @last_modified 2024-07-27 - Gesslar

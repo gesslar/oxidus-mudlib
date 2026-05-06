@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/porch.c
- * @description A porch in the manor.
+ * A porch in the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

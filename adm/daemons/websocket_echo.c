@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/websocket_echo.c
- * @description Test websocket with echo.websocket.org
+ * Test websocket with echo.websocket.org
  *
  * @created 2024-07-05 - Gesslar
  * @last_modified 2024-07-05 - Gesslar

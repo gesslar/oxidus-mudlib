@@ -1,6 +1,6 @@
 /**
  * @file /obj/drink/drink.c
- * @description Base drink inheritable for virtual drink items
+ * Base drink inheritable for virtual drink items
  *
  * @created 2026-05-01 - Gesslar
  * @last_modified 2026-05-01 - Gesslar

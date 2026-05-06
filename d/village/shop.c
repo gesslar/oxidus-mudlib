@@ -1,6 +1,6 @@
 /**
  * @file /d/village/shop.c
- * @description A basic shop in Olum village.
+ * A basic shop in Olum village.
  *
  * @created 2024-08-01 - Gesslar
  * @last_modified 2024-08-01 - Gesslar

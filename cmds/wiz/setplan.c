@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/setplan.c
- * @description Command to manage one's .plan file
+ * Command to manage one's .plan file
  *
  * @created 2006/07/22 - Parthenon
  * @last_modified 2024-07-20 - Gesslar

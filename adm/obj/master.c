@@ -32,7 +32,7 @@ private nosave int testing_in_progress = 0;
  * disable.
  *
  * @param {int} duration - Seconds to suppress caught-error logging.
- * @return {int} 1 on success, 0 if caller is not authorized.
+ * @returns {int} 1 on success, 0 if caller is not authorized.
  */
 int set_test_mode(int duration) {
   object po = previous_object();
@@ -57,7 +57,7 @@ void clear_test_mode() {
 }
 
 /**
- * @return {int} 1 if test-mode error suppression is currently active.
+ * @returns {int} 1 if test-mode error suppression is currently active.
  */
 int query_test_mode() {
   return testing_in_progress > time();

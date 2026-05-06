@@ -1,7 +1,7 @@
 /**
  * @file /std/object/object.c
- * @description Base object implementation that provides core functionality
- *              for all game objects.
+ * Base object implementation that provides core functionality
+ * for all game objects.
  *
  * @created 2005-04-04 - Tacitus
  * @last_modified 2025-03-16 - GitHub Copilot

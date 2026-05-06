@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/modules/message/combat.c
- * @description Combat messaging module for the message daemon
+ * Combat messaging module for the message daemon
  *
  * @created 2024-07-28 - Gesslar
  * @last_modified 2024-07-28 - Gesslar

@@ -1,8 +1,8 @@
 /**
  * @file /std/daemon/http_server.c
- * @description This is an HTTP server that may be inherited by other objects
- *              to create a custom HTTP server. It listens on a specified port
- *              and accepts incoming connections.
+ * This is an HTTP server that may be inherited by other objects
+ * to create a custom HTTP server. It listens on a specified port
+ * and accepts incoming connections.
  *
  * @created 2024-07-05 - Gesslar
  * @last_modified 2024-07-05 - Gesslar

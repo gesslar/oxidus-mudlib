@@ -1,6 +1,6 @@
 /**
  * @file /obj/food/food.c
- * @description Base food inheritable for virtual food items
+ * Base food inheritable for virtual food items
  *
  * @created 2024-08-21 - Gesslar
  * @last_modified 2024-08-22 - Gesslar

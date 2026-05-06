@@ -1,6 +1,6 @@
 /**
  * @file /cmds/ghost/help.c
- * @description Help command for looking up help files and command help.
+ * Help command for looking up help files and command help.
  *
  * @created 2005-10-08 - Tacitus
  * @last_modified 2006-10-06 - Tacitus

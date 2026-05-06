@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/modules/virtual/ob.c
- * @description Base module for virtual objects
+ * Base module for virtual objects
  *
  * @created 2024-08-22 - Gesslar
  * @last_modified 2024-08-22 - Gesslar

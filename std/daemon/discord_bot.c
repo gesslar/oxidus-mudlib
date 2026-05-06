@@ -1,6 +1,6 @@
 /**
  * @file /std/daemon/discord_bot.c
- * @description Discord server daemon
+ * Discord server daemon
  *
  * @created 2024-07-06 - Gesslar
  * @last_modified 2024-07-06 - Gesslar

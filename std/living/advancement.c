@@ -1,6 +1,6 @@
 /**
  * @file /std/user/advancement.c
- * @description Advancement object for players
+ * Advancement object for players
  *
  * @created 2024-07-24 - Gesslar
  * @last_modified 2024-07-24 - Gesslar

@@ -1,6 +1,6 @@
 /**
  * @file /cmds/ghost/who.c
- * @description Who command displaying currently connected users.
+ * Who command displaying currently connected users.
  *
  * @created 2005-04-08 - Tacitus
  * @last_modified 2006-10-04 - Tacitus

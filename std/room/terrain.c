@@ -1,6 +1,6 @@
 /**
  * @file /std/room/terrain.c
- * @description Terrain types
+ * Terrain types
  *
  * @created 2024-08-19 - Gesslar
  * @last_modified 2024-08-19 - Gesslar

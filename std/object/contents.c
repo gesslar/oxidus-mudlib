@@ -1,7 +1,7 @@
 /**
  * @file /std/object/contents.c
- * @description Handles the capacity and contents of an object, providing
- *              inventory management and mass/capacity tracking.
+ * Handles the capacity and contents of an object, providing
+ * inventory management and mass/capacity tracking.
  *
  * @created 2024-02-18 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

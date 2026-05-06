@@ -1,8 +1,8 @@
 /**
  * @file /cmds/wiz/killme.c
- * @description This command commands all NPCs in a room to attack you. It
- *              does not change their current target if they are already
- *              attacking someone else.
+ * This command commands all NPCs in a room to attack you. It
+ * does not change their current target if they are already
+ * attacking someone else.
  *
  * @created 2024-10-06 - Gesslar
  * @last_modified 2024-10-06 - Gesslar

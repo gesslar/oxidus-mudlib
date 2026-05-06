@@ -1,6 +1,6 @@
 /**
  * @file /std/living/communication.c
- * @description says/tells/etc
+ * says/tells/etc
  *
  * @created 2024-08-17 - Gesslar
  * @last_modified 2024-08-17 - Gesslar

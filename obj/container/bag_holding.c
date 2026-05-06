@@ -1,6 +1,6 @@
 /**
  * @file /obj/container/bag_holding.c
- * @description A bag holding object
+ * A bag holding object
  *
  * @created 2024-08-07 - Gesslar
  * @last_modified 2024-08-07 - Gesslar

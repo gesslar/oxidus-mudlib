@@ -11,9 +11,9 @@
 /* Last updated by Tacitus on October 6th, 2006 */
 
 /**
- * @simul_efun resolve_path
- * @description Resolves a given path relative to the current path, handling
- *              special cases such as user directories and relative paths.
+ * Resolves a given path relative to the current path, handling
+ * special cases such as user directories and relative paths.
+ *
  * @param {string} base_dir - The current path.
  * @param {string} path - The next path to resolve.
  * @returns {string} The resolved absolute path.
@@ -62,12 +62,12 @@ string resolve_path(string base_dir, string path) {
 }
 
 /**
- * @simul_efun valid_path
- * @description Resolves and validates a path, checking if it exists as either
- *              a file or directory.
+ * Resolves and validates a path, checking if it exists as either
+ * a file or directory.
+ *
  * @param {string} base_dir - The base directory to resolve relative paths from.
  * @param {string} path - The path to resolve and validate.
- * @returns {string|int} - The resolved absolute path if valid, or 0 if invalid.
+ * @returns {string|int} The resolved absolute path if valid, or 0 if invalid.
  */
 string valid_path(string base_dir, string path) {
   string resolved = resolve_path(base_dir, path);
@@ -76,12 +76,12 @@ string valid_path(string base_dir, string path) {
 }
 
 /**
- * @simul_efun valid_file
- * @description Resolves and validates a file path, checking if it exists as a
- *              file.
+ * Resolves and validates a file path, checking if it exists as a
+ * file.
+ *
  * @param {string} base_dir - The base directory to resolve relative paths from.
  * @param {string} path - The file path to resolve and validate.
- * @returns {string|int} - The resolved absolute file path if valid, or 0 if invalid.
+ * @returns {string|int} The resolved absolute file path if valid, or 0 if invalid.
  */
 string valid_file(string base_dir, string path) {
   string resolved = resolve_path(base_dir, path);
@@ -90,12 +90,12 @@ string valid_file(string base_dir, string path) {
 }
 
 /**
- * @simul_efun valid_dir
- * @description Resolves and validates a directory path, checking if it exists
- *              as a directory.
+ * Resolves and validates a directory path, checking if it exists
+ * as a directory.
+ *
  * @param {string} base_dir - The base directory to resolve relative paths from.
  * @param {string} path - The directory path to resolve and validate.
- * @returns {string|int} - The resolved absolute directory path if valid, or 0 if invalid.
+ * @returns {string|int} The resolved absolute directory path if valid, or 0 if invalid.
  */
 string valid_dir(string base_dir, string path) {
   string resolved = resolve_path(base_dir, path);
@@ -104,23 +104,23 @@ string valid_dir(string base_dir, string path) {
 }
 
 /**
- * @simul_efun resolve_file
- * @description Resolves a file path without checking its existence.
+ * Resolves a file path without checking its existence.
+ *
  * @param {string} base_dir - The base directory to resolve relative paths from.
  * @param {string} path - The file path to resolve.
- * @returns {string} - The resolved absolute file path.
+ * @returns {string} The resolved absolute file path.
  */
 string resolve_file(string base_dir, string path) {
   return resolve_path(base_dir, path);
 }
 
 /**
- * @simul_efun resolve_dir
- * @description Resolves a directory path without checking its existence,
- *              ensuring it ends with a slash.
+ * Resolves a directory path without checking its existence,
+ * ensuring it ends with a slash.
+ *
  * @param {string} base_dir - The base directory to resolve relative paths from.
  * @param {string} path - The directory path to resolve.
- * @returns {string} - The resolved absolute directory path, ending with a slash.
+ * @returns {string} The resolved absolute directory path, ending with a slash.
  */
 string resolve_dir(string base_dir, string path) {
   string resolved = resolve_path(base_dir, path);
@@ -129,11 +129,11 @@ string resolve_dir(string base_dir, string path) {
 }
 
 /**
- * @simul_efun get_files
- * @description Resolves a path and returns an array of matching files, supporting * wildcard pattern.
+ * Resolves a path and returns an array of matching files, supporting * wildcard pattern.
+ *
  * @param {string} base_dir - The base directory to resolve relative paths from.
  * @param {string} path - The path or pattern to resolve and search for files.
- * @returns {string[]} - An array of matching file paths, or ({}) if invalid.
+ * @returns {string*} An array of matching file paths, or ({}) if invalid.
  */
 string *get_files(string base_dir, string path) {
   string resolved_path = resolve_path(base_dir, path);

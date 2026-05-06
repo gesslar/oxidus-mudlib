@@ -1,6 +1,6 @@
 /**
  * @file /std/modules/mob/combat_memory.c
- * @description NPC combat memory module
+ * NPC combat memory module
  *
  * @created 2024-07-29 - Gesslar
  * @last_modified 2024-07-29 - Gesslar

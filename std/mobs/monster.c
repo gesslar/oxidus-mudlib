@@ -1,6 +1,6 @@
 /**
  * @file /std/mobs/monster.c
- * @description Standard monster inheritable for all types of monsters
+ * Standard monster inheritable for all types of monsters
  *
  * @created 2024-08-20 - Gesslar
  * @last_modified 2024-08-20 - Gesslar

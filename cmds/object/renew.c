@@ -1,7 +1,7 @@
 /**
  * @file /cmds/object/renew.c
- * @description Command for renewing objects. Destructs the original
- *              and reclones from a freshly loaded master.
+ * Command for renewing objects. Destructs the original
+ * and reclones from a freshly loaded master.
  *
  * @created 2024-07-23 - Gesslar
  * @last_modified 2024-07-23 - Gesslar

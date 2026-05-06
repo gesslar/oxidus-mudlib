@@ -1,7 +1,7 @@
 /**
  * @file /std/object/init.c
- * @description Manages object initialization callbacks when objects encounter
- *              each other in the game world.
+ * Manages object initialization callbacks when objects encounter
+ * each other in the game world.
  *
  * @created 2024-02-29 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

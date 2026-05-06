@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/unload.c
- * @description This command will unload a master object
+ * This command will unload a master object
  *
  * @created 2024-08-13 - Gesslar
  * @last_modified 2024-08-13 - Gesslar

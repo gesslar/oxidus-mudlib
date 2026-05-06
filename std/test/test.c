@@ -1,8 +1,8 @@
 /**
  * @file /std/test/test.c
- * @description Base for individual test files. A test file inherits this,
- *              registers suites in setup() via describe()/test(), and is
- *              cloned and invoked by a STD_TEST_RUNNER.
+ * Base for individual test files. A test file inherits this,
+ * registers suites in setup() via describe()/test(), and is
+ * cloned and invoked by a STD_TEST_RUNNER.
  */
 
 #include <test.h>
@@ -28,7 +28,7 @@ private nosave mixed *test_functions = ({});
  * @param {mixed} y The second value to compare
  * @param {int} [loose=1] If true, allow arrays to be loosely compared,
  *                        rather than requiring positional matches.
- * @return {int} 1 if the values are equal, 0 otherwise
+ * @returns {int} 1 if the values are equal, 0 otherwise
  */
 varargs int same(mixed x, mixed y, int loose) {
   loose = nullp(loose) ? 1 : loose;
@@ -98,7 +98,7 @@ void _assert_ne(mixed expected, mixed actual, string where) {
  *
  * @param {string} description Suite description.
  * @param {mixed *} tests Array of test entries built by test().
- * @return {object} this_object() for chaining.
+ * @returns {object} this_object() for chaining.
  */
 object describe(string description, mixed *tests) {
   test_functions += ({({ description, tests })});
@@ -150,7 +150,7 @@ varargs mixed *pending(string description, string reason) {
  * list so a subsequent run() starts fresh (relevant if the same instance is
  * reused; runners typically clone instead).
  *
- * @return {mixed *} ({ passed, failed, failures, pendings }) where failures
+ * @returns {mixed *} ({ passed, failed, failures, pendings }) where failures
  *                   is an array of ({ suite, test, error }) and pendings is
  *                   an array of ({ suite, test, reason }).
  */

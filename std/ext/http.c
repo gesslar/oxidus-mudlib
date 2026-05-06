@@ -1,6 +1,6 @@
 /**
  * @file /std/ext/http.c
- * @description HTTP module with shared functions for use in HTTP operations
+ * HTTP module with shared functions for use in HTTP operations
  *
  * @created 2024-07-05 - Gesslar
  * @last_modified 2024-12-07 - Gesslar

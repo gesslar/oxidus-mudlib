@@ -1,11 +1,12 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/data.test.c
- * @description Tests for the data_value, data_write, data_del, and data_inc
- *              simul_efuns from /adm/simul_efun/data.c.
  *
- *              Uses a fixture file under __fixtures/ that is cleaned at the
- *              start of each test that needs a known starting state.
+ * Tests for the data_value, data_write, data_del, and data_inc
+ * simul_efuns from /adm/simul_efun/data.c.
+ *
+ * Uses a fixture file under __fixtures/ that is cleaned at the
+ * start of each test that needs a known starting state.
  */
 
 #include <test.h>

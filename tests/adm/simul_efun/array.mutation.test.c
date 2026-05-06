@@ -1,10 +1,11 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/array.mutation.test.c
- * @description Tests for the in-place ref-based array simul_efuns:
- *              pop, push, shift, unshift, set_push, set_unshift,
- *              eject, eject_value, eject_value_all, insert, and
- *              their array_* aliases.
+ *
+ * Tests for the in-place ref-based array simul_efuns:
+ * pop, push, shift, unshift, set_push, set_unshift,
+ * eject, eject_value, eject_value_all, insert, and
+ * their array_* aliases.
  */
 
 #include <test.h>

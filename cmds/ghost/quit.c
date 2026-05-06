@@ -1,6 +1,6 @@
 /**
  * @file /cmds/ghost/quit.c
- * @description Quit command for ghosts to disconnect from the mud.
+ * Quit command for ghosts to disconnect from the mud.
  *
  * @created 2005-04-06 - Tacitus
  * @last_modified 2005-10-08 - Tacitus

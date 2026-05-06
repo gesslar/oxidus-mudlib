@@ -1,6 +1,6 @@
 /**
  * @file /adm/daemons/body.c
- * @description Handles body instantiation
+ * Handles body instantiation
  *
  * @created 2024-07-28 - Gesslar
  * @last_modified 2024-07-28 - Gesslar

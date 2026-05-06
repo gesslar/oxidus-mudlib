@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/foyer.c
- * @description The foyer of the manor.
+ * The foyer of the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

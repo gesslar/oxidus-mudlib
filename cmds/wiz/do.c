@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/do.c
- * @description do command to execute a number of commands and/or repeatedly
+ * do command to execute a number of commands and/or repeatedly
  *
  * @created 2024-07-13 - Gesslar
  * @last_modified 2024-07-13 - Gesslar

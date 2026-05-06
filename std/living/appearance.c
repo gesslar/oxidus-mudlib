@@ -1,6 +1,6 @@
 /**
  * @file /std/living/appearance.c
- * @description Handles the appearance of living objects
+ * Handles the appearance of living objects
  *
  * @created 2024-07-30 - Gesslar
  * @last_modified 2024-07-30 - Gesslar

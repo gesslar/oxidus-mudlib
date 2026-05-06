@@ -1,6 +1,6 @@
 /**
  * @file /std/modules/race/human.c
- * @description Human racial module
+ * Human racial module
  *
  * @created 2024-07-25 - Gesslar
  * @last_modified 2024-07-25 - Gesslar

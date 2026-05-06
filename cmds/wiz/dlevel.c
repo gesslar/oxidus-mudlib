@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/dlevel.c
- * @description Manages debug levels
+ * Manages debug levels
  *
  * @created 2024-07-20 - Gesslar
  * @last_modified 2024-07-20 - Gesslar

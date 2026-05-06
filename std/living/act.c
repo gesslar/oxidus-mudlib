@@ -1,6 +1,6 @@
 /**
  * @file /std/living/act.c
- * @description Call-out based action module
+ * Call-out based action module
  *
  * @created 2024-08-08 - Gesslar
  * @last_modified 2024-08-08 - Gesslar

@@ -1,6 +1,6 @@
 /**
  * @file /std/room/items.c
- * @description Manages item descriptions within rooms for examination.
+ * Manages item descriptions within rooms for examination.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

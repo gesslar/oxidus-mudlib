@@ -1,6 +1,6 @@
 /**
  * @file /std/mobs/mammal.c
- * @description Virtual mammals
+ * Virtual mammals
  *
  * @created 2024-08-20 - Gesslar
  * @last_modified 2024-08-20 - Gesslar

@@ -1,6 +1,6 @@
 /**
  * @file /cmds/spell/motes.c
- * @description Motes spell.
+ * Motes spell.
  *
  * @created 2024-08-09 - Gesslar
  * @last_modified 2024-08-09 - Gesslar

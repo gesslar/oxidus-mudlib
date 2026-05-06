@@ -1,6 +1,6 @@
 /**
  * @file /cmds/object/dest.c
- * @description Command to destruct objects from memory.
+ * Command to destruct objects from memory.
  *
  * @created 2005-10-31 - Tacitus@LPUniversity
  * @last_modified 2024-02-04 - Gesslar

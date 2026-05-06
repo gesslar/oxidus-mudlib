@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/hall3.c
- * @description The third hall in the manor.
+ * The third hall in the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

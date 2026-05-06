@@ -1,7 +1,7 @@
 /**
  * @file /std/ext/shop_menu.c
- * @description A module to enable a shop that uses a menu instead of an
- *              inventory.
+ * A module to enable a shop that uses a menu instead of an
+ * inventory.
  *
  * @created 2024-08-17 - Gesslar
  * @last_modified 2024-08-17 - Gesslar
@@ -32,7 +32,8 @@ void init_shop() {
 }
 
 /**
- * @description Add a food item to the menu.
+ * Add a food item to the menu.
+ *
  * @param {string} type - The type of the item.
  * @param {string} file - The file to add to the menu.
  * @param {mixed*} cost - The cost of the item.
@@ -66,7 +67,8 @@ varargs void add_menu_item(string type, string file, int cost) {
 }
 
 /**
- * @description Remove a food item from the menu.
+ * Remove a food item from the menu.
+ *
  * @param {string} file - The file to remove from the menu.
  */
 void remove_menu_item(string file) {
@@ -84,10 +86,11 @@ void remove_menu_item(string file) {
 }
 
 /**
- * @description Player command to list the menu.
+ * Player command to list the menu.
+ *
  * @param {object} tp - The player object.
  * @param {string} str - The type of the item to list.
- * @return {mixed} - The menu list.
+ * @returns {mixed} The menu list.
  */
 mixed cmd_menu(object tp, string str) {
     class Menu *items, item;
@@ -114,10 +117,11 @@ mixed cmd_menu(object tp, string str) {
 }
 
 /**
- * @description Player command to buy an item.
+ * Player command to buy an item.
+ *
  * @param {object} tp - The player object.
  * @param {string} str - The item to buy.
- * @return {mixed} - The result of the buy command.
+ * @returns {mixed} The result of the buy command.
  */
 mixed cmd_buy(object tp, string str) {
     object ob;
@@ -179,10 +183,11 @@ mixed cmd_buy(object tp, string str) {
 }
 
 /**
- * @description Player command to view an item.
+ * Player command to view an item.
+ *
  * @param {object} tp - The player object.
  * @param {string} str - The item to view.
- * @return {mixed} - The result of the view command.
+ * @returns {mixed} The result of the view command.
  */
 mixed cmd_view(object tp, string str) {
     class Menu item;
@@ -199,7 +204,7 @@ mixed cmd_view(object tp, string str) {
 }
 
 /**
- * @description Wipe the menu.
+ * Wipe the menu.
  */
 void wipe_menu() {
     food_menu = ({ });

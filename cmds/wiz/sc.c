@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/sc.c
- * @description Deep scan
+ * Deep scan
  *
  * @created 2024-07-28 - Gesslar
  * @last_modified 2024-07-28 - Gesslar

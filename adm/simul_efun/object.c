@@ -459,7 +459,7 @@ object get_player(string name, object room) {
  *
  * @param {string|string*} names - The name of the player objects to locate.
  * @param {object STD_ROOM} room - The room to search for the player objects in.
- * @returns {object STD_PLAYER*} - An array of located player objects.
+ * @returns {object STD_PLAYER*} An array of located player objects.
  */
 object *get_players(mixed names, object room) {
   object *ret = ({});
@@ -562,7 +562,7 @@ int caller_is(mixed ob) {
  * @param {object} one - The first object to compare.
  * @param {object} two - The second object to compare.
  * @param {int} top_env - Whether to check the top-level environment.
- * @returns {int} - 1 if the objects are in the same environment, 0 otherwise.
+ * @returns {int} 1 if the objects are in the same environment, 0 otherwise.
  */
 varargs int same_env_check(object one, object two, int top_env) {
   object env1, env2;

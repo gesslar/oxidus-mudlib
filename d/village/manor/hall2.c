@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/hall2.c
- * @description The second hall in the manor.
+ * The second hall in the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

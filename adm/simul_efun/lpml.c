@@ -903,11 +903,11 @@ private mixed lpml_decode_parse(mixed* parse) {
 // File interpolation pattern: "#path"
 
 /**
- * @simul_efun lpml_decode_preprocess
- * @description Preprocesses LPML text to handle "#path" includes
+ * Preprocesses LPML text to handle "#path" includes
+ *
  * @param {string} text - The LPML string to preprocess
  * @param {string} base_path - Base directory for relative paths
- * @returns {string} - Preprocessed LPML text
+ * @returns {string} Preprocessed LPML text
  *
  * Looks for "#path" pattern and replaces with file contents.
  * Use \# to escape literal # (per LPML spec).
@@ -1062,11 +1062,11 @@ private string lpml_decode_preprocess(string text, string base_path) {
 }
 
 /**
- * @simul_efun lpml_decode
- * @description Deserializes a LPML string into an LPC value.
+ * Deserializes a LPML string into an LPC value.
+ *
  * @param {string} text - The LPML string to deserialize.
  * @param {string} base_path - Optional base directory for relative includes
- * @returns {mixed} - The deserialized LPC value.
+ * @returns {mixed} The deserialized LPC value.
  */
 varargs mixed lpml_decode(string text, string base_path) {
   mixed* parse;
@@ -1091,10 +1091,10 @@ varargs mixed lpml_decode(string text, string base_path) {
 }
 
 /**
- * @simul_efun lpml_encode
- * @description Serializes an LPC value into JSON text.
+ * Serializes an LPC value into JSON text.
+ *
  * @param {mixed} value - The LPC value to serialize.
- * @returns {string} - The JSON string representation.
+ * @returns {string} The JSON string representation.
  *
  * Note: Encoding produces standard JSON
  */

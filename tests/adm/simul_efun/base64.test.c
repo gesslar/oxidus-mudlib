@@ -1,7 +1,8 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/base64.test.c
- * @description Tests for base64_encode() and base64_decode() simul_efuns.
+ *
+ * Tests for base64_encode() and base64_decode() simul_efuns.
  */
 
 #include <test.h>

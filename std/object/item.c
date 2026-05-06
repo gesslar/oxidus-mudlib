@@ -1,7 +1,7 @@
 /**
  * @file /std/object/item.c
- * @description Base implementation for physical game items that can be
- *              manipulated, carried, and moved between containers.
+ * Base implementation for physical game items that can be
+ * manipulated, carried, and moved between containers.
  *
  * @created 2024-07-27 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

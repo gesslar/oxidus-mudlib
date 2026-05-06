@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/library.c
- * @description A library in the manor.
+ * A library in the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

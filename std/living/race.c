@@ -1,6 +1,6 @@
 /**
  * @file /std/user/race.c
- * @description Race stuff
+ * Race stuff
  *
  * @created 2024-07-25 - Gesslar
  * @last_modified 2024-07-25 - Gesslar

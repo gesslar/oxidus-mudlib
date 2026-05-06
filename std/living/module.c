@@ -1,6 +1,6 @@
 /**
  * @file /std/living/module.c
- * @description Module management for user objects
+ * Module management for user objects
  *
  * @created 2024-07-29 - Gesslar
  * @last_modified 2024-07-29 - Gesslar

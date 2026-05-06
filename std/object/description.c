@@ -1,6 +1,6 @@
 /**
  * @file /std/object/description.c
- * @description Functions and variables for object descriptions
+ * Functions and variables for object descriptions
  *
  * @created 2024-01-31 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

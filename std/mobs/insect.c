@@ -1,6 +1,6 @@
 /**
  * @file /std/mobs/insect.c
- * @description Virtual insects
+ * Virtual insects
  *
  * @created 2024-08-20 - Gesslar
  * @last_modified 2024-08-20 - Gesslar

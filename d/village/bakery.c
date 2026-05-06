@@ -1,6 +1,6 @@
 /**
  * @file /d/village/bakery.c
- * @description A cozy bakery in Olum village.
+ * A cozy bakery in Olum village.
  *
  * @created 2024-08-01 - Gesslar
  * @last_modified 2024-08-01 - Gesslar

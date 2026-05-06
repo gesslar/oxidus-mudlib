@@ -431,10 +431,10 @@ varargs int _debug(mixed args...) {
 }
 
 /**
- * @simul_efun boot_number
- * @description Returns the boot number of the MUD. This is the number of
- *              times the MUD has been booted.
- * @returns {int} - The current boot number.
+ * Returns the boot number of the MUD. This is the number of
+ * times the MUD has been booted.
+ *
+ * @returns {int} The current boot number.
  */
 int boot_number() {
   return BOOT_D->query_boot_number();

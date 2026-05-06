@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/env.c
- * @description Manage environment settings for a wizard.
+ * Manage environment settings for a wizard.
  *
  * @created 2024-08-17 - Gesslar
  * @last_modified 2024-08-17 - Gesslar

@@ -1,7 +1,7 @@
 /**
  * @file /cmds/object/clean.c
- * @description Command to destroy all non-living, non-protected objects
- *              within a target object's inventory.
+ * Command to destroy all non-living, non-protected objects
+ * within a target object's inventory.
  *
  * @created 2005-10-28 - Icoz@LPUniversity
  * @last_modified 2024-02-04 - Gesslar

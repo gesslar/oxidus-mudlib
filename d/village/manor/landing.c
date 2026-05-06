@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/landing.c
- * @description The landing in the manor.
+ * The landing in the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

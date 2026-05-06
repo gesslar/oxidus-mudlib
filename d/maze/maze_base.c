@@ -1,6 +1,6 @@
 /**
  * @file /d/maze/maze_base.c
- * @description The maze base room.
+ * The maze base room.
  *
  * @created 2024-09-04 - Gesslar
  * @last_modified 2024-09-04 - Gesslar

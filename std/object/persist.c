@@ -2,8 +2,8 @@
 
 /**
  * @file /std/object/persist.c
- * @description Provides persistence capabilities allowing objects to save and
- *              restore their state to/from strings or files.
+ * Provides persistence capabilities allowing objects to save and
+ * restore their state to/from strings or files.
  *
  * @created Unknown - Beek (Nightmare)
  * @last_modified 2025-03-16 - GitHub Copilot

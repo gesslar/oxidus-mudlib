@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/washroom.c
- * @description A washroom in the manor.
+ * A washroom in the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

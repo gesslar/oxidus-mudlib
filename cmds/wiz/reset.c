@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/reset.c
- * @description Resets a target object
+ * Resets a target object
  *
  * @created 2024-07-23 - Gesslar
  * @last_modified 2024-07-23 - Gesslar

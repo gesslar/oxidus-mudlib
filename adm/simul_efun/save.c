@@ -1,10 +1,10 @@
 #include <simul_efun.h>
 
 /**
- * @simul_efun object_data_directory
- * @description Returns the data directory path for the specified object.
+ * Returns the data directory path for the specified object.
+ *
  * @param {object} ob - The object to get the data directory for.
- * @returns {string} - The data directory path for the object.
+ * @returns {string} The data directory path for the object.
  */
 string object_data_directory(object ob) {
     string source_dir = query_directory(ob);
@@ -16,10 +16,10 @@ string object_data_directory(object ob) {
 }
 
 /**
- * @simul_efun object_data_file
- * @description Returns the data file path for the specified object.
+ * Returns the data file path for the specified object.
+ *
  * @param {object} ob - The object to get the data file for.
- * @returns {string} - The data file path for the object.
+ * @returns {string} The data file path for the object.
  */
 string object_data_file(object ob) {
     string source_dir = object_data_directory(ob);
@@ -32,11 +32,11 @@ string object_data_file(object ob) {
 }
 
 /**
- * @simul_efun assure_object_data_dir
- * @description Ensures the data directory for the specified object exists,
- *              creating it if necessary.
+ * Ensures the data directory for the specified object exists,
+ * creating it if necessary.
+ *
  * @param {object} ob - The object to ensure the data directory for.
- * @returns {string} - The data directory path for the object, or 0 if creation
+ * @returns {string} The data directory path for the object, or 0 if creation
  *                     failed.
  */
 string assure_object_data_dir(object ob) {

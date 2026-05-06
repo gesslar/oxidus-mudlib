@@ -1,7 +1,7 @@
 /**
  * @file /std/object/setup.c
- * @description Provides a standardised setup and teardown chain for objects,
- *              ensuring proper initialization and cleanup order.
+ * Provides a standardised setup and teardown chain for objects,
+ * ensuring proper initialization and cleanup order.
  *
  * @created 2024-01-29 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

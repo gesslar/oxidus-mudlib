@@ -1,6 +1,6 @@
 /**
  * @file /d/village/village_path5.c
- * @description Path through the village
+ * Path through the village
  *
  * @created 2024-08-12 - Gesslar
  * @last_modified 2024-08-12 - Gesslar

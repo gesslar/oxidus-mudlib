@@ -1,12 +1,13 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/array.transform.test.c
- * @description Tests for the return-new-array simul_efuns in
- *              /adm/simul_efun/array.c. Covers distinct_array,
- *              uniq_array, reverse_array, array_shuffle, flatten,
- *              flatten_array, slice, splice, merge_array,
- *              remove_array_element, exclude_array, intersection,
- *              array_fill, array_pad, and pad_array.
+ *
+ * Tests for the return-new-array simul_efuns in
+ * /adm/simul_efun/array.c. Covers distinct_array,
+ * uniq_array, reverse_array, array_shuffle, flatten,
+ * flatten_array, slice, splice, merge_array,
+ * remove_array_element, exclude_array, intersection,
+ * array_fill, array_pad, and pad_array.
  */
 
 #include <test.h>

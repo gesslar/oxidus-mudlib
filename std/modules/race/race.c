@@ -1,6 +1,6 @@
 /**
  * @file /std/modules/race/race.c
- * @description Race body module
+ * Race body module
  *
  * @created 2024-07-25 - Gesslar
  * @last_modified 2024-07-25 - Gesslar
@@ -226,12 +226,12 @@ int query_body_part_vitalness_modifier(string part) {
 
 /**
  * @function valid_body_part
- * @description Check if a body part is valid. It is valid if it is a string
+ * Check if a body part is valid. It is valid if it is a string
  * and is a key in the body_parts mapping. Force is an optional argument that
  * will force the function to forgo the check for membership in the body_parts
  * @param {string} part - the body part to check
  * @param {[int=0]} force - optional, default 0
- * @returns {int} - 1 if the body part is valid, 0 otherwise
+ * @returns {int} 1 if the body part is valid, 0 otherwise
  */
 int valid_body_part(string part, int force: (: 0 :)) {
   if(!stringp(part))

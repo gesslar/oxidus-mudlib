@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/touch.c
- * @description This command allows a wizard to create a new empty file.
+ * This command allows a wizard to create a new empty file.
  *
  * @created 2024-08-10 - Gesslar
  * @last_modified 2024-08-10 - Gesslar

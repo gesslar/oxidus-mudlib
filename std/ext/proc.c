@@ -1,6 +1,6 @@
 /**
  * @file /std/ext/proc.c
- * @description Module for handling procs for objects.
+ * Module for handling procs for objects.
  *
  * @created 2024-10-06 - Gesslar
  * @last_modified 2024-10-06 - Gesslar
@@ -19,13 +19,14 @@ private nosave int __proc_weight = 100;
 
 /**
  * @module_function set_procs
- * @description Set the procs for an object. You must pass the procs as an
- *              2D array of names and mappings, strings, or function pointers.
- *              * The first element of the array is the name of the proc.
- *              * The second element of the array is the proc as a mapping,
- *                string, or function pointer that follows the same criteria as
- *                the individual elements of the arguments passed to add_proc.
- * @param {mixed[]} procs - The procs to set.
+ * Set the procs for an object. You must pass the procs as an
+ * 2D array of names and mappings, strings, or function pointers.
+ * * The first element of the array is the name of the proc.
+ * * The second element of the array is the proc as a mapping,
+ *   string, or function pointer that follows the same criteria as
+ *   the individual elements of the arguments passed to add_proc.
+ *
+ * @param {mixed*} procs - The procs to set.
  */
 void set_procs(mixed *procs) {
   assert((:pointerp($(procs)):), "Procs must be an array.");
@@ -39,18 +40,19 @@ void set_procs(mixed *procs) {
 
 /**
  * @module_function add_proc
- * @description Add a proc to an object. You must pass the name of the proc and
- *              the proc as a mapping, a string, or a valid function pointer.
- *              * If you pass a string, it must be a function name in
- *                this_object() that is either public or protected.
- *              * If you pass a function pointer, it must be a valid function.
- *              * If you pass a mapping, it must contain a function property.
- *                The value of this property can be a string, a function
- *                with the same criteria as above (string or function). When
- *                cooldown and weight are not specified, the default values
- *                are used.
- *              * In the case of a string or a function pointer, the cooldown
- *                and weight are set to the default values.
+ * Add a proc to an object. You must pass the name of the proc and
+ * the proc as a mapping, a string, or a valid function pointer.
+ * * If you pass a string, it must be a function name in
+ *   this_object() that is either public or protected.
+ * * If you pass a function pointer, it must be a valid function.
+ * * If you pass a mapping, it must contain a function property.
+ *   The value of this property can be a string, a function
+ *   with the same criteria as above (string or function). When
+ *   cooldown and weight are not specified, the default values
+ *   are used.
+ * * In the case of a string or a function pointer, the cooldown
+ *   and weight are set to the default values.
+ *
  * @param {string} name - The name of the proc to add.
  * @param {mixed} proc - The proc to add as a mapping, string, or function
  *                       pointer.

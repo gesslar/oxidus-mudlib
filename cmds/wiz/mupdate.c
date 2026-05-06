@@ -1,7 +1,7 @@
 /**
  * @file /cmds/wiz/mupdate.c
- * @description This command will cause the caller to be moved around
- *              all coordinates in order to generate a new Mudlet map.
+ * This command will cause the caller to be moved around
+ * all coordinates in order to generate a new Mudlet map.
  *
  * @created 2024-08-23 - Gesslar
  * @last_modified 2024-08-23 - Gesslar

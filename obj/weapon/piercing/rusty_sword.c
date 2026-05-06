@@ -1,6 +1,6 @@
 /**
  * @file /obj/weapon/piercing/rusty_sword.c
- * @description A basic sword for stabbing things
+ * A basic sword for stabbing things
  *
  * @created 2024-08-04 - Gesslar
  * @last_modified 2024-08-04 - Gesslar

@@ -1,6 +1,6 @@
 /**
  * @file /std/living/ghost.c
- * @description You're a ghost OooOoOOOOoOOoOooooOOo
+ * You're a ghost OooOoOOOOoOOoOooooOOo
  *
  * @created 2024-07-28 - Gesslar
  * @last_modified 2024-07-28 - Gesslar

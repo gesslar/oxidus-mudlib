@@ -1,7 +1,7 @@
 /**
  * @file /adm/daemons/httpc.c
- * @description HTTP client daemon to fetch data from the web
- *              and return it to the caller via callback
+ * HTTP client daemon to fetch data from the web
+ * and return it to the caller via callback
  *
  * @created 2024-07-06 - Gesslar
  * @last_modified 2024-07-06 - Gesslar

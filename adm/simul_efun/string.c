@@ -1,12 +1,12 @@
 #include <simul_efun.h>
 
 /**
- * @simul_efun append
- * @description Appends a string to another string if it is not already there.
- *              If the string is already present, the original string is returned.
+ * Appends a string to another string if it is not already there.
+ * If the string is already present, the original string is returned.
+ *
  * @param {string} source - The string to append to.
  * @param {string} to_append - The string to append.
- * @returns {string} - The original string with the appended string if it was not
+ * @returns {string} The original string with the appended string if it was not
  *                     already present.
  */
 string append(string source, string to_append) {
@@ -23,12 +23,12 @@ string append(string source, string to_append) {
 }
 
 /**
- * @simul_efun prepend
- * @description Prepends a string to another string if it is not already there.
- *              If the string is already present, the original string is returned.
+ * Prepends a string to another string if it is not already there.
+ * If the string is already present, the original string is returned.
+ *
  * @param {string} source - The string to prepend to.
  * @param {string} to_prepend - The string to prepend.
- * @returns {string} - The original string with the prepended string if it was not
+ * @returns {string} The original string with the prepended string if it was not
  *                     already present.
  */
 string prepend(string source, string to_prepend) {
@@ -45,14 +45,14 @@ string prepend(string source, string to_prepend) {
 }
 
 /**
- * @simul_efun chop
- * @description Chops a substring off the end or beginning of another string if
- *              it is present. If the substring is not present, the original
- *              string is returned.
+ * Chops a substring off the end or beginning of another string if
+ * it is present. If the substring is not present, the original
+ * string is returned.
+ *
  * @param {string} str - The string to chop from.
  * @param {string} sub - The substring to chop.
  * @param {int} [dir=-1] - The direction to chop: 1 for left, -1 for right.
- * @returns {string} - The string with the substring chopped off if it was present.
+ * @returns {string} The string with the substring chopped off if it was present.
  */
 varargs string chop(string str, string sub, int dir) {
     int sub_len;
@@ -78,12 +78,12 @@ varargs string chop(string str, string sub, int dir) {
 }
 
 /**
- * @simul_efun extract
- * @description Extracts a substring from a string.
+ * Extracts a substring from a string.
+ *
  * @param {string} str - The string to extract from.
  * @param {int} from - The starting position to extract from.
  * @param {int} [to] - The ending position to extract to.
- * @returns {string} - The extracted substring.
+ * @returns {string} The extracted substring.
  */
 varargs string extract(string str, int from, int to) {
     if(nullp(to)) return str[from ..];
@@ -91,35 +91,35 @@ varargs string extract(string str, int from, int to) {
 }
 
 /**
- * @simul_efun no_ansi
- * @description Returns a string with all colour removed.
+ * Returns a string with all colour removed.
+ *
  * @param {string} str - The string to remove colour from.
- * @returns {string} - The string without colour.
+ * @returns {string} The string without colour.
  */
 string no_ansi(string str) {
     return COLOUR_D->substituteColour(str, "plain");
 }
 
 /**
- * @simul_efun colour
- * @description Resolves colour codes in a string to ANSI escape sequences.
- *              Inverse of no_ansi(). Use when output bypasses the body
- *              messaging pipeline (printf, debug_message, etc.).
+ * Resolves colour codes in a string to ANSI escape sequences.
+ * Inverse of no_ansi(). Use when output bypasses the body
+ * messaging pipeline (printf, debug_message, etc.).
+ *
  * @param {string} str - The string with colour codes.
- * @returns {string} - The string with colour codes replaced by ANSI escapes.
+ * @returns {string} The string with colour codes replaced by ANSI escapes.
  */
 string colour(string str) {
     return COLOUR_D->substituteColour(str, "on");
 }
 
 /**
- * @simul_efun simple_list
- * @description Returns a string that is a simple list of the elements of an array,
- *              joined by a conjunction.
- * @param {string[]} arr - The array to make a list from.
+ * Returns a string that is a simple list of the elements of an array,
+ * joined by a conjunction.
+ *
+ * @param {string*} arr - The array to make a list from.
  * @param {string} [conjunction="and"] - The word to join the last two elements
  *                                       of the list.
- * @returns {string} - The simple list string.
+ * @returns {string} The simple list string.
  */
 varargs string simple_list(string *arr, string conjunction) {
   assert_arg(pointerp(arr) && uniform_array(arr, T_STRING), 1, "Invalid or missing array.");
@@ -135,15 +135,15 @@ varargs string simple_list(string *arr, string conjunction) {
 }
 
 /**
- * @simul_efun substr
- * @description Returns a substring of a string, starting from 0 and ending at the
- *              first occurrence of another string within it. If the reverse flag
- *              is set, the substring will start at the last occurrence of the
- *              substring within the string.
+ * Returns a substring of a string, starting from 0 and ending at the
+ * first occurrence of another string within it. If the reverse flag
+ * is set, the substring will start at the last occurrence of the
+ * substring within the string.
+ *
  * @param {string} str - The string to extract from.
  * @param {string} sub - The substring to extract to.
  * @param {int} [reverse=0] - If set, the substring will start at the last occurrence.
- * @returns {string} - The extracted substring.
+ * @returns {string} The extracted substring.
  */
 varargs string substr(string str, string sub, int reverse) {
     int sub_len;
@@ -167,13 +167,13 @@ varargs string substr(string str, string sub, int reverse) {
 // This simul_efun blatantly (but lovingly) ripped off from:
 // https://github.com/fluffos/dead-souls/blob/09a74caa87d8aadbfe303c294cc0bebb25fdb4db/lib/secure/sefun/strings.c#L104C1-L242C1
 /**
- * @simul_efun from_string
- * @description Converts a string representation of an LPC value to the
- *              corresponding LPC value.
+ * Converts a string representation of an LPC value to the
+ * corresponding LPC value.
+ *
  * @param {string} str - The string to convert.
  * @param {int} [flag=0] - If set, returns an array with the value and the
  *                         remaining string.
- * @returns {mixed} - The LPC value represented by the string.
+ * @returns {mixed} The LPC value represented by the string.
  */
 varargs mixed fromString(string str, int flag) {
     mixed *ret = ({ 0, "" });
@@ -364,10 +364,10 @@ varargs mixed fromString(string str, int flag) {
 }
 
 /**
- * @simul_efun stringify
- * @description Converts an LPC value to its string representation.
+ * Converts an LPC value to its string representation.
+ *
  * @param {mixed} val - The value to convert.
- * @returns {string} - The string representation of the value.
+ * @returns {string} The string representation of the value.
  */
 string stringify(mixed val) {
     if(nullp(val))
@@ -395,10 +395,10 @@ private nosave string decimal = ".";
 private nosave string thousands = ",";
 
 /**
- * @simul_efun add_commas
- * @description Returns a string with commas added to the number.
+ * Returns a string with commas added to the number.
+ *
  * @param {mixed} number - The number to add commas to.
- * @returns {string} - The number with commas added as a string.
+ * @returns {string} The number with commas added as a string.
  */
 string add_commas(mixed number) {
     string num_str;
@@ -458,23 +458,23 @@ string add_commas(mixed number) {
 }
 
 /**
- * @simul_efun reverse_string
- * @description Reverses a string.
+ * Reverses a string.
+ *
  * @param {string} str - The string to reverse.
- * @returns {string} - The reversed string.
+ * @returns {string} The reversed string.
  */
 string reverse_string(string str) {
     return implode(reverse_array(explode(str, "")), "");
 }
 
 /**
- * @simul_efun reverse_strsrch
- * @description Searches for a substring in a string starting from a given position
- *              and moving backwards.
+ * Searches for a substring in a string starting from a given position
+ * and moving backwards.
+ *
  * @param {string} str - The string to search in.
  * @param {string} sub - The substring to search for.
  * @param {int} [start=-1] - The starting position to search from.
- * @returns {int} - The position of the substring in the string, or -1 if not found.
+ * @returns {int} The position of the substring in the string, or -1 if not found.
  */
 varargs int reverse_strsrch(string str, string sub, int start) {
     int sub_len, str_len;
@@ -502,15 +502,17 @@ varargs int reverse_strsrch(string str, string sub, int start) {
 
     return -1;
 }
+
 #include <colour.h>
+
 /**
- * @simul_efun pcre_strsrch
- * @description Searches for the position of a substring in a string using a
- *              regular expression.
+ * Searches for the position of a substring in a string using a
+ * regular expression.
+ *
  * @param {string} str - The string to search in.
  * @param {string} substr - The regular expression to search for.
  * @param {int} [reverse=0] - If set, the search will start from the end of the string.
- * @returns {int} - The position of the substring in the string, or -1 if not found.
+ * @returns {int} The position of the substring in the string, or -1 if not found.
  */
 varargs int pcre_strsrch(string str, string substr, int reverse) {
     int pos;
@@ -523,10 +525,10 @@ varargs int pcre_strsrch(string str, string substr, int reverse) {
 }
 
 /**
- * @simul_efun colourp
- * @description Returns 1 if the string contains colour codes, 0 if not.
+ * Returns 1 if the string contains colour codes, 0 if not.
+ *
  * @param {string} str - The string to check.
- * @returns {int} - 1 if the string contains colour codes, otherwise 0.
+ * @returns {int} 1 if the string contains colour codes, otherwise 0.
  */
 int colourp(string str) {
     return pcre_match(str, COLOUR_REGEX);
@@ -548,7 +550,7 @@ string all_caps(string str) {
  * start with '-' for negatives. Uses a regex to confirm the format.
  *
  * @param {string} str The string to check
- * @return {int} 1 if it matches a numeric pattern, 0 otherwise
+ * @returns {int} 1 if it matches a numeric pattern, 0 otherwise
  *
  * @example
  * ```c
@@ -569,8 +571,8 @@ varargs int is_numeric(string str, int allow_float: (: 0 :)) {
 }
 
 /**
- * @simul_efun startsWith
- * @description Checks if a string starts with a specific substring.
+ * Checks if a string starts with a specific substring.
+ *
  * @param {string} str - The string to check.
  * @param {string} startingString - The substring to check for at the start.
  * @returns {int} 1 if the string starts with the specified substring, 0 otherwise.
@@ -593,8 +595,8 @@ int startsWith(string str, string startingString) {
 }
 
 /**
- * @simul_efun endsWith
- * @description Checks if a string ends with a specific substring.
+ * Checks if a string ends with a specific substring.
+ *
  * @param {string} str - The string to check.
  * @param {string} endingString - The substring to check for at the end.
  * @returns {int} 1 if the string ends with the specified substring, 0 otherwise.

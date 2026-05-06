@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/bedroom1.c
- * @description A bedroom in the manor.
+ * A bedroom in the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

@@ -1,6 +1,6 @@
 /**
 * @file /adm/daemons/modules/colour/css.c
-* @description CSS colour codes for colour, forward and reverse
+* CSS colour codes for colour, forward and reverse
 *
 * @created 2024-07-14 - Gesslar
 * @last_modified 2024-07-14 - Gesslar

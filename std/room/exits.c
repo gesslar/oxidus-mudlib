@@ -1,6 +1,6 @@
 /**
  * @file /std/room/exits.c
- * @description Exits are the connections between rooms.
+ * Exits are the connections between rooms.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

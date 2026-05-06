@@ -1,6 +1,6 @@
 /**
  * @file /d/wastes/wastes_base.c
- * @description The wastes room.
+ * The wastes room.
  *
  * @created 2024-08-30 - Gesslar
  * @last_modified 2024-08-30 - Gesslar

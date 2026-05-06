@@ -1,7 +1,7 @@
 /**
  * @file /std/user/pager.c
- * @description Pager object for displaying text to the user in a paginated
- *              format.
+ * Pager object for displaying text to the user in a paginated
+ * format.
  *
  * @created 2024-07-23 - Gesslar
  * @last_modified 2024-07-23 - Gesslar

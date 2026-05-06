@@ -1,6 +1,6 @@
 /**
  * @file /cmds/adm/master.c
- * @description Command to reload core system files.
+ * Command to reload core system files.
  *
  * @created 2024-07-17 - Gesslar
  * @last_modified 2024-07-17 - Gesslar

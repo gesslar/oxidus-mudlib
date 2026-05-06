@@ -1,7 +1,8 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/daemon.test.c
- * @description Tests for the daemon-accessor simul_efuns.
+ *
+ * Tests for the daemon-accessor simul_efuns.
  */
 
 #include <test.h>

@@ -1,7 +1,7 @@
 /**
  * @file /std/room/storage.c
- * @description This is a room that enables players to access storage. Inherit
- *              from this class to create a storage room.
+ * This is a room that enables players to access storage. Inherit
+ * from this class to create a storage room.
  *
  * @created 2024-08-12 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

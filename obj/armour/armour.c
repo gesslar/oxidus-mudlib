@@ -1,6 +1,6 @@
 /**
  * @file /obj/armour/armour.c
- * @description Base armour inheritable for virtual armour items
+ * Base armour inheritable for virtual armour items
  *
  * @created 2026-05-01 - Gesslar
  * @last_modified 2026-05-01 - Gesslar

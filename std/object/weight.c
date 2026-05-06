@@ -1,6 +1,6 @@
 /**
  * @file /std/object/weight.c
- * @description Handles mass and weight mechanics for objects in the game.
+ * Handles mass and weight mechanics for objects in the game.
  *
  * @created 2024-02-18 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

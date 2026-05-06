@@ -1,6 +1,6 @@
 /**
  * @file /d/village/forest/forest_base.c
- * @description The main forest room.
+ * The main forest room.
  *
  * @created 2024-08-21 - Gesslar
  * @last_modified 2024-08-21 - Gesslar

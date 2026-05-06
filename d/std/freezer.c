@@ -1,6 +1,6 @@
 /**
  * @file /d/std/freezer.c
- * @description Room where bodies can hang out while not inhabited.
+ * Room where bodies can hang out while not inhabited.
  *
  * @created 2024-08-11 - Gesslar
  * @last_modified 2024-08-11 - Gesslar

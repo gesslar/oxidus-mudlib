@@ -1,6 +1,6 @@
 /**
  * @file /d/village/tunnels/twisting_tunnels.c
- * @description Zone object for the Twisting Tunnels.
+ * Zone object for the Twisting Tunnels.
  *
  * @created 2024-09-02 - Gesslar
  * @last_modified 2024-09-02 - Gesslar

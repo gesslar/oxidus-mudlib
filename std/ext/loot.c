@@ -1,6 +1,6 @@
 /**
  * @file /std/ext/loot.c
- * @description Loot module for anything.
+ * Loot module for anything.
  *
  * @created 2024-08-05 - Gesslar
  * @last_modified 2024-08-05 - Gesslar

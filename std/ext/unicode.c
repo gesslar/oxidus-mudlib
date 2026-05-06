@@ -1,6 +1,6 @@
 /**
  * @file /std/ext/unicode.c
- * @description Module for handling unicode characters.
+ * Module for handling unicode characters.
  *
  * Portions of this were delightfully and unabashedly stolen from the Lima base
  * library.

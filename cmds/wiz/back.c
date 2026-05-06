@@ -1,6 +1,6 @@
 /**
  * @file /cmds/wiz/back.c
- * @description Return to your previous location.
+ * Return to your previous location.
  *
  * @created 2024-09-09 - Gesslar
  * @last_modified 2024-09-09 - Gesslar

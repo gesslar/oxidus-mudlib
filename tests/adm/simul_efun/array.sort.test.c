@@ -1,16 +1,17 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/array.sort.test.c
- * @description Tests for the sort wrappers in /adm/simul_efun/array.c —
- *              sort_alpha(), sort_num(), sort_float(),
- *              reverse_sort_alpha(), reverse_sort_num(), and
- *              reverse_sort_float(). These are thin wrappers around
- *              the FluffOS sort_array() efun (direction +1 or -1).
  *
- *              Order matters here, but ASSERT_EQ uses same() which is
- *              loose by default for arrays. Each test therefore uses
- *              same_array(expected, actual, 1) (exact/positional) and
- *              asserts the result is 1.
+ * Tests for the sort wrappers in /adm/simul_efun/array.c —
+ * sort_alpha(), sort_num(), sort_float(),
+ * reverse_sort_alpha(), reverse_sort_num(), and
+ * reverse_sort_float(). These are thin wrappers around
+ * the FluffOS sort_array() efun (direction +1 or -1).
+ *
+ * Order matters here, but ASSERT_EQ uses same() which is
+ * loose by default for arrays. Each test therefore uses
+ * same_array(expected, actual, 1) (exact/positional) and
+ * asserts the result is 1.
  */
 
 #include <test.h>

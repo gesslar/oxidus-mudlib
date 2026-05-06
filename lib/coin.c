@@ -1,6 +1,6 @@
 /**
  * @file /obj/mudlib/coin.c
- * @description A coin object
+ * A coin object
  *
  * @created 2024-02-19 - Gesslar
  * @last_modified 2024-08-08 - Gesslar

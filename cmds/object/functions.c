@@ -1,6 +1,6 @@
 /**
  * @file /cmds/object/functions.c
- * @description Command to list functions contained in an object.
+ * Command to list functions contained in an object.
  *
  * @created 2006-08-16 - Parthenon@LPUniversity
  * @last_modified 2024-02-04 - Gesslar

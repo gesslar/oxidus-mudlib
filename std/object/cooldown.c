@@ -1,6 +1,6 @@
 /**
  * @file /std/object/cooldown.c
- * @description Manages time-limited actions via cooldown timers.
+ * Manages time-limited actions via cooldown timers.
  *
  * @created 2024-09-15 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot

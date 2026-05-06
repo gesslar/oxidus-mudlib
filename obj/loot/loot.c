@@ -1,6 +1,6 @@
 /**
  * @file /obj/loot/loot.c
- * @description Base loot inheritable. This is for vendor trash, etc.
+ * Base loot inheritable. This is for vendor trash, etc.
  *
  * @created 2024-08-20 - Gesslar
  * @last_modified 2024-08-21 - Gesslar

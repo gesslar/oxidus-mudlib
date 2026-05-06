@@ -1,9 +1,10 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/array.functional.test.c
- * @description Tests for callback-applying simul_efuns in
- *              /adm/simul_efun/array.c — reduce(), each(), find(),
- *              find_index(), eval_first(), and eval_last().
+ *
+ * Tests for callback-applying simul_efuns in
+ * /adm/simul_efun/array.c — reduce(), each(), find(),
+ * find_index(), eval_first(), and eval_last().
  */
 
 #include <test.h>

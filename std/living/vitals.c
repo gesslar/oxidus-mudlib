@@ -1,6 +1,6 @@
 /**
  * @file /std/user/vitals.c
- * @description Vitals for livings
+ * Vitals for livings
  *
  * @created 2024-07-24 - Gesslar
  * @last_modified 2024-07-24 - Gesslar

@@ -1,8 +1,9 @@
 // @lpc-nocheck
 /**
  * @file /tests/adm/simul_efun/array.misc.test.c
- * @description Tests for the leftover one-off array simul_efuns:
- *              array_item(), array_columns(), and array_sum().
+ *
+ * Tests for the leftover one-off array simul_efuns:
+ * array_item(), array_columns(), and array_sum().
  */
 
 #include <test.h>

@@ -1,6 +1,6 @@
 /**
  * @file /d/village/centre.c
- * @description The commmunity centre
+ * The commmunity centre
  *
  * @created 2024-08-12 - Gesslar
  * @last_modified 2024-08-12 - Gesslar

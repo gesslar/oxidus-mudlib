@@ -1,6 +1,6 @@
 /**
  * @file /d/village/house/salon.c
- * @description A salon in the manor.
+ * A salon in the manor.
  *
  * @created 2024-09-13 - Gesslar
  * @last_modified 2024-09-13 - Gesslar

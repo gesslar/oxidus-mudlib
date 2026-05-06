@@ -1,7 +1,7 @@
 /**
  * @file /cmds/object/call.c
- * @description Command to call functions on objects, supporting
- *              references and multiple targets.
+ * Command to call functions on objects, supporting
+ * references and multiple targets.
  *
  * @created 1992-06-00 - Pallando (Douglas Reay)
  * @last_modified 2024-02-04 - Gesslar

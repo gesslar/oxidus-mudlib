@@ -1,6 +1,6 @@
 /**
  * @file /std/modules/race/ghost.c
- * @description Ghost racial module
+ * Ghost racial module
  *
  * @created 2024-07-25 - Gesslar
  * @last_modified 2024-07-25 - Gesslar

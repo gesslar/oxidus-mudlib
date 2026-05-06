@@ -1,7 +1,7 @@
 /**
  * @file /std/container/storage_object.c
- * @description Object for permanent or temporary storage, like shops or
- *              armouries.
+ * Object for permanent or temporary storage, like shops or
+ * armouries.
  *
  * @created 2024-08-01 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot
