@@ -64,6 +64,9 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
       always_show_path = 0;
   string *paths = ({});
   int c;
+  mixed *output_files;
+  mixed *output_file;
+  int num_files;
 
   tokens = reg_assoc(
     arg || "",
@@ -323,7 +326,7 @@ private string filename_prefix(mixed *file_details) {
     default:
       switch(file_details[0][<2..<1]) {
         case ".c":
-          if(stat(current_path + file_details[0])[2])
+          if(stat(current_path + file_details[0])[2], 0)
             return "{{00FF00}}*";
           return "{{008000}} ";
         case ".h":

@@ -1,19 +1,26 @@
 /**
- * @file /std/area/corpse/corpse.c
+ * @file /lib/corpse.c
+ *
  * Corpses oooOooOooOooO
  *
+ * Corpse object created when a living dies. Holds the deceased's
+ * inventory and cycles through stages of decay (dead, bloated,
+ * decaying, rotting, putrid, decomposing, skeletal) on a wallclock
+ * timer, removing itself after the final stage.
+ *
  * @created 2024-07-27 - Gesslar
- * @last_modified 2024-07-27 - Gesslar
+ * @last_modified 2026-05-06 - Gesslar
  *
  * @history
  * 2024-07-27 - Gesslar - Created
+ * 2026-05-06 - Gesslar - Documented
  */
 
 inherit STD_ITEM;
 inherit STD_CONTAINER;
 
 // Forward declarations
-private void decay(int it);
+private void decay(string *corpse_shorts);
 public void setup_corpse(object dead, object killer);
 public string query_killer_name();
 public string query_dead_name();
@@ -22,9 +29,9 @@ public int is_npc_corpse();
 public int is_corpse();
 
 // Variables
-private string dead_name, killer_name;
-private nosave int pc_corpse, npc_corpse;
-private nosave string *_shorts = ({
+private nosave string __dead_name, __killer_name;
+private nosave int __pc_corpse, __npc_corpse;
+private nosave string *__shorts = ({
   "the dead body of {NAME}",
   "the bloated body of {NAME}",
   "the decaying body of {NAME}",
@@ -34,35 +41,75 @@ private nosave string *_shorts = ({
   "the skeletal remains of {NAME}",
 });
 
+/**
+ * Initialises this corpse for a freshly-killed body. Records the
+ * killer and deceased names, sets identifiers, short and long
+ * descriptions, mass and capacity, captures the PC/NPC flags, and
+ * schedules the first decay tick.
+ *
+ * @param {STD_BODY} dead - The body that died.
+ * @param {STD_BODY} killer - The killer, or 0 if unknown.
+ */
 public void setup_corpse(object dead, object killer) {
-  string *corpse_shorts = copy(_shorts);
+  string *corpse_shorts = copy(__shorts);
   string short = shift(ref corpse_shorts);
 
-  killer_name = killer ? killer->query_name() : "unknown";
-  dead_name = dead->query_name();
+  __killer_name = killer ? killer->query_name() : "unknown";
+  __dead_name = dead->query_name();
 
   set_id(({ "body", "dead body", "corpse" }));
-  set_name(dead_name+"'s body");
+  set_name(__dead_name+"'s body");
 
-  short = replace_string(short, "{NAME}", dead_name);
+  short = replace_string(short, "{NAME}", __dead_name);
 
   set_short(short);
-  set_long("This is the dead body of "+dead_name+".");
+  set_long("This is the dead body of "+__dead_name+".");
   set_mass(1);
-  set_capacity(1000);
+  set_capacity(1_000);
 
-  pc_corpse = dead->is_pc();
-  npc_corpse = dead->is_npc();
+  __pc_corpse = dead->is_pc();
+  __npc_corpse = dead->is_npc();
 
   call_out_walltime((: decay, corpse_shorts :), 5.0+random_float(5.0));
 }
 
-public string query_killer_name() { return killer_name; }
-public string query_dead_name() { return dead_name; }
+/**
+ * Returns the name of whoever killed the deceased.
+ *
+ * @returns {string} The killer's name, or "unknown".
+ */
+public string query_killer_name() { return __killer_name; }
 
-public int is_pc_corpse() { return pc_corpse; }
-public int is_npc_corpse() { return npc_corpse; }
+/**
+ * Returns the name of the deceased.
+ *
+ * @returns {string} The dead body's name.
+ */
+public string query_dead_name() { return __dead_name; }
 
+/**
+ * Indicates whether this corpse came from a player character.
+ *
+ * @returns {int} 1 if the body was a PC, 0 otherwise.
+ */
+public int is_pc_corpse() { return __pc_corpse; }
+
+/**
+ * Indicates whether this corpse came from an NPC.
+ *
+ * @returns {int} 1 if the body was an NPC, 0 otherwise.
+ */
+public int is_npc_corpse() { return __npc_corpse; }
+
+/**
+ * Advances the corpse to its next decay stage by consuming the next
+ * short description from the supplied list. When no stages remain,
+ * schedules the corpse to remove itself. Aborts silently if the
+ * corpse no longer has an environment.
+ *
+ * @param {string*} corpse_shorts - Remaining decay-stage short
+ *                                  descriptions.
+ */
 private void decay(string *corpse_shorts) {
   string short;
 
@@ -70,18 +117,19 @@ private void decay(string *corpse_shorts) {
     return;
 
   short = shift(ref corpse_shorts);
-  short = replace_string(short, "{NAME}", dead_name);
+  short = replace_string(short, "{NAME}", __dead_name);
   set_short(short);
 
   if(sizeof(corpse_shorts) == 0) {
-    call_out_walltime(function() {
-      // clean_contents();
-      remove();
-    }, 1.0);
-    return;
+    call_out_walltime((: remove :), 1.0);
+  } else {
+    call_out_walltime((: decay, corpse_shorts :), 5.0+random_float(5.0));
   }
-
-  call_out_walltime((: decay, corpse_shorts :), 5.0+random_float(5.0));
 }
 
+/**
+ * Identifies this object as a corpse.
+ *
+ * @returns {int} Always 1.
+ */
 public int is_corpse() { return 1; }
