@@ -1,6 +1,6 @@
 int *p;
 int *perm;
-mixed *gradP;
+mixed *grad_p;
 
 float F2, G2;
 
@@ -34,7 +34,7 @@ mixed *init_noise(int width, int height, int seed) {
   });
 
   perm = allocate(512);
-  gradP = allocate(512);
+  grad_p = allocate(512);
 
   F2 = 0.5 * (sqrt(3.0) - 1.0);
   G2 = (3.0 - sqrt(3.0)) / 6.0;
@@ -68,7 +68,7 @@ varargs void seed(mixed seed_input) {
       v = p[i] ^ ((s1 >> 8) & 255);   // Use s1 for even indices
 
     perm[i] = perm[i + 256] = v;
-    gradP[i] = gradP[i + 256] = grad3[v % 12];
+    grad_p[i] = grad_p[i + 256] = grad3[v % 12];
   }
 
   _seed = ({ s0, s1 });
@@ -120,9 +120,9 @@ float simplex2(float xin, float yin) {
   // Work out the hashed gradient indices of the three simplex corners
   i &= 255;
   j &= 255;
-  gi0 = gradP[i+perm[j]];
-  gi1 = gradP[i+i1+perm[j+j1]];
-  gi2 = gradP[i+1+perm[j+1]];
+  gi0 = grad_p[i+perm[j]];
+  gi1 = grad_p[i+i1+perm[j+j1]];
+  gi2 = grad_p[i+1+perm[j+1]];
   // Calculate the contribution from the three corners
   t0 = 0.5 - x0 * x0 - y0 * y0;
 
@@ -176,10 +176,10 @@ float perlin2 (float x, float y) {
   X = X & 255; Y = Y & 255;
 
   // Calculate noise contributions from each of the four corners
-  n00 = dot2(gradP[X+perm[Y]], x, y);
-  n01 = dot2(gradP[X+perm[Y + 1]], x, y - 1.0);
-  n10 = dot2(gradP[X+1+perm[Y]], x - 1.0, y);
-  n11 = dot2(gradP[X+1+perm[Y + 1]], x - 1.0, y - 1.0);
+  n00 = dot2(grad_p[X+perm[Y]], x, y);
+  n01 = dot2(grad_p[X+perm[Y + 1]], x, y - 1.0);
+  n10 = dot2(grad_p[X+1+perm[Y]], x - 1.0, y);
+  n11 = dot2(grad_p[X+1+perm[Y + 1]], x - 1.0, y - 1.0);
 
   // Compute the fade curve value for x
   u = fade(x);

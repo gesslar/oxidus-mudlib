@@ -18,26 +18,26 @@ inherit STD_DAEMON;
 inherit DM_CSS;
 
 // Forward declarations
-int *hexToRgb(string hex);
-int colourToGreyscale(int colour_code);
+int *hext_to_rgb(string hex);
+int colour_to_greyscale(int colour_code);
 int colourp(string text);
-private int tooDarkCheck();
+private int too_dark_check();
 private string cached(string tag);
-private void normalizeHex(string ref hex);
-public int *colourToRgb(int colour_code);
-public int rgbToColour(int r, int g, int b);
-public string rgbToSequence(int *rgb, int mode);
-string ansi256To3hex(int ansi);
-string bodyColourReplace(object body, string text, int message_type);
-string hextToSequence(string hex);
-string substituteColour(string text, string mode);
-string substituteTooDark(string hex);
+private void normalize_hex(string ref hex);
+public int *colour_to_rgb(int colour_code);
+public int rgb_to_colour(int r, int g, int b);
+public string rgb_to_sequence(int *rgb, int mode);
+string ansi256_to_3hex(int ansi);
+string bod_colour_replace(object body, string text, int message_type);
+string hex_to_sequence(string hex);
+string substitute_colour(string text, string mode);
+string substitute_too_dark(string hex);
 string wrap(string str, int wrap_at, int indent_at);
-int getLuminance(int *rgb);
-float getAccessibleLuminanceMultiplier(int *rgb);
-public string rgbToHex(int *rgb);
+int get_luminance(int *rgb);
+float get_accessible_luminance_multiplier(int *rgb);
+public string rgb_to_hex(int *rgb);
 void cache256();
-void cacheAttributes();
+void cache_attributes();
 void resync();
 
 private nosave float minimum_luminance;
@@ -57,10 +57,10 @@ private nosave mixed *ansi_rgb = ({
  * @returns {void}
  */
 void setup() {
-  cacheAttributes();
+  cache_attributes();
   cache256();
 
-  minimum_luminance = mudConfig("COLOUR_MININUM_LUMINANCE") || 50.0;
+  minimum_luminance = mud_config("COLOUR_MININUM_LUMINANCE") || 50.0;
 }
 
 /**
@@ -69,9 +69,8 @@ void setup() {
  * @returns {int} 1 if enabled, 0 if disabled
  * @private
  */
-private int tooDarkCheck() {
+private int too_dark_check() {
   return 1;
-  // return mudConfig("COLOUR_TOO_DARK") == "on";
 }
 
 /**
@@ -83,7 +82,7 @@ private int tooDarkCheck() {
  */
 private string cached(string tag) {
   if(!cache[tag])
-    cache[tag] = hextToSequence(tag);
+    cache[tag] = hex_to_sequence(tag);
 
   return cache[tag];
 }
@@ -95,7 +94,7 @@ private string cached(string tag) {
  *
  * @returns {void}
  */
-void cacheAttributes() {
+void cache_attributes() {
   cache += ([
     "{{res}}" : "\e[0m",  // reset
     "{{RES}}" : "\e[0m",  // reset
@@ -127,10 +126,10 @@ private void cache256() {
   int x;
 
   for(; x < 256; x++) {
-    int *rgb = colourToRgb(x);
-    string hex = rgbToHex(rgb);
+    int *rgb = colour_to_rgb(x);
+    string hex = rgb_to_hex(rgb);
     string lookup = sprintf("{{%s}}", hex);
-    string code = rgbToSequence(rgb, 0);
+    string code = rgb_to_sequence(rgb, 0);
 
     cache[lookup] = code;
   }
@@ -150,7 +149,7 @@ public mapping query_colour_cache() { return copy(cache); }
  * @param {string} mode - The mode to use ("on" or "off")
  * @returns {string} Text with colour codes processed according to mode
  */
-public string substituteColour(string text, string mode) {
+public string substitute_colour(string text, string mode) {
   mixed *parts;
   string *tags;
   int *matches;
@@ -178,12 +177,12 @@ public string substituteColour(string text, string mode) {
         if(good = cached(tags[sz]))
           tags[sz] = good;
         else
-          tags[sz] = cache[tags[sz]] = hextToSequence(tags[sz], 1);
+          tags[sz] = cache[tags[sz]] = hex_to_sequence(tags[sz], 1);
       } else {
         if(good = cached(tags[sz]))
           tags[sz] = good;
         else
-          tags[sz] = cache[tags[sz]] = hextToSequence(tags[sz]);
+          tags[sz] = cache[tags[sz]] = hex_to_sequence(tags[sz]);
       }
     }
   } else {
@@ -227,7 +226,7 @@ public string wrap(string str, int wrap_at, int indent_at) {
         return part;
       }
 
-      plain = substituteColour(part, "off");
+      plain = substitute_colour(part, "off");
       len = sizeof(plain);
 
       running["length"] += (len + 1);
@@ -313,7 +312,7 @@ string get_colour_list() {
     for(int j = 0; j < 6; j++) {
       for(int k = 0; k < 12; k++) {
         int colour = i*(6*12) + j + k*6;
-        string hex = ansi256To3hex(colours[colour]); // Convert ANSI to #RGB
+        string hex = ansi256_to_3hex(colours[colour]); // Convert ANSI to #RGB
 
         output += sprintf("  {{%s}}#%s{{res}}",
           hex, hex
@@ -328,7 +327,7 @@ string get_colour_list() {
   for(int i = 0; i < 2; i++) {
     for(int j = 0; j < 8; j++) {
       int colour = i*8 + j;
-      string hex = ansi256To3hex(colours_low[colour]);
+      string hex = ansi256_to_3hex(colours_low[colour]);
 
       output += sprintf("  {{%s}}#%s{{res}}",
         hex, hex
@@ -342,7 +341,7 @@ string get_colour_list() {
   for(int i = 0; i < 3; i++) {
     for(int j = 0; j < 5; j++) {
       int colour = i*5 + j;
-      string hex = ansi256To3hex(colours_greyscale[colour]);
+      string hex = ansi256_to_3hex(colours_greyscale[colour]);
 
       output += sprintf("  {{%s}}#%s{{res}}",
         hex, hex
@@ -383,12 +382,12 @@ mixed *base_colours() {
  * @param {int} ansi - ANSI 256 color code (0-255)
  * @returns {string} 3-digit hex color code
  */
-string ansi256To3hex(int ansi) {
-  int *rgb = colourToRgb(ansi); // Get the RGB triplet
+string ansi256_to_3hex(int ansi) {
+  int *rgb = colour_to_rgb(ansi); // Get the RGB triplet
   return sprintf("%X%X%X", rgb[0] / 17, rgb[1] / 17, rgb[2] / 17); // Convert to 3-hex
 }
 
-int getLuminance(int *rgb) {
+int get_luminance(int *rgb) {
   assert_arg(uniform_array(rgb, T_INT), 1, "Invalid value.");
   assert_arg(every(rgb, (: !nullp($1) && clamped($1, 0, 255) :)), 1, "Invalid value.");
 
@@ -403,8 +402,8 @@ int getLuminance(int *rgb) {
  * @param {int*} rgb - The colour code to check
  * @returns {int} 1 if the colour is too dark, 0 otherwise
  */
-float getAccessibleLuminanceMultiplier(int *rgb) {
-  float lum = getLuminance(rgb);
+float get_accessible_luminance_multiplier(int *rgb) {
+  float lum = get_luminance(rgb);
 
   return lum >= minimum_luminance ? 1.0 : minimum_luminance / lum;
 }
@@ -419,16 +418,16 @@ float getAccessibleLuminanceMultiplier(int *rgb) {
  * @param {string} hex - The colour code to potentially substitute
  * @returns {string} Substituted colour code or original if not too dark
  */
-string substituteTooDark(string hex) {
+string substitute_too_dark(string hex) {
   int *rgb;
   float scale;
 
   if(find_index(base_colours(), (: $1[0] == $(hex) :)) > -1)
     return hex;
 
-  rgb = hexToRgb(hex);
+  rgb = hext_to_rgb(hex);
 
-  scale = getAccessibleLuminanceMultiplier(rgb);
+  scale = get_accessible_luminance_multiplier(rgb);
   if(scale == 1.0)
     return hex;
 
@@ -436,10 +435,10 @@ string substituteTooDark(string hex) {
   rgb[1] = clamp(to_int(rgb[1] * scale), 0, 255);
   rgb[2] = clamp(to_int(rgb[2] * scale), 0, 255);
 
-  return sprintf("{{%s}}", rgbToHex(rgb));
+  return sprintf("{{%s}}", rgb_to_hex(rgb));
 }
 
-private void normalizeHex(string ref hex) {
+private void normalize_hex(string ref hex) {
   int r, g, b;
   string *match;
 
@@ -479,7 +478,7 @@ private void normalizeHex(string ref hex) {
  * @param {int} colour_code - Original colour code (0-255)
  * @returns {int} Equivalent greyscale colour code (232-255)
  */
-int colourToGreyscale(int colour_code) {
+int colour_to_greyscale(int colour_code) {
   float normalized;
   int greyscale_code;
 
@@ -501,7 +500,7 @@ int colourToGreyscale(int colour_code) {
  * @param {int} message_type - Type of message (NO_COLOUR, MSG_COMBAT_HIT, etc)
  * @returns {string} Text with applied colour preferences
  */
-public string bodyColourReplace(object body, string text, int message_type) {
+public string bod_colour_replace(object body, string text, int message_type) {
   string pref, colour;
 
   if(!objectp(body) || !stringp(text) || !strlen(text) || !message_type)
@@ -541,7 +540,7 @@ public string bodyColourReplace(object body, string text, int message_type) {
  * @returns {int} Best matching 256-colour code
  * @errors If any RGB value is outside the valid range
  */
-public int rgbToColour(int r, int g, int b) {
+public int rgb_to_colour(int r, int g, int b) {
   if(r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255)
     error("Invalid RGB values: " + r + ", " + g + ", " + b);
 
@@ -564,21 +563,21 @@ public int rgbToColour(int r, int g, int b) {
 /**
  * Converts RGB values to a 256-color code.
  *
- * @param {int} colourCode - Array containing RGB values [r, g, b]
+ * @param {int} colour_code - Array containing RGB values [r, g, b]
  * @returns {int*} The corresponding 256-color code
  */
-int *colourToRgb(int colourCode) {
+int *colour_to_rgb(int colour_code) {
   int r, g, b;
 
-  if(colourCode < 16) { // ANSI basic colors
-    return ansi_rgb[colourCode]; // Assuming you have a predefined array like before
-  } else if(clamped(colourCode, 16, 231)) { // 6x6x6 color cube (216 colors)
-    colourCode -= 16;
-    r = (colourCode / 36) * 51; // 6 levels (0, 51, 102, 153, 204, 255)
-    g = ((colourCode / 6) % 6) * 51;
-    b = (colourCode % 6) * 51;
+  if(colour_code < 16) { // ANSI basic colors
+    return ansi_rgb[colour_code]; // Assuming you have a predefined array like before
+  } else if(clamped(colour_code, 16, 231)) { // 6x6x6 color cube (216 colors)
+    colour_code -= 16;
+    r = (colour_code / 36) * 51; // 6 levels (0, 51, 102, 153, 204, 255)
+    g = ((colour_code / 6) % 6) * 51;
+    b = (colour_code % 6) * 51;
   } else { // 24 grayscale shades (232-255)
-    r = g = b = 8 + (colourCode - 232) * 10; // Start at 8, increase by 10
+    r = g = b = 8 + (colour_code - 232) * 10; // Start at 8, increase by 10
   }
 
   return ({ r, g, b });
@@ -590,7 +589,7 @@ int *colourToRgb(int colourCode) {
  * @param {int*} rgb - Array containing RGB values [r, g, b]
  * @returns {string} Hexadecimal color string in format "RRGGBB"
  */
-varargs string rgbToHex(int *rgb) {
+varargs string rgb_to_hex(int *rgb) {
   return sprintf("%02X%02X%02X", rgb[0], rgb[1], rgb[2]);
 }
 
@@ -601,7 +600,7 @@ varargs string rgbToHex(int *rgb) {
  * @param {int} mode - 0 for foreground, 1 for background
  * @returns {string} ANSI escape sequence for the color
  */
-public string rgbToSequence(int *rgb, int mode) {
+public string rgb_to_sequence(int *rgb, int mode) {
   int r, g, b;
   int bg = !!mode ? 48 : 38;
 
@@ -612,10 +611,10 @@ public string rgbToSequence(int *rgb, int mode) {
   return sprintf("\e[%d;2;%d;%d;%dm", bg, r, g, b);
 }
 
-int *hexToRgb(string hex) {
+int *hext_to_rgb(string hex) {
   int r, g, b;
 
-  normalizeHex(ref hex);
+  normalize_hex(ref hex);
 
   sscanf(hex[0..1], "%x", r);
   sscanf(hex[2..3], "%x", g);
@@ -631,12 +630,12 @@ int *hexToRgb(string hex) {
  * @param {int} mode - 0 for foreground, 1 for background
  * @returns {string} ANSI escape sequence for the color
  */
-varargs string hextToSequence(string hex, int mode) {
+varargs string hex_to_sequence(string hex, int mode) {
   int *rgb;
 
-  rgb = hexToRgb(hex);
+  rgb = hext_to_rgb(hex);
 
-  return rgbToSequence(rgb, mode);
+  return rgb_to_sequence(rgb, mode);
 }
 
 /**
@@ -645,6 +644,6 @@ varargs string hextToSequence(string hex, int mode) {
  * @returns {void}
  */
 void resync() {
-  cacheAttributes();
+  cache_attributes();
   cache256();
 }

@@ -46,7 +46,7 @@ public mixed main(
 
   ob = first_inventory(target);
   while(ob) {
-    string shortDesc = get_short(ob);
+    string short_desc = get_short(ob);
 
     next = next_inventory(ob);
     if(ob->query_no_clean() || ob->can_clean_up()) {
@@ -62,7 +62,7 @@ public mixed main(
     if(ob)
       destruct(ob);
 
-    _ok(caller, "%s destroyed.", shortDesc);
+    _ok(caller, "%s destroyed.", short_desc);
     ob = next;
   }
 

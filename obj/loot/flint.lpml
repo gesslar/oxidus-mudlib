@@ -1,0 +1,18 @@
+{
+  id: ["flint"],
+  additional ids: ["stone","rock"],
+  adj: ["small","sharp","grey"],
+  name: "piece of flint",
+  short: "a small piece of flint",
+  long: "This is a small chunk of dark grey flint, its edges chipped to a "
+        "glassy, razor-sharp point. Struck against steel it throws a shower "
+        "of sparks, and a skilled hand could knap it into a blade or "
+        "arrowhead.",
+  mass: 10,
+  value: 4,
+  material: ["stone"],
+  properties: {
+    crafting material: true,
+    striker: true,
+  },
+}

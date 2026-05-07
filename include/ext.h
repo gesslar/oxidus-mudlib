@@ -13,6 +13,7 @@
 #define EXT_HTTP          DIR_STD_EXT "http"
 #define EXT_LOG           DIR_STD_EXT "log"
 #define EXT_LOOT          DIR_STD_EXT "loot"
+#define EXT_MATERIAL      DIR_STD_EXT "material"
 #define EXT_MESSAGING     DIR_STD_EXT "messaging"
 #define EXT_NOISE         DIR_STD_EXT "noise"
 #define EXT_PERSIST_DATA  DIR_STD_EXT "persist_data"

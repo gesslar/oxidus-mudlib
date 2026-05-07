@@ -54,7 +54,7 @@ public void repopulate() {
     int level = random_clamp(mob_data["level"][0], mob_data["level"][1]);
 
     mob = add_inventory(file);
-    mob->setLevel(level);
+    mob->set_level(level);
 
     __mobs += ({ mob });
 

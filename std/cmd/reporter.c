@@ -56,7 +56,7 @@ protected nomask void set_report_type(string type) {
  * @errors If label is not a recognised type
  */
 protected nomask void set_git_hub_label(string label) {
-  mapping config = mudConfig("GITHUB_REPORTER");
+  mapping config = mud_config("GITHUB_REPORTER");
 
   if(!stringp(label) && !strlen(label))
     error("Bad argument 1 to set_git_hub_label().\n");

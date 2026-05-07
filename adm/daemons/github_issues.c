@@ -46,7 +46,7 @@ void setup() {
  */
 
 varargs mixed create_issue(string type, string title, string body, mixed *callback) {
-  mapping config = mudConfig("GITHUB_REPORTER");
+  mapping config = mud_config("GITHUB_REPORTER");
 
   if(!stringp(type) || !strlen(type))
     return "Type must be a valid string";
@@ -114,7 +114,7 @@ void http_handle_shutdown(mapping response) {
 
   if(response["response"]["status"]["code"] != 201) {
     string file;
-    _log(2, "Request error: %d %s\nO",
+    _log(2, "Request error: %d %s\n",
       response["response"]["status"]["code"],
       response["response"]["status"]["message"],
       body

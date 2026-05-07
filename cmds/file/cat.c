@@ -21,7 +21,7 @@ void setup() {
 
 mixed main(/** @type {STD_PLAYER} */ object caller,
     string str) {
-  int i, maxLines;
+  int i, max_lines;
 
   if(!str)
     return _usage(caller);
@@ -36,12 +36,12 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
     return _error(caller,
       "No such file or 0-length file: %s", str);
 
-  maxLines = file_length(str);
+  max_lines = file_length(str);
 
   tell(caller, "=== " + str + " ===\n");
 
   i = 0;
-  while(++i <= maxLines)
+  while(++i <= max_lines)
     tell(caller, append(read_file(str, i, 1), "\n"));
 
   return 1;

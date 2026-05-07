@@ -11,6 +11,8 @@
 
 #include <colour.h>
 
+inherit STD_ITEM;
+
 private nosave float dir_delay = 0.02;
 private nosave float file_delay = 0.01;
 
@@ -41,10 +43,15 @@ void check_running() {
     message("info", "\aDone!\n", notify);
     message("info", sprintf("%d dirs and %d files checked.\n", dirs_checked, files_checked), notify);
     message("info", sprintf("Duration: %.2fs\n", time_frac()-started), notify);
+    remove();
   }
 }
 
 void runit(object who) {
+  new(base_name())->do_check(who);
+}
+
+void do_check(object who) {
   notify = who;
 
   started = time_frac();

@@ -45,7 +45,7 @@ private void new_password(string str, object tp) {
 private void confirm_password(string str, string pass, object tp) {
     if(str == pass) {
         _ok("Password accepted.");
-        ACCOUNT_D->writeAccount(tp->query_real_name(), "password", crypt(str, 0));
+        ACCOUNT_D->write_account(tp->query_real_name(), "password", crypt(str, 0));
         _ok("Password changed.");
     } else {
         _error("Passwords do not match.");

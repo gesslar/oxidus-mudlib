@@ -36,9 +36,9 @@ private int __ed_setup = 0;
 void setup_body() {
   set_living_name(query_real_name());
   set_id(({query_real_name()}));
-  set_heart_beat(mudConfig("DEFAULT_HEART_RATE"));
-  !query_race() && set_race(mudConfig("DEFAULT_RACE"));
-  !queryLevel() && setLevel(1.0);
+  set_heart_beat(mud_config("DEFAULT_HEART_RATE"));
+  !query_race() && set_race(mud_config("DEFAULT_RACE"));
+  !query_level() && set_level(1.0);
   !query_env("cwd") && set_env("cwd", "/doc");
   !query_short() && set_short(query_name());
   !query_pref("colour") && set_pref("colour", "on");
@@ -343,7 +343,7 @@ mapping query_all_environ() {
  * @param {mixed} value - The value to set
  */
 void set_environ_option(string key, mixed value) {
-  __environ_data[key] = fromString(value);
+  __environ_data[key] = from_string(value);
 
   _log(1, "Setting environ option: %s = %O", key, value);
 }

@@ -16,15 +16,15 @@ private float _level = 1.0;
 private float _level_mod = 0.0;
 private int __xp = 0;
 
-int queryXp() {
+int query_xp() {
   return __xp;
 }
 
 float query_tnl() {
-  return ADVANCE_D->toNextLevel(_level);
+  return ADVANCE_D->to_next_level(_level);
 }
 
-float queryLevel() {
+float query_level() {
   return _level;
 }
 
@@ -32,7 +32,7 @@ float query_effective_level() {
   return _level + _level_mod;
 }
 
-float setLevel(float l) {
+float set_level(float l) {
   _level = to_float(l);
 
   if(userp()) {
@@ -74,7 +74,7 @@ float adjust_level_mod(float l) {
   return _level_mod;
 }
 
-int adjustXp(int amount) {
+int adjust_xp(int amount) {
   __xp += amount;
 
   if(userp()) {
@@ -88,7 +88,7 @@ int adjustXp(int amount) {
   return __xp;
 }
 
-int setXp(int amount) {
+int set_xp(int amount) {
   int delta;
 
   if(__xp < 0)
@@ -96,7 +96,7 @@ int setXp(int amount) {
   else
     delta = amount;
 
-  return adjustXp(delta);
+  return adjust_xp(delta);
 }
 
 void on_advance(object tp, float l) {

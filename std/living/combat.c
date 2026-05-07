@@ -230,7 +230,7 @@ int next_round() {
  */
 public int can_strike(object enemy, mixed weapon) {
   float ac;
-  float chance = mudConfig("DEFAULT_HIT_CHANCE");
+  float chance = mud_config("DEFAULT_HIT_CHANCE");
   float lvl = query_effective_level();
   float vlvl = enemy->query_effective_level();
   float result;
@@ -965,7 +965,7 @@ float set_damage(float x) {
  */
 float query_damage() {
   if(_damage <= 0.0)
-    return random_float(queryLevel() * 2.0);
+    return random_float(query_level() * 2.0);
 
   return random_float(_damage);
 }

@@ -53,13 +53,10 @@ inherit STD_CMD;
 #define GETOPT_KEEPQUOTES (1 << 1)
 #define GETOPT_KEEPSPACES (1 << 2)
 
-private mixed absVal(mixed val);
-private varargs mixed *getOpt(string str,
-    string opts, int flags);
-private varargs string *globArray(string *paths,
-    string cwd);
-private string grepFile(mapping opt, string pat,
-    string file);
+private mixed abs_val(mixed val);
+private varargs mixed *get_opt(string str, string opts, int flags);
+private varargs string *glob_array(string *paths, string cwd);
+private string grep_file(mapping opt, string pat, string file);
 
 void setup() {
   usage_text = "grep [-cilmnvxEFLM] [-a after] "
@@ -91,7 +88,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
   mixed *opt;
   string out, *files;
 
-  if(sizeof(opt = getOpt(str,
+  if(sizeof(opt = get_opt(str,
       "a:b:cilmnvxEFLMR:")) < 2
   || opt[0]["?"])
     return _error(caller,
@@ -118,9 +115,9 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
     opt[0]["m"] = 0;
 
   if(opt[0]["a"])
-    opt[0]["a"] = absVal(to_int(opt[0]["a"]));
+    opt[0]["a"] = abs_val(to_int(opt[0]["a"]));
   if(opt[0]["b"])
-    opt[0]["b"] = absVal(to_int(opt[0]["b"]));
+    opt[0]["b"] = abs_val(to_int(opt[0]["b"]));
 
   if(opt[0]["i"])
     opt[1] = lower_case(opt[1]);
@@ -130,7 +127,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
 
     r = ({});
     files = filter(
-      globArray(opt[2..],
+      glob_array(opt[2..],
         caller->query_env("cwd")),
       (: file_size($1) == -2 :));
 
@@ -139,22 +136,22 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
       files = files[1..];
 
       r = r + filter(
-        globArray(
+        glob_array(
           ({ dir + "/" + opt[0]["R"] }), "/"),
         (: file_size($1) >= 0 :));
       files = filter(
-        globArray(({ dir + "/*" }), "/"),
+        glob_array(({ dir + "/*" }), "/"),
         (: file_size($1) == -2 :)) + files;
     }
 
     files = r;
   } else {
-    files = globArray(opt[2..],
+    files = glob_array(opt[2..],
       caller->query_env("cwd"));
 
     if(sizeof(files) == 1
     && file_size(files[0]) == -2)
-      files = globArray(
+      files = glob_array(
         ({ files[1]
           + (files[1][<1] == '/'
             ? "*" : "/*") }),
@@ -179,7 +176,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
   out = "";
 
   for(i = 0; i < sizeof(files); i++) {
-    str = grepFile(opt[0], opt[1], files[i]);
+    str = grep_file(opt[0], opt[1], files[i]);
 
     if(str != "") {
       if(opt[0]["c"] || opt[0]["l"]
@@ -207,17 +204,15 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
   return 1;
 }
 
-private mixed absVal(mixed val) {
+private mixed abs_val(mixed val) {
   if(val < 0)
     return -val;
 
   return val;
 }
 
-private varargs mixed *getOpt(string str,
-    string opts, int flags) {
-  int i, j, k, optsLen, elemLen,
-      quote = 0, parse = 1;
+private varargs mixed *get_opt(string str, string opts, int flags) {
+  int i, j, k, opts_len, elem_len, quote = 0, parse = 1;
   string elem, into, quoted, *list;
   mapping opt = ([]);
   mixed *ret;
@@ -235,13 +230,13 @@ private varargs mixed *getOpt(string str,
   if(!stringp(opts))
     opts = "";
 
-  optsLen = strlen(opts);
+  opts_len = strlen(opts);
   into = 0;
   list = explode(str, " ");
 
   for(i = 0; i < sizeof(list); i++) {
     elem = list[i];
-    elemLen = strlen(elem);
+    elem_len = strlen(elem);
 
     if(parse && !into && elem[0] == '-') {
       if(elem == "--") {
@@ -249,16 +244,16 @@ private varargs mixed *getOpt(string str,
         continue;
       }
 
-      for(j = 1; j < elemLen; j++) {
+      for(j = 1; j < elem_len; j++) {
         if(elem[j] == ':'
         || (k = strsrch(opts, elem[j])) < 0) {
           opt["?"] = 1;
           return ret + list[i..];
         }
 
-        if(k < optsLen
+        if(k < opts_len
         && opts[k + 1] == ':') {
-          if(j < elemLen - 1) {
+          if(j < elem_len - 1) {
             opt["?"] = 1;
             return ret + list[i..];
           }
@@ -276,7 +271,7 @@ private varargs mixed *getOpt(string str,
       parse = 0;
 
     if(quote) {
-      if(elemLen > 1
+      if(elem_len > 1
       && elem[<1] == quote
       && elem[<2] == '\\') {
         quoted += " "
@@ -313,7 +308,7 @@ private varargs mixed *getOpt(string str,
       && (elem[0] == '\''
           || elem[0] == '"'
           || elem[0] == '`')) {
-        if(elemLen < 2
+        if(elem_len < 2
         || elem[<1] != elem[0]
         || elem[<2] == '\\') {
           quote = elem[0];
@@ -350,7 +345,7 @@ private varargs mixed *getOpt(string str,
   return ret;
 }
 
-private varargs string *globArray(string *paths,
+private varargs string *glob_array(string *paths,
     string cwd) {
   int i;
   string root, *path, *globbed;
@@ -392,7 +387,7 @@ private varargs string *globArray(string *paths,
   return paths;
 }
 
-private string grepFile(mapping opt, string pat,
+private string grep_file(mapping opt, string pat,
     string file) {
   int i, j, match, colour = 0;
   string line;

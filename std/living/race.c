@@ -12,15 +12,15 @@
 #include <race.h>
 #include <module.h>
 
-private nosave string racialBodies = DIR_STD_MODULES "race/";
+private nosave string racial_bodies = DIR_STD_MODULES "race/";
 private nomask nosave string __race;
 private string __gender;
 
 public string set_race(string race) {
-  string modulePath = "std/modules/race/" + race;
+  string module_path = "std/modules/race/" + race;
   object mod;
 
-  if(!file_exists(racialBodies + race + ".c")) {
+  if(!file_exists(racial_bodies + race + ".c")) {
     __race = race;
     return __race;
   }
@@ -28,7 +28,7 @@ public string set_race(string race) {
   if(query_module("race"))
     error("Race body module has already been applied");
 
-  mod = add_module(modulePath);
+  mod = add_module(module_path);
 
   if(!objectp(mod))
     error("Failed to add race module.");

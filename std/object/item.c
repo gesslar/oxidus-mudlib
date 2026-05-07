@@ -16,6 +16,8 @@
 inherit STD_OBJECT;
 inherit STD_VALUE;
 
+inherit EXT_MATERIAL;
+
 private nosave mapping _spawn_info = ([]);
 
 /**
@@ -87,7 +89,7 @@ int allow_move(mixed dest) {
   if(!ob->can_receive(this_object()))
     return MOVE_NOT_ALLOWED;
 
-  if(mudConfig("USE_MASS"))
+  if(mud_config("USE_MASS"))
     if(!ob->ignore_capacity())
       if(query_mass() + ob->query_fill() > ob->query_capacity())
         return MOVE_TOO_HEAVY;
@@ -130,7 +132,7 @@ int move(mixed dest) {
   int result;
   /** @type {STD_CONTAINER} */
   object prev = environment();
-  int use_mass = mudConfig("USE_MASS");
+  int use_mass = mud_config("USE_MASS");
   int prev_ignore_capacity = prev ? call_if(prev, "ignore_capacity") : 0;
   int dest_ignore_capacity = call_if(dest, "ignore_capacity") || 0;
   int prev_ignore_mass = prev ? call_if(prev, "ignore_mass") : 0;

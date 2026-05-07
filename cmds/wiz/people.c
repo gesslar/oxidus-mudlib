@@ -10,37 +10,37 @@
 
 inherit STD_CMD;
 
-mixed main(object tp, string arg) {
-  object *adminArr, *devArr, *userArr;
-  object *allUsers;
+mixed main(object tp, string _arg) {
+  object *admin_arr, *dev_arr, *user_arr;
+  object *all_users;
 
-  allUsers = ({});
-  adminArr = ({});
-  devArr = ({});
-  userArr = ({});
+  all_users = ({});
+  admin_arr = ({});
+  dev_arr = ({});
+  user_arr = ({});
 
   printf("%-15s%-10s%-20s%-5s %-30s\n", "Name:", "Rank:", "IP:", "Idle:", "Location:");
   printf("%-15s%-10s%-20s%-5s %-30s\n", "-----", "-----", "---", "-----", "---------");
 
-  allUsers = filter(users(), (: environment($1) && interactive($1) :));
+  all_users = filter(users(), (: environment($1) && interactive($1) :));
 
-  foreach(object user in allUsers) {
+  foreach(object user in all_users) {
     if(adminp(user) && user->query_real_name() != "login") {
-      adminArr += ({ user });
+      admin_arr += ({ user });
     } else if(devp(user)) {
-      devArr += ({ user });
+      dev_arr += ({ user });
     } else {
-      userArr += ({ user });
+      user_arr += ({ user });
     }
   }
 
-  adminArr = sort_array(adminArr, (: strcmp($1->query_real_name(), $2->query_real_name()) :));
-  devArr = sort_array(devArr, (: strcmp($1->query_real_name(), $2->query_real_name()) :));
-  userArr = sort_array(userArr, (: strcmp($1->query_real_name(), $2->query_real_name()) :));
+  admin_arr = sort_array(admin_arr, (: strcmp($1->query_real_name(), $2->query_real_name()) :));
+  dev_arr = sort_array(dev_arr, (: strcmp($1->query_real_name(), $2->query_real_name()) :));
+  user_arr = sort_array(user_arr, (: strcmp($1->query_real_name(), $2->query_real_name()) :));
 
-  allUsers = adminArr + devArr + userArr;
+  all_users = admin_arr + dev_arr + user_arr;
 
-  foreach(object user in allUsers) {
+  foreach(object user in all_users) {
     string this_rank, this_ip, this_env;
     int this_idle;
     string name;

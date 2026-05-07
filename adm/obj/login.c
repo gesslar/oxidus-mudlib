@@ -45,7 +45,7 @@ private nosave mapping __login_gmcp_data = ([ "client" : null, "supports" : null
 private nosave mapping __environ_data = ([]);
 private nosave mapping __account = null;
 private nosave string __name, __character;
-private nosave string __login_message = parse_tokens(read_file(mudConfig("LOGIN_MSG")));
+private nosave string __login_message = parse_tokens(read_file(mud_config("LOGIN_MSG")));
 private nosave int __call_out_id;
 private nosave int __gmcp_login_status = 0;
 private nosave int __greet_call;
@@ -197,7 +197,7 @@ private void get_account(string str) {
   }
 #endif
 
-  __account = ACCOUNT_D->loadAccount(__name);
+  __account = ACCOUNT_D->load_accoubt(__name);
 
   if(!__account) {
     if(LOCKDOWN_D->query_player_lock()) {
@@ -277,13 +277,13 @@ private void get_password(string str, int i) {
       return;
     }
 
-    if(!validAccount(__account["name"])) {
-      if(!ACCOUNT_D->createAccount(__account["name"], crypt(str, 0))) {
+    if(!valid_account(__account["name"])) {
+      if(!ACCOUNT_D->create_account(__account["name"], crypt(str, 0))) {
         _error("There was a problem creating your account.");
         return dest_me();
       }
 
-      __account = ACCOUNT_D->loadAccount(__account["name"]);
+      __account = ACCOUNT_D->load_accoubt(__account["name"]);
     }
 
     _question("Please enter your password again to verify: ");
@@ -306,7 +306,7 @@ private void verify_password(string str, int i) {
   curr = __account["password"];
   str = crypt(str, curr);
   if(str != curr) {
-    ACCOUNT_D->removeAccount(__account["name"]);
+    ACCOUNT_D->remove_account(__account["name"]);
     _error("Your passwords do not match.");
     _question("Please enter your password: ");
     input_to("get_password", 1, i);
@@ -483,7 +483,7 @@ private void new_character(string str) {
     return;
   }
 
-  if(!ACCOUNT_D->addCharacter(__name, str)) {
+  if(!ACCOUNT_D->add_character(__name, str)) {
     _error("There was a problem creating your character.");
     return dest_me();
   }
@@ -515,7 +515,7 @@ private void new_character(string str) {
  * marker file.
  */
 private void first_admin_login() {
-  if(!file_exists(mudConfig("FIRST_USER"))) {
+  if(!file_exists(mud_config("FIRST_USER"))) {
     object security_editor;
     string home_path = home_path(body->query_real_name());
     string privs = query_privs(body);
@@ -524,12 +524,12 @@ private void first_admin_login() {
     assure_dir(home_path + "public");
     assure_dir(home_path + "private");
     catch(cp("/d/std/workroom.c", home_path(privs)));
-    body->addWizardPaths();
+    body->add_wizard_path();
     security_editor = new(OBJ_SECURITY_EDITOR);
-    security_editor->enableMembership(privs, "developer");
-    security_editor->enableMembership(privs, "admin");
-    security_editor->writeState(0);
-    write_file(mudConfig("FIRST_USER"), privs, 1);
+    security_editor->enable_membership(privs, "developer");
+    security_editor->enable_membership(privs, "admin");
+    security_editor->write_state(0);
+    write_file(mud_config("FIRST_USER"), privs, 1);
     _ok(this_object(), "You are now an admin.");
   }
 }

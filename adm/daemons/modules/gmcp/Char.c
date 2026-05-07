@@ -62,7 +62,7 @@ void Status(object who, mapping payload) {
     GMCP_LBL_CHAR_STATUS_NAME        : who->query_name(),
     GMCP_LBL_CHAR_STATUS_FILL        : sprintf("%d", who->query_fill()),
     GMCP_LBL_CHAR_STATUS_CAPACITY    : sprintf("%d", who->query_capacity()),
-    GMCP_LBL_CHAR_STATUS_XP          : sprintf("%d", who->queryXp()),
+    GMCP_LBL_CHAR_STATUS_XP          : sprintf("%d", who->query_xp()),
     GMCP_LBL_CHAR_STATUS_TNL         : sprintf("%d", who->query_tnl()),
     GMCP_LBL_CHAR_STATUS_WEALTH      : wealth,
   ]);
@@ -185,7 +185,7 @@ void Items(object who, string submodule, mixed arg) {
 
       foreach(item in items) {
         item_data += ({ ([
-          "name": COLOUR_D->substituteColour(get_short(item), "on"),
+          "name": COLOUR_D->substitute_colour(get_short(item), "on"),
           "id"  : item->query_ids(),
           "attrib": get_item_attrib(item),
           "hash": hash("md4", file_name(item)),
@@ -200,7 +200,7 @@ void Items(object who, string submodule, mixed arg) {
         return;
 
       item_data = ([
-        "name"    : COLOUR_D->substituteColour(get_short(item), "on"),
+        "name"    : COLOUR_D->substitute_colour(get_short(item), "on"),
         "id"      : item->query_ids(),
         "attrib"  : get_item_attrib(item),
         "hash"    : hash("md4", file_name(item)),

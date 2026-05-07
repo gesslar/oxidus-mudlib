@@ -10,7 +10,6 @@
  * @history
  * 2024-03-03 - Gesslar - Created
  * 2025-03-16 - GitHub Copilot - Added documentation
- * 2025-03-29 - Gesslar - Converted to camelCase coding standards
  * 2026-03-29 - Gesslar - Updated documentation to LPCDoc standards
  */
 
@@ -32,9 +31,9 @@ private nosave string *__cmdHistory = ({});
  * @errors If action function does not exist
  * @errors If command or action parameters are invalid types
  */
-public void addCommand(mixed command, mixed action) {
+public void add_command(mixed command, mixed action) {
   if(stringp(command)) {
-    removeCommand(command);
+    remove_command(command);
     if(stringp(action)) {
       if(!function_exists(action))
         error("No such function " + action + " in " + file_name() + ".\n");
@@ -47,7 +46,7 @@ public void addCommand(mixed command, mixed action) {
     }
   } else if(pointerp(command)) {
     foreach(mixed cmd in command)
-      addCommand(cmd, action);
+      add_command(cmd, action);
   } else {
     error("Illegal command " + command + " in " + file_name() + ".\n");
   }
@@ -59,7 +58,7 @@ public void addCommand(mixed command, mixed action) {
  * @param {string | string*} command - Command name or array of
  *                                     command names
  */
-public void removeCommand(mixed command) {
+public void remove_command(mixed command) {
   if(stringp(command)) {
     map_delete(__cmdHandlers, command);
   } else if(pointerp(command)) {
@@ -75,11 +74,11 @@ public void removeCommand(mixed command) {
  * @param {function | string} action - Function name or pointer
  *                                     to remove
  */
-public void removeCommandAll(mixed action) {
+public void remove_command_all(mixed action) {
   foreach(mixed command, mixed act in __cmdHandlers) {
     if(act == action) {
       map_delete(__cmdHandlers, command);
-      removeCommand(command);
+      remove_command(command);
     }
   }
 }
@@ -91,7 +90,7 @@ public void removeCommandAll(mixed action) {
  * @returns {function | string | undefined} Action handler, or
  *          undefined if not found
  */
-public mixed queryCommand(string command) {
+public mixed query_command(string command) {
   return __cmdHandlers[command];
 }
 
@@ -100,7 +99,7 @@ public mixed queryCommand(string command) {
  *
  * @returns {mapping} Copy of the commands mapping
  */
-public mapping queryCommands() {
+public mapping query_commands() {
   return copy(__cmdHandlers);
 }
 
@@ -110,7 +109,7 @@ public mapping queryCommands() {
  *
  * @returns {string*} Array of all available command names
  */
-public string *queryAllCommands() {
+public string *query_all_commands() {
   return commands();
 }
 
@@ -123,7 +122,7 @@ public string *queryAllCommands() {
  * @returns {string*} Array of commands sharing the same
  *          handler, or empty array
  */
-public string *queryMatchingCommands(string command) {
+public string *query_matching_commands(string command) {
   string *matches = allocate(1);
 
   if(nullp(__cmdHandlers[command]))
@@ -145,7 +144,7 @@ public string *queryMatchingCommands(string command) {
 /**
  * Initialises the commands mapping to an empty state.
  */
-public void initCommands() {
+public void init_commands() {
   __cmdHandlers = ([]);
 }
 
@@ -158,7 +157,7 @@ public void initCommands() {
  * @returns {mixed} Result of command evaluation, or undefined
  *          if no handler
  */
-public mixed evaluateCommand(object user, string command, string arg) {
+public mixed evaluate_command(object user, string command, string arg) {
   if(stringp(__cmdHandlers[command]))
     return call_other(this_object(), __cmdHandlers[command], user, arg);
 
@@ -186,7 +185,7 @@ string process_input(string arg) {
  *
  * @returns {string*} Copy of the command paths array
  */
-public string *queryPath() {
+public string *query_path() {
   return copy(__cmdPaths);
 }
 
@@ -197,7 +196,7 @@ public string *queryPath() {
  * @param {string} str - The directory path to add
  * @returns {int} 1 on success, 0 on failure
  */
-public int addPath(string str) {
+public int add_path(string str) {
   if(!adminp(previous_object()) && this_body() != this_object())
     return 0;
 
@@ -222,7 +221,7 @@ public int addPath(string str) {
  * @param {string | string*} path - Colon-delimited path string
  *                                  or array of paths
  */
-public void setPath(mixed path) {
+public void set_path(mixed path) {
   string *paths;
 
   if(stringp(path))
@@ -230,7 +229,7 @@ public void setPath(mixed path) {
   else if(pointerp(path))
     paths = copy(path);
 
-  filter(paths, (: addPath :));
+  filter(paths, (: add_path :));
 }
 
 /**
@@ -240,7 +239,7 @@ public void setPath(mixed path) {
  * @param {string} str - The directory path to remove
  * @returns {int} 1 on success, 0 on failure
  */
-public int remPath(string str) {
+public int rem_path(string str) {
   if(!adminp(previous_object()) && this_body() != this_object())
     return 0;
 
@@ -256,40 +255,40 @@ public int remPath(string str) {
  * Adds wizard-specific command paths from the wizard paths
  * configuration file.
  */
-public void addWizardPaths() {
+public void add_wizard_path() {
   string *paths = explode_file("/adm/etc/wizard_paths");
 
-  filter(paths, (: addPath :));
+  filter(paths, (: add_path :));
 }
 
 /**
  * Removes all current command paths and restores standard
  * paths only.
  */
-public void removeWizardPaths() {
-  filter(queryPath(), (: remPath :));
+public void remove_wizard_paths() {
+  filter(query_path(), (: rem_path :));
 
-  addStandardPaths();
+  add_standard_paths();
 }
 
 /**
  * Adds the standard command paths from the standard paths
  * configuration file.
  */
-public void addStandardPaths() {
+public void add_standard_paths() {
   string *paths = explode_file("/adm/etc/standard_paths");
 
-  filter(paths, (: addPath :));
+  filter(paths, (: add_path :));
 }
 
 /**
  * Adds ghost-specific command paths from the ghost paths
  * configuration file.
  */
-public void addGhostPaths() {
+public void add_ghost_paths() {
   string *paths = explode_file("/adm/etc/ghost_paths");
 
-  filter(paths, (: addPath :));
+  filter(paths, (: add_path :));
 }
 
 /**
@@ -300,7 +299,7 @@ public void addGhostPaths() {
  * @param {int} [range] - End index for a range of entries
  * @returns {string*} Array of command history entries
  */
-public nomask varargs string *queryCommandHistory(int index,
+public nomask varargs string *query_command_history(int index,
     int range) {
   if(this_body() != this_object()
       && !adminp(previous_object()))
@@ -322,7 +321,7 @@ public nomask varargs string *queryCommandHistory(int index,
  * @param {string} arg - The raw command arguments
  * @returns {int} 1 if the command was handled, 0 otherwise
  */
-public int commandHook(string arg) {
+public int command_hook(string arg) {
   string verb, err, *cmds = ({});
 
   object
@@ -333,7 +332,7 @@ public int commandHook(string arg) {
   int sz;
   mixed result;
   string complete;
-  mixed returnValue;
+  mixed return_value;
 
   caller = this_body();
 
@@ -364,8 +363,8 @@ public int commandHook(string arg) {
   obs += ({ this_object() });
 
   foreach(ob in obs) {
-    result = ob->evaluateCommand(this_object(), verb, arg);
-    result = evaluateResult(result);
+    result = ob->evaluate_command(this_object(), verb, arg);
+    result = evaluate_result(result);
     if(result == 1)
       return 1;
   }
@@ -414,13 +413,13 @@ public int commandHook(string arg) {
       return 1;
     }
 
-    returnValue = cmd->main(caller, arg);
+    return_value = cmd->main(caller, arg);
 
-    result = evaluateResult(returnValue);
+    result = evaluate_result(return_value);
     if(result == 1)
       return 1;
 
-    return returnValue;
+    return return_value;
   }
 
   return 0;
@@ -434,8 +433,8 @@ public int commandHook(string arg) {
  * @returns {string | undefined} The full path to the command
  *          file without extension, or undefined if not found
  */
-public string findCommandPath(string verb) {
-  string *paths = queryPath();
+public string find_command_path(string verb) {
+  string *paths = query_path();
   string path;
 
   foreach(string p in paths) {
@@ -448,7 +447,7 @@ public string findCommandPath(string verb) {
   return path;
 }
 
-private nomask int evaluateResult(mixed result) {
+private nomask int evaluate_result(mixed result) {
   if(stringp(result)) {
     if(!strlen(result)) {
       return 0;
@@ -477,7 +476,7 @@ private nomask int evaluateResult(mixed result) {
  * @returns {int} Result of the command execution, or 0 if
  *          permission denied
  */
-public int forceMe(string cmd) {
+public int force_me(string cmd) {
   if(this_body() != this_object()
       && !adminp(previous_object())
       && !adminp(this_caller()))

@@ -13,18 +13,17 @@
 
 inherit STD_CMD;
 
-private object *addArray(object *oldArr, object *newArr);
-private int sortName(object ob1, object ob2);
+private int sort_name(object ob1, object ob2);
 
 mixed main(object tp, string _arg) {
   string ret;
   object *list;
-  object *adminArr, *devArr, *userArr;
+  object *admin_arr, *dev_arr, *user_arr;
   int i;
 
-  adminArr = ({});
-  devArr = ({});
-  userArr = ({});
+  admin_arr = ({});
+  dev_arr = ({});
+  user_arr = ({});
   ret = "";
 
   ret += read_file("/adm/etc/logo") + "\n\n";
@@ -37,21 +36,18 @@ mixed main(object tp, string _arg) {
   foreach(object name in list) {
     if(adminp(name)
     && name->query_real_name() != "login")
-      adminArr += ({ name });
+      admin_arr += ({ name });
     else if(devp(name))
-      devArr += ({ name });
+      dev_arr += ({ name });
     else
-      userArr += ({ name });
+      user_arr += ({ name });
   }
 
-  adminArr = sort_array(adminArr, "sortName");
-  devArr = sort_array(devArr, "sortName");
-  userArr = sort_array(userArr, "sortName");
+  admin_arr = sort_array(admin_arr, "sort_name");
+  dev_arr = sort_array(dev_arr, "sort_name");
+  user_arr = sort_array(user_arr, "sort_name");
 
-  list = ({});
-  list = addArray(list, adminArr);
-  list = addArray(list, devArr);
-  list = addArray(list, userArr);
+  list = admin_arr + dev_arr + user_arr;
 
   for(i = 0; i < sizeof(list); i++) {
     string tag;
@@ -80,7 +76,7 @@ mixed main(object tp, string _arg) {
   return 1;
 }
 
-private int sortName(/** @type {STD_BODY} */ object ob1,
+private int sort_name(/** @type {STD_BODY} */ object ob1,
     /** @type {STD_BODY} */ object ob2) {
   if(ob1->query_name() > ob2->query_name())
     return 1;
@@ -88,13 +84,6 @@ private int sortName(/** @type {STD_BODY} */ object ob1,
     return -1;
   else
     return 0;
-}
-
-private object *addArray(object *oldArr, object *newArr) {
-  foreach(object name in newArr)
-    oldArr += ({ name });
-
-  return oldArr;
 }
 
 string query_help(object _caller) {

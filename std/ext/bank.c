@@ -15,7 +15,7 @@
 
 #include <daemons.h>
 
-void addCommand(string cmd, string fun);
+void add_command(string cmd, string fun);
 
 /**
  * Initialises the banking commands for the room. Should be called
@@ -23,10 +23,10 @@ void addCommand(string cmd, string fun);
  * and balance commands.
  */
 void init_bank() {
-  addCommand("register", "cmd_register");
-  addCommand("deposit", "cmd_deposit");
-  addCommand("withdraw", "cmd_withdraw");
-  addCommand("balance", "cmd_balance");
+  add_command("register", "cmd_register");
+  add_command("deposit", "cmd_deposit");
+  add_command("withdraw", "cmd_withdraw");
+  add_command("balance", "cmd_balance");
 }
 
 /**

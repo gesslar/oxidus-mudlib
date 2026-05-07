@@ -50,7 +50,7 @@ float receive_damage(object attacker, float damage, string type) {
     red = percent_of(def, damage);
 
     // The global damage level modifier
-    mod = mudConfig("DAMAGE_LEVEL_MODIFIER");
+    mod = mud_config("DAMAGE_LEVEL_MODIFIER");
 
     // The level of the attacker and the victim
     level = query_effective_level();

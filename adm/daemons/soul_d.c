@@ -35,7 +35,7 @@ nomask string *query_emote_msgs(string emote);
 
 void setup() {
     set_no_clean(1);
-    setPersistent();
+    set_persistent();
 }
 
 /*********************************************/
@@ -176,14 +176,14 @@ nomask varargs string build_emote(string msg, string emote, string mods, object 
 nomask void delete_emote(string emote) {
     if(base_name(previous_object()) + ".c" != OBJ_SOUL_TOOL) return;
     map_delete(emotes, emote);
-    saveData();
+    save_data();
 }
 
 nomask void set_emote(string emote, string *msgs) {
     if(base_name(previous_object()) + ".c" != OBJ_SOUL_TOOL) return;
 
     emotes[emote] = msgs;
-    saveData();
+    save_data();
 }
 
 nomask string *query_emotes() {
@@ -198,5 +198,5 @@ nomask void reset_emotes() {
     if(base_name(previous_object()) + ".c" != OBJ_SOUL_TOOL) return;
 
     emotes = ([]);
-    saveData();
+    save_data();
 }

@@ -12,21 +12,21 @@
 inherit STD_DAEMON;
 
 // Variables
-public float baseTnl;
-public float tnlRate;
-public float overlevelThreshold, overlevelXpPunish;
-public float underlevelThreshold, underlevelXpBonus;
+public float base_tnl;
+public float tnl_rate;
+public float overlevel_threshold, overlevel_xp_punish;
+public float underlevel_threshold, underlevel_xp_bonus;
 
 // Functions
-public int toNextLevel(float level);
+public int to_next_level(float level);
 
 void setup() {
-  baseTnl = mudConfig("BASE_TNL");
-  tnlRate = mudConfig("TNL_RATE");
-  overlevelThreshold = mudConfig("OVERLEVEL_THRESHOLD");
-  overlevelXpPunish = mudConfig("OVERLEVEL_XP_PUNISH");
-  underlevelThreshold = mudConfig("UNDERLEVEL_THRESHOLD");
-  underlevelXpBonus = mudConfig("UNDERLEVEL_XP_BONUS");
+  base_tnl = mud_config("BASE_TNL");
+  tnl_rate = mud_config("TNL_RATE");
+  overlevel_threshold = mud_config("OVERLEVEL_THRESHOLD");
+  overlevel_xp_punish = mud_config("OVERLEVEL_XP_PUNISH");
+  underlevel_threshold = mud_config("UNDERLEVEL_THRESHOLD");
+  underlevel_xp_bonus = mud_config("UNDERLEVEL_XP_BONUS");
 }
 
 /**
@@ -37,13 +37,13 @@ void setup() {
  * @param {float} level - The current level to calculate TNL for.
  * @returns {int} The total XP needed to reach the next level.
  */
-public int toNextLevel(float level) {
+public int to_next_level(float level) {
   // Ensure level is at least 1.0
   if(level < 1.0)
     level = 1.0;
 
   // Calculate TNL
-  return to_int(baseTnl * pow(tnlRate, level - 1.0));
+  return to_int(base_tnl * pow(tnl_rate, level - 1.0));
 }
 
 /**
@@ -54,8 +54,8 @@ public int toNextLevel(float level) {
  * @param {float} level - The current level.
  * @returns {int} 1 if the character can advance, 0 otherwise.
  */
-public int canAdvance(int xp, float level) {
-  return xp >= toNextLevel(level);
+public int can_advance(int xp, float level) {
+  return xp >= to_next_level(level);
 }
 
 /**
@@ -67,18 +67,18 @@ public int canAdvance(int xp, float level) {
  * @returns {int} 1 if the character advanced, 0 if they did not have enough XP.
  */
 public int advance(object tp) {
-  int xp = tp->queryXp();
-  float level = tp->queryLevel();
-  int toNextLevel = toNextLevel(level);
+  int xp = tp->query_xp();
+  float level = tp->query_level();
+  int to_next_level = to_next_level(level);
 
-  if(!canAdvance(xp, level))
+  if(!can_advance(xp, level))
     return 0;
 
-  xp -= toNextLevel;
+  xp -= to_next_level;
   level += 1.0;
 
-  tp->setLevel(level);
-  tp->setXp(xp);
+  tp->set_level(level);
+  tp->set_xp(xp);
 
   emit(SIG_PLAYER_ADVANCED, tp, level);
 
@@ -94,10 +94,10 @@ public int advance(object tp) {
  * @param {int} amount - The amount of XP to award.
  * @returns {int} Always returns 1.
  */
-public int earnXp(object tp, int amount) {
-  tp->adjustXp(amount);
+public int earn_xp(object tp, int amount) {
+  tp->adjust_xp(amount);
 
-  if(mudConfig("PLAYER_AUTOLEVEL"))
+  if(mud_config("PLAYER_AUTOLEVEL"))
     advance(tp);
 
   return 1;
@@ -113,35 +113,35 @@ public int earnXp(object tp, int amount) {
  * @param {STD_NPC | STD_PLAYER} killed - The object that was killed.
  * @returns {int} The amount of XP awarded, or 0 if either object is null.
  */
-int killXp(object killer, object killed) {
+int kill_xp(object killer, object killed) {
   if(nullp(killer) || nullp(killed))
     return 0;
 
-  float killerLevel = killer->query_effective_level();
-  float killedLevel = killed->query_effective_level();
+  float killer_level = killer->query_effective_level();
+  float killed_level = killed->query_effective_level();
 
-  float toNextLevel = toNextLevel(killedLevel);
-  float xp = (toNextLevel / 10);
+  float to_next_level = to_next_level(killed_level);
+  float xp = (to_next_level / 10);
   float variance = xp / 10;
   xp = xp - variance + random(variance);
 
   // Calculate the level difference
-  float levelDifference = killerLevel - killedLevel;
+  float level_difference = killer_level - killed_level;
 
   // Initialize the adjustment factor
-  float adjustmentFactor = 1.0;
+  float adjustment_factor = 1.0;
 
   // Apply punishments if the player is higher level by more than the monster
-  if(levelDifference > overlevelThreshold)
-    adjustmentFactor -= overlevelXpPunish * (levelDifference - overlevelThreshold);
+  if(level_difference > overlevel_threshold)
+    adjustment_factor -= overlevel_xp_punish * (level_difference - overlevel_threshold);
   // Apply bonuses if the player is lower level by more than the monster
-  else if(levelDifference < underlevelThreshold)
-    adjustmentFactor += underlevelXpBonus * (-levelDifference);
+  else if(level_difference < underlevel_threshold)
+    adjustment_factor += underlevel_xp_bonus * (-level_difference);
 
   // Apply the adjustment factor to the XP
-  xp = to_int(xp * adjustmentFactor);
+  xp = to_int(xp * adjustment_factor);
 
-  earnXp(killer, xp);
+  earn_xp(killer, xp);
 
   return xp;
 }

@@ -60,9 +60,9 @@ private nosave mixed *__shop_inventory = ({});
  * been registered with add_shop_inventory().
  */
 void init_shop() {
-  addCommand("buy", "cmd_buy");
-  addCommand("sell", "cmd_sell");
-  addCommand("list", "cmd_list");
+  add_command("buy", "cmd_buy");
+  add_command("sell", "cmd_sell");
+  add_command("list", "cmd_list");
 
   create_storage();
 
@@ -274,7 +274,7 @@ mixed cmd_sell(object tp, string str) {
   /** @type {STD_ITEM | STD_ARMOUR | STD_CLOTHING | STD_WEAPON} */ object ob;
   /** @type {STD_ITEM*} */ object *obs;
   int sz;
-  int use_mass = mudConfig("USE_MASS");
+  int use_mass = mud_config("USE_MASS");
 
   create_storage();
 

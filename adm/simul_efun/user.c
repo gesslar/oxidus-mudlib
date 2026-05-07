@@ -109,7 +109,7 @@ string account_path(string name) {
  * @returns {string} The file path for the account file, or 0 if the input is
  *                   invalid.
  */
-string accountFile(string name) {
+string account_file(string name) {
   return account_path(name) + name + ".txt";
 }
 
@@ -119,8 +119,8 @@ string accountFile(string name) {
  * @param {string} name - The name of the account.
  * @returns {int} 1 if the account is valid, otherwise 0.
  */
-int validAccount(string name) {
-  return mapp(ACCOUNT_D->loadAccount(name));
+int valid_account(string name) {
+  return mapp(ACCOUNT_D->load_accoubt(name));
 }
 
 /**

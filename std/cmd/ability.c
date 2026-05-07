@@ -127,8 +127,8 @@ varargs object local_target(object tp, string arg, function f) {
   source = environment(tp);
 
   if(!t = find_target(tp, arg, source, f)) {
-      tell(tp, "You don't see that here.\n");
-      return 0;
+    tell(tp, "You don't see "+add_article(arg)+" here.\n");
+    return 0;
   }
 
   if(aggressive == 1) {
@@ -139,6 +139,51 @@ varargs object local_target(object tp, string arg, function f) {
   }
 
   return t;
+}
+
+varargs object carried_target(object tp, string arg, function f) {
+  object t;
+  object source;
+
+  if(!objectp(tp))
+    error("Bad argument 1 to carried_target().\n");
+
+  if(!stringp(arg) || falsy(arg)) {
+    tell(tp, "You need to specify a target.\n");
+    return 0;
+  }
+
+  source = tp;
+
+  if(!t = find_target(tp, arg, source, f)) {
+    tell(tp, "You don't see "+add_article(arg)+" here.\n");
+    return 0;
+  }
+
+  return t;
+}
+
+varargs object carried_or_local_target(object tp, string arg, function f) {
+  object t;
+  object source;
+
+  if(!objectp(tp))
+    error("Bad argument 1 to carried_target().\n");
+
+  if(!stringp(arg) || falsy(arg)) {
+    tell(tp, "You need to specify a target.\n");
+    return 0;
+  }
+
+  source = tp;
+  if(t = find_target(tp, arg, source, f))
+    return t;
+
+  source = environment(tp);
+  if(t = find_target(tp, arg, source, f))
+    return t;
+
+  tell(tp, "You don't see "+add_article(arg)+" here.\n");
 }
 
 /**
@@ -222,8 +267,8 @@ private string find_cooldown_key(string arg) {
  *
  * @param {STD_BODY} tp - The player to check cooldowns for
  * @param {string} arg - The argument passed to the ability
- * @returns {int} 1 if the cooldown is ready or no cooldown
- *                applies, 0 if still on cooldown
+ * @returns {int} 1 if the cooldown is ready or no cooldown applies, 0 if
+ *                still on cooldown
  */
 int cooldown_check(object tp, string arg) {
   string key = find_cooldown_key(arg);

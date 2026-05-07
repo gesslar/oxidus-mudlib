@@ -20,7 +20,7 @@ public mixed main(
   /** @type {STD_PLAYER} */ object caller, string str
 ) {
   object target;
-  mixed *cloneList;
+  mixed *clone_list;
   string para, output, t1, t2;
   int dest, view, original;
 
@@ -48,10 +48,10 @@ public mixed main(
   else
     output += "\n";
 
-  cloneList = children(file_name(target));
+  clone_list = children(file_name(target));
 
-  if(sizeof(cloneList) == 1) {
-    if(base_name(cloneList[0]) == file_name(cloneList[0]))
+  if(sizeof(clone_list) == 1) {
+    if(base_name(clone_list[0]) == file_name(clone_list[0]))
       output +=
         "There are no active copies of this object.\n";
 
@@ -79,16 +79,16 @@ public mixed main(
 
     return explode(output, "\n");
   } else {
-    cloneList -= ({ target });
+    clone_list -= ({ target });
   }
 
-  original = sizeof(cloneList);
+  original = sizeof(clone_list);
 
   if(!(dest && !view)) {
-    output += "\n   There are " + sizeof(cloneList) +
+    output += "\n   There are " + sizeof(clone_list) +
       " copies active.\n\n";
 
-    foreach(object clone in cloneList) {
+    foreach(object clone in clone_list) {
       if(interactive(clone))
         output += " I ";
       else
@@ -114,28 +114,28 @@ public mixed main(
         "destruct that object group."
       );
 
-    cloneList->remove();
-    cloneList = children(file_name(target));
-    cloneList -= ({ target });
+    clone_list->remove();
+    clone_list = children(file_name(target));
+    clone_list -= ({ target });
 
-    for(int i = 0; i < sizeof(cloneList); i++)
-      destruct(cloneList[i]);
+    for(int i = 0; i < sizeof(clone_list); i++)
+      destruct(clone_list[i]);
 
-    cloneList = children(file_name(target));
-    cloneList -= ({ target });
+    clone_list = children(file_name(target));
+    clone_list -= ({ target });
 
     output += "All " + original + " copies of " +
       file_name(target) +
       " have been removed and destroyed";
 
-    if(!sizeof(cloneList)) {
+    if(!sizeof(clone_list)) {
       output += ".\n";
       return explode(output, "\n");
     }
 
     output += " except:\n";
 
-    foreach(object remaining in cloneList)
+    foreach(object remaining in clone_list)
       output += "  " + remaining + "\n";
   }
 

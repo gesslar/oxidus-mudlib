@@ -23,7 +23,7 @@ private nomask mixed cmd_list(object tp, string arg);
 private nomask mixed cmd_store(object tp, string arg);
 private nomask mixed cmd_take(object tp, string arg);
 
-private class StorageOptions storageOptions;
+private class StorageOptions storage_options;
 
 /**
  * Initialises a storage room with commands and cleanup handler.
@@ -31,10 +31,10 @@ private class StorageOptions storageOptions;
  * This adds the 'list', 'store', and 'take' commands to the room
  * and sets up object cleanup on destruction.
  */
-void initStorageRoom() {
-  addCommand("list", cmd_list);
-  addCommand("store", cmd_store);
-  addCommand("take", cmd_take);
+void init_storage_room() {
+  add_command("list", cmd_list);
+  add_command("store", cmd_store);
+  add_command("take", cmd_take);
 
   add_destruct(destructing);
 }
@@ -53,22 +53,22 @@ void initStorageRoom() {
  * @errors If custom storage file is not found
  */
 object store() {
-  if(!stringp(storageOptions.storage_org))
+  if(!stringp(storage_options.storage_org))
     error("Invalid storage organization specified");
 
-  string org = storageOptions.storage_org;
+  string org = storage_options.storage_org;
   string file;
 
-  /** @type {STD_STORAGE_OBJECT} */ object storageObject;
+  /** @type {STD_STORAGE_OBJECT} */ object storage_object;
 
-  switch(storageOptions.storage_type) {
+  switch(storage_options.storage_type) {
     case "public": {
       file = sprintf("/storage/%s", org);
       break;
     }
 
     case "private": {
-      mixed id = storageOptions.storage_id;
+      mixed id = storage_options.storage_id;
       function f = valid_function(id) ? id : null;
 
       id = f ? f() : id;
@@ -88,20 +88,20 @@ object store() {
         error("Custom storage file not found: " + file + ".c");
       }
 
-      storageObject = new(file);
-      storageObject->set_storage_options(storageOptions);
-      return storageObject;
+      storage_object = new(file);
+      storage_object->set_storage_options(storage_options);
+      return storage_object;
     }
   }
 
-  if(storageObject = find_object(file))
-    return storageObject;
+  if(storage_object = find_object(file))
+    return storage_object;
 
-  storageObject = load_object(file);
-  storageObject->set_storage_options(storageOptions);
-  storageObject->set_link(file_name());
+  storage_object = load_object(file);
+  storage_object->set_storage_options(storage_options);
+  storage_object->set_link(file_name());
 
-  return storageObject;
+  return storage_object;
 }
 
 /**
@@ -110,7 +110,7 @@ object store() {
  * @param {class StorageOptions} options - The storage configuration options
  */
 void set_storage_options(class StorageOptions options) {
-  storageOptions = options;
+  storage_options = options;
 }
 
 /**
@@ -119,7 +119,7 @@ void set_storage_options(class StorageOptions options) {
  * @returns {class StorageOptions} The storage configuration options
  */
 class StorageOptions query_storage_options() {
-  return storageOptions;
+  return storage_options;
 }
 
 /**
@@ -132,9 +132,9 @@ class StorageOptions query_storage_options() {
 mixed cmd_list(object _tp, string _arg) {
   string *list = ({});
   object ob, next;
-  object storageObject = store();
+  object storage_object = store();
 
-  ob = first_inventory(storageObject);
+  ob = first_inventory(storage_object);
 
   while(ob) {
     next = next_inventory(ob);
@@ -164,7 +164,7 @@ mixed cmd_store(object tp, string arg) {
   /** @type {STD_ITEM*} */ object *obs;
   string out = "";
   int result;
-  object storageObject = store();
+  object storage_object = store();
 
   if(!arg)
     return "Usage: store <item|all|all <item>>";
@@ -182,15 +182,15 @@ mixed cmd_store(object tp, string arg) {
     return "You don't possess any such thing to store.";
 
   foreach(ob in obs) {
-    if(result = ob->move(storageObject))
+    if(result = ob->move(storage_object))
       out += get_short(ob) + " could not be stored.\n";
     else
       out += "You store " + get_short(ob) + ".\n";
   }
 
   if(strlen(out)) {
-    if(storageOptions.restore_on_load)
-      storageObject->save_contents();
+    if(storage_options.restore_on_load)
+      storage_object->save_contents();
 
       return out;
   } else {
@@ -212,17 +212,17 @@ mixed cmd_take(object tp, string arg) {
   /** @type {STD_ITEM*} */ object *obs;
   string out = "";
   int result;
-  object storageObject = store();
+  object storage_object = store();
 
   if(!arg)
     return "Usage: take <item|all|all <item>>";
 
   if(arg == "all")
-    obs = all_inventory(storageObject);
+    obs = all_inventory(storage_object);
   else if(sscanf(arg, "all %s", arg))
-    obs = filter(all_inventory(storageObject), (: $1->id($2) :), arg);
+    obs = filter(all_inventory(storage_object), (: $1->id($2) :), arg);
   else
-    obs = ({ present(arg, storageObject) });
+    obs = ({ present(arg, storage_object) });
 
   obs -= ({ 0 });
 
@@ -237,8 +237,8 @@ mixed cmd_take(object tp, string arg) {
   }
 
   if(strlen(out)) {
-    if(storageOptions.restore_on_load)
-      storageObject->save_contents();
+    if(storage_options.restore_on_load)
+      storage_object->save_contents();
 
     return out;
   } else {
@@ -252,9 +252,9 @@ mixed cmd_take(object tp, string arg) {
  * Finds and removes any storage objects linked to this room.
  */
 void destructing() {
-  object *storageObjects = clones(STD_STORAGE_OBJECT);
+  object *storage_objects = clones(STD_STORAGE_OBJECT);
 
-  storageObjects = filter(storageObjects, (: interactive :));
+  storage_objects = filter(storage_objects, (: interactive :));
 
-  filter(storageObjects, (: $1->remove() :));
+  filter(storage_objects, (: $1->remove() :));
 }

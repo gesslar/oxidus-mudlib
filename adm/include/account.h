@@ -25,7 +25,7 @@
  /**
   * An account record.
   * @typedef {mapping} AccountRecord
-  * @property {string*} characterNames - A list of character names for this account.
+  * @property {string*} character_names - A list of character names for this account.
   * @property {string} password - The password for this account.
   */
 

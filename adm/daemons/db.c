@@ -23,115 +23,115 @@ inherit EXT_HTTP;
 #ifdef __USE_SQLITE3__
 
 // Forward declarations
-public int validDb(string db);
-public int validTable(string db, string table);
+public int valid_db(string db);
+public int valid_table(string db, string table);
 public mixed query(string db, string q, mixed *callback);
-public int allowUpsert(string db);
-public mixed sqliteVersion(string db);
-public string statementFromMapping(mapping data);
-private mapping *collateData(mixed *result);
-private void executeQuery(string db, string q, int offset, string queryId, mixed *callback);
-public mapping queryDatabases();
-public mapping queryTables(string dbName);
-public void lazyQuery(string db, string q, mixed *callback);
+public int allow_upsert(string db);
+public mixed sqlite_version(string db);
+public string statement_from_mapping(mapping data);
+private mapping *collate_data(mixed *result);
+private void execute_query(string db, string q, int offset, string query_id, mixed *callback);
+public mapping query_databases();
+public mapping query_tables(string db_name);
+public void lazy_query(string db, string q, mixed *callback);
 public varargs mixed rest(string method, string url, mapping data, mixed *callback);
-private mapping parseDbUrl(string url);
-private string escapeValue(mixed v);
-private string escapeIdent(string s);
-private string whereFromMapping(mapping m);
-private string setFromMapping(mapping m);
+private mapping parse_db_url(string url);
+private string escape_value(mixed v);
+private string escape_ident(string s);
+private string where_from_mapping(mapping m);
+private string set_from_mapping(mapping m);
 
 private nosave mapping __handle = ([]);
 private nosave mapping __databases = ([]);
-private nosave mapping __tableDefinitions = ([]);
-private nosave int __dbChunkSize = mudConfig("DB_CHUNK_SIZE");
+private nosave mapping __table_definitions = ([]);
+private nosave int __dbchunk_size = mud_config("DB_CHUNK_SIZE");
 
 public void setup() {
-  string dbPath = mudConfig("DB_PATH");
-  string dbSuffix = mudConfig("DB_SUFFIX");
-  string tableSuffix = mudConfig("DB_TABLE_SUFFIX");
+  string db_path = mud_config("DB_PATH");
+  string db_suffix = mud_config("DB_SUFFIX");
+  string table_suffix = mud_config("DB_TABLE_SUFFIX");
 
   __databases = ([]);
-  __tableDefinitions = ([]);
+  __table_definitions = ([]);
 
-  if(strlen(dbPath) > 0) {
+  if(strlen(db_path) > 0) {
     // Find all table definition files first
-    string *tableFiles = get_dir(dbPath + "*" + tableSuffix);
+    string *table_filesiles = get_dir(db_path + "*" + table_suffix);
 
-    foreach(string tableFile in tableFiles) {
-      string dbName = chop(tableFile, tableSuffix, -1);
-      string tableFileName = dbPath + tableFile;
+    foreach(string table_file in table_filesiles) {
+      string db_name = chop(table_file, table_suffix, -1);
+      string table_file_name = db_path + table_file;
 
-      if(file_size(tableFileName) > 0) {
-        string line, *lines = explode_file(tableFileName);
-        __tableDefinitions[dbName] = ([]);
+      if(file_size(table_file_name) > 0) {
+        string line, *lines = explode_file(table_file_name);
+        __table_definitions[db_name] = ([]);
 
         foreach(line in lines) {
-          string tableName, tableDefinition;
+          string table_name, table_definitions;
 
-          if(sscanf(line, "%s=%s", tableName, tableDefinition) == 2)
-            __tableDefinitions[dbName][tableName] = tableDefinition;
+          if(sscanf(line, "%s=%s", table_name, table_definitions) == 2)
+            __table_definitions[db_name][table_name] = table_definitions;
         }
       }
     }
 
     // Create databases and tables
-    foreach(string dbName, mapping tables in __tableDefinitions) {
-      string databaseFile = dbPath + dbName + dbSuffix;
+    foreach(string db_name, mapping tables in __table_definitions) {
+      string database_file = db_path + db_name + db_suffix;
 
       if(!sizeof(tables)) {
         log_file("system/db",
-          "Skipping " + dbName + ": no parseable tables in .tbl.\n");
+          "Skipping " + db_name + ": no parseable tables in .tbl.\n");
         continue;
       }
 
-      __databases[dbName] = databaseFile;
+      __databases[db_name] = database_file;
 
       if(sizeof(tables)) {
         string err = catch {
           int fd;
           mixed result;
-          int closeResult;
+          int close_result;
 
-          fd = db_connect("", databaseFile, "", __USE_SQLITE3__);
+          fd = db_connect("", database_file, "", __USE_SQLITE3__);
           if(fd == 0) {
             log_file(
               "system/db",
-              "Error connecting to " + dbName + " at " + databaseFile + "\n"
+              "Error connecting to " + db_name + " at " + database_file + "\n"
             );
             return;
           }
 
-          foreach(string tableName,
-            string tableDefinition in tables) {
+          foreach(string table_name,
+            string table_definitions in tables) {
             result = db_exec(
               fd,
-              "CREATE TABLE IF NOT EXISTS " + tableName + " (" + tableDefinition + ")"
+              "CREATE TABLE IF NOT EXISTS " + table_name + " (" + table_definitions + ")"
             );
 
             if(stringp(result)) {
               log_file("system/db",
                 "Error creating table " +
-                tableName + " in " +
-                dbName + ": " +
+                table_name + " in " +
+                db_name + ": " +
                 result + "\n");
               return;
             }
           }
 
-          closeResult = db_close(fd);
-          if(closeResult == 0) {
+          close_result = db_close(fd);
+          if(close_result == 0) {
             log_file("system/db",
               "Error closing connection to " +
-              dbName + " at " +
-              databaseFile + "\n");
+              db_name + " at " +
+              database_file + "\n");
             return;
           }
         };
         if(err) {
           log_file("system/db",
             "Error creating tables in " +
-            dbName + ": " + err + "\n");
+            db_name + ": " + err + "\n");
           continue;
         }
       }
@@ -148,7 +148,7 @@ public void setup() {
  *                          contains column names
  * @returns {mapping*} An array of mappings keyed by column name
  */
-private mapping *collateData(mixed *result) {
+private mapping *collate_data(mixed *result) {
   mapping *data = ({});
   int i, sz = sizeof(result);
 
@@ -184,9 +184,9 @@ private mapping *collateData(mixed *result) {
  *                           or 1 if using a callback
  */
 public mixed query(string db, string q, mixed *callback) {
-  string databaseFile;
+  string database_file;
   int fd;
-  int closeResult, i;
+  int close_result, i;
   mixed rows, *result = ({});
 
   if(!db || !q) {
@@ -195,15 +195,15 @@ public mixed query(string db, string q, mixed *callback) {
     return 0;
   }
 
-  databaseFile = __databases[db];
+  database_file = __databases[db];
 
   q = append(q, ";");
-  fd = db_connect("", databaseFile, "", __USE_SQLITE3__);
+  fd = db_connect("", database_file, "", __USE_SQLITE3__);
 
   if(fd == 0) {
     log_file(
       "system/db",
-      "Error connecting to " + db + " at " + databaseFile + "\n"
+      "Error connecting to " + db + " at " + database_file + "\n"
     );
 
     return 0;
@@ -241,23 +241,23 @@ public mixed query(string db, string q, mixed *callback) {
     }
   };
 
-  closeResult = db_close(fd);
+  close_result = db_close(fd);
 
-  if(closeResult == 0) {
+  if(close_result == 0) {
     log_file(
       "system/db",
-      "Error closing connection to " + db + " at " + databaseFile + "\n");
+      "Error closing connection to " + db + " at " + database_file + "\n");
     // Data is already fetched — the close failure is a separate
     // resource issue. Log it and return the rows we have.
   }
 
   if(callback) {
-    call_back(callback, collateData(result));
+    call_back(callback, collate_data(result));
 
     return 1;
   }
 
-  return collateData(result);
+  return collate_data(result);
 }
 
 /**
@@ -271,10 +271,10 @@ public mixed query(string db, string q, mixed *callback) {
  *                            results when complete, or 0 on
  *                            failure
  */
-public void lazyQuery(string db, string q,
+public void lazy_query(string db, string q,
   mixed *callback) {
-  string queryId = db + "_" + time_ns();
-  executeQuery(db, q, 0, queryId, callback);
+  string query_id = db + "_" + time_ns();
+  execute_query(db, q, 0, query_id, callback);
 }
 
 /**
@@ -288,43 +288,43 @@ public void lazyQuery(string db, string q,
  * @param {string} db - The name of the database to query
  * @param {string} q - The SQL query to execute
  * @param {int} offset - The current offset for chunked retrieval
- * @param {string} queryId - Unique identifier for this query
+ * @param {string} query_id - Unique identifier for this query
  *                           execution
  * @param {mixed*} cb - Callback to receive the accumulated
  *                      results when complete, or 0 on failure
  */
-private void executeQuery(
+private void execute_query(
     string db,
     string q,
     int offset,
-    string queryId,
+    string query_id,
     mixed *cb
   ) {
-  string databaseFile, modifiedQuery;
-  int fd, closeResult, i;
+  string database_file, modified_query;
+  int fd, close_result, i;
   mixed rows;
 
-  databaseFile = __databases[db];
+  database_file = __databases[db];
 
   // Modify the query to include LIMIT and OFFSET
-  modifiedQuery = q + " LIMIT " + __dbChunkSize + " OFFSET " + offset;
+  modified_query = q + " LIMIT " + __dbchunk_size + " OFFSET " + offset;
 
-  fd = db_connect("", databaseFile, "", __USE_SQLITE3__);
+  fd = db_connect("", database_file, "", __USE_SQLITE3__);
   if(fd == 0) {
     log_file(
       "system/db",
-      "Error connecting to " + db + " at " + databaseFile + "\n"
+      "Error connecting to " + db + " at " + database_file + "\n"
     );
 
     if(cb)
       call_back(cb, 0);
 
-    map_delete(__handle, queryId);
+    map_delete(__handle, query_id);
 
     return;
   }
 
-  rows = db_exec(fd, modifiedQuery);
+  rows = db_exec(fd, modified_query);
 
   if(stringp(rows)) {
     log_file(
@@ -337,7 +337,7 @@ private void executeQuery(
     if(cb)
       call_back(cb, 0);
 
-    map_delete(__handle, queryId);
+    map_delete(__handle, query_id);
 
     return;
   }
@@ -347,9 +347,9 @@ private void executeQuery(
     db_close(fd);
 
     if(cb)
-      call_back(cb, __handle[queryId]);
+      call_back(cb, __handle[query_id]);
 
-    map_delete(__handle, queryId);
+    map_delete(__handle, query_id);
 
     return;
   }
@@ -370,36 +370,36 @@ private void executeQuery(
   }
 
   // Accumulate the results for this chunk
-  if(!pointerp(__handle[queryId]))
-    __handle[queryId] = ({});
+  if(!pointerp(__handle[query_id]))
+    __handle[query_id] = ({});
 
-  __handle[queryId] += result;
+  __handle[query_id] += result;
 
-  closeResult = db_close(fd);
+  close_result = db_close(fd);
 
-  if(closeResult == 0) {
+  if(close_result == 0) {
     log_file(
       "system/db",
-      "Error closing connection to " + db + " at " + databaseFile + "\n"
+      "Error closing connection to " + db + " at " + database_file + "\n"
     );
 
     if(cb)
       call_back(cb, 0);
 
-    map_delete(__handle, queryId);
+    map_delete(__handle, query_id);
 
     return;
   }
 
   // Check if there might be more data to fetch
-  if(rows == __dbChunkSize) {
-    call_out("executeQuery", 1, db, q, offset + __dbChunkSize, queryId, cb);
+  if(rows == __dbchunk_size) {
+    call_out("execute_query", 1, db, q, offset + __dbchunk_size, query_id, cb);
   } else {
     // Final chunk, process accumulated result
     if(cb)
-      call_back(cb, __handle[queryId]);
+      call_back(cb, __handle[query_id]);
 
-    map_delete(__handle, queryId);
+    map_delete(__handle, query_id);
   }
 }
 
@@ -409,7 +409,7 @@ private void executeQuery(
  * @returns {([ string: string ])} A mapping of database names to
  *                                 their file paths
  */
-public mapping queryDatabases() {
+public mapping query_databases() {
   return copy(__databases);
 }
 
@@ -417,12 +417,12 @@ public mapping queryDatabases() {
  * Retrieves a copy of all table definitions for a specified
  * database.
  *
- * @param {string} dbName - The name of the database
+ * @param {string} db_name - The name of the database
  * @returns {([ string: string ])} A mapping of table names to
  *                                 their SQL definitions
  */
-public mapping queryTables(string dbName) {
-  return copy(__tableDefinitions[dbName]);
+public mapping query_tables(string db_name) {
+  return copy(__table_definitions[db_name]);
 }
 
 /**
@@ -431,7 +431,7 @@ public mapping queryTables(string dbName) {
  * @param {string} db - The name of the database to check
  * @returns {int} 1 if the database exists, 0 otherwise
  */
-public int validDb(string db) {
+public int valid_db(string db) {
   return !nullp(__databases[db]);
 }
 
@@ -443,17 +443,17 @@ public int validDb(string db) {
  * @param {string} table - The name of the table to check
  * @returns {int} 1 if the table exists, 0 otherwise
  */
-public int validTable(string db, string table) {
+public int valid_table(string db, string table) {
   string statement;
   mixed result;
 
-  if(!validDb(db))
+  if(!valid_db(db))
     return 0;
 
   statement = sprintf(
     "SELECT name FROM sqlite_master " +
     "WHERE type='table' AND name=%s;",
-    escapeValue(table)
+    escape_value(table)
   );
 
   result = query(db, statement, 0);
@@ -477,11 +477,11 @@ public int validTable(string db, string table) {
  *                          the database is invalid or version is
  *                          a string, or -1 on query failure
  */
-public mixed sqliteVersion(string db) {
+public mixed sqlite_version(string db) {
   string statement = "SELECT sqlite_version() ;";
   mixed result;
 
-  if(!validDb(db))
+  if(!valid_db(db))
     return 0;
 
   result = query(db, statement, 0);
@@ -506,7 +506,7 @@ public mixed sqliteVersion(string db) {
  *                   "(col1,col2) VALUES (val1,val2)", or null
  *                   if the mapping is empty
  */
-public string statementFromMapping(mapping data) {
+public string statement_from_mapping(mapping data) {
   if(!sizeof(data))
     return null;
 
@@ -517,8 +517,8 @@ public string statementFromMapping(mapping data) {
     if(!stringp(k))
       continue;
 
-    array_push(ref columns, escapeIdent(k));
-    array_push(ref values, escapeValue(v));
+    array_push(ref columns, escape_ident(k));
+    array_push(ref values, escape_value(v));
   }
 
   if(!sizeof(columns))
@@ -535,8 +535,8 @@ public string statementFromMapping(mapping data) {
  * @param {string} db - The name of the database to check
  * @returns {int} 1 if upsert is supported, 0 otherwise
  */
-public int allowUpsert(string db) {
-  mixed version = sqliteVersion(db);
+public int allow_upsert(string db) {
+  mixed version = sqlite_version(db);
 
   if(!arrayp(version) || sizeof(version) < 3)
     return 0;
@@ -566,7 +566,7 @@ public int allowUpsert(string db) {
  */
 public varargs mixed rest(string method, string url,
   mapping data, mixed *callback) {
-  mapping parsed = parseDbUrl(url);
+  mapping parsed = parse_db_url(url);
 
   if(!parsed)
     error("Invalid URL format. Expected: db://database/table");
@@ -575,60 +575,60 @@ public varargs mixed rest(string method, string url,
   string table = parsed["table"];
   mapping params = parsed["query"];
 
-  if(!validDb(db))
+  if(!valid_db(db))
     error("Unknown database: " + db);
 
-  if(!validTable(db, table))
+  if(!valid_table(db, table))
     error("Unknown table: " + table + " in " + db);
 
   // Separate special params from WHERE conditions
-  string orderClause = "";
-  string limitClause = "";
-  string offsetClause = "";
+  string order_clause = "";
+  string limit_clause = "";
+  string offset_clause = "";
 
   if(mapp(params)) {
     if(!nullp(params["_order"])) {
-      string *orderParts = explode(params["_order"], ":");
-      string col = orderParts[0];
-      string dir = sizeof(orderParts) > 1 ?
-        upper_case(orderParts[1]) : "ASC";
+      string *order_parts = explode(params["_order"], ":");
+      string col = order_parts[0];
+      string dir = sizeof(order_parts) > 1 ?
+        upper_case(order_parts[1]) : "ASC";
 
       if(dir != "ASC" && dir != "DESC")
         dir = "ASC";
 
-      orderClause = " ORDER BY " + escapeIdent(col) + " " + dir;
+      order_clause = " ORDER BY " + escape_ident(col) + " " + dir;
       map_delete(params, "_order");
     }
 
     if(!nullp(params["_limit"])) {
-      limitClause = " LIMIT " + to_int(params["_limit"]);
+      limit_clause = " LIMIT " + to_int(params["_limit"]);
       map_delete(params, "_limit");
     }
 
     if(!nullp(params["_offset"])) {
-      offsetClause = " OFFSET " + to_int(params["_offset"]);
+      offset_clause = " OFFSET " + to_int(params["_offset"]);
       map_delete(params, "_offset");
     }
   }
 
-  string where = whereFromMapping(params);
+  string where = where_from_mapping(params);
   string q;
 
   switch(method) {
     case "GET":
-      q = "SELECT * FROM " + escapeIdent(table) + where +
-        orderClause + limitClause + offsetClause;
+      q = "SELECT * FROM " + escape_ident(table) + where +
+        order_clause + limit_clause + offset_clause;
       break;
     case "POST": {
       if(!mapp(data) || !sizeof(data))
         error("POST requires a data mapping.");
 
-      string values = statementFromMapping(data);
+      string values = statement_from_mapping(data);
 
       if(!values)
         error("Failed to build INSERT statement.");
 
-      q = "INSERT INTO " + escapeIdent(table) + " " + values;
+      q = "INSERT INTO " + escape_ident(table) + " " + values;
       break;
     }
     case "PUT": {
@@ -638,15 +638,15 @@ public varargs mixed rest(string method, string url,
       if(!strlen(where))
         error("PUT requires query params for WHERE clause.");
 
-      string set = setFromMapping(data);
-      q = "UPDATE " + escapeIdent(table) + " " + set + where;
+      string set = set_from_mapping(data);
+      q = "UPDATE " + escape_ident(table) + " " + set + where;
       break;
     }
     case "DELETE": {
       if(!strlen(where))
         error("DELETE requires query params for WHERE clause.");
 
-      q = "DELETE FROM " + escapeIdent(table) + where;
+      q = "DELETE FROM " + escape_ident(table) + where;
       break;
     }
     default:
@@ -664,7 +664,7 @@ public varargs mixed rest(string method, string url,
  * @param {string} url - URL in the form db://database/table?query
  * @returns {mapping} Parsed components with keys: db, table, query
  */
-private mapping parseDbUrl(string url) {
+private mapping parse_db_url(string url) {
   string *matches = pcre_extract(url,
     "^db://([^/?]+)/([^/?]+)(?:\\?(.*))?$"
   );
@@ -689,7 +689,7 @@ private mapping parseDbUrl(string url) {
  * @param {mixed} v - The value to escape
  * @returns {string} The escaped value as a SQL literal
  */
-private string escapeValue(mixed v) {
+private string escape_value(mixed v) {
   if(typeof(v) == T_STRING)
     return "'" + replace_string(v, "'", "''") + "'";
 
@@ -704,7 +704,7 @@ private string escapeValue(mixed v) {
  * @param {string} s - The identifier to escape
  * @returns {string} The quoted identifier
  */
-private string escapeIdent(string s) {
+private string escape_ident(string s) {
   return "\"" + replace_string(s, "\"", "\"\"") + "\"";
 }
 
@@ -716,14 +716,14 @@ private string escapeIdent(string s) {
  * @returns {string} WHERE clause string, or empty string if no
  *                   conditions
  */
-private string whereFromMapping(mapping m) {
+private string where_from_mapping(mapping m) {
   if(!mapp(m) || !sizeof(m))
     return "";
 
   string *conditions = ({});
 
   foreach(string k, mixed v in m)
-    conditions += ({ escapeIdent(k) + " = " + escapeValue(v) });
+    conditions += ({ escape_ident(k) + " = " + escape_value(v) });
 
   return " WHERE " + implode(conditions, " AND ");
 }
@@ -735,11 +735,11 @@ private string whereFromMapping(mapping m) {
  * @param {mapping} m - Mapping of column:value pairs
  * @returns {string} SET clause string
  */
-private string setFromMapping(mapping m) {
+private string set_from_mapping(mapping m) {
   string *assignments = ({});
 
   foreach(string k, mixed v in m)
-    assignments += ({ escapeIdent(k) + " = " + escapeValue(v) });
+    assignments += ({ escape_ident(k) + " = " + escape_value(v) });
 
   return "SET " + implode(assignments, ", ");
 }

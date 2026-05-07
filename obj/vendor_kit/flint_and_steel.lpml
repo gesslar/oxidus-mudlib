@@ -1,0 +1,17 @@
+{
+  id: ["kit"],
+  additional ids: ["flint and steel kit","fire kit"],
+  adj: ["small","leather","flint","steel"],
+  name: "flint and steel kit",
+  short: "a small flint and steel kit",
+  long: "A modest leather pouch holding a chunk of dark flint and a "
+        "C-shaped firesteel - the makings of any traveller's campfire. "
+        "Strike one against the other over dry tinder and a spark will "
+        "do the rest.",
+  mass: 20,
+  value: 15,
+  contents: [
+    "/obj/loot/flint.loot",
+    "/obj/loot/firesteel.loot",
+  ],
+}

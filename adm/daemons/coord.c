@@ -19,14 +19,14 @@ private nomask mapping rooms = ([ ]);
 private nomask mixed *rooms_array = ({ });
 
 void setup() {
-  setPersistent(1);
+  set_persistent(1);
 }
 
 void set_coordinate_data(mapping m) {
   rooms = m;
   rooms_array = map(values(rooms), (: $1.coords :));
 
-  saveData();
+  save_data();
 }
 
 mapping get_coordinate_data() {

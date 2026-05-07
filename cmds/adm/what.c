@@ -17,16 +17,16 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string _arg) {
   tell(caller, "=----------------------------------------------=\n");
 
   foreach(/** @type {STD_PLAYER} */ object user in users()) {
-    string *commandHistory = user->queryCommandHistory();
+    string *command_history = user->query_command_history();
     if(!living(user)) continue;
 
-    if(sizeof(commandHistory) <= 0)
+    if(sizeof(command_history) <= 0)
       tell(caller, sprintf("  %-15s %s\n",
         user->query_name(), "<none>"));
     else
       tell(caller, sprintf("  %-15s %s\n",
         user->query_name(),
-        commandHistory[sizeof(commandHistory) - 1]));
+        command_history[sizeof(command_history) - 1]));
   }
 
   tell(caller, "=----------------------------------------------=\n");

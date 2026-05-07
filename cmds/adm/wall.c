@@ -7,7 +7,7 @@
 inherit STD_CMD;
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
-  object *allUsers;
+  object *all_users;
 
   if(!adminp(previous_object()))
     return _error("Error [wall]: Access denied.");
@@ -17,9 +17,9 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
     return 1;
   }
 
-  allUsers = users();
+  all_users = users();
 
-  foreach(object user in allUsers) {
+  foreach(object user in all_users) {
     tell(user, "**** System Wide Message From: "
       + capitalize(caller->query_real_name()) + " at "
       + ctime(time()) + " ****\n\n\t" + str + "\n");

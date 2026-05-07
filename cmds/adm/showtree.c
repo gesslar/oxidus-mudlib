@@ -11,7 +11,7 @@ inherit STD_CMD;
 
 private string dig(string file, string func, int index);
 
-private nosave string errorMsg;
+private nosave string error_message;
 private nosave string FAIL =
 "Syntax: showtree <file>\n"
 "        showtree <func> in <file>\n";
@@ -52,8 +52,8 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   result = dig(file, func, 0);
 
   if(!result)
-    if(errorMsg)
-      return errorMsg;
+    if(error_message)
+      return error_message;
     else
       return "No such file " + file + ".c\n";
 
@@ -73,12 +73,12 @@ string dig(string file, string func, int indent) {
   if(file[0] != '/')
     file = "/" + file;
   if(!file_exists(file + ".c")) {
-    errorMsg = "No such file " + file + ".c\n";
+    error_message = "No such file " + file + ".c\n";
     return 0;
   }
 
   if(!(ob = load_object(file))) {
-    errorMsg = "Error in loading " + file + ".\n";
+    error_message = "Error in loading " + file + ".\n";
     return 0;
   }
 

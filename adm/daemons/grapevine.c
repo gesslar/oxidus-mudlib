@@ -17,14 +17,14 @@ inherit STD_WS_CLIENT;
 private nomask void startup();
 private nomask void restart();
 private nomask mapping connect(mapping grapevine);
-protected nomask varargs string zTimeString(int time);
+protected nomask varargs string z_time_string(int time);
 
-private nomask varargs void sendOutgoingMessage(string ev, string reff, mapping message, mixed *cb);
-private nomask void grapevineHandleEventRestart(string reff, mapping data);
+private nomask varargs void send_outgoing_message(string ev, string reff, mapping message, mixed *cb);
+private nomask void grapevine_handle_event_restart(string reff, mapping data);
 
 // Send events
-private nomask void grapevineSendEventAuthenticate(mapping auth);
-private nomask void grapevineSendEventHeartbeat();
+private nomask void grapevine_send_event_authenticate(mapping auth);
+private nomask void grapevine_send_event_heartbeat();
 
 private nosave mapping __config, __restart, __reffs;
 private nosave mapping __games;
@@ -33,10 +33,10 @@ protected void setup() {
   set_log_level(1);
   set_log_prefix("(GRAPEVINE)");
 
-  slot(SIG_USER_LOGIN, "grapevineSendEventPlayersSignIn");
-  slot(SIG_USER_LINK_RESTORE, "grapevineSendEventPlayersSignIn");
-  slot(SIG_USER_LOGOUT, "grapevineSendEventPlayersSignOut");
-  slot(SIG_USER_LINKDEAD, "grapevineSendEventPlayersSignOut");
+  slot(SIG_USER_LOGIN, "grapevine_send_event_players_sign_in");
+  slot(SIG_USER_LINK_RESTORE, "grapevine_send_event_players_sign_in");
+  slot(SIG_USER_LOGOUT, "grapevine_send_event_players_sign_out");
+  slot(SIG_USER_LINKDEAD, "grapevine_send_event_players_sign_out");
 
   call_out("startup", 3);
 }
@@ -53,7 +53,7 @@ private nomask void startup() {
     return;
   }
 
-  __config = mudConfig("GRAPEVINE");
+  __config = mud_config("GRAPEVINE");
 
   mapping result = connect(__config);
 
@@ -61,11 +61,11 @@ private nomask void startup() {
 
   switch(result["status"]) {
     case GR_STATUS_OK:
-      call_if(this_object(), "grapevineHandleConnecting", result);
+      call_if(this_object(), "grapevine_handle_connecting", result);
       break;
 
     case GR_STATUS_FAIL:
-      call_if(this_object(), "grapevineHandleError", result);
+      call_if(this_object(), "grapevine_handle_error", result);
       break;
 
     default:
@@ -102,12 +102,12 @@ private nomask void restart() {
   switch(result["status"]) {
     case GR_STATUS_OK:
       __restart["attempts"]++;
-      call_if(this_object(), "grapevineHandleConnecting", result);
+      call_if(this_object(), "grapevine_handle_connecting", result);
       break;
 
     case GR_STATUS_ERROR:
       __restart = null;
-      call_if(this_object(), "grapevineHandleError", result);
+      call_if(this_object(), "grapevine_handle_error", result);
       break;
 
     default:
@@ -117,7 +117,7 @@ private nomask void restart() {
   }
 }
 
-private void restartAttempt() {
+private void restart_attempt() {
   if(__restart) {
     if(__restart["attempts"]++ > __config["max_restart"]) {
       _log(1, "Max restart attempts reached");
@@ -182,7 +182,7 @@ protected void websocket_handle_connected() {
     __restart = null;
   }
 
-  grapevineSendEventAuthenticate(auth);
+  grapevine_send_event_authenticate(auth);
 
   server["grapevine"] = ([]);
 }
@@ -191,21 +191,21 @@ protected void websocket_handle_connection_error(int result) {
   _log(2, "Connection error: %O", result);
 
   if(__restart)
-    return restartAttempt();
+    return restart_attempt();
 }
 
 protected void websocket_handle_resolve_error() {
   _log(2, "Failed to resolve host");
 
   if(__restart)
-    return restartAttempt();
+    return restart_attempt();
 }
 
 protected void websocket_handle_handshake_error(int result) {
   _log(2, "Handshake error: %O", result);
 
   if(__restart)
-    return restartAttempt();
+    return restart_attempt();
 }
 
 // Handle eventuality that the connection has been closed
@@ -213,7 +213,7 @@ protected void websocket_handle_shutdown() {
   _log(1, "Grapevine connection closed");
 
   if(__restart)
-    return restartAttempt();
+    return restart_attempt();
 }
 
 // Handle incoming text frames
@@ -245,104 +245,104 @@ protected void websocket_handle_text_frame(mapping payload) {
     // Authenticate
     case GR_EVENT_AUTHENTICATE:
       _log(2, "Received authenticate event");
-      call_if(this_object(), "grapevineHandleEventAuthenticate", status, err, data);
+      call_if(this_object(), "grapevine_handle_event_authenticate", status, err, data);
       break;
 
     // Heartbeat
     case GR_EVENT_HEARTBEAT:
       _log(2, "Received heartbeat event");
-      call_if(this_object(), "grapevineHandleEventHeartbeat", data);
+      call_if(this_object(), "grapevine_handle_event_heartbeat", data);
       break;
 
     // Restart
     case GR_EVENT_RESTART:
       _log(2, "Received restart event");
-      call_if(this_object(), "grapevineHandleEventRestart", reff, data);
+      call_if(this_object(), "grapevine_handle_event_restart", reff, data);
       break;
 
     // Channels
     case GR_EVENT_CHANNELS_SUBSCRIBE:
       _log(2, "Received subscribe event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleChannelsSubscribe", reff, status, err);
+      call_if(this_object(), "grapevine_handle_channels_subscribe", reff, status, err);
       break;
 
     case GR_EVENT_CHANNELS_UNSUBSCRIBE:
       _log(2, "Received unsubscribe event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleChannelsUnsubscribe", reff);
+      call_if(this_object(), "grapevine_handle_channels_unsubscribe", reff);
       break;
 
     case GR_EVENT_CHANNELS_BROADCAST:
       _log(2, "Received broadcast event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleChannelsBroadcast", reff, data);
+      call_if(this_object(), "grapevine_handle_channels_broadcast", reff, data);
       break;
 
     case GR_EVENT_CHANNELS_SEND:
       _log(2, "Received send event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleChannelsSend", reff);
+      call_if(this_object(), "grapevine_handle_channels_send", reff);
       break;
 
     // Players
     case GR_EVENT_PLAYERS_SIGN_IN:
       _log(2, "Received sign-in event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandlePlayersSignIn", reff, data);
+      call_if(this_object(), "grapevine_handle_players_sign_in", reff, data);
       break;
 
     case GR_EVENT_PLAYERS_SIGN_OUT:
       _log(2, "Received sign-out event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandlePlayersSignOut", reff, data);
+      call_if(this_object(), "grapevine_handle_players_sign_out", reff, data);
       break;
 
     case GR_EVENT_PLAYERS_STATUS:
       _log(2, "Received status event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandlePlayersStatus", reff, status, err, data);
+      call_if(this_object(), "grapevine_handle_players_status", reff, status, err, data);
       break;
 
     // Tells
     case GR_EVENT_TELLS_SEND:
       _log(2, "Received send event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleTellsSend", reff, status, err);
+      call_if(this_object(), "grapevine_handle_tells_send", reff, status, err);
       break;
 
     case GR_EVENT_TELLS_RECEIVE:
       _log(1, "Received receive event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleTellsReceive", reff, data);
+      call_if(this_object(), "grapevine_handle_tells_receive", reff, data);
       break;
 
     // Game
     case GR_EVENT_GAMES_CONNECT:
       _log(2, "Received connect event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleGamesConnect", reff, data);
+      call_if(this_object(), "grapevine_handle_games_connect", reff, data);
       break;
 
     case GR_EVENT_GAMES_DISCONNECT:
       _log(2, "Received disconnect event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleGamesDisconnect", reff, data);
+      call_if(this_object(), "grapevine_handle_games_disconnect", reff, data);
       break;
 
     case GR_EVENT_GAMES_STATUS:
       _log(2, "Received status event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleGamesStatus", reff, status, err, data);
+      call_if(this_object(), "grapevine_handle_games_status", reff, status, err, data);
       break;
 
     case GR_EVENT_ACHIEVEMENTS:
       _log(2, "Received sync event, reference: %s", reff);
       call_if(this_object(),
-        "grapevineHandleAchievementsSync", reff, data);
+        "grapevine_handle_achievements_sync", reff, data);
       break;
 
     case GR_EVENT_ACHIEVEMENTS_CREATE:
       _log(2, "Received create event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleAchievementsCreate", reff, status, data);
+      call_if(this_object(), "grapevine_handle_achievements_create", reff, status, data);
       break;
 
     case GR_EVENT_ACHIEVEMENTS_UPDATE:
       _log(2, "Received update event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleAchievementsUpdate", reff, status, data);
+      call_if(this_object(), "grapevine_handle_achievements_update", reff, status, data);
       break;
 
     case GR_EVENT_ACHIEVEMENTS_DELETE:
       _log(2, "Received delete event, reference: %s", reff);
-      call_if(this_object(), "grapevineHandleAchievementsDelete", reff, data);
+      call_if(this_object(), "grapevine_handle_achievements_delete", reff, data);
       break;
 
     default:
@@ -364,7 +364,7 @@ protected void websocket_handle_close_frame(mapping _payload) {
     __restart = ([
       "restart" : server["grapevine"]["restart"],
       "attempts" : 0,
-      "restarting" : call_out_walltime((:restartAttempt:), server["grapevine"]["restart"] + 60),
+      "restarting" : call_out_walltime((:restart_attempt:), server["grapevine"]["restart"] + 60),
     ]);
   }
 }
@@ -375,7 +375,7 @@ protected void websocket_handle_close_frame(mapping _payload) {
 
 // Authentication
 
-private void grapevineHandleEventAuthenticate(
+private void grapevine_handle_event_authenticate(
     string status, string err, mapping data) {
   _log(2, "Received authentication response: %s", identify(data));
 
@@ -388,20 +388,20 @@ private void grapevineHandleEventAuthenticate(
 
 // Heartbeat
 
-private void grapevineHandleEventHeartbeat(mapping _data) {
+private void grapevine_handle_event_heartbeat(mapping _data) {
   _log(2, "Received heartbeat");
-  grapevineSendEventHeartbeat();
+  grapevine_send_event_heartbeat();
 }
 
 // Restart
 
-private nomask void grapevineHandleEventRestart(string _reff, mapping data) {
+private nomask void grapevine_handle_event_restart(string _reff, mapping data) {
   _log(1, "Grapevine restart imminent, duration: %d", data["downtime"]);
   server["grapevine"]["restart"] = data["downtime"];
 }
 
 // Channels
-private void grapevineHandleChannelsSubscribe(string reff, string _status, string err) {
+private void grapevine_handle_channels_subscribe(string reff, string _status, string err) {
   mapping request = __reffs[reff];
 
   if(!request)
@@ -427,7 +427,7 @@ private void grapevineHandleChannelsSubscribe(string reff, string _status, strin
 }
 
 // TODO: We need to ask them if we could receive a status and error message for this event.
-private void grapevineHandleChannelsUnsubscribe(string reff) {
+private void grapevine_handle_channels_unsubscribe(string reff) {
   mapping request = __reffs[reff];
 
   map_delete(__reffs, reff);
@@ -443,14 +443,14 @@ private void grapevineHandleChannelsUnsubscribe(string reff) {
   _log(1, "Unsubscribed from channel: %s", request["channel"]);
 }
 
-private void grapevineHandleChannelsBroadcast(string _reff, mapping data) {
+private void grapevine_handle_channels_broadcast(string _reff, mapping data) {
   _log(1, "Received broadcast on channel: %s", data["channel"]);
   // catch(CHAN_D->grapevine_chat(data));
 }
 
 // TODO: We need to ask them if we could receive a status and
 // error message for this event.
-private void grapevineHandleChannelsSend(string reff) {
+private void grapevine_handle_channels_send(string reff) {
   mapping request = __reffs[reff];
 
   if(!request)
@@ -473,7 +473,7 @@ private void grapevineHandleChannelsSend(string reff) {
 
 // TODO: We need to ask them if we could receive a status and
 // error message for this event.
-private void grapevineHandlePlayersSignIn(string reff, mapping data) {
+private void grapevine_handle_players_sign_in(string reff, mapping data) {
   // We have a reff, so this is a response to our own player
   // signing in
   if(reff) {
@@ -498,7 +498,7 @@ private void grapevineHandlePlayersSignIn(string reff, mapping data) {
   }
 
   // catch(CHAN_D->grapevine_chat(([
-  //   "channel": mudConfig("GRAPEVINE")["notice"],
+  //   "channel": mud_config("GRAPEVINE")["notice"],
   //   "message": sprintf("%s has signed in to %s", data["name"], data["game"]),
   //   "name": "Grapevine",
   //   "game": mud_name(),
@@ -509,7 +509,7 @@ private void grapevineHandlePlayersSignIn(string reff, mapping data) {
 
 // TODO: We need to ask them if we could receive a status and
 // error message for this event.
-private void grapevineHandlePlayersSignOut(string reff, mapping data) {
+private void grapevine_handle_players_sign_out(string reff, mapping data) {
   if(reff) {
     mapping request = __reffs[reff];
 
@@ -532,7 +532,7 @@ private void grapevineHandlePlayersSignOut(string reff, mapping data) {
   }
 
   // catch(CHAN_D->grapevine_chat(([
-  //   "channel": mudConfig("GRAPEVINE")["notice"],
+  //   "channel": mud_config("GRAPEVINE")["notice"],
   //   "message": sprintf("%s has signed out of %s", data["name"], data["game"]),
   //   "name": "Grapevine",
   //   "game": mud_name(),
@@ -543,7 +543,7 @@ private void grapevineHandlePlayersSignOut(string reff, mapping data) {
 
 // TODO: We need to ask them if we could receive a status and
 // error message for this event.
-private void grapevineHandlePlayersStatus(string reff, string _status, string err, mapping data) {
+private void grapevine_handle_players_status(string reff, string _status, string err, mapping data) {
   mapping request = __reffs[reff];
 
   if(!request)
@@ -580,7 +580,7 @@ private void grapevineHandlePlayersStatus(string reff, string _status, string er
 
 // Tells
 
-private void grapevineHandleTellsSend(string reff, string _status, string err) {
+private void grapevine_handle_tells_send(string reff, string _status, string err) {
   mapping request = __reffs[reff];
 
   if(!request)
@@ -607,14 +607,14 @@ private void grapevineHandleTellsSend(string reff, string _status, string err) {
 
 // TODO: We need to ask them what the significance is of the
 // ref in this event.
-private void grapevineHandleTellsReceive(string _reff, mapping data) {
+private void grapevine_handle_tells_receive(string _reff, mapping data) {
   _log(1, "Received tell: %s", identify(data));
 }
 
 // Game
-private void grapevineHandleGamesConnect(string _reff, mapping data) {
+private void grapevine_handle_games_connect(string _reff, mapping data) {
   // catch(CHAN_D->grapevine_chat(([
-  //   "channel": mudConfig("GRAPEVINE")["notice"],
+  //   "channel": mud_config("GRAPEVINE")["notice"],
   //   "message": sprintf("%s has connected to Grapevine", data["game"]),
   //   "name": "Grapevine",
   //   "game": mud_name(),
@@ -623,9 +623,9 @@ private void grapevineHandleGamesConnect(string _reff, mapping data) {
   _log(1, "Game connected: %s", data["game"]);
 }
 
-private void grapevineHandleGamesDisconnect(string _reff, mapping data) {
+private void grapevine_handle_games_disconnect(string _reff, mapping data) {
   // catch(CHAN_D->grapevine_chat(([
-  //   "channel": mudConfig("GRAPEVINE")["notice"],
+  //   "channel": mud_config("GRAPEVINE")["notice"],
   //   "message": sprintf("%s has disconnected from Grapevine", data["game"]),
   //   "name": "Grapevine",
   //   "game": mud_name(),
@@ -639,7 +639,7 @@ private void grapevineHandleGamesDisconnect(string _reff, mapping data) {
 // completed fully.
 // TODO: When doing a single request, the game appears to be
 // case sensitive, despite tells/send not being case sensitive.
-private void grapevineHandleGamesStatus(string reff, string _status, string err, mapping data) {
+private void grapevine_handle_games_status(string reff, string _status, string err, mapping data) {
   mapping request = __reffs[reff];
 
   if(!request)
@@ -668,7 +668,7 @@ private void grapevineHandleGamesStatus(string reff, string _status, string err,
 
 // TODO: We need to ask if we could receive a status and error
 // message for this event.
-private void grapevineHandleAchievementsSync(string reff, mapping data) {
+private void grapevine_handle_achievements_sync(string reff, mapping data) {
   mapping request = __reffs[reff];
 
   if(!request)
@@ -687,7 +687,7 @@ private void grapevineHandleAchievementsSync(string reff, mapping data) {
   _log(1, "Achievements synced: %s", identify(data));
 }
 
-private void grapevineHandleAchievementsCreate(string reff, string status, mapping data) {
+private void grapevine_handle_achievements_create(string reff, string status, mapping data) {
   mapping request = __reffs[reff];
 
   if(!request)
@@ -712,7 +712,7 @@ private void grapevineHandleAchievementsCreate(string reff, string status, mappi
   _log(1, "Achievement created: %s", identify(data));
 }
 
-private void grapevineHandleAchievementsUpdate(string reff, string status, mapping data) {
+private void grapevine_handle_achievements_update(string reff, string status, mapping data) {
   mapping request = __reffs[reff];
 
   if(!request)
@@ -739,7 +739,7 @@ private void grapevineHandleAchievementsUpdate(string reff, string status, mappi
 
 // TODO: We need to ask them if we could receive a status and
 // error message for this event.
-private void grapevineHandleAchievementsDelete(string reff, mapping data) {
+private void grapevine_handle_achievements_delete(string reff, mapping data) {
   mapping request = __reffs[reff];
 
   if(!request)
@@ -759,23 +759,23 @@ private void grapevineHandleAchievementsDelete(string reff, mapping data) {
 }
 
 // Unknown
-private void grapevineHandleUnknownChannels(string _reff, mapping data) {
+private void grapevine_handle_unknown_channels(string _reff, mapping data) {
   _log(1, "Unknown channels event: %s", identify(data));
 }
 
-private void grapevineHandleUnknownPlayers(string _reff, mapping data) {
+private void grapevine_handle_unknown_players(string _reff, mapping data) {
   _log(1, "Unknown players event: %s", identify(data));
 }
 
-private void grapevineHandleUnknownGame(string _reff, mapping data) {
-  _log(1, "Unknown game event: %s", identify(data));
+private void grapevine_handle_unknown_games(string _reff, mapping data) {
+  _log(1, "Unknown games event: %s", identify(data));
 }
 
-private void grapevineHandleUnknownTells(string _reff, mapping data) {
+private void grapevine_handle_unknown_tells(string _reff, mapping data) {
   _log(1, "Unknown tells event: %s", identify(data));
 }
 
-private void grapevineHandleUnknownAchievements(string _reff, mapping data) {
+private void grapevine_handle_unknown_achievements(string _reff, mapping data) {
   _log(1, "Unknown achievements event: %s", identify(data));
 }
 
@@ -784,13 +784,13 @@ private void grapevineHandleUnknownAchievements(string _reff, mapping data) {
  * ************************************************************ */
 
 // Authenticate
-private nomask void grapevineSendEventAuthenticate(mapping auth) {
+private nomask void grapevine_send_event_authenticate(mapping auth) {
   _log(2, "Sending authentication");
-  sendOutgoingMessage(GR_EVENT_AUTHENTICATE, null, auth);
+  send_outgoing_message(GR_EVENT_AUTHENTICATE, null, auth);
 }
 
 // Heartbeat
-private nomask void grapevineSendEventHeartbeat() {
+private nomask void grapevine_send_event_heartbeat() {
   object *u = users();
 
   _log(2, "Sending heartbeat");
@@ -804,7 +804,7 @@ private nomask void grapevineSendEventHeartbeat() {
 
   _log(2, "Sending heartbeat");
 
-  sendOutgoingMessage(GR_EVENT_HEARTBEAT, null, pl);
+  send_outgoing_message(GR_EVENT_HEARTBEAT, null, pl);
 }
 
 // Channels
@@ -816,12 +816,12 @@ private nomask void grapevineSendEventHeartbeat() {
  * @param {mixed*} cb - Callback to invoke when the subscription
  *                      is confirmed.
  */
-public nomask void grapevineSendEventChannelsSubscribe(string chan, mixed *cb) {
+public nomask void grapevine_send_event_channels_subscribe(string chan, mixed *cb) {
   mapping pl = ([
     "channel": chan,
   ]);
 
-  sendOutgoingMessage(GR_EVENT_CHANNELS_SUBSCRIBE,generate_uuid(), pl, cb);
+  send_outgoing_message(GR_EVENT_CHANNELS_SUBSCRIBE,generate_uuid(), pl, cb);
 }
 
 /**
@@ -831,12 +831,12 @@ public nomask void grapevineSendEventChannelsSubscribe(string chan, mixed *cb) {
  * @param {mixed*} cb - Callback to invoke when the unsubscription
  *                      is confirmed.
  */
-public nomask void grapevineSendEventChannelsUnsubscribe(string chan, mixed *cb) {
+public nomask void grapevine_send_event_channels_unsubscribe(string chan, mixed *cb) {
   mapping pl = ([
     "channel": chan,
   ]);
 
-  sendOutgoingMessage(GR_EVENT_CHANNELS_UNSUBSCRIBE, generate_uuid(), pl, cb);
+  send_outgoing_message(GR_EVENT_CHANNELS_UNSUBSCRIBE, generate_uuid(), pl, cb);
 }
 
 /**
@@ -849,14 +849,14 @@ public nomask void grapevineSendEventChannelsUnsubscribe(string chan, mixed *cb)
  * @param {mixed*} cb - Callback to invoke when the send is
  *                      confirmed.
  */
-public nomask void grapevineSendEventChannelsSend(object who, string chan, string msg, mixed *cb) {
+public nomask void grapevine_send_event_channels_send(object who, string chan, string msg, mixed *cb) {
   mapping pl = ([
     "channel": chan,
     "message": msg,
     "name": who->query_real_name(),
   ]);
 
-  sendOutgoingMessage(GR_EVENT_CHANNELS_SEND, generate_uuid(), pl, cb);
+  send_outgoing_message(GR_EVENT_CHANNELS_SEND, generate_uuid(), pl, cb);
 }
 
 // Players
@@ -866,13 +866,13 @@ public nomask void grapevineSendEventChannelsSend(object who, string chan, strin
  *
  * @param {STD_PLAYER} who - The player who signed in.
  */
-public nomask void grapevineSendEventPlayersSignIn(object who) {
+public nomask void grapevine_send_event_players_sign_in(object who) {
   mapping pl = ([
     "name": who->query_real_name(),
     "game": get_config(__MUD_NAME__),
   ]);
 
-  sendOutgoingMessage(GR_EVENT_PLAYERS_SIGN_IN, generate_uuid(), pl);
+  send_outgoing_message(GR_EVENT_PLAYERS_SIGN_IN, generate_uuid(), pl);
 }
 
 // TODO: Ask why this event does not take a game, but sign-in does
@@ -881,12 +881,12 @@ public nomask void grapevineSendEventPlayersSignIn(object who) {
  *
  * @param {STD_PLAYER} who - The player who signed out.
  */
-public nomask void grapevineSendEventPlayersSignOut(object who) {
+public nomask void grapevine_send_event_players_sign_out(object who) {
   mapping pl = ([
     "name" : who->query_real_name(),
   ]);
 
-  sendOutgoingMessage(GR_EVENT_PLAYERS_SIGN_OUT, generate_uuid(), pl);
+  send_outgoing_message(GR_EVENT_PLAYERS_SIGN_OUT, generate_uuid(), pl);
 }
 
 // TODO: Ask if this can be made case-insensitive like tells/send
@@ -899,13 +899,13 @@ public nomask void grapevineSendEventPlayersSignOut(object who) {
  * @param {mixed*} cb - Callback to invoke with the status
  *                      response.
  */
-public nomask void grapevineSendEventPlayersStatus(string game, mixed *cb) {
+public nomask void grapevine_send_event_players_status(string game, mixed *cb) {
   mapping pl;
 
   if(game)
     pl = ([ "game" : game ]);
 
-  sendOutgoingMessage(GR_EVENT_PLAYERS_STATUS, generate_uuid(), pl, cb);
+  send_outgoing_message(GR_EVENT_PLAYERS_STATUS, generate_uuid(), pl, cb);
 }
 
 // Tells
@@ -921,19 +921,19 @@ public nomask void grapevineSendEventPlayersStatus(string game, mixed *cb) {
  * @param {mixed*} cb - Callback to invoke when the send is
  *                      confirmed.
  */
-public nomask void grapevineSendEventTellsSend(object who, string to, string game, string msg, mixed *cb) {
+public nomask void grapevine_send_event_tells_send(object who, string to, string game, string msg, mixed *cb) {
   mapping pl = ([
     "from_name": who->query_real_name(),
     "to_name": to,
     "to_game": game,
     "message": msg,
-    "sent_at": zTimeString(),
+    "sent_at": z_time_string(),
   ]);
 
-  sendOutgoingMessage(GR_EVENT_TELLS_SEND, generate_uuid(), pl, cb);
+  send_outgoing_message(GR_EVENT_TELLS_SEND, generate_uuid(), pl, cb);
 }
 
-private nomask varargs void sendOutgoingMessage(string ev, string reff, mapping message, mixed *cb) {
+private nomask varargs void send_outgoing_message(string ev, string reff, mapping message, mixed *cb) {
   if(!server) {
     _log(1, "Not connected to Grapevine");
 
@@ -969,7 +969,7 @@ private nomask varargs void sendOutgoingMessage(string ev, string reff, mapping 
  * @param {mixed*} cb - Callback to invoke with the status
  *                      response.
  */
-public nomask void grapevineSendEventGamesStatus(mixed game, mixed *cb) {
+public nomask void grapevine_send_event_games_status(mixed game, mixed *cb) {
   mapping pl;
 
   if(stringp(game))
@@ -978,7 +978,7 @@ public nomask void grapevineSendEventGamesStatus(mixed game, mixed *cb) {
   else
     pl = null;
 
-  sendOutgoingMessage(GR_EVENT_GAMES_STATUS, generate_uuid(), pl, cb);
+  send_outgoing_message(GR_EVENT_GAMES_STATUS, generate_uuid(), pl, cb);
 }
 
 // Achievements
@@ -991,8 +991,8 @@ public nomask void grapevineSendEventGamesStatus(mixed game, mixed *cb) {
  * Requests a sync of all achievements from the Grapevine
  * server.
  */
-public nomask void grapevineSendEventAchievementsSync() {
-  sendOutgoingMessage(GR_EVENT_ACHIEVEMENTS_SYNC, generate_uuid(), null);
+public nomask void grapevine_send_event_achievements_sync() {
+  send_outgoing_message(GR_EVENT_ACHIEVEMENTS_SYNC, generate_uuid(), null);
 }
 
 /**
@@ -1000,8 +1000,8 @@ public nomask void grapevineSendEventAchievementsSync() {
  *
  * @param {mapping} achievement - The achievement data to create.
  */
-public nomask void grapevineSendEventAchievementsCreate(mapping achievement) {
-  sendOutgoingMessage(GR_EVENT_ACHIEVEMENTS_CREATE, generate_uuid(), achievement);
+public nomask void grapevine_send_event_achievements_create(mapping achievement) {
+  send_outgoing_message(GR_EVENT_ACHIEVEMENTS_CREATE, generate_uuid(), achievement);
 }
 
 /**
@@ -1010,8 +1010,8 @@ public nomask void grapevineSendEventAchievementsCreate(mapping achievement) {
  *
  * @param {mapping} achievement - The updated achievement data.
  */
-public nomask void grapevineSendEventAchievementsUpdate( mapping achievement) {
-  sendOutgoingMessage(GR_EVENT_ACHIEVEMENTS_UPDATE, generate_uuid(), achievement);
+public nomask void grapevine_send_event_achievements_update( mapping achievement) {
+  send_outgoing_message(GR_EVENT_ACHIEVEMENTS_UPDATE, generate_uuid(), achievement);
 }
 
 /**
@@ -1019,12 +1019,12 @@ public nomask void grapevineSendEventAchievementsUpdate( mapping achievement) {
  *
  * @param {string} key - The key of the achievement to delete.
  */
-public nomask void grapevineSendEventAchievementsDelete(string key) {
+public nomask void grapevine_send_event_achievements_delete(string key) {
   mapping pl = ([
     "key": key,
   ]);
 
-  sendOutgoingMessage(GR_EVENT_ACHIEVEMENTS_DELETE, generate_uuid(), pl);
+  send_outgoing_message(GR_EVENT_ACHIEVEMENTS_DELETE, generate_uuid(), pl);
 }
 
 /**
@@ -1035,7 +1035,7 @@ public nomask void grapevineSendEventAchievementsDelete(string key) {
  * @param {string} usr - The sender's display name.
  * @param {string} msg - The message content.
  */
-public nomask void grapevineBroadcastMessage(string chan, string usr, string msg) {
+public nomask void grapevine_broadcast_message(string chan, string usr, string msg) {
   mapping message = ([
     "channel": chan,
     "message": msg,
@@ -1043,7 +1043,7 @@ public nomask void grapevineBroadcastMessage(string chan, string usr, string msg
     "game": get_config(__MUD_NAME__),
   ]);
 
-  sendOutgoingMessage(GR_EVENT_CHANNELS_SEND, generate_uuid(), message);
+  send_outgoing_message(GR_EVENT_CHANNELS_SEND, generate_uuid(), message);
 }
 
 /**
@@ -1054,7 +1054,7 @@ public nomask void grapevineBroadcastMessage(string chan, string usr, string msg
  * @returns {string} The formatted timestamp in
  *                   YYYY-MM-DDTHH:MM:SSZ format.
  */
-protected nomask varargs string zTimeString(int time: (: time() :)) {
+protected nomask varargs string z_time_string(int time: (: time() :)) {
   mixed *lt = localtime(time);
   int off = lt[LT_GMTOFF];
 

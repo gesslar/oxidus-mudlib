@@ -18,8 +18,8 @@ private mixed render_container(object tp, object room, string target);
 private mixed render_living(object tp, object room, object target, int brief);
 private string highlight_view(object tp, string str, string *keys);
 
-private nosave string default_highlight_colour = mudConfig("LOOK_HIGHLIGHT_COLOUR");
-private nosave string look_highlight_enabled = mudConfig("LOOK_HIGHLIGHT");
+private nosave string default_highlight_colour = mud_config("LOOK_HIGHLIGHT_COLOUR");
+private nosave string look_highlight_enabled = mud_config("LOOK_HIGHLIGHT");
 
 mixed main(/** @type {STD_PLAYER} */ object tp, string arguments) {
   string target;

@@ -44,26 +44,26 @@ int valid_function(mixed f) {
  * the first one that exists.
  *
  * @param {object} ob - The object to check.
- * @param {string|string*} functionNames - Function name(s) to look for `(string|string*)`
+ * @param {string|string*} function_names - Function name(s) to look for `(string|string*)`
  * @returns {string|null} The filename where a function is defined, or null
  *                        if none found or if ob is not an object.
  * @example
  * has(player, "query_level");  // Returns "/std/body.c" if exists
  * has(item, ({ "is_weapon", "is_armour" }));  // Returns filename of first existing function
  */
-string has(object ob, mixed functionNames) {
+string has(object ob, mixed function_names) {
   if(!objectp(ob))
     return null;
 
-  if(stringp(functionNames))
-    return function_exists(functionNames, ob);
-  if(pointerp(functionNames) && uniform_array(functionNames, T_STRING))
-    return eval_first(functionNames, (: function_exists($1, $(ob)) :));
+  if(stringp(function_names))
+    return function_exists(function_names, ob);
+  if(pointerp(function_names) && uniform_array(function_names, T_STRING))
+    return eval_first(function_names, (: function_exists($1, $(ob)) :));
 
   return null;
 }
 
-private nosave string *traceColours = ({
+private nosave string *trace_colours = ({
   "#0099ff",
   "#66ff33",
   "#ff33cc",
@@ -92,8 +92,8 @@ varargs string call_trace(int colour) {
   string *origins;
   string *lines;
   string *colours = colour
-    ? traceColours
-    : map(traceColours, (: "" :));
+    ? trace_colours
+    : map(trace_colours, (: "" :));
 
   res = "";
   programs = call_stack(0);

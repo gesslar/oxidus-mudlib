@@ -16,7 +16,7 @@ public mixed main(
   /** @type {STD_PLAYER} */ object caller, string str
 ) {
   object ob, dest, env;
-  string err, custom, tmp, shortDesc, fileName;
+  string err, custom, tmp, short_desc, file_name;
   int result;
 
   if(!str)
@@ -50,8 +50,8 @@ public mixed main(
   if(!ob)
     return _error("Unable to clone the object.");
 
-  shortDesc = get_short(ob);
-  fileName = file_name(ob);
+  short_desc = get_short(ob);
+  file_name = file_name(ob);
   dest = caller;
 
   result = ob->move(dest);
@@ -59,7 +59,7 @@ public mixed main(
   if(result == MOVE_TOO_HEAVY) {
     ob->move(env);
     caller->set_env("cwf", str);
-    return _ok("%s was moved to the room.", shortDesc);
+    return _ok("%s was moved to the room.", short_desc);
   }
 
   if(result == MOVE_NO_DEST)
@@ -78,19 +78,19 @@ public mixed main(
 
   if(custom) {
     tmp = custom;
-    tmp = replace_string(tmp, "$O", shortDesc);
+    tmp = replace_string(tmp, "$O", short_desc);
     tmp = replace_string(tmp, "$N", caller->query_name());
     tell_them(capitalize(tmp) + "\n");
   } else {
     tell_them(
       capitalize(caller->query_name()) +
-      " creates " + shortDesc + ".\n"
+      " creates " + short_desc + ".\n"
     );
   }
 
   _ok(
     "%s cloned to %s (%s).",
-    fileName, get_short(dest), file_name(dest)
+    file_name, get_short(dest), file_name(dest)
   );
 
   caller->set_env("cwf", str);

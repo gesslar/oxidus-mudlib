@@ -16,12 +16,12 @@
 inherit STD_ITEM;
 
 protected nosave object owner;
-protected nosave string moduleName;
+protected nosave string module_name;
 
-private void stopModule();
+private void stop_module();
 
 void mudlib_setup() {
-  moduleName = "module";
+  module_name = "module";
 }
 
 /**
@@ -87,7 +87,7 @@ public int request_clean_up() {
  * @returns {string} The module name
  */
 public string query_name() {
-  return moduleName;
+  return module_name;
 }
 
 /**

@@ -108,8 +108,7 @@ int remove_skill(string skill) {
 /**
  * Get the level of a skill.
  * @param {string} skill - The name of the skill
- * @returns {float} The raw float level of the skill. For NPCs,
- *   returns queryLevel() * 3.0.
+ * @returns {float} The raw float level of the skill. For NPCs, returns query_level() * 3.0.
  */
 float query_skill(string skill) {
   string *path = explode(skill, ".");
@@ -120,7 +119,7 @@ float query_skill(string skill) {
     return null;
 
   if(function_exists("is_npc") && is_npc())
-    return queryLevel() * 3.0;
+    return query_level() * 3.0;
 
   sz = sizeof(path);
   for(x = 0; x < sz; x++) {

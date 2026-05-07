@@ -33,12 +33,12 @@ inherit EXT_REF;
      "query_aliases" })
 #define TAB "\t"
 
-private mixed doCall(object ob, string func, mixed args);
+private mixed do_call(object ob, string func, mixed args);
 
 public mixed main(
   /** @type {STD_PLAYER} */ object _caller, string a
 ) {
-  string str, *expA;
+  string str, *exp_a;
   mixed objs, funcs, args, tmp, ret, rets;
   object ob;
   int i, s, fi, fs;
@@ -48,17 +48,17 @@ public mixed main(
     return 0;
   }
 
-  expA = explode(a, ";");
-  s = sizeof(expA);
-  objs = expA[0];
+  exp_a = explode(a, ";");
+  s = sizeof(exp_a);
+  objs = exp_a[0];
   if(s > 1)
-    funcs = expA[1];
+    funcs = exp_a[1];
   else
     funcs = FUNC_LIST;
   if(s == 3)
-    args = ({ expA[2] });
+    args = ({ exp_a[2] });
   if(s > 3)
-    args = expA[2..(s - 1)];
+    args = exp_a[2..(s - 1)];
 
   objs = resolv_ref(objs);
   if(objs == "users")
@@ -128,7 +128,7 @@ public mixed main(
   for(i = 0; i < s; i++) {
     str = identify(objs[i]);
     for(fi = 0; fi < fs; fi++) {
-      ret = doCall(objs[i], funcs[fi], args);
+      ret = do_call(objs[i], funcs[fi], args);
       if(ret[0])
         rets += ({ ret[0] });
       if(fs == 1)
@@ -152,7 +152,7 @@ public mixed main(
   return 1;
 }
 
-private mixed doCall(
+private mixed do_call(
   object ob, string func, mixed args
 ) {
   mixed ret, err;

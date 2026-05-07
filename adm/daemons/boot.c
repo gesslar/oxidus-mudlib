@@ -20,7 +20,7 @@ private nomask int boot_number;
 
 void setup() {
   set_log_level(0);
-  setPersistent(1);
+  set_persistent(1);
   slot(SIG_SYS_BOOT, "boot");
 }
 
@@ -34,7 +34,7 @@ void boot() {
 
   _log(1, "Boot #%d loaded.", ++boot_number);
 
-  saveData();
+  save_data();
 }
 
 /**

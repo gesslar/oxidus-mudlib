@@ -1,0 +1,18 @@
+{
+  id: ["firesteel"],
+  additional ids: ["steel","fire steel"],
+  adj: ["small","curved","blackened"],
+  name: "firesteel",
+  short: "a small curved firesteel",
+  long: "This is a small piece of high-carbon steel, bent into a rough "
+        "C-shape and worn smooth from years of use. Scraped sharply against "
+        "a striker like flint, it sheds a fountain of glowing sparks hot "
+        "enough to set dry tinder smouldering.",
+  mass: 5,
+  value: 12,
+  material: ["steel"],
+  properties: {
+    crafting material: true,
+    firesteel: true,
+  },
+}

@@ -19,7 +19,7 @@ private nomask nosave string *combat_memory = ({});
 public function attack_on_sight = (: attack_on_sight :);
 
 void setup() {
-  moduleName = query_file_name();
+  module_name = query_file_name();
 }
 
 int start_module(mixed args...) {
@@ -58,4 +58,3 @@ void add_to_memory(object target) {
   if(!of(name, combat_memory))
     combat_memory += ({ name });
 }
-

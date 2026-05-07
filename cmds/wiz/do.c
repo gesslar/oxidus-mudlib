@@ -59,7 +59,7 @@ mixed main(object tp, string str) {
       string cmd_str = cmd[1];
 
       while(repeat--) {
-        tp->forceMe(cmd_str);
+        tp->force_me(cmd_str);
       }
     }
   }

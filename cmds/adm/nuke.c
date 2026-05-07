@@ -12,7 +12,7 @@ Standard nuke command V2
 
 inherit STD_CMD;
 
-void confirmNuke(string str, object caller, string user);
+void confirm_nuke(string str, object caller, string user);
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string user) {
   if(!adminp(previous_object()))
@@ -27,12 +27,12 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string user) {
     return _error("User '%s' does not exist.", user);
 
   _question(caller, "Are you sure you want to delete " + user + "? [y/n] ", MSG_PROMPT);
-  input_to("confirmNuke", 0, caller, user);
+  input_to("confirm_nuke", 0, caller, user);
 
   return 1;
 }
 
-void confirmNuke(string str, object caller, string user) {
+void confirm_nuke(string str, object caller, string user) {
   object body;
   string *dir;
 
@@ -45,13 +45,13 @@ void confirmNuke(string str, object caller, string user) {
 
   /** @type {OBJ_SECURITY_EDITOR} */ object security_editor = new(OBJ_SECURITY_EDITOR);
 
-  foreach(mixed group in security_editor->listGroups()) {
+  foreach(mixed group in security_editor->list_groups()) {
     if(is_member(user, group))
       _info(caller, "* Removing from group: %s.", group);
-    security_editor->disableMembership(user, group);
+    security_editor->disable_membership(user, group);
   }
 
-  security_editor->writeState(0);
+  security_editor->write_state(0);
   security_editor->remove();
 
   if(body = find_player(user)) {

@@ -16,29 +16,29 @@ inherit STD_CMD;
 mapping access = ([]);
 mapping groups = ([]);
 
-void writeGroupFile(int flag);
-void writeAccessFile(int flag);
+void write_group_file(int flag);
+void write_access_file(int flag);
 string *parse(string str);
-void parseFiles();
-void parseGroup();
-void parseAccess();
+void parse_files();
+void parse_group();
+void parse_access();
 
-int inputMainMenu(string str, object caller);
-int inputModMenu(string str, object caller);
-int inputDisMenu(string str, object caller);
-void inputContinueDisMenu(string str, object caller);
-int inputQueryGroup(string str, object caller);
-int inputCreateGroup(string str, object caller);
-int inputDeleteGroup(string str, object caller);
-int inputToggleMembership(string str, object caller);
-int inputToggleMembership2(string str, object caller, string user);
-int inputModDirectory(string str, object caller);
-int inputModDirGroup(string str, object caller, string dir);
-int inputModDirAccessKey(string str, object caller, string dir, string group);
-int inputQueryDirectory(string str, object caller);
+int input_main_menu(string str, object caller);
+int input_mod_menu(string str, object caller);
+int input_dis_menu(string str, object caller);
+void input_continue_dis_menu(string str, object caller);
+int input_query_group(string str, object caller);
+int input_create_group(string str, object caller);
+int input_delete_group(string str, object caller);
+int input_toggle_membership(string str, object caller);
+int input_toggle_membership2(string str, object caller, string user);
+int input_mod_directory(string str, object caller);
+int input_mod_dir_group(string str, object caller, string dir);
+int input_mod_dir_access_key(string str, object caller, string dir, string group);
+int input_query_directory(string str, object caller);
 
 void setup() {
-  parseFiles();
+  parse_files();
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string _arg) {
@@ -52,12 +52,12 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string _arg) {
   tell_me(" 3: Reload data from file\n");
   tell_me(" 4: Save & Exit\n");
   tell_me(" 5: Exit without saving\n");
-  input_to("inputMainMenu", caller);
+  input_to("input_main_menu", caller);
 
   return 1;
 }
 
-int inputMainMenu(string str, object caller) {
+int input_main_menu(string str, object caller) {
   if(!str)
     return 1;
 
@@ -69,7 +69,7 @@ int inputMainMenu(string str, object caller) {
     tell_me(" 3: List members of a group\n");
     tell_me(" 4: List access for directory\n");
     tell_me(" 5: Main menu\n");
-    input_to("inputDisMenu", caller);
+    input_to("input_dis_menu", caller);
     return 1;
   case "2":
     tell_me("\n\tMODIFY CURRENT ACCESS SETTINGS\n\n");
@@ -78,23 +78,23 @@ int inputMainMenu(string str, object caller) {
     tell_me(" 3: Toggle user membership to group\n");
     tell_me(" 4: Modify access to a directory\n");
     tell_me(" 5: Main menu\n");
-    input_to("inputModMenu", caller);
+    input_to("input_mod_menu", caller);
     return 1;
   case "3":
-    parseFiles();
+    parse_files();
     tell_me("\nSuccess: Data reloaded from file -- All unsaved changes lost.\n");
     main(caller, 0);
     return 1;
   case "4":
     tell_me("Attempting to write data to files...\n");
-    writeGroupFile(0);
-    writeAccessFile(0);
-    parseFiles();
+    write_group_file(0);
+    write_access_file(0);
+    parse_files();
     tell_me("Success [access]: Exited with data saved.\n");
     return 1;
   case "5":
     tell_me("Success [access]: Exiting without saving.\n");
-    parseFiles();
+    parse_files();
     return 1;
   default:
     tell_me("Error [access]: Unknown menu " + str + "\n");
@@ -102,7 +102,7 @@ int inputMainMenu(string str, object caller) {
   }
 }
 
-int inputModMenu(string str, object caller) {
+int input_mod_menu(string str, object caller) {
   string *arr;
 
   arr = ({});
@@ -110,19 +110,19 @@ int inputModMenu(string str, object caller) {
   switch(str) {
   case "1":
     tell_me("Enter the name of the group you wish to create: ");
-    input_to("inputCreateGroup", caller);
+    input_to("input_create_group", caller);
     return 1;
   case "2":
     tell_me("Enter the name of the group you wish to delete: ");
-    input_to("inputDeleteGroup", caller);
+    input_to("input_delete_group", caller);
     return 1;
   case "3":
     tell_me("Enter the name of the user who you wish to toggle membership: ");
-    input_to("inputToggleMembership", caller);
+    input_to("input_toggle_membership", caller);
     return 1;
   case "4":
     tell_me("Enter the directory that you wish to modify the access to: ");
-    input_to("inputModDirectory", caller);
+    input_to("input_mod_directory", caller);
     return 1;
   default:
     tell_me("\n");
@@ -131,10 +131,10 @@ int inputModMenu(string str, object caller) {
   }
 }
 
-int inputModDirectory(string str, object caller) {
+int input_mod_directory(string str, object caller) {
   if(!str) {
     tell_me("\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 
@@ -142,28 +142,28 @@ int inputModDirectory(string str, object caller) {
     str += "/";
 
   tell_me("\nEnter the name of the group/user whom's access you wish to edit: ");
-  input_to("inputModDirGroup", caller, str);
+  input_to("input_mod_dir_group", caller, str);
   return 1;
 }
 
-int inputModDirGroup(string str, object caller, string dir) {
+int input_mod_dir_group(string str, object caller, string dir) {
   if(!str) {
     tell_me("\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   } else {
     tell_me("\nEnter the access key: ");
-    input_to("inputModDirAccessKey", caller, dir, str);
+    input_to("input_mod_dir_access_key", caller, dir, str);
     return 1;
   }
 }
 
-int inputModDirAccessKey(string str, object caller, string dir, string group) {
+int input_mod_dir_access_key(string str, object caller, string dir, string group) {
   string *access_keys = allocate(8);
 
   if(!str) {
     tell_me("\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 
@@ -183,34 +183,34 @@ int inputModDirAccessKey(string str, object caller, string dir, string group) {
     access[dir] += ([group : access_keys]);
 
   tell_me("\nSuccess: Access to '" + dir + "' for group/user '" + group + "' updated.\n");
-  inputMainMenu("2", caller);
+  input_main_menu("2", caller);
   return 1;
 }
 
-int inputToggleMembership(string str, object caller) {
+int input_toggle_membership(string str, object caller) {
   if(!str) {
     tell_me("\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 
   if(!user_data_file(str)) {
     tell_me("\nError: User '" + str + "' does not exist.\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   } else {
     tell_me("Enter the name of the group that you wish to toggle " + capitalize(str) + "'s membership to: ");
-    input_to("inputToggleMembership2", caller, str);
+    input_to("input_toggle_membership2", caller, str);
     return 1;
   }
 }
 
-int inputToggleMembership2(string str, object caller, string user) {
+int input_toggle_membership2(string str, object caller, string user) {
   string *user_list;
 
   if(!str) {
     tell_me("\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 
@@ -218,73 +218,73 @@ int inputToggleMembership2(string str, object caller, string user) {
 
   if(sizeof(user_list) == 0) {
     tell_me("\nError:  Group '" + str + "' does not exist.\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 
   if(member_array(user, user_list) == -1) {
     groups[str] += ({user});
     tell_me("\nSuccess: User '" + user + "' was added to group '" + str + "'\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   } else {
     groups[str] -= ({user});
     tell_me("\nSuccess: User '" + user + "' was removed from the group '" + str + "'\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 }
 
-int inputCreateGroup(string str, object caller) {
+int input_create_group(string str, object caller) {
   if(!str) {
     tell_me("\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 
   if(groups[str]) {
     tell_me("\nError:  a group with the name '" + str + "' already exists.\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   } else {
     groups[str] = ({query_privs(this_body())});
     tell_me("\nSuccess:  group '" + str + "' created. Note: You were added to the new group.\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 }
 
-int inputDeleteGroup(string str, object caller) {
+int input_delete_group(string str, object caller) {
   if(!str) {
     tell_me("\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 
   if(!groups[str]) {
     tell_me("\nError:  group '" + str + "' does not exist.\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 
   if(str == "admin" || str == "soul") {
     tell_me("\nError:  group '" + str + "' cannot be deleted.\n\t"
       + "The group is a system group and is required for proper functionality of the mudlib.\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   } else {
     map_delete(groups, str);
     tell_me("Success:  The group '" + str + "' was deleted.\n");
-    inputMainMenu("2", caller);
+    input_main_menu("2", caller);
     return 1;
   }
 }
 
-void inputContinueDisMenu(string _str, object caller) {
-  inputMainMenu("1", caller);
+void input_continue_dis_menu(string _str, object caller) {
+  input_main_menu("1", caller);
 }
 
-int inputDisMenu(string str, object caller) {
+int input_dis_menu(string str, object caller) {
   string *arr;
 
   arr = ({});
@@ -292,11 +292,11 @@ int inputDisMenu(string str, object caller) {
   switch(str) {
   case "1":
     tell_me("\nRaw group data:\n\n");
-    writeGroupFile(1);
+    write_group_file(1);
     tell_me("\nRaw access data:\n\n");
-    writeAccessFile(1);
+    write_access_file(1);
     tell_me("\n[Hit enter to continue]");
-    input_to("inputContinueDisMenu", caller);
+    input_to("input_continue_dis_menu", caller);
     return 1;
   case "2":
     arr = keys(groups);
@@ -305,15 +305,15 @@ int inputDisMenu(string str, object caller) {
     tell_me("\nThere is a total of " + sizeof(arr) + " groups on " + mud_name() + "\n\n");
     tell_me(simple_list(arr));
     tell_me("\n[Hit enter to continue]");
-    input_to("inputContinueDisMenu", caller);
+    input_to("input_continue_dis_menu", caller);
     return 1;
   case "3":
     tell_me("\n Enter name of group: ");
-    input_to("inputQueryGroup", caller);
+    input_to("input_query_group", caller);
     return 1;
   case "4":
     tell_me("\n Enter name of directory: ");
-    input_to("inputQueryDirectory", caller);
+    input_to("input_query_directory", caller);
     return 1;
   default:
     tell_me("\n");
@@ -322,7 +322,7 @@ int inputDisMenu(string str, object caller) {
   }
 }
 
-int inputQueryDirectory(string str, object caller) {
+int input_query_directory(string str, object caller) {
   string *access_key_list, *arr;
   string output;
   mapping access_data;
@@ -333,14 +333,14 @@ int inputQueryDirectory(string str, object caller) {
 
   if(!str) {
     tell_me("\n");
-    inputMainMenu("1", caller);
+    input_main_menu("1", caller);
     return 1;
   }
 
   if(!mapp(access[str])) {
     tell_me("\nError: No specific access settings have been set for directory '" + str + "'\n");
     tell_me("\n[Hit enter to continue]");
-    input_to("inputContinueDisMenu", caller);
+    input_to("input_continue_dis_menu", caller);
     return 1;
   }
 
@@ -356,23 +356,23 @@ int inputQueryDirectory(string str, object caller) {
     output += arr[0] + "\n";
   tell_me("\n" + output);
   tell_me("\n[Hit enter to continue]");
-  input_to("inputContinueDisMenu", caller);
+  input_to("input_continue_dis_menu", caller);
   return 1;
 }
 
-int inputQueryGroup(string str, object caller) {
+int input_query_group(string str, object caller) {
   string *arr;
 
   if(!str) {
     tell_me("\n");
-    inputMainMenu("1", caller);
+    input_main_menu("1", caller);
     return 1;
   }
 
   if(!sizeof(groups[str])) {
     tell_me("\nError: Group '" + str + "' doesn't exist.\n");
     tell_me("\n[Hit enter to continue]");
-    input_to("inputContinueDisMenu", caller);
+    input_to("input_continue_dis_menu", caller);
     return 1;
   }
 
@@ -382,11 +382,11 @@ int inputQueryGroup(string str, object caller) {
   else
     printf("\nThe following user is a member of the group '" + str + "':\n\t%s\n", arr[0]);
   tell_me("\n[Hit enter to continue]");
-  input_to("inputContinueDisMenu", caller);
+  input_to("input_continue_dis_menu", caller);
   return 1;
 }
 
-void writeGroupFile(int flag) {
+void write_group_file(int flag) {
   string file;
   string *group_list, *group_data;
   int i;
@@ -410,10 +410,10 @@ void writeGroupFile(int flag) {
   if(flag)
     tell_me(file + "\n");
   else
-    parseFiles();
+    parse_files();
 }
 
-void writeAccessFile(int flag) {
+void write_access_file(int flag) {
   string file;
   string *access_list, *access_key_list, *arr;
   mapping access_data;
@@ -443,7 +443,7 @@ void writeAccessFile(int flag) {
   if(flag)
     tell_me(file + "\n");
   else
-    parseFiles();
+    parse_files();
 }
 
 string *parse(string str) {
@@ -467,12 +467,12 @@ string *parse(string str) {
   return arr;
 }
 
-void parseFiles() {
-  parseGroup();
-  parseAccess();
+void parse_files() {
+  parse_group();
+  parse_access();
 }
 
-void parseGroup() {
+void parse_group() {
   int i, n;
   string *arr;
 
@@ -518,7 +518,7 @@ void parseGroup() {
   }
 }
 
-void parseAccess() {
+void parse_access() {
   int i, n;
   string *arr;
 

@@ -48,8 +48,8 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
       if(num < 0 || num > 255)
         return _error(caller, "Invalid colour code.");
 
-      int *rgb = COLOUR_D->colourToRgb(num);
-      string hex = COLOUR_D->rgbToHex(rgb);
+      int *rgb = COLOUR_D->colour_to_rgb(num);
+      string hex = COLOUR_D->rgb_to_hex(rgb);
       string fg = sprintf("{{%s}}", hex);
       string bg = sprintf("^^%s^^", hex);
 

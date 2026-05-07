@@ -236,7 +236,7 @@ void error_handler(mapping mp, int caught) {
 #if 0
 void error_handler(mapping mp, int caught) {
     string ret;
-    string logfile = caught ? mudConfig("LOG_CATCH") : mudConfig("LOG_RUNTIME");
+    string logfile = caught ? mud_config("LOG_CATCH") : mud_config("LOG_RUNTIME");
     string what = mp["error"];
     string userid;
 
@@ -425,7 +425,7 @@ varargs void log_file(string file, string msg, mixed arg...) {
   }
 
   arg = pointerp(arg) ? arg : ({ arg });
-  msg = sanitizeRegex(msg);
+  msg = sanitize_regex(msg);
   msg = sprintf(msg, arg...);
   msg = append(msg, "\n");
 

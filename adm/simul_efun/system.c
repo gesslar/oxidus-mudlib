@@ -42,7 +42,7 @@ string mud_name() {
  * @returns {string} The library name.
  */
 string lib_name() {
-  return mudConfig("LIB_NAME");
+  return mud_config("LIB_NAME");
 }
 
 /**
@@ -51,7 +51,7 @@ string lib_name() {
  * @returns {string} The library version.
  */
 string lib_version() {
-  return mudConfig("LIB_VERSION");
+  return mud_config("LIB_VERSION");
 }
 
 /**
@@ -60,7 +60,7 @@ string lib_version() {
  * @returns {string} The open status of the MUD.
  */
 string open_status() {
-  return mudConfig("OPEN_STATUS");
+  return mud_config("OPEN_STATUS");
 }
 
 /**
@@ -69,7 +69,7 @@ string open_status() {
  * @returns {string} The admin email address.
  */
 string admin_email() {
-  return mudConfig("ADMIN_EMAIL");
+  return mud_config("ADMIN_EMAIL");
 }
 
 /**
@@ -121,7 +121,7 @@ string arch() {
  * @param {string} str - The configuration key to retrieve.
  * @returns {mixed} The configuration value.
  */
-mixed mudConfig(string str) {
+mixed mud_config(string str) {
   return CONFIG_D->get_mud_config(str);
 }
 
@@ -141,7 +141,7 @@ string log_dir() {
  * @returns {string} The temporary directory.
  */
 string tmp_dir() {
-  return mudConfig("TMP_DIR");
+  return mud_config("TMP_DIR");
 }
 
 /**
@@ -151,7 +151,7 @@ string tmp_dir() {
  */
 
 string doc_dir() {
-  return mudConfig("DOC_DIR");
+  return mud_config("DOC_DIR");
 }
 
 /**
@@ -174,7 +174,7 @@ varargs void debug(mixed str, mixed args...) {
     str = sprintf("%O", str);
   }
 
-  str = COLOUR_D->substituteColour(str, "on");
+  str = COLOUR_D->substitute_colour(str, "on");
 
   debug_message(str);
 }
@@ -188,7 +188,7 @@ private nosave mapping _symbols = ([
   "debug"   : ({ ({ SYSTEM_DEBUG,   "" }), ({ "\u25A1 ", "o ", "" }) }), // □ = white square
 ]);
 
-private string _format_message(string type, int includeDecoration, string str, mixed args...) {
+private string _format_message(string type, int include_decoration, string str, mixed args...) {
   /** @type {STD_BODY} */
   object body = this_body();
   mixed *symbol = _symbols[type];
@@ -196,7 +196,7 @@ private string _format_message(string type, int includeDecoration, string str, m
   string final;
 
   if(body) {
-    if(body->has_screenreader() || !includeDecoration) {
+    if(body->has_screenreader() || !include_decoration) {
       colour_index = 1;
       tag_index = 2;
     } else {
@@ -230,7 +230,7 @@ class SystemMessage {
   string message;
 }
 
-private varargs class SystemMessage constructMessageFromArgs(string type, mixed args...) {
+private varargs class SystemMessage construct_message_from_args(string type, mixed args...) {
   string str;
   class SystemMessage system_message;
   object ob;
@@ -269,7 +269,7 @@ private int _feedback(string type, mixed args...) {
   class SystemMessage result;
   object tp;
 
-  result = constructMessageFromArgs(type, args...);
+  result = construct_message_from_args(type, args...);
   if(!result)
     return 0;
 

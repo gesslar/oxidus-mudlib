@@ -20,7 +20,7 @@ mixed main(object tp, string cmd) {
 
   before = rusage();
 
-  eval_cost = tp->forceMe(cmd);
+  eval_cost = tp->force_me(cmd);
   after = rusage();
   usertime = after["utime"] - before["utime"];
   stime = after["stime"] - before["stime"];

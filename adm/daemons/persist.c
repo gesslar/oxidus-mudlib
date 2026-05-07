@@ -12,25 +12,25 @@
  * 2024-03-05 - Gesslar - Created
  */
 
-private void findPersistentObjects();
-public void registerPersistent(object ob);
-public void unregisterPersistent(object ob);
-public void persistObjects();
+private void find_persistent_objects();
+public void register_persistent(object ob);
+public void unregister_persistent(object ob);
+public void persist_objects();
 
 private nosave object *__persistents = ({});
 
 void setup() {
   set_heart_beat(30);
-  findPersistentObjects();
-  slot(SIG_SYS_CRASH, "persistObjects");
-  slot(SIG_SYS_PERSIST, "persistObjects");
+  find_persistent_objects();
+  slot(SIG_SYS_CRASH, "persist_objects");
+  slot(SIG_SYS_PERSIST, "persist_objects");
 }
 
 /**
  * Scans all loaded objects and populates the persistent object list
  * with those that report as persistent.
  */
-private void findPersistentObjects() {
+private void find_persistent_objects() {
   __persistents = objects((: $1->query_persistent() :));
 }
 
@@ -39,7 +39,7 @@ private void findPersistentObjects() {
  *
  * @param {object} ob - The object to register
  */
-public void registerPersistent(object ob) {
+public void register_persistent(object ob) {
   if(member_array(ob, __persistents) == -1)
     __persistents += ({ ob });
 }
@@ -49,7 +49,7 @@ public void registerPersistent(object ob) {
  *
  * @param {object} ob - The object to unregister
  */
-public void unregisterPersistent(object ob) {
+public void unregister_persistent(object ob) {
   if(member_array(ob, __persistents) != -1)
     __persistents -= ({ ob });
 }
@@ -58,11 +58,11 @@ public void unregisterPersistent(object ob) {
  * Saves all registered persistent objects, removing any that have
  * been destructed.
  */
-public void persistObjects() {
+public void persist_objects() {
   __persistents -= ({ 0 });
   catch(filter(__persistents, (: $1->save_data() :)));
 }
 
 void heart_beat() {
-  persistObjects();
+  persist_objects();
 }

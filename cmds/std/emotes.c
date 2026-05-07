@@ -10,10 +10,10 @@
  * 2006-06-28 - Parthenon - Created
  */
 
-private string *singledEmotes = ({});
+private string *singled_emotes = ({});
 
-private void fixArray(string *arr);
-private void printEmotes(string *emotes);
+private void fix_array(string *arr);
+private void print_emotes(string *emotes);
 
 mixed main(object _tp, string _arg) {
   string *emotes;
@@ -25,39 +25,39 @@ mixed main(object _tp, string _arg) {
     return "Error [emotes]: There are no emotes "
       "available\n";
 
-  singledEmotes = ({});
-  fixArray(emotes);
+  singled_emotes = ({});
+  fix_array(emotes);
 
   tell_me("\nAvailable emotes:\n");
 
-  printEmotes(singledEmotes);
+  print_emotes(singled_emotes);
 
   return 1;
 }
 
-private void printEmotes(string *emotes) {
-  int i, numFullRows, numExtras, index;
-  int newLine = 0, rowCount = 0, columnCount = 0;
-  int *indexesPrinted = ({});
-  int tmp = 1, needToAdd;
-  string *allEmotes = SOUL_D->query_emotes();
+private void print_emotes(string *emotes) {
+  int i, num_full_rows, num_extras, index;
+  int new_line = 0, row_count = 0, column_count = 0;
+  int *indexes_printed = ({});
+  int tmp = 1, need_to_add;
+  string *all_emotes = SOUL_D->query_emotes();
 
-  numFullRows = sizeof(emotes) / 4;
-  numExtras = sizeof(emotes) % 4;
+  num_full_rows = sizeof(emotes) / 4;
+  num_extras = sizeof(emotes) % 4;
 
-  if(numExtras)
-    needToAdd = 1;
+  if(num_extras)
+    need_to_add = 1;
 
   for(i = 0; i < sizeof(emotes); i++) {
-    if(newLine >= 4) {
+    if(new_line >= 4) {
       tell_me("\n");
-      newLine = 0;
-      rowCount++;
-      columnCount = 0;
+      new_line = 0;
+      row_count++;
+      column_count = 0;
     }
 
-    if(sizeof(indexesPrinted) >= 4) {
-      index = indexesPrinted[columnCount] + rowCount;
+    if(sizeof(indexes_printed) >= 4) {
+      index = indexes_printed[column_count] + row_count;
 
       if(index > sizeof(emotes) - 1)
         continue;
@@ -67,29 +67,29 @@ private void printEmotes(string *emotes) {
       if(i == 0) {
         index = 0;
       } else {
-        if(needToAdd) {
-          if(numExtras) {
-            index = rowCount * columnCount +
-              numFullRows * columnCount + tmp;
-            numExtras--;
+        if(need_to_add) {
+          if(num_extras) {
+            index = row_count * column_count +
+              num_full_rows * column_count + tmp;
+            num_extras--;
             tmp++;
           } else {
-            index = rowCount * columnCount +
-              numFullRows * columnCount + tmp;
+            index = row_count * column_count +
+              num_full_rows * column_count + tmp;
           }
         } else {
-          index = rowCount * columnCount +
-            numFullRows * columnCount;
+          index = row_count * column_count +
+            num_full_rows * column_count;
         }
       }
 
       tell(this_player(), sprintf("%-15s", emotes[index]));
 
-      indexesPrinted += ({ (index) });
+      indexes_printed += ({ (index) });
     }
 
-    newLine++;
-    columnCount++;
+    new_line++;
+    column_count++;
   }
 
   tell_me("\n\n*Cyan* untargeted only.\n");
@@ -100,19 +100,19 @@ private int alphabetize(string arg1, string arg2) {
   return strcmp(arg1, arg2);
 }
 
-private void fixArray(string *arr) {
+private void fix_array(string *arr) {
   int i;
 
   for(i = 0; i < sizeof(arr); i++) {
     if(arr[i][<2..<1] == "/t")
       arr[i] = arr[i][0..<3];
 
-    if(member_array(arr[i], singledEmotes) == -1)
-      singledEmotes += ({ arr[i] });
+    if(member_array(arr[i], singled_emotes) == -1)
+      singled_emotes += ({ arr[i] });
   }
 
-  singledEmotes =
-    sort_array(singledEmotes, "alphabetize");
+  singled_emotes =
+    sort_array(singled_emotes, "alphabetize");
 }
 
 string query_help(object _caller) {

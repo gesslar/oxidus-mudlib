@@ -12,7 +12,7 @@
 
 inherit STD_CMD;
 
-private mixed listAliases(object tp, int global);
+private mixed list_aliases(object tp, int global);
 
 mixed main(/** @type {STD_PLAYER} */ object tp,
     string args) {
@@ -20,9 +20,9 @@ mixed main(/** @type {STD_PLAYER} */ object tp,
   mapping aliases;
 
   if(!args)
-    return listAliases(tp, 0);
+    return list_aliases(tp, 0);
   else if(args == "-g")
-    return listAliases(tp, 1);
+    return list_aliases(tp, 1);
 
   if(sscanf(args, "%s %s", verb, alias) == 2) {
     if(verb == "alias" || verb == "unalias")
@@ -48,9 +48,9 @@ mixed main(/** @type {STD_PLAYER} */ object tp,
   return _error("No such alias `%s` defined.", args);
 }
 
-private mixed listAliases(object tp, int global) {
+private mixed list_aliases(object tp, int global) {
   mapping data = tp->get_aliases(global);
-  string *sortedKeys, header, footer;
+  string *sorted_keys, header, footer;
   int i, sz;
   string *out;
 
@@ -65,13 +65,13 @@ private mixed listAliases(object tp, int global) {
     footer = "Number of local aliases: %d";
   }
 
-  sortedKeys = keys(data);
-  sz = sizeof(sortedKeys);
+  sorted_keys = keys(data);
+  sz = sizeof(sorted_keys);
 
   if(!sz)
     return "Aliases: No aliases defined.\n";
 
-  sortedKeys = sort_array(sortedKeys, 1);
+  sorted_keys = sort_array(sorted_keys, 1);
 
   out = allocate(sz + 4);
   out[0] = header;
@@ -81,7 +81,7 @@ private mixed listAliases(object tp, int global) {
 
   for(i = 0; i < sz; i++)
     out[i + 2] = sprintf("%-10s %-20s",
-      sortedKeys[i], data[sortedKeys[i]]);
+      sorted_keys[i], data[sorted_keys[i]]);
 
   return out;
 }

@@ -2,33 +2,33 @@
 #define __COMMAND_H__
 
 // Command handler functions
-public void addCommand(mixed command, mixed action);
-public void removeCommand(mixed command);
-public void removeCommandAll(mixed action);
-public mixed queryCommand(string command);
-public mapping queryCommands();
-public string *queryMatchingCommands(string command);
-public string *queryAllCommands();
-public void initCommands();
-public mixed evaluateCommand(object tp, string command,
+public void add_command(mixed command, mixed action);
+public void remove_command(mixed command);
+public void remove_command_all(mixed action);
+public mixed query_command(string command);
+public mapping query_commands();
+public string *query_matching_commands(string command);
+public string *query_all_commands();
+public void init_commands();
+public mixed evaluate_command(object tp, string command,
   string arg);
 
 // Path functions
-public string *queryPath();
-public int addPath(string str);
-public void setPath(mixed path);
-public int remPath(string str);
-public void addWizardPaths();
-public void removeWizardPaths();
-public void addStandardPaths();
-public void addGhostPaths();
-public string findCommandPath(string verb);
+public string *query_path();
+public int add_path(string str);
+public void set_path(mixed path);
+public int rem_path(string str);
+public void add_wizard_path();
+public void remove_wizard_paths();
+public void add_standard_paths();
+public void add_ghost_paths();
+public string find_command_path(string verb);
 
 // Command history and execution
-public nomask varargs string *queryCommandHistory(int index,
+public nomask varargs string *query_command_history(int index,
   int range);
-public int commandHook(string arg);
-private nomask int evaluateResult(mixed result);
-public int forceMe(string cmd);
+public int command_hook(string arg);
+private nomask int evaluate_result(mixed result);
+public int force_me(string cmd);
 
 #endif // __COMMAND_H__

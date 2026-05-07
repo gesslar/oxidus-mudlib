@@ -12,15 +12,15 @@ private nosave string data_file = 0;
 varargs string set_data_file(string file);
 
 // whether this object will save/load
-varargs int setPersistent(int x: (: 1 :)) {
+varargs int set_persistent(int x: (: 1 :)) {
     x = !!x;
 
     if(!data_file) set_data_file();
 
     if(x == 1)
-        PERSIST_D->registerPersistent(this_object());
+        PERSIST_D->register_persistent(this_object());
     else
-        PERSIST_D->unregisterPersistent(this_object());
+        PERSIST_D->unregister_persistent(this_object());
 
     return persistent = x;
 }
@@ -54,7 +54,7 @@ private string get_base_path(string path) {
 }
 
 // saving and loading data
-int saveData() {
+int save_data() {
     string base;
 
     if(!persistent)

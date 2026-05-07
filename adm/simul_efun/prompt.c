@@ -51,7 +51,7 @@ private nomask void _password(string input, object body, int attempts, int count
     return;
   }
 
-  current_password = ACCOUNT_D->readAccount(body->query_real_name(), "password");
+  current_password = ACCOUNT_D->read_account(body->query_real_name(), "password");
   if(crypt(input, current_password) != current_password) {
     _error(body, "Incorrect password.");
     if(++count > attempts) {

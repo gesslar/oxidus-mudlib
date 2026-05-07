@@ -38,9 +38,9 @@ void Supports(string submodule, mixed data) {
       foreach(string item in data) {
         // Splitting the package.module version format
         string *parts = explode(item, " ");
-        string fullName = parts[0];
+        string full_name = parts[0];
         int version = to_int(parts[1]);
-        string *path = explode(fullName, ".");
+        string *path = explode(full_name, ".");
 
         // Building the hierarchical structure
         mapping current = supports;
@@ -78,9 +78,9 @@ void Supports(string submodule, mixed data) {
 
       foreach(string item in data) {
         string *parts = explode(item, " ");
-        string fullName = parts[0];
+        string full_name = parts[0];
         int version = to_int(parts[1]);
-        string *path = explode(fullName, ".");
+        string *path = explode(full_name, ".");
 
         mapping current = supports;
 
@@ -99,9 +99,9 @@ void Supports(string submodule, mixed data) {
       break;
     }
     case "Remove" : {
-      string *path, key, lastKey;
+      string *path, key, last_key;
       mapping current;
-      int i, size;
+      int i;
 
       if(stringp(data))
         data = ({ data });
@@ -130,11 +130,11 @@ void Supports(string submodule, mixed data) {
           continue;
 
         // At the parent of the target, remove the target
-        lastKey = path[<1];
+        last_key = path[<1];
           if(sizeof(path) == 1) // Removing a package
-            map_delete(current, lastKey);
+            map_delete(current, last_key);
           else // Removing a module or submodule
-            map_delete(current[key]["modules"], lastKey);
+            map_delete(current[key]["modules"], last_key);
 
           break;
       }

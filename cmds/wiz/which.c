@@ -9,8 +9,8 @@
 inherit STD_CMD;
 
 mixed main(object caller, string args) {
-  string *command_path = this_body()->queryPath();
-  mixed *actions = previous_object()->queryCommands();
+  string *command_path = this_body()->query_path();
+  mixed *actions = previous_object()->query_commands();
   mapping aliases = this_body()->get_aliases(1);
   int i, is_located = 0;
 

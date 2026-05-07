@@ -8,4 +8,7 @@
 #define OBJ_LOOT                DIR_OBJ         "loot/loot"
 #define OBJ_SOUL_TOOL           DIR_OBJ_MUDLIB  "emote_admin/emote_client"
 
+#define OBJ_VENDOR_KIT          DIR_OBJ_MUDLIB  "vendor_kit"
+#define OBJ_STRIKER             DIR_OBJ_MUDLIB  "striker"
+
 #endif // __OBJECTS_H__

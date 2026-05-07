@@ -633,7 +633,7 @@ varargs mixed *slice(mixed *arr, int start, int end) {
  * The function accumulates a result as it processes each element.
  *
  * @param {mixed*} arr Array to reduce
- * @param {function} fun Function taking (accumulator, currentValue, index, array)
+ * @param {function} fun Function taking (accumulator, current_value, index, array)
  * @param {mixed} [init=arr[0]] Initial value for accumulator
  * @returns {mixed} Final accumulated value
  *

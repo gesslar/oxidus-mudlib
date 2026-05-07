@@ -14,10 +14,10 @@
 
 inherit STD_CMD;
 
-private void startDelete();
-private void handleDelete(string contents);
+private void start_delete();
+private void handle_delete(string contents);
 
-private string *dirTree;
+private string *dir_tree;
 private string dir;
 
 void setup() {
@@ -31,11 +31,10 @@ void setup() {
 "for a confirmation just to be safe.";
 }
 
-mixed main(/** @type {STD_PLAYER} */ object caller,
-    string str) {
+mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   int result;
 
-  dirTree = ({});
+  dir_tree = ({});
 
   if(!str)
     return _usage(caller);
@@ -51,10 +50,10 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
     if(!master()->valid_write(dir, caller, "rmdir"))
       return _error(caller, "Permission denied.");
 
-    dirTree += ({ dir });
+    dir_tree += ({ dir });
 
     tell(caller, "Are you sure you about that? ");
-    input_to("confirmRecursiveDelete", caller);
+    input_to("confirm_recursive_delete", caller);
 
     return 1;
   }
@@ -122,24 +121,24 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
       "Could not remove file: %s", str);
 }
 
-private int confirmRecursiveDelete(string arg,
+private int confirm_recursive_delete(string arg,
     object caller) {
   if(!arg || arg == ""
   || member_array(lower_case(arg),
       ({ "y", "yes" })) == -1)
     return _info(caller, "Deletion cancelled.");
 
-  startDelete();
+  start_delete();
 }
 
-private void startDelete() {
+private void start_delete() {
   mixed *contents;
 
   do {
     contents = get_dir(dir);
 
     if(sizeof(contents) > 0)
-      handleDelete(contents[0]);
+      handle_delete(contents[0]);
   } while(sizeof(contents) > 0);
 
   rmdir(dir)
@@ -149,27 +148,27 @@ private void startDelete() {
         "not be deleted.");
 }
 
-private void handleDelete(string contents) {
-  if(file_size(implode(dirTree, "") + contents)
+private void handle_delete(string contents) {
+  if(file_size(implode(dir_tree, "") + contents)
       == -2) {
-    dirTree += ({ contents + "/" });
+    dir_tree += ({ contents + "/" });
 
-    if(sizeof(get_dir(implode(dirTree, "")))
+    if(sizeof(get_dir(implode(dir_tree, "")))
         == 0) {
-      if(rmdir(implode(dirTree, ""))) {
-        dirTree -= ({ contents + "/" });
+      if(rmdir(implode(dir_tree, ""))) {
+        dir_tree -= ({ contents + "/" });
         return;
       }
     } else {
-      handleDelete(
-        get_dir(implode(dirTree, ""))[0]);
-      dirTree -= ({ contents + "/" });
+      handle_delete(
+        get_dir(implode(dir_tree, ""))[0]);
+      dir_tree -= ({ contents + "/" });
       return;
     }
   } else if(file_size(
-      implode(dirTree, "") + contents) == -1) {
-    dirTree -= ({ contents + "/" });
+      implode(dir_tree, "") + contents) == -1) {
+    dir_tree -= ({ contents + "/" });
   } else {
-    rm(implode(dirTree, "") + contents);
+    rm(implode(dir_tree, "") + contents);
   }
 }

@@ -51,7 +51,7 @@ mapping get_aliases(int all) {
   if(!all)
     return alias + xverb + ([]);
   else
-    return GA_SERVER->getAlias(query_privs()) + GA_SERVER->getXverb(query_privs()) + ([]);
+    return GA_SERVER->get_alias(query_privs()) + GA_SERVER->get_xverb(query_privs()) + ([]);
 }
 
 string compute_alias(string al, string args) {
@@ -128,8 +128,8 @@ string alias_parse(string verb, string args) {
   alias = mapp(alias) ? alias : ([]);
   xverb = mapp(xverb) ? xverb : ([]);
 
-  tmp_alias = GA_SERVER->getAlias(query_privs()) + alias;
-  tmp_xverb = GA_SERVER->getXverb(query_privs()) + xverb;
+  tmp_alias = GA_SERVER->get_alias(query_privs()) + alias;
+  tmp_xverb = GA_SERVER->get_xverb(query_privs()) + xverb;
 
   if(sizeof(tmp_alias))
     if(tmp_alias[verb])

@@ -24,9 +24,9 @@ public mixed main(
   /** @type {STD_ROOM} */
   object room;
   int cloned;
-  string shortDesc, callerName;
+  string short_desc, caller_name;
 
-  callerName = caller->query_name();
+  caller_name = caller->query_name();
 
   if(!str)
     str = caller->query_env("cwf");
@@ -42,19 +42,19 @@ public mixed main(
     env = environment(ob);
 
     if(living(ob))
-      shortDesc = ob->query_name();
+      short_desc = ob->query_name();
     else if(environment(ob))
-      shortDesc = add_article(get_short(ob));
+      short_desc = add_article(get_short(ob));
     else
-      shortDesc = file_name(ob);
+      short_desc = file_name(ob);
 
     if(caller->query_env("custom_dest") && wizardp(caller))
       custom = caller->query_env("custom_dest");
 
     if(custom) {
       tmp = custom;
-      tmp = replace_string(tmp, "$O", shortDesc);
-      tmp = replace_string(tmp, "$N", callerName);
+      tmp = replace_string(tmp, "$O", short_desc);
+      tmp = replace_string(tmp, "$N", caller_name);
     }
 
     catch(ob->remove());
@@ -69,10 +69,10 @@ public mixed main(
         tell_them(capitalize(tmp) + "\n");
     } else {
       if(env == room)
-        tell_them(callerName + " destructs " +shortDesc + ".\n");
+        tell_them(caller_name + " destructs " +short_desc + ".\n");
     }
 
-    return _ok("Destructed %s.", shortDesc);
+    return _ok("Destructed %s.", short_desc);
   }
 
   if(str[<2..<1] != ".c")

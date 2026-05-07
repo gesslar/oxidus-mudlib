@@ -28,14 +28,14 @@ inherit STD_DAEMON;
 inherit CLASS_ALARM;
 
 // Functions
-private int nextMinuteStart();
-private nomask parseAlarmInFile(string file);
-private string *parseAlarmLine(string line);
-public class Alarm createAlarm(string *parts, int silent);
-public int calculateAlarmTime(class Alarm alarm, int next);
-public int validateAlarm(class Alarm alarm, int silent);
-public void reloadAlarms();
-private void executeAlarm(class Alarm alarm);
+private int next_minute_start();
+private nomask parse_alarm_in_file(string file);
+private string *parse_alarm_line(string line);
+public class Alarm create_alarm(string *parts, int silent);
+public int calculate_alarm_time(class Alarm alarm, int next);
+public int validate_alarm(class Alarm alarm, int silent);
+public void reload_alarms();
+private void execute_alarm(class Alarm alarm);
 
 // Variables
 private nomask class Alarm *alarms = ({});
@@ -48,11 +48,11 @@ private nosave int cid;
  * minute, and registers for boot signal handling.
  */
 void setup() {
-  int nextMinute = nextMinuteStart();
+  int next_minute = next_minute_start();
 
-  setPersistent(1);
+  set_persistent(1);
 
-  cid = call_out_walltime("poll_alarms", nextMinute - time());
+  cid = call_out_walltime("poll_alarms", next_minute - time());
 
   slot(SIG_SYS_BOOT, "execute_boot_alarms");
 }
@@ -62,9 +62,9 @@ void setup() {
  *
  * Called after the daemon is restored from persistent storage.
  */
-void postRestore() {
+void post_restore() {
   if(!sizeof(alarms))
-    reloadAlarms();
+    reload_alarms();
 }
 
 /**
@@ -73,20 +73,20 @@ void postRestore() {
  * Reads and parses all .txt files in the alarms directory, creating
  * alarm objects for each valid definition.
  */
-void reloadAlarms() {
+void reload_alarms() {
   alarms = ({});
 
-  string alarmPath = mudConfig("ALARMS_PATH");
-  string *alarmFiles = get_dir(alarmPath + "*.txt");
-  alarmFiles = map(alarmFiles, (: $2 + $1 :), alarmPath);
+  string alarm_path = mud_config("ALARMS_PATH");
+  string *alarm_files = get_dir(alarm_path + "*.txt");
+  alarm_files = map(alarm_files, (: $2 + $1 :), alarm_path);
 
   if(!sizeof(alarms)) {
-    foreach(string alarmFile in alarmFiles) {
-      parseAlarmInFile(alarmFile);
+    foreach(string alarm_file in alarm_files) {
+      parse_alarm_in_file(alarm_file);
     }
   }
 
-  saveData();
+  save_data();
 }
 
 /**
@@ -114,13 +114,13 @@ varargs int add_once(string master, string pattern, string file, string func, mi
     func
   }) + map(args, (: ""+$1 :));
 
-  class Alarm alarm = createAlarm(parts, 1);
+  class Alarm alarm = create_alarm(parts, 1);
 
   if(alarm == null)
     return 0;
 
   alarms += ({ alarm });
-  saveData();
+  save_data();
   return 1;
 }
 
@@ -133,30 +133,30 @@ varargs int add_once(string master, string pattern, string file, string func, mi
  * - Handles one-time alarm cleanup
  * - Updates alarm states and saves changes
  */
- void pollAlarms() {
-  int i, now, nextMinute, untilNextPoll;
+ void poll_alarms() {
+  int i, now, next_minute, until_next_poll;
 
   now = time();
-  nextMinute = nextMinuteStart();
-  untilNextPoll = nextMinute - now + 1; // Adjust to ensure it's right after the minute starts.
+  next_minute = next_minute_start();
+  until_next_poll = next_minute - now + 1; // Adjust to ensure it's right after the minute starts.
 
   if(find_call_out(cid) != -1)
     remove_call_out(cid);
 
-  cid = call_out_walltime("poll_alarms", untilNextPoll);
+  cid = call_out_walltime("poll_alarms", until_next_poll);
 
   // We need to run sizeof alarms times, because we might remove an alarm
   for(i = 0; i < sizeof(alarms); i++) {
     class Alarm alarm = alarms[i];
     // Initially check for the current or immediate next occurrence (not forced future)
-    int nextCurrent = calculateAlarmTime(alarm, 0);
+    int next_current = calculate_alarm_time(alarm, 0);
     // Then force check for the strictly next occurrence (future)
 
     // Decide to trigger based on the immediate next occurrence time
-    if(now >= nextCurrent && (now <= nextCurrent + 59) && alarm.last_run < nextCurrent) {
+    if(now >= next_current && (now <= next_current + 59) && alarm.last_run < next_current) {
       // Execute the alarm, considering the grace period and ensuring it hasn't been executed for this occurrence.
       alarm.last_run = now; // Update last_run to mark this execution.
-      call_out((: executeAlarm :), 0.01, alarm); // Schedule the alarm execution.
+      call_out((: execute_alarm :), 0.01, alarm); // Schedule the alarm execution.
 
       // Now remove the alarm if it's a one-time alarm
       if(alarm.type == "O") {
@@ -165,7 +165,7 @@ varargs int add_once(string master, string pattern, string file, string func, mi
       }
     } else {
       if(alarm.type == "O") {
-        if(now > nextCurrent) {
+        if(now > next_current) {
           alarms = splice(alarms, i, 1);
           i--; // Decrement the index to account for the removed alarm
         }
@@ -182,7 +182,7 @@ varargs int add_once(string master, string pattern, string file, string func, mi
  *
  * @param {class Alarm} alarm - The alarm to execute
  */
-void executeAlarm(class Alarm alarm) {
+void execute_alarm(class Alarm alarm) {
   string err;
   object ob;
 
@@ -205,7 +205,7 @@ void executeAlarm(class Alarm alarm) {
     log_file("system/alarm", "[%s] Error executing alarm %s: %O\n", ctime(), alarm.func, err);
   }
 
-  saveData();
+  save_data();
 }
 
 /**
@@ -213,7 +213,7 @@ void executeAlarm(class Alarm alarm) {
  *
  * @param {string} alarm_file - Path to the alarm definition file
  */
-void parseAlarmInFile(string alarm_file) {
+void parse_alarm_in_file(string alarm_file) {
   string *lines, line;
 
   if(!file_exists(alarm_file))
@@ -224,8 +224,8 @@ void parseAlarmInFile(string alarm_file) {
     string *parts;
     class Alarm alarm;
 
-    parts = parseAlarmLine(line);
-    alarm = createAlarm(parts, 0);
+    parts = parse_alarm_line(line);
+    alarm = create_alarm(parts, 0);
 
     if(!alarm)
       continue;
@@ -243,7 +243,7 @@ void parseAlarmInFile(string alarm_file) {
  * @param {string} line - The line to parse
  * @returns {string *} Array of parsed components
  */
-string *parseAlarmLine(string line) {
+string *parse_alarm_line(string line) {
   int i, len = strlen(line);
   int in_quote = 0;
   string arg = "";
@@ -286,7 +286,7 @@ string *parseAlarmLine(string line) {
  * @param {int} silent - Whether to throw errors (0) or log them (1)
  * @returns {class Alarm} The created alarm object, or null on failure
  */
-class Alarm createAlarm(string *parts, int silent) {
+class Alarm create_alarm(string *parts, int silent) {
   class Alarm alarm;
   string type, pattern, master, file, func, *args;
   string err;;
@@ -300,7 +300,7 @@ class Alarm createAlarm(string *parts, int silent) {
       func = parts[4];
       if(sizeof(parts) >= 6) {
         args = parts[5..];
-        args = map(args, (: stringp($1) ? fromString($1) : $1 :));
+        args = map(args, (: stringp($1) ? from_string($1) : $1 :));
       }
     } else
       return null;
@@ -320,7 +320,7 @@ class Alarm createAlarm(string *parts, int silent) {
   alarm.master = master == "true" ? 1 : 0;
   alarm.id = sprintf("%s.%d", generate_uuid(), time());
 
-  err = catch(validateAlarm(alarm, silent));
+  err = catch(validate_alarm(alarm, silent));
   if(err)
     return null;
 
@@ -337,7 +337,7 @@ class Alarm createAlarm(string *parts, int silent) {
  * @param {int} next - Whether to force calculation of next occurrence (1) or allow current time (0)
  * @returns {int} Unix timestamp of next execution, or -1 on error
  */
-int calculateAlarmTime(class Alarm alarm, int next) {
+int calculate_alarm_time(class Alarm alarm, int next) {
   int current_time = time();
   int alarm_time = -1;
   string alarm_time_str, alarm_date_time;
@@ -489,7 +489,7 @@ class Alarm* query_alarms() {
  *
  * @returns {int} Unix timestamp of the next minute's start
  */
-private int nextMinuteStart() {
+private int next_minute_start() {
   int current_time = time(); // Current UNIX timestamp
   int seconds_to_next_minute = 60 - (current_time % 60); // Seconds remaining to next minute
   int next_minute_time = current_time + seconds_to_next_minute; // Timestamp of the next minute start
@@ -541,7 +541,7 @@ void execute_boot_alarms() {
  * @returns {int} 1 if valid, 0 if invalid
  * @throws If validation fails and silent is 0
  */
-int validateAlarm(class Alarm alarm, int silent) {
+int validate_alarm(class Alarm alarm, int silent) {
   string err;
   object ob;
 
@@ -567,7 +567,7 @@ int validateAlarm(class Alarm alarm, int silent) {
   }
 
   if(alarm.type == "O") {
-    int time = calculateAlarmTime(alarm, 0);
+    int time = calculate_alarm_time(alarm, 0);
 
     if(time < time()) {
       log_file("system/alarm", "[%s] Time is in the past\n%O", ctime(), alarm);

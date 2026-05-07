@@ -35,7 +35,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   if(!str)
     str = "help";
 
-  path = caller->queryPath();
+  path = caller->query_path();
 
   for(int i = 0; i < sizeof(path); i++) {
     if(file_exists(path[i] + str + ".c")) {

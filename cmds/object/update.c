@@ -14,9 +14,9 @@
 
 inherit STD_CMD;
 
-private void doUpdate(string file);
-private string *collectInherits(object obj, int depth);
-private string *deepCollectInherits(
+private void do_update(string file);
+private string *collect_inherits(object obj, int depth);
+private string *deep_collect_inherits(
   object obj, mapping seen, int depth
 );
 
@@ -29,7 +29,7 @@ public mixed main(
   string *interactives;
   string e;
   int depth = 0;
-  int isRoomObj;
+  int is_room_obj;
 
   if(!objectp(room = environment(caller)))
     return "You are not in a valid environment.";
@@ -90,7 +90,7 @@ public mixed main(
   if(!obj)
     obj = find_object(file);
 
-  isRoomObj = objectp(obj) && obj->is_room();
+  is_room_obj = objectp(obj) && obj->is_room();
 
   if(objectp(obj)) {
     if(clonep(obj))
@@ -103,7 +103,7 @@ public mixed main(
       file = append(file, ".c");
     }
 
-    if(isRoomObj) {
+    if(is_room_obj) {
       interactives = filter_array(
         all_inventory(obj), (: interactive :)
       );
@@ -125,18 +125,18 @@ public mixed main(
   if(!objectp(obj))
     return _error("Failed to load: %s", file);
 
-  string *files = collectInherits(obj, depth);
+  string *files = collect_inherits(obj, depth);
   files = map(files, (: append($1, ".c") :));
-  filter(files, (: doUpdate :));
+  filter(files, (: do_update :));
 
   obj = load_object(start);
-  if(isRoomObj && pointerp(interactives))
+  if(is_room_obj && pointerp(interactives))
     interactives->move(obj, 1);
 
   return 1;
 }
 
-private void doUpdate(string file) {
+private void do_update(string file) {
   object obj;
   string err;
 
@@ -161,7 +161,7 @@ private void doUpdate(string file) {
   _ok("%s was updated.", file);
 }
 
-private string *collectInherits(object obj, int depth) {
+private string *collect_inherits(object obj, int depth) {
   string fname = file_name(obj);
   mapping seen = ([ fname: 1 ]);
   string *files;
@@ -169,14 +169,14 @@ private string *collectInherits(object obj, int depth) {
   if(depth == 0)
     return ({ fname });
 
-  files = deepCollectInherits(obj, seen, depth);
+  files = deep_collect_inherits(obj, seen, depth);
   if(!sizeof(files) || files[<1] != fname)
     files += ({ fname });
 
   return files;
 }
 
-private string *deepCollectInherits(
+private string *deep_collect_inherits(
   object obj, mapping seen, int depth
 ) {
   string *files = ({});
@@ -184,13 +184,13 @@ private string *deepCollectInherits(
   if(depth > 0) {
     foreach(string file in inherit_list(obj)) {
       if(!seen[file]) {
-        object inheritObj =
+        object inherit_obj =
           find_object(file) || load_object(file);
         seen[file] = 1;
 
-        if(depth == 2 && inheritObj)
-          files += deepCollectInherits(
-            inheritObj, seen, depth
+        if(depth == 2 && inherit_obj)
+          files += deep_collect_inherits(
+            inherit_obj, seen, depth
           );
 
         files += ({ file });

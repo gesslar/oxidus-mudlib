@@ -21,7 +21,7 @@ inherit CLASS_STORAGE;
 public nomask void save_contents();
 private nomask void restore_contents();
 
-private nomask class StorageOptions storageOptions;
+private nomask class StorageOptions storage_options;
 private nosave string link;
 
 /**
@@ -47,39 +47,37 @@ void mudlib_setup() {
  * @errors If private storage is missing required directory info
  */
 void set_storage_options(class StorageOptions storage) {
-  storageOptions = copy(storage);
+  storage_options = copy(storage);
 
-  mixed storageId = storageOptions.storage_id;
+  mixed storage_id = storage_options.storage_id;
 
-  if(storageId) {
-    if(valid_function(storageId)) {
-      debug("Typeof storageid %O", typeof(storageId));
-      debug("storageId = %O", storageId);
+  if(storage_id) {
+    if(valid_function(storage_id)) {
+      function f = storage_id;
 
-      function f = storageId;
-      storageId = f();
+      storage_id = f();
     }
-  } else if(storageOptions.storage_org) {
-    storageId = storageOptions.storage_org;
+  } else if(storage_options.storage_org) {
+    storage_id = storage_options.storage_org;
   } else {
     error("Either storage_id or storage_org must be specified in storage options.");
   }
 
-  if(!stringp(storageId))
+  if(!stringp(storage_id))
     error("storage_id must resolve to a string.");
 
-  storageOptions.storage_id = storageId;
+  storage_options.storage_id = storage_id;
 
-  if(storageOptions.restore_on_load) {
-    if(storageOptions.storage_type == "private") {
+  if(storage_options.restore_on_load) {
+    if(storage_options.storage_type == "private") {
       // we must have an storage_directory. if we don't, then we can use
       // the storage_org
 
-      if(!storageOptions.storage_directory)
-        if(!storageOptions.storage_org)
+      if(!storage_options.storage_directory)
+        if(!storage_options.storage_org)
           error("For private storage, storage_directory is only optional if storage_org is specified.");
         else
-          storageOptions.storage_directory = storageOptions.storage_org;
+          storage_options.storage_directory = storage_options.storage_org;
     }
 
     restore_contents();
@@ -92,7 +90,7 @@ void set_storage_options(class StorageOptions storage) {
  * @returns {class StorageOptions} The current storage configuration
  */
 class StorageOptions query_storage_options() {
-  return storageOptions;
+  return storage_options;
 }
 
 /**
@@ -102,21 +100,21 @@ class StorageOptions query_storage_options() {
  * Only saves if restore_on_load is enabled and a storage_id is set.
  */
 public nomask void save_contents() {
-    if(classp(storageOptions)) {
-        if(storageOptions.restore_on_load &&
-           storageOptions.storage_id) {
-            string storage_dir = mudConfig("STORAGE_DATA_DIR");
+    if(classp(storage_options)) {
+        if(storage_options.restore_on_load &&
+           storage_options.storage_id) {
+            string storage_dir = mud_config("STORAGE_DATA_DIR");
             string dest;
             string data;
 
-            if(storageOptions.storage_directory) {
-                storage_dir = resolve_path(storage_dir, storageOptions.storage_directory);
+            if(storage_options.storage_directory) {
+                storage_dir = resolve_path(storage_dir, storage_options.storage_directory);
                 storage_dir = append(storage_dir, "/");
             }
 
             dest = sprintf("%s%s",
                 storage_dir,
-                storageOptions.storage_id
+                storage_options.storage_id
             );
 
             assure_file(dest);
@@ -139,22 +137,22 @@ public nomask void save_contents() {
  * Sets up the storage directory for future save operations.
  */
 public nomask void restore_contents() {
-    if(classp(storageOptions)) {
-        if(storageOptions.restore_on_load &&
-           storageOptions.storage_id) {
-            string storage_dir = mudConfig("STORAGE_DATA_DIR");
+    if(classp(storage_options)) {
+        if(storage_options.restore_on_load &&
+           storage_options.storage_id) {
+            string storage_dir = mud_config("STORAGE_DATA_DIR");
             string dest;
             string data;
 
-            if(storageOptions.storage_directory) {
-                storage_dir = resolve_path(storage_dir, storageOptions.storage_directory);
+            if(storage_options.storage_directory) {
+                storage_dir = resolve_path(storage_dir, storage_options.storage_directory);
                 storage_dir = append(storage_dir, "/");
             }
-            storageOptions.storage_directory = storage_dir;
+            storage_options.storage_directory = storage_dir;
 
             dest = sprintf("%s%s",
                 storage_dir,
-                storageOptions.storage_id
+                storage_options.storage_id
             );
 
             if(file_exists(dest)) {
@@ -174,7 +172,7 @@ public nomask void restore_contents() {
  * @param {int} clean - 1 to enable cleanup when empty, 0 to disable
  */
 void set_clean_on_empty(int clean) {
-    storageOptions.clean_on_empty = clean;
+    storage_options.clean_on_empty = clean;
 }
 
 /**
@@ -183,7 +181,7 @@ void set_clean_on_empty(int clean) {
  * @returns {int} 1 if cleanup is enabled, 0 if disabled
  */
 int query_clean_on_empty() {
-    return storageOptions.clean_on_empty;
+    return storage_options.clean_on_empty;
 }
 
 /**
@@ -192,7 +190,7 @@ int query_clean_on_empty() {
  * @param {int} restore - 1 to enable restore on load, 0 to disable
  */
 void set_restore_on_load(int restore) {
-    storageOptions.restore_on_load = restore;
+    storage_options.restore_on_load = restore;
 }
 
 /**
@@ -201,7 +199,7 @@ void set_restore_on_load(int restore) {
  * @returns {int} 1 if restore is enabled, 0 if disabled
  */
 int query_restore_on_load() {
-    return storageOptions.restore_on_load;
+    return storage_options.restore_on_load;
 }
 
 /**
@@ -210,7 +208,7 @@ int query_restore_on_load() {
  * @param {string} id - The unique identifier for this storage
  */
 void set_storage_id(string id) {
-    storageOptions.storage_id = id;
+    storage_options.storage_id = id;
 }
 
 /**
@@ -219,7 +217,7 @@ void set_storage_id(string id) {
  * @returns {string} The storage identifier
  */
 string query_storage_id() {
-    return storageOptions.storage_id;
+    return storage_options.storage_id;
 }
 
 /**
@@ -228,7 +226,7 @@ string query_storage_id() {
  * @param {string} dir - The directory path
  */
 void set_storage_directory(string dir) {
-    storageOptions.storage_directory = dir;
+    storage_options.storage_directory = dir;
 }
 
 /**
@@ -237,7 +235,7 @@ void set_storage_directory(string dir) {
  * @returns {string} The directory path
  */
 string query_storage_directory() {
-    return storageOptions.storage_directory;
+    return storage_options.storage_directory;
 }
 
 /**
@@ -248,8 +246,8 @@ string query_storage_directory() {
  * @returns {int} 1 if the object should be cleaned up, 0 if not
  */
 int request_clean_up() {
-    if(sizeof(all_inventory()) == 0 && classp(storageOptions) &&
-       storageOptions.clean_on_empty)
+    if(sizeof(all_inventory()) == 0 && classp(storage_options) &&
+       storage_options.clean_on_empty)
         return 1;
 
     return 0;
@@ -261,19 +259,19 @@ int request_clean_up() {
  * In addition to normal ID checks, also returns true if the ID matches
  * the storage_id.
  *
- * @param {string} toCheck - The ID to check
+ * @param {string} to_check - The ID to check
  * @returns {int} 1 if ID matches, 0 if not
  */
-int id(string toCheck) {
-  if(classp(storageOptions)) {
-    if(storageOptions.storage_id) {
-      if(storageOptions.storage_id == toCheck) {
+int id(string to_check) {
+  if(classp(storage_options)) {
+    if(storage_options.storage_id) {
+      if(storage_options.storage_id == to_check) {
         return 1;
       }
     }
   }
 
-  return ::id(toCheck);
+  return ::id(to_check);
 }
 
 /**

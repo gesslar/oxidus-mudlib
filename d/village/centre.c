@@ -78,7 +78,7 @@ void setup() {
     restore_on_load: true
   ));
 
-  initStorageRoom();
+  init_storage_room();
   set_terrain("indoor");
   set_room_type("inn");
 }

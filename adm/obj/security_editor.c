@@ -20,13 +20,13 @@ inherit STD_OBJECT;
 #define FILE_ACCESSDATA "/adm/etc/access"
 
 // Forward declarations
-private void parseFiles();
-private void parseGroup();
-private void parseAccess();
-public void writeState(int flag);
-private void writeGroupFile(int flag);
-private void writeAccessFile(int flag);
-private void integrityCheck();
+private void parse_files();
+private void parse_group();
+private void parse_access();
+public void write_state(int flag);
+private void write_group_file(int flag);
+private void write_access_file(int flag);
+private void integrity_check();
 
 // Global variables
 private mapping access = ([]);
@@ -34,7 +34,7 @@ private mapping groups = ([]);
 
 void setup() {
   if(clonep())
-    parseFiles();
+    parse_files();
 }
 
 /**
@@ -47,7 +47,7 @@ void setup() {
  *                        comments).
  */
 private string *parse(string str) {
-  integrityCheck();
+  integrity_check();
 
   if(!str)
     return ({});
@@ -67,14 +67,14 @@ private string *parse(string str) {
   return arr;
 }
 
-private void parseFiles() {
-  integrityCheck();
-  parseGroup();
-  parseAccess();
+private void parse_files() {
+  integrity_check();
+  parse_group();
+  parse_access();
 }
 
-private void parseGroup() {
-  integrityCheck();
+private void parse_group() {
+  integrity_check();
 
   string *arr = parse(read_file(FILE_GROUPDATA));
   int sz = sizeof(arr);
@@ -113,8 +113,8 @@ private void parseGroup() {
   }
 }
 
-private void parseAccess() {
-  integrityCheck();
+private void parse_access() {
+  integrity_check();
 
   string *arr = parse(read_file(FILE_ACCESSDATA));
   int sz = sizeof(arr);
@@ -156,17 +156,17 @@ private void parseAccess() {
 
       // read, write, network, shadow, link, execute, bind,
       // ownership
-      string *permArr = allocate(8);
-      if(strsrch(permissions, "r") != -1) permArr[0] = "r";
-      if(strsrch(permissions, "w") != -1) permArr[1] = "w";
-      if(strsrch(permissions, "n") != -1) permArr[2] = "n";
-      if(strsrch(permissions, "s") != -1) permArr[3] = "s";
-      if(strsrch(permissions, "l") != -1) permArr[4] = "l";
-      if(strsrch(permissions, "e") != -1) permArr[5] = "e";
-      if(strsrch(permissions, "b") != -1) permArr[6] = "b";
-      if(strsrch(permissions, "o") != -1) permArr[7] = "o";
+      string *perm_arr = allocate(8);
+      if(strsrch(permissions, "r") != -1) perm_arr[0] = "r";
+      if(strsrch(permissions, "w") != -1) perm_arr[1] = "w";
+      if(strsrch(permissions, "n") != -1) perm_arr[2] = "n";
+      if(strsrch(permissions, "s") != -1) perm_arr[3] = "s";
+      if(strsrch(permissions, "l") != -1) perm_arr[4] = "l";
+      if(strsrch(permissions, "e") != -1) perm_arr[5] = "e";
+      if(strsrch(permissions, "b") != -1) perm_arr[6] = "b";
+      if(strsrch(permissions, "o") != -1) perm_arr[7] = "o";
 
-      data[identity] = permArr;
+      data[identity] = perm_arr;
     }
 
     access[directory] = data;
@@ -180,8 +180,8 @@ private void parseAccess() {
  * @param {string *} members - Array of member names.
  * @returns {int} 1 on success, 0 on failure.
  */
-public int createGroup(string group, string *members) {
-  integrityCheck();
+public int create_group(string group, string *members) {
+  integrity_check();
 
   if(groups[group])
     return 0;
@@ -200,8 +200,8 @@ public int createGroup(string group, string *members) {
  * @param {string} group - The group name.
  * @returns {int} 1 on success, 0 if group does not exist.
  */
-public int deleteGroup(string group) {
-  integrityCheck();
+public int delete_group(string group) {
+  integrity_check();
 
   if(!groups[group])
     return 0;
@@ -219,8 +219,8 @@ public int deleteGroup(string group) {
  * @returns {int} 1 on success, 0 if group does not exist or
  *                  user is already a member.
  */
-public int enableMembership(string user, string group) {
-  integrityCheck();
+public int enable_membership(string user, string group) {
+  integrity_check();
 
   if(!groups[group])
     return 0;
@@ -241,8 +241,8 @@ public int enableMembership(string user, string group) {
  * @returns {int} 1 on success, 0 if group does not exist or
  *                  user is not a member.
  */
-public int disableMembership(string user, string group) {
-  integrityCheck();
+public int disable_membership(string user, string group) {
+  integrity_check();
 
   if(!groups[group])
     return 0;
@@ -262,8 +262,8 @@ public int disableMembership(string user, string group) {
  * @param {string} group - The group name.
  * @returns {int} 1 on success, 0 if group does not exist.
  */
-public int toggleMembership(string user, string group) {
-  integrityCheck();
+public int toggle_membership(string user, string group) {
+  integrity_check();
 
   if(!groups[group])
     return 0;
@@ -285,8 +285,8 @@ public int toggleMembership(string user, string group) {
  * @param {string *} akeys - Array of permission keys.
  * @returns {int} 1 on success, 0 if no keys provided.
  */
-public int setAccess(string dir, string id, string *akeys) {
-  integrityCheck();
+public int set_access(string dir, string id, string *akeys) {
+  integrity_check();
 
   if(!sizeof(akeys))
     return 0;
@@ -304,44 +304,44 @@ public int setAccess(string dir, string id, string *akeys) {
  *
  * @returns {string *} Array of group names.
  */
-public string *listGroups() {
-  integrityCheck();
+public string *list_groups() {
+  integrity_check();
 
   return keys(groups);
 }
 
-public void writeState(int flag) {
-  integrityCheck();
+public void write_state(int flag) {
+  integrity_check();
 
   if(!adminp(previous_object()) && !adminp(this_body()))
     return;
 
-  writeGroupFile(flag);
-  writeAccessFile(flag);
+  write_group_file(flag);
+  write_access_file(flag);
 }
 
-private void writeGroupFile(int flag) {
-  integrityCheck();
+private void write_group_file(int flag) {
+  integrity_check();
 
   if(!adminp(previous_object()) && !adminp(this_body()))
     return;
 
-  string *groupList = keys(groups);
-  int sz = sizeof(groupList);
+  string *group_list = keys(groups);
+  int sz = sizeof(group_list);
   string file = "";
 
   for(int i = 0; i < sz; i++) {
-    string *groupData = groups[groupList[i]];
-    int gsz = sizeof(groupData);
+    string *group_data = groups[group_list[i]];
+    int gsz = sizeof(group_data);
 
-    file += "(" + groupList[i] + ")";
+    file += "(" + group_list[i] + ")";
 
     if(gsz > 1)
-      file += implode(groupData, ":") + "\n";
+      file += implode(group_data, ":") + "\n";
     else if(gsz == 1)
-      file += groupData[0] + "\n";
+      file += group_data[0] + "\n";
     else
-      error("ERROR: Group '" + groupList[i]
+      error("ERROR: Group '" + group_list[i]
         + "' has no members!");
   }
 
@@ -349,7 +349,7 @@ private void writeGroupFile(int flag) {
     tell_me(file);
   } else {
     write_file(FILE_GROUPDATA, file, 1);
-    parseFiles();
+    parse_files();
 
     string err = "";
     err += catch(destruct(master()));
@@ -365,28 +365,28 @@ private void writeGroupFile(int flag) {
   }
 }
 
-private void writeAccessFile(int flag) {
-  integrityCheck();
+private void write_access_file(int flag) {
+  integrity_check();
 
   if(!adminp(previous_object()) && !adminp(this_body()))
     return;
 
-  string *accessList = keys(access);
-  int sz = sizeof(accessList);
+  string *access_list = keys(access);
+  int sz = sizeof(access_list);
   string file = "";
 
   for(int i = 0; i < sz; i++) {
-    mapping accessData = access[accessList[i]];
-    string *accessKeys = keys(accessData);
-    int ksz = sizeof(accessKeys);
+    mapping access_data = access[access_list[i]];
+    string *access_keys = keys(access_data);
+    int ksz = sizeof(access_keys);
     string *arr = ({});
 
-    file += "(" + accessList[i] + ") ";
+    file += "(" + access_list[i] + ") ";
 
     for(int j = 0; j < ksz; j++)
       arr += ({
-        sprintf("%s[%s]", accessKeys[j],
-          implode(accessData[accessKeys[j]], ""))
+        sprintf("%s[%s]", access_keys[j],
+          implode(access_data[access_keys[j]], ""))
       });
 
     if(sizeof(arr) > 1)
@@ -399,7 +399,7 @@ private void writeAccessFile(int flag) {
     tell_me(file);
   } else {
     write_file(FILE_ACCESSDATA, file, 1);
-    parseFiles();
+    parse_files();
 
     string err = "";
     err += catch(destruct(master()));
@@ -415,7 +415,7 @@ private void writeAccessFile(int flag) {
   }
 }
 
-private void integrityCheck() {
+private void integrity_check() {
   if(!clonep())
     error("Error [security_editor]: This object must be "
       "cloned to be used.");

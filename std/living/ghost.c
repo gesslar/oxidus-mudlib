@@ -25,20 +25,20 @@ void mudlib_setup() {
 
 /* Connection functions */
 void setup_body() {
-  add_action("commandHook", "", 1);
+  add_action("command_hook", "", 1);
   add_action("revive", "revive");
   set_living_name(query_real_name());
   set_id(({query_real_name()}));
-  set_heart_beat(mudConfig("DEFAULT_HEART_RATE"));
+  set_heart_beat(mud_config("DEFAULT_HEART_RATE"));
   set_race("ghost");
-  setLevel(1.0);
+  set_level(1.0);
   set_hp(1.0);
   set_sp(1.0);
   set_mp(1.0);
   set_env("move_out", "$N drifts away to the $D.");
   set_env("move_in", "$N drifts into the area.");
   enable_commands();
-  addGhostPaths();
+  add_ghost_paths();
   if(!query_short()) set_short(query_name());
   if(!query_pref("colour")) set_pref("colour", "off");
   if(!query_pref("prompt")) set_pref("prompt", ">");

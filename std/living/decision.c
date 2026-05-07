@@ -117,8 +117,8 @@ int evaluate_decision(class Decision decision, mapping data) {
 
   foreach(score in decision.scores) {
     if(valid_function(score.callback)) {
-      function scoreFunc = score.callback;
-      total_score += scoreFunc(data);
+      function score_func = score.callback;
+      total_score += score_func(data);
     }
   }
 

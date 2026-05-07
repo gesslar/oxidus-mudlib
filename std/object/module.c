@@ -6,7 +6,7 @@
  * behaviour.
  *
  * Modules are registered under their `query_name()` (i.e. the
- * `moduleName` they advertise in setup), not their file path.
+ * `module_name` they advertise in setup), not their file path.
  * A module may opt into multi-instance attachment by overriding
  * `allows_multi()` to return 1; in that case the registry value
  * for that name is an array of objects.
@@ -40,40 +40,37 @@ private nosave mapping __modules = ([]);
  *
  * @type {function}
  */
-private nosave function onDestructFunction =
-  (: remove_all_modules :);
+private nosave function on_destruct_function = (: remove_all_modules :);
 
 /**
  * Asserts that a module name argument is a non-empty string.
  *
- * @param {string} moduleName - The candidate module name.
+ * @param {string} module_name - The candidate module name.
  * @param {int} index - The argument position used in the
  *                      `assert_arg` failure message.
- * @errors If `moduleName` is not a non-empty string.
+ * @errors If `module_name` is not a non-empty string.
  */
-private void validModuleName(string moduleName, int index) {
+private void valid_module_name(string module_name, int index) {
   assert_arg(
-    stringp(moduleName) && strlen(moduleName),
+    stringp(module_name) && strlen(module_name),
     index,
-    "`moduleName` must be a non-empty string."
+    "`module_name` must be a non-empty string."
   );
 }
 
 /**
  * Asserts that a function name argument is a non-empty string.
  *
- * @param {string} functionName - The candidate function name.
+ * @param {string} function_name - The candidate function name.
  * @param {int} index - The argument position used in the
  *                      `assert_arg` failure message.
- * @errors If `functionName` is not a non-empty string.
+ * @errors If `function_name` is not a non-empty string.
  */
-private void validFunctionName(
-  string functionName, int index
-) {
+private void valid_function_name(string function_name, int index) {
   assert_arg(
-    stringp(functionName) && strlen(functionName),
+    stringp(function_name) && strlen(function_name),
     index,
-    "`functionName` must be a non-empty string."
+    "`function_name` must be a non-empty string."
   );
 }
 
@@ -87,7 +84,7 @@ private void validFunctionName(
  *                                destruct. Non-objects are
  *                                ignored.
  */
-private void detachAndDestruct(object mod) {
+private void detach_and_destruct(object mod) {
   if(!objectp(mod))
     return;
 
@@ -114,7 +111,7 @@ private void detachAndDestruct(object mod) {
  * appended. If a single-instance entry already exists, the new
  * clone is discarded and 0 is returned.
  *
- * @param {string} moduleFile - Path to the module file, without
+ * @param {string} module_file - Path to the module file, without
  *                              leading "/" or trailing ".c"
  * @param {mixed} [args] - Additional arguments passed to the
  *                         module's attach/start_module
@@ -123,12 +120,10 @@ private void detachAndDestruct(object mod) {
  * @errors If the module file does not exist
  * @errors If the module fails to load
  */
-public varargs object add_module(
-  string moduleFile, mixed args...
-) {
-  validModuleName(moduleFile, 1);
+public varargs object add_module(string module_file, mixed args...) {
+  valid_module_name(module_file, 1);
 
-  string path = append(moduleFile, ".c");
+  string path = append(module_file, ".c");
   path = prepend(path, "/");
   path = replace_string(path, " ", "_");
 
@@ -140,7 +135,7 @@ public varargs object add_module(
 
   string e = catch(mod = new(path));
   if(e)
-    error("Module " + moduleFile +
+    error("Module " + module_file +
       " failed to load with error: " + e);
 
   string name = mod->query_name();
@@ -172,7 +167,7 @@ public varargs object add_module(
   else
     __modules[name] = mod;
 
-  call_if(this_object(), "add_destruct", (:onDestructFunction:));
+  call_if(this_object(), "add_destruct", (:on_destruct_function:));
 
   return mod;
 }
@@ -182,17 +177,17 @@ public varargs object add_module(
  * single-instance modules this is the module object; for
  * multi-instance modules it is an array of module objects.
  *
- * @param {string} moduleName - The module's `query_name()`
+ * @param {string} module_name - The module's `query_name()`
  * @returns {STD_MODULE_BASE | STD_MODULE_BASE *} The module
  *          entry, or 0 if not found
  */
-public mixed query_module(string moduleName) {
-  validModuleName(moduleName, 1);
+public mixed query_module(string module_name) {
+  valid_module_name(module_name, 1);
 
-  if(nullp(__modules[moduleName]))
+  if(nullp(__modules[module_name]))
     return 0;
 
-  return __modules[moduleName];
+  return __modules[module_name];
 }
 
 /**
@@ -200,24 +195,24 @@ public mixed query_module(string moduleName) {
  * detaching and destructing each. For multi-instance modules,
  * every attached instance is removed.
  *
- * @param {string} moduleName - The module's `query_name()`
+ * @param {string} module_name - The module's `query_name()`
  * @returns {int} 1 if removed, 0 if not found
  */
-public int remove_module(string moduleName) {
-  validModuleName(moduleName, 1);
+public int remove_module(string module_name) {
+  valid_module_name(module_name, 1);
 
-  mixed entry = query_module(moduleName);
+  mixed entry = query_module(module_name);
 
   if(!entry)
     return 0;
 
   if(pointerp(entry))
     foreach(object mod in entry)
-      detachAndDestruct(mod);
+      detach_and_destruct(mod);
   else
-    detachAndDestruct(entry);
+    detach_and_destruct(entry);
 
-  map_delete(__modules, moduleName);
+  map_delete(__modules, module_name);
 
   return 1;
 }
@@ -239,8 +234,8 @@ public mapping query_modules() {
  * function is called on every instance and an array of results
  * is returned.
  *
- * @param {string} moduleName - The module's `query_name()`
- * @param {string} functionName - The function to call on the
+ * @param {string} module_name - The module's `query_name()`
+ * @param {string} function_name - The function to call on the
  *                                module
  * @param {mixed} [args] - Arguments to pass to the function
  * @returns {mixed} The result of the function call, an array of
@@ -248,12 +243,12 @@ public mapping query_modules() {
  *                  if no module is registered under that name
  */
 public varargs mixed module(
-  string moduleName, string functionName, mixed args...
+  string module_name, string function_name, mixed args...
 ) {
-  validModuleName(moduleName, 1);
-  validFunctionName(functionName, 2);
+  valid_module_name(module_name, 1);
+  valid_function_name(function_name, 2);
 
-  mixed entry = query_module(moduleName);
+  mixed entry = query_module(module_name);
 
   if(!entry)
     return null;
@@ -263,7 +258,7 @@ public varargs mixed module(
 
     foreach(object mod in entry) {
       mixed r;
-      catch(r = call_if(mod, functionName, args...));
+      catch(r = call_if(mod, function_name, args...));
       results += ({ r });
     }
 
@@ -271,7 +266,7 @@ public varargs mixed module(
   }
 
   mixed result;
-  catch(result = call_if(entry, functionName, args...));
+  catch(result = call_if(entry, function_name, args...));
 
   return result;
 }
@@ -281,6 +276,6 @@ public varargs mixed module(
  * object is destructed.
  */
 public void remove_all_modules() {
-  foreach(string moduleName, mixed _ in __modules)
-    remove_module(moduleName);
+  foreach(string module_name, mixed _ in __modules)
+    remove_module(module_name);
 }

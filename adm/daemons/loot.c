@@ -160,7 +160,7 @@ private mixed process_loot_item(mixed item, object tp, object source) {
  */
 private void autovalue_loot_item(object item, object _tp, object source) {
   if(item->query_loot_property("autovalue") == true) {
-    int value = determine_value_by_level(source->queryLevel());
+    int value = determine_value_by_level(source->query_level());
 
     item->set_value(value);
   }
@@ -194,8 +194,8 @@ private void drop_coins(object _tp, mixed item, object source) {
  * @returns {int} The calculated coin value
  */
 public int determine_value_by_level(int level) {
-  int value_per_level = mudConfig("COIN_VALUE_PER_LEVEL");
-  float config_variance = mudConfig("COIN_VARIANCE");
+  int value_per_level = mud_config("COIN_VALUE_PER_LEVEL");
+  float config_variance = mud_config("COIN_VARIANCE");
 
   int value = level * value_per_level;
   int ivariance = to_int(config_variance * to_float(value));

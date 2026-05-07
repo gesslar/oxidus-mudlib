@@ -17,7 +17,7 @@ mixed main(/** @type {STD_BODY} */ object tp,
     string *attrs, attr;
     string out = "";
 
-    attrs = mudConfig("ATTRIBUTES");
+    attrs = mud_config("ATTRIBUTES");
 
     foreach(attr in attrs) {
         out += sprintf("%-15s: %d\n",

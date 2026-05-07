@@ -21,7 +21,7 @@ mixed main(object _tp, string arg) {
   int next_poll;
 
   if(arg == "reload") {
-    ALARM_D->reloadAlarms();
+    ALARM_D->reload_alarms();
     return "Alarms reloaded.";
   }
 
@@ -30,7 +30,7 @@ mixed main(object _tp, string arg) {
   while(sz--) {
     info[sz] = ({
       alarms[sz],
-      ALARM_D->calculateAlarmTime(alarms[sz], 1)
+      ALARM_D->calculate_alarm_time(alarms[sz], 1)
     });
   }
 

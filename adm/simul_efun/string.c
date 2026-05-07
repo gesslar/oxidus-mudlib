@@ -97,7 +97,7 @@ varargs string extract(string str, int from, int to) {
  * @returns {string} The string without colour.
  */
 string no_ansi(string str) {
-    return COLOUR_D->substituteColour(str, "plain");
+    return COLOUR_D->substitute_colour(str, "plain");
 }
 
 /**
@@ -109,7 +109,7 @@ string no_ansi(string str) {
  * @returns {string} The string with colour codes replaced by ANSI escapes.
  */
 string colour(string str) {
-    return COLOUR_D->substituteColour(str, "on");
+  return COLOUR_D->substitute_colour(str, "on");
 }
 
 /**
@@ -122,7 +122,7 @@ string colour(string str) {
  * @returns {string} The simple list string.
  */
 varargs string simple_list(string *arr, string conjunction) {
-  assert_arg(pointerp(arr) && uniform_array(arr, T_STRING), 1, "Invalid or missing array.");
+  assert_arg(pointerp(arr) && sizeof(arr) && uniform_array(arr, T_STRING), 1, "Invalid, empty, or missing array.");
 
   conjunction = conjunction || "and";
 
@@ -175,7 +175,7 @@ varargs string substr(string str, string sub, int reverse) {
  *                         remaining string.
  * @returns {mixed} The LPC value represented by the string.
  */
-varargs mixed fromString(string str, int flag) {
+varargs mixed from_string(string str, int flag) {
     mixed *ret = ({ 0, "" });
 
     if(!str || !sizeof(str) || str == "")
@@ -208,7 +208,7 @@ varargs mixed fromString(string str, int flag) {
                 while(str[0] != '}') {
                     mixed *tmp;
 
-                    tmp = fromString(str, 1);
+                    tmp = from_string(str, 1);
                     ret[0] += ({ tmp[0] });
                     str = tmp[1];
                     while(str[0] == ' ' || str[0] == '\t')
@@ -248,13 +248,13 @@ varargs mixed fromString(string str, int flag) {
                     mixed *tmp;
                     mixed cle;
 
-                    tmp = fromString(str, 1);
+                    tmp = from_string(str, 1);
                     str = tmp[1];
                     while(str[0] == ' ' || str[0] == '\t') str = str[1..];
                     if(str[0] != ':')
                         error("Illegally formatting mapping: " + str + "\n");
                     cle = tmp[0];
-                    tmp = fromString(str[1..], 1);
+                    tmp = from_string(str[1..], 1);
                     ret[0][cle] = tmp[0];
                     str = tmp[1];
                     while(str[0] == ' ' || str[0] == '\t')
@@ -389,8 +389,8 @@ string stringify(mixed val) {
 }
 
 // TODO: maybe use a define?
-// private nosave string decimal = mudConfig("DECIMAL");
-// private nosave string thousands = mudConfig("THOUSANDS");
+// private nosave string decimal = mud_config("DECIMAL");
+// private nosave string thousands = mud_config("THOUSANDS");
 private nosave string decimal = ".";
 private nosave string thousands = ",";
 
@@ -574,56 +574,56 @@ varargs int is_numeric(string str, int allow_float: (: 0 :)) {
  * Checks if a string starts with a specific substring.
  *
  * @param {string} str - The string to check.
- * @param {string} startingString - The substring to check for at the start.
+ * @param {string} starting_string - The substring to check for at the start.
  * @returns {int} 1 if the string starts with the specified substring, 0 otherwise.
  * @errors If either argument is not a string.
  */
-int startsWith(string str, string startingString) {
-  assert_arg(stringp(str), 1, "Bad argument 1 to startsWith");
-  assert_arg(stringp(startingString), 2, "Bad argument 2 to startsWith");
+int starts_with(string str, string starting_string) {
+  assert_arg(stringp(str), 1, "Bad argument 1 to starts_with");
+  assert_arg(stringp(starting_string), 2, "Bad argument 2 to starts_with");
 
-  if(str == startingString)
+  if(str == starting_string)
     return true;
 
   int len = strlen(str);
-  int len2 = strlen(startingString);
+  int len2 = strlen(starting_string);
 
   if(len2 > len)
     return false;
 
-  return str[0 .. len2] == startingString;
+  return str[0 .. len2] == starting_string;
 }
 
 /**
  * Checks if a string ends with a specific substring.
  *
  * @param {string} str - The string to check.
- * @param {string} endingString - The substring to check for at the end.
+ * @param {string} ending_string - The substring to check for at the end.
  * @returns {int} 1 if the string ends with the specified substring, 0 otherwise.
  * @errors If either argument is not a string.
  */
-int endsWith(string str, string endingString) {
-  assert_arg(stringp(str), 1, "Bad argument 1 to endsWith");
-  assert_arg(stringp(endingString), 2, "Bad argument 2 to endsWith");
+int ends_with(string str, string ending_string) {
+  assert_arg(stringp(str), 1, "Bad argument 1 to ends_with");
+  assert_arg(stringp(ending_string), 2, "Bad argument 2 to ends_with");
 
-  if(str == endingString)
+  if(str == ending_string)
     return true;
 
   int len = strlen(str);
-  int len2 = strlen(endingString);
+  int len2 = strlen(ending_string);
 
   if(len2 > len)
     return false;
 
-  return str[<len2 ..] == endingString;
+  return str[<len2 ..] == ending_string;
 }
 
-private nosave nomask string percentPattern = "(?<!%)(%)(?!%)";
-private nosave nomask string *percentReplacement = ({"%%"});
+private nosave nomask string percent_pattern = "(?<!%)(%)(?!%)";
+private nosave nomask string *percent_replacement = ({"%%"});
 
-string sanitizeRegex(string msg) {
-  while(pcre_match(msg, percentPattern))
-    msg = pcre_replace(msg, percentPattern, percentReplacement);
+string sanitize_regex(string msg) {
+  while(pcre_match(msg, percent_pattern))
+    msg = pcre_replace(msg, percent_pattern, percent_replacement);
 
   return msg;
 }

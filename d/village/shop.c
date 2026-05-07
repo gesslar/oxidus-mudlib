@@ -65,6 +65,7 @@ void setup() {
   add_shop_inventory(
     "/obj/weapon/piercing/rusty_sword",
     "/obj/armour/torso/leather_jerkin.armour",
+    ({ "/obj/vendor_kit/flint_and_steel", 3 }),
   );
 
   set_terrain("indoor");

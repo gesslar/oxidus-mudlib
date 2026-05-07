@@ -21,19 +21,12 @@ private nomask nosave int BOON = 1;
 private nomask nosave int CURSE = 2;
 
 // Forward declarations for private helpers
-private nomask mapping getStore(int which);
-private nomask int apply(
-  int which, string name, string cl,
-  string type, int amt, int dur
-);
+private nomask mapping get_store(int which);
+private nomask int apply(int which, string name, string cl, string type, int amt, int dur);
 private nomask int query(int which, string cl, string type);
 private nomask void process(int which);
-private nomask int removeByTag(
-  int which, string cl, string type, int tag
-);
-private nomask int removeByName(
-  int which, string cl, string type, string name
-);
+private nomask int remove_by_tag(int which, string cl, string type, int tag);
+private nomask int remove_by_name(int which, string cl, string type, string name);
 
 public nomask void init_boon() {
   boons = boons || ([]);
@@ -79,25 +72,25 @@ public nomask int query_effective_boon(
 public nomask int remove_boon(
   string cl, string type, int tag
 ) {
-  return removeByTag(BOON, cl, type, tag);
+  return remove_by_tag(BOON, cl, type, tag);
 }
 
 public nomask int remove_curse(
   string cl, string type, int tag
 ) {
-  return removeByTag(CURSE, cl, type, tag);
+  return remove_by_tag(CURSE, cl, type, tag);
 }
 
 public nomask int remove_boon_by_name(
   string cl, string type, string name
 ) {
-  return removeByName(BOON, cl, type, name);
+  return remove_by_name(BOON, cl, type, name);
 }
 
 public nomask int remove_curse_by_name(
   string cl, string type, string name
 ) {
-  return removeByName(CURSE, cl, type, name);
+  return remove_by_name(CURSE, cl, type, name);
 }
 
 protected nomask void process_boon() {
@@ -107,7 +100,7 @@ protected nomask void process_boon() {
 
 // --- Private helpers ---
 
-private nomask mapping getStore(int which) {
+private nomask mapping get_store(int which) {
   return which == BOON ? boons : curses;
 }
 
@@ -115,7 +108,7 @@ private nomask int apply(
   int which, string name, string cl,
   string type, int amt, int dur
 ) {
-  mapping src = getStore(which);
+  mapping src = get_store(which);
   int tag = time_ns();
 
   if(nullp(name) || nullp(cl) || nullp(type)
@@ -144,7 +137,7 @@ private nomask int apply(
 private nomask int query(
   int which, string cl, string type
 ) {
-  mapping src = getStore(which);
+  mapping src = get_store(which);
   int total = 0;
 
   if(!of(cl, src) || !of(type, src[cl]))
@@ -158,18 +151,18 @@ private nomask int query(
 }
 
 private nomask void process(int which) {
-  mapping src = getStore(which);
+  mapping src = get_store(which);
   int now = time();
   string cl, type;
-  mapping classData, typeData;
+  mapping class_data, type_data;
 
   // Collect expired tags first to avoid mutating
   // during iteration.
   mixed *expired = ({});
 
-  foreach(cl, classData in src) {
-    foreach(type, typeData in classData) {
-      foreach(int tag, mapping entry in typeData) {
+  foreach(cl, class_data in src) {
+    foreach(type, type_data in class_data) {
+      foreach(int tag, mapping entry in type_data) {
         if(entry["expires"] < now) {
           expired += ({ ({
             cl, type, tag, entry["name"],
@@ -181,30 +174,30 @@ private nomask void process(int which) {
 
   // Now remove and notify.
   foreach(mixed *info in expired) {
-    string eCl = info[0];
-    string eType = info[1];
-    int eTag = info[2];
-    string eName = info[3];
+    string e_cl = info[0];
+    string e_type = info[1];
+    int e_tag = info[2];
+    string e_name = info[3];
 
-    map_delete(src[eCl][eType], eTag);
+    map_delete(src[e_cl][e_type], e_tag);
     tell(
       this_object(),
-      "Your " + eName + " has worn off.\n"
+      "Your " + e_name + " has worn off.\n"
     );
 
     // Prune empty inner mappings.
-    if(!sizeof(src[eCl][eType]))
-      map_delete(src[eCl], eType);
+    if(!sizeof(src[e_cl][e_type]))
+      map_delete(src[e_cl], e_type);
 
-    if(!sizeof(src[eCl]))
-      map_delete(src, eCl);
+    if(!sizeof(src[e_cl]))
+      map_delete(src, e_cl);
   }
 }
 
-private nomask int removeByTag(
+private nomask int remove_by_tag(
   int which, string cl, string type, int tag
 ) {
-  mapping src = getStore(which);
+  mapping src = get_store(which);
 
   if(!of(cl, src)
       || !of(type, src[cl])
@@ -222,10 +215,10 @@ private nomask int removeByTag(
   return 1;
 }
 
-private nomask int removeByName(
+private nomask int remove_by_name(
   int which, string cl, string type, string name
 ) {
-  mapping src = getStore(which);
+  mapping src = get_store(which);
   int removed = 0;
 
   if(!of(cl, src) || !of(type, src[cl]))

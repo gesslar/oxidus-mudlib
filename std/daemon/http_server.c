@@ -82,15 +82,15 @@ protected nomask void start_server() {
     socket_set_option(fd, SO_TLS_KEY, "adm/certs/key.pem");
   }
 
-  int bindStatus = socket_bind(fd, LISTEN_PORT);
-  if(bindStatus != EESUCCESS) {
-    _log(0, "Unable to bind to port %d: %s", LISTEN_PORT, socket_error(bindStatus));
+  int bind_status = socket_bind(fd, LISTEN_PORT);
+  if(bind_status != EESUCCESS) {
+    _log(0, "Unable to bind to port %d: %s", LISTEN_PORT, socket_error(bind_status));
     return;
   }
 
-  int listenStatus = socket_listen(fd, "on_socket_listen");
-  if(listenStatus != EESUCCESS) {
-    _log(0, "Unable to listen on socket: %s", socket_error(listenStatus));
+  int listen_status = socket_listen(fd, "on_socket_listen");
+  if(listen_status != EESUCCESS) {
+    _log(0, "Unable to listen on socket: %s", socket_error(listen_status));
     return;
   }
 
