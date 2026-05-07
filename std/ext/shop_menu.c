@@ -21,7 +21,7 @@ private nosave class Menu *food_menu = ({ });
 
 void reset_menu();
 void init_shop();
-void add_menu_item(string type, string file, mixed *cost);
+varargs void add_menu_item(string type, string file, int cost);
 void remove_menu_item(string file);
 void wipe_menu();
 
@@ -40,7 +40,7 @@ void init_shop() {
  */
 varargs void add_menu_item(string type, string file, int cost) {
     class Menu item;
-    object ob;
+    /** @type {STD_ITEM} */ object ob;
     string err;
 
     if(nullp(type) || nullp(file))
@@ -119,13 +119,12 @@ mixed cmd_menu(object tp, string str) {
 /**
  * Player command to buy an item.
  *
- * @param {object} tp - The player object.
+ * @param {STD_BODY} tp - The player object.
  * @param {string} str - The item to buy.
  * @returns {mixed} The result of the buy command.
  */
 mixed cmd_buy(object tp, string str) {
     object ob;
-    string file;
     string err;
     mixed result;
     string action;
@@ -185,11 +184,11 @@ mixed cmd_buy(object tp, string str) {
 /**
  * Player command to view an item.
  *
- * @param {object} tp - The player object.
+ * @param {object} _tp - The player object.
  * @param {string} str - The item to view.
  * @returns {mixed} The result of the view command.
  */
-mixed cmd_view(object tp, string str) {
+mixed cmd_view(object _tp, string str) {
     class Menu item;
 
     if(!str)

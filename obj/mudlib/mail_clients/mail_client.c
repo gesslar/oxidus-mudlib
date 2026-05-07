@@ -24,7 +24,7 @@ mapping inbox;
 mapping outbox;
 int curr_in_msg, curr_out_msg, in_outbox;
 int in_start_index, in_end_index, out_start_index, out_end_index;
-object s_editor;
+/** @type {OBJ_SECURITY_EDITOR} */object s_editor;
 
 protected void main_menu();
 int has_new_mail();
@@ -48,6 +48,10 @@ void setup() {
     add_init((: client :));
 }//END create
 
+/**
+ *
+ * @param {STD_PLAYER} tp
+ */
 void client(object tp) {
     int i;
 
@@ -151,8 +155,6 @@ protected varargs void i_MainMenu(string arg, int flag, int forward) {
                     return;
                 }
     }
-
-    return;
 }//END i_MainMenu
 
 protected void i_InboxOutbox(string arg) {
@@ -190,7 +192,7 @@ protected void i_InboxOutbox(string arg) {
 protected varargs void do_read_mail() {
     int *msg_keys;
     int i;
-    string *tmp_recipients;
+    string tmp_recipients;
 
     resync_mailbox();
 
@@ -602,7 +604,7 @@ protected void read_message(int num) {
         curr_out_msg = num;
         save_mailbox();
         resync_mailbox();
-        environment()->page(ret, assemble_call_back("done_reading"), 0);
+        /** @type {STD_PLAYER} */ (environment())->page(ret, assemble_call_back("done_reading"), 0);
         return;
     } else {
         ret += "\nFROM:    " + inbox[num]["FROM"] + "\n";
@@ -616,7 +618,7 @@ protected void read_message(int num) {
         curr_in_msg = num;
         save_mailbox();
         resync_mailbox();
-        environment()->page(ret, assemble_call_back("done_reading"), 0);
+        /** @type {STD_PLAYER} */ (environment())->page(ret, assemble_call_back("done_reading"), 0);
         return;
     }
 }
@@ -810,7 +812,7 @@ protected varargs void get_cc(string arg, int flag, int forward) {
     else ed(current_file, "callback_write", "callback_exit", 0);
 }//END get_cc
 
-int callback_write(string fname, int flag) {
+int callback_write(string fname) {
     if(!master()->valid_read(fname, this_object(), "callback_exit")) return 0;
     current_file = fname;
     did_write = 1;

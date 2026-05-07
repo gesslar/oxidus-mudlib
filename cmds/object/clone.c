@@ -1,5 +1,6 @@
 /**
  * @file /cmds/object/clone.c
+ *
  * Command to clone objects into the game world.
  *
  * @created 2005-10-31 - Tacitus@LPUniversity
@@ -12,10 +13,9 @@
 
 inherit STD_CMD;
 
-public mixed main(
-  /** @type {STD_PLAYER} */ object caller, string str
-) {
-  object ob, dest, env;
+public mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
+  /** @type {STD_ITEM} */ object ob;
+  object dest, env;
   string err, custom, tmp, short_desc, file_name;
   int result;
 

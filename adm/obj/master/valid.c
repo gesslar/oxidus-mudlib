@@ -155,8 +155,6 @@ void parse_access() {
 }
 
 string *parse(string *arr) {
-    int i;
-
     if(!sizeof(arr))
         return ({});
 
@@ -170,12 +168,17 @@ int valid_shadow(object ob) {
     string location, name;
     location = base_name(ob);
     name = query_privs(ob);
-    if(ob == this_object() || ob == master()) return 0;
-    if(query_access(location, name, 4) && !ob->disallow_shadow(ob)) return 1;
+
+    if(ob == this_object() || ob == master())
+      return 0;
+
+    if(query_access(location, name, 4) && !call_if(ob, "disallow_shadow", ob))
+      return 1;
+
     return 0;
 }
 
-int valid_bind(object obj, object owner, object victim) {
+int valid_bind(object _obj, object owner, object victim) {
     string name;
     name = query_privs(previous_object());
     if(query_access(base_name(owner), name, 7) && query_access(base_name(victim), name, 7)) return 1;
@@ -186,7 +189,7 @@ int valid_compile_to_c() {
     return 0;
 }
 
-int valid_hide(object ob) {
+int valid_hide(object _ob) {
     return 0;
 }
 
@@ -212,7 +215,7 @@ int valid_object(object ob) {
     return 0;
 }
 
-int valid_override(string file, string efun_name, string mainfile) {
+int valid_override(string _file, string efun_name, string mainfile) {
   if(mainfile == "/adm/obj/simul_efun.c") return 1;
   if(mainfile == "/adm/simul_efun/override.c") return 1;
   if(mainfile == "/adm/simul_efun/overrides.c") return 1;
@@ -222,7 +225,7 @@ int valid_override(string file, string efun_name, string mainfile) {
   return 0;
 }
 
-int valid_socket(object caller, string func, mixed *info) {
+int valid_socket(object _caller, string _func, mixed *_info) {
     //We might code a daemon or something that allows
     //us to ban connections to certain ports/connections
 
@@ -266,7 +269,7 @@ int valid_read(string file, object user, string func) {
     return 0;
 }
 
-int valid_write(string file, object user, string func) {
+int valid_write(string file, object user, string _func) {
     string name, tmp, tmp2;
     if(this_interactive() && query_privs(user) != "[daemon]")
     name = query_privs(this_interactive());
@@ -433,7 +436,7 @@ int query_access(string directory, string id, int type) {
 
 string *track_member(string id, string directory) {
     mapping data = access[directory];
-    string *keys = keys(data);
+    string *cles = keys(data);
     string *group_data = ({});
     int i;
     int sz_keys;
@@ -444,10 +447,10 @@ string *track_member(string id, string directory) {
 
 #endif
 
-    for(i = 0, sz_keys = sizeof(keys); i < sz_keys; i++) {
-        group_data = query_group(keys[i]);
+    for(i = 0, sz_keys = sizeof(cles); i < sz_keys; i++) {
+        group_data = query_group(cles[i]);
         if(!pointerp(group_data) || sizeof(group_data) < 1) continue;
-        if(member_array(id, group_data) != -1) return data[keys[i]];
+        if(member_array(id, group_data) != -1) return data[cles[i]];
     }
 
     return ({});
@@ -493,7 +496,7 @@ int is_member(string user, string group) {
     else return 0;
 }
 
-mixed valid_database(object caller, string fun, mixed *info) {
+mixed valid_database(object _caller, string _fun, mixed *_info) {
     // We are using SQLITE3, so just return 1.
     return 1;
 }

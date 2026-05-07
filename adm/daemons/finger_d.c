@@ -28,8 +28,7 @@ varargs string finger_user(string username) {
     string ret, group, *users;
     string rank, last_t, last, idle, plan;
     int idle_time;
-    mixed user, body;
-    mixed *packet;
+    /** @type {STD_BODY} */ mixed body;
 
     username = lower_case(username);
 
@@ -94,7 +93,7 @@ varargs string finger_user(string username) {
             }
         }
 
-        last = ctime(body->query_last_login());
+        last = ctime((body->query_last_login()));
 
         if(adminp(username)) rank = "Admin";
         else if(devp(username)) rank = "Developer";
@@ -121,8 +120,11 @@ mixed get_body(string name) {
     if(origin() != ORIGIN_LOCAL && !adminp(query_privs(previous_object()))) return 0;
 
     error = catch(body = BODY_D->create_body(name));
-    if(error) return -1;
-    if(!body) return -2;
+    if(error)
+      return -1;
+
+    if(!body)
+      return -2;
 
     return body;
 }

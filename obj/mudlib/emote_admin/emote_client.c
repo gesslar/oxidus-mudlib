@@ -9,15 +9,18 @@
 
 
 #define PROMPT "Emote Editor > "
-#define MARKERS ({ "$I - Emoter", "$T - Target", \
+#define MARKERS ({ \
+                  "$I - Emoter", "$T - Target", \
                   "$PI - Possessive emoter", "$PT - Possessive target", \
                   "$SI - Subjective emoter", "$PT - Possessive target", \
                   "$OI - Objective emoter", "$OT - Objective target", \
-                  "$M - Modifier", "$V - Verb"})
+                  "$M - Modifier", "$V - Verb" \
+                })
 
 inherit STD_ITEM;
 
-object soul_d;
+/** @type {SOUL_D} */ object soul_d;
+
 nosave string tmp_emote_targeted_name;
 nosave string tmp_emote_untargeted_name;
 nosave string *tmp_emote_untargeted_msgs;
@@ -123,7 +126,7 @@ nomask void get_emote_name(string arg) {
 nomask void targeted_or_not(string arg) {
     int i;
     string tmp = "";
-    string existing_emotes = soul_d->query_emotes();
+    string *existing_emotes = soul_d->query_emotes();
 
     if(!arg || arg == "") {
         tell_me("\nPlease enter 't', 'u' or 'b'.\n"+
@@ -228,7 +231,6 @@ nomask void get_player_msg(string arg, int flag) {
 
                 input_to("get_player_msg", 0, 1);
                 return;
-                break;
             }//END IF
 
             tmp_emote_untargeted_msgs = ({ arg });
@@ -243,7 +245,6 @@ nomask void get_player_msg(string arg, int flag) {
 
             input_to("get_room_msg", 0, 1);
             return;
-            break;
         case 2:
             if(!arg || arg == "") {
                 tell_me("\nPlease enter the message printed to the emoter if there is a target.\n"+
@@ -256,7 +257,6 @@ nomask void get_player_msg(string arg, int flag) {
 
                 input_to("get_player_msg", 0, 2);
                 return;
-                break;
             }//END IF
 
             tmp_emote_targeted_msgs = ({ arg });
@@ -271,7 +271,6 @@ nomask void get_player_msg(string arg, int flag) {
 
             input_to("get_room_msg", 0, 2);
             return;
-            break;
         case 3:
             if(!arg || arg == "") {
                 tell_me("\nPlease enter the message printed to the emoter if there is no target.\n"+
@@ -284,7 +283,6 @@ nomask void get_player_msg(string arg, int flag) {
 
                 input_to("get_player_msg", 0, 3);
                 return;
-                break;
             }//END IF
 
             tmp_emote_untargeted_msgs = ({ arg });
@@ -299,7 +297,6 @@ nomask void get_player_msg(string arg, int flag) {
 
             input_to("get_room_msg", 0, 3);
             return;
-            break;
     }//END SWITCH
 }
 
@@ -325,7 +322,6 @@ nomask void get_room_msg(string arg, int flag) {
 
                 input_to("get_room_msg", 0, 1);
                 return;
-                break;
             }//END IF
 
             tmp_emote_untargeted_msgs += ({ arg });
@@ -336,7 +332,6 @@ nomask void get_room_msg(string arg, int flag) {
 
             input_to("get_mods", 0, 1);
             return;
-            break;
         case 2:
             if(!arg || arg == "") {
                 tell_me("\nPlease enter the message printed to the room if there is a target.\n"+
@@ -349,7 +344,6 @@ nomask void get_room_msg(string arg, int flag) {
 
                 input_to("get_room_msg", 0, 2);
                 return;
-                break;
             }//END IF
 
             tmp_emote_targeted_msgs += ({ arg });
@@ -364,7 +358,6 @@ nomask void get_room_msg(string arg, int flag) {
 
             input_to("get_target_msg");
             return;
-            break;
         case 3:
             if(!arg || arg == "") {
                 tell_me("\nPlease enter the message printed to the room if there is no target.\n"+
@@ -377,7 +370,6 @@ nomask void get_room_msg(string arg, int flag) {
 
                 input_to("get_room_msg", 0, 3);
                 return;
-                break;
             }//END IF
 
             tmp_emote_untargeted_msgs += ({ arg });
@@ -388,7 +380,6 @@ nomask void get_room_msg(string arg, int flag) {
 
             input_to("get_mods", 0, 3);
             return;
-            break;
     }//END SWITCH
 }
 
@@ -445,7 +436,6 @@ nomask void get_mods(string arg, int flag) {
             tell_me("Hit enter to go back to the main menu or type 'q' to quit.\n\n" + PROMPT);
             input_to("main_or_quit");
             return;
-            break;
         case 2:
             if(!arg || arg == "")
                 tmp_emote_targeted_msgs += ({ "" });
@@ -460,7 +450,6 @@ nomask void get_mods(string arg, int flag) {
             tell_me("Hit enter to go back to the main menu or type 'q' to quit.\n\n" + PROMPT);
             input_to("main_or_quit");
             return;
-            break;
         case 3:
             if(!arg || arg == "")
                 tmp_emote_untargeted_msgs += ({ "" });
@@ -481,7 +470,6 @@ nomask void get_mods(string arg, int flag) {
 
             input_to("get_player_msg", 0, 2);
             return;
-            break;
     }//END SWITCH
 }
 

@@ -56,10 +56,7 @@ void setup() {
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
-  mixed *output_files;
-  mixed *output_file;
   string output_str = "";
-  int num_files;
   mixed *tokens;
   int max, i;
   int show_all = 0, sort_order = 1, size_sort = 0,

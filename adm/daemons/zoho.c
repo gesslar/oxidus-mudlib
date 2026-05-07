@@ -11,9 +11,9 @@
 
 inherit STD_HTTP_CLIENT;
 
-void send_email_with_token(string to, string subject, string body, mixed *cb, mapping token_result);
+void send_email_with_token(mapping token_result, string to, string subject, string body, mixed *cb);
 void get_valid_token(mapping args);
-void handle_new_token(mixed *cb, mapping response);
+void handle_new_token(mapping response, mixed *cb)
 void handle_email_result(mapping result);
 void get_initial_tokens(mixed *cb);
 

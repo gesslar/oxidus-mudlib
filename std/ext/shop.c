@@ -159,11 +159,11 @@ protected void reset_shop() {
  * heading followed by one line per item in storage, each formatted
  * as "<short> (<cost>)".
  *
- * @param {STD_BODY} tp - The acting body (unused).
+ * @param {STD_BODY} _tp - The acting body (unused).
  * @param {string} _str - The command argument (unused).
  * @returns {string*} The lines to display.
  */
-mixed cmd_list(object tp, string _str) {
+mixed cmd_list(object _tp, string _str) {
   object *items, item;
   string *lines = ({});
   string line;
@@ -177,7 +177,7 @@ mixed cmd_list(object tp, string _str) {
   lines = ({ get_short(), "" });
 
   foreach(item in items) {
-    cost = query_cost(tp, item, "list");
+    cost = query_cost(_tp, item, "list");
     short = get_short(item);
     line = sprintf("%s (%d)", short, cost);
     lines += ({ line });

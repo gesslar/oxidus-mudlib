@@ -18,7 +18,8 @@ public mixed main(
   /** @type {STD_PLAYER} */ object caller, string arg
 ) {
   object target;
-  object ob, next;
+  /** @type {STD_OBJECT} */ object ob;
+  /** @type {STD_OBJECT} */ object next;
 
   if(!arg) {
     target = caller;
