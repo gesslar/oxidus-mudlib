@@ -10,7 +10,7 @@
  * 2026-05-05 - Gesslar - Created
  */
 
-inherit OBJ_STRIKER;
+inherit LIB_STRIKER;
 
 void setup() {
   set_id(({"flint","stone","rock"}));

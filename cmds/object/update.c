@@ -20,9 +20,7 @@ private string *deep_collect_inherits(
   object obj, mapping seen, int depth
 );
 
-public mixed main(
-  /** @type {STD_PLAYER} */ object caller, string arg
-) {
+public mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   /** @type {STD_ROOM|STD_OBJECT} */ object obj;
   object room;
   string *parts, start, file;
@@ -76,7 +74,7 @@ public mixed main(
   file = resolve_path(caller->query_env("cwd"), file);
   file = append(file, ".c");
 
-  if(file == append(file_name(), ".c"))
+  if(file == __FILE__)
     return _error(
       "You cannot update the update command. "
       "Destruct it instead."

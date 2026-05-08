@@ -23,13 +23,11 @@ void setup() {
 "(such as ls, ed, or update).";
 }
 
-mixed main(/** @type {STD_PLAYER} */ object caller,
-    string _arg) {
-  tell(caller, sprintf(
+mixed main(/** @type {STD_PLAYER} */ object caller, string _arg) {
+  return _ok(sprintf(
     "Current working directory: %s\n"
     "Current working file: %s\n",
     caller->query_env("cwd"),
-    caller->query_env("cwf")));
-
-  return 1;
+    caller->query_env("cwf"))
+  );
 }

@@ -18,24 +18,24 @@ varargs void page(mixed text, mixed *cb, int no_colour) {
   string page_display;
 
   if(nullp(text))
-      error("Bad argument 1 to page().");
+    error("Bad argument 1 to page().");
 
   if(stringp(text))
-      text = explode(text, "\n");
+    text = explode(text, "\n");
 
   if(!pointerp(text))
-      return 0;
+    return 0;
 
   if(!uniform_array(text, T_STRING))
-      return 0;
+    return 0;
 
   more_lines = to_int(query_pref("morelines")) || mud_config("MORELINES");
   page_display = query_pref("page_display") || mud_config("PAGE_DISPLAY");
 
   if(no_colour == 1)
-      no_colour = NO_COLOUR;
+    no_colour = NO_COLOUR;
   else
-      no_colour = 0;
+    no_colour = 0;
 
   sz = sizeof(text);
 
@@ -67,11 +67,11 @@ void continue_page(string input, string *text, mixed *cb, int no_colour, int mor
   if(curr < sizeof(text)) {
     switch(page_display) {
       case "percent":
-          mess += sprintf("\n[%d%% - Press <Return> to continue, q to quit]", percent(curr, num));
-          break;
+        mess += sprintf("\n[%d%% - Press <Return> to continue, q to quit]", percent(curr, num));
+        break;
       default:
-          mess += sprintf("\n[%d/%d - Press <Return> to continue, q to quit]", curr, num);
-          break;
+        mess += sprintf("\n[%d/%d - Press <Return> to continue, q to quit]", curr, num);
+        break;
     }
 
     tell(this_object(), mess, no_colour | MSG_PROMPT);

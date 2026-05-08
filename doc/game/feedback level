@@ -1,22 +1,22 @@
-\ebl1\eFeedback Level\eres\e determines the tagging in front of system messages.
+{{bl1}}Feedback Level{{bl0}} determines the tagging in front of system messages.
 
 You can set your feedback level by typing `set_env feedback_level <level>`.
 
 Feedback level options are:
 
-* none - no feedback tagging
-* normal - will attempt to use Unicode tagging
-* plain - will use only ASCII characters
+• none - no feedback tagging
+• normal - will attempt to use Unicode tagging
+• plain - will use only ASCII characters
 
 If you have feedback level other than `none`, the tagging will be appropriately coloured:
 
-* green - success
-* red - error
-* orange - warning
-* yellow - info
-* blue - question
+• green - success
+• red - error
+• orange - warning
+• yellow - info
+• blue - question
 
 Note
 
-* If you have a screenreader, this is automatically set to none.
-* If you have colour disabled, it will still send you the tagged messages, but without the colour. This helps identify that you are receiving a system message.
+• If you have a screenreader, this is automatically set to none.
+• If you have colour disabled, it will still send you the tagged messages, but without the colour. This helps identify that you are receiving a system message.

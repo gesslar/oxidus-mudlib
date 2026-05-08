@@ -29,36 +29,41 @@ void setup() {
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
-  string func, file, result;
+  string func, target, file, result;
   /** @type {STD_OBJECT} */ object ob;
 
   if(!str)
     return FAIL;
 
-  if(sscanf(str, "%s in %s", func, file) != 2 && sscanf(str, "%s %s", func, file) != 2) {
+  if(sscanf(str, "%s in %s", func, target) != 2 && sscanf(str, "%s %s", func, target) != 2) {
     func = 0;
-    file = str;
+    target = str;
   }
 
-  ob = get_object(file);
+  ob = get_object(target);
   if(ob) {
-    if(virtualp(ob))
+    if(virtualp(ob)) {
       file = ob->query_virtual_master();
-    else
+    } else {
       file = base_name(ob);
-  } else
+    }
+  } else {
     file = resolve_path(caller->query_env("cwd"), file);
+  }
+
+  if(!file)
+    return _error("Unable to determine file for %O", ob);
 
   result = dig(file, func, 0);
 
   if(!result)
     if(error_message)
-      return error_message;
+      return _error(error_message);
     else
-      return "No such file " + file + ".c\n";
+      return _error("No such file %s.c", file);
 
   if(result == "")
-    return "No such function " + func + " in " + file + ".c\n";
+    return _error("No such function %s in %s.c", func, file);
 
   return result;
 }
@@ -86,7 +91,7 @@ string dig(string file, string func, int indent) {
 
   str = sprintf("%*-' 's↳ %s", width-1, "", file);
   if(func && (function_exists(func, ob) == file))
-    str += " ({{FFCC00}}" + func + "{{res}} defined)\n";
+    str += " ({{ffcc00}}" + func + "{{res}} defined)\n";
   else
     str += "\n";
 

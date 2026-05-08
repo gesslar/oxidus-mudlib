@@ -1,4 +1,4 @@
-inherit OBJ_VENDOR_KIT;
+inherit LIB_VENDOR_KIT;
 
 void setup() {
   set_id(({"kit","flint and steel kit","fire kit"}));
@@ -14,7 +14,7 @@ void setup() {
   set_value(15);
 
   __contents = ({
-    "/obj/loot/flint.loot",
-    "/obj/loot/firesteel.loot",
+    "/obj/general/flint",
+    "/obj/general/firesteel",
   });
 }

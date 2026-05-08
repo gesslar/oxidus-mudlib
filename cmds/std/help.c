@@ -13,25 +13,20 @@
 
 inherit STD_CMD;
 
-#define HELP_PATH ({ "/doc/general/", "/doc/game/" })
-#define DEV_PATH ({ "/doc/wiz/", "/doc/driver/efun/", "/doc/driver/apply/" })
+private nosave string* HELP_PATH = ({ "/doc/general/", "/doc/game/" });
+private nosave string* DEV_PATH = ({ "/doc/wiz/", "/doc/driver/efun/", "/doc/driver/apply/" });
+private nosave string* ADMIN_PATH = ({ "/doc/admin/" });
 
 #include <logs.h>
 
 mixed main(/** @type {STD_PLAYER} */ object tp, string str) {
+  /** @type {STD_CMD} */ object cmd;
   string file, *path, err, output = "";
-  object cmd;
   int i;
-  string border;
-  int width = 80;
-
-  if(tp->query_environ("WORD_WRAP"))
-    width = tp->query_environ("WORD_WRAP");
-
-  border = "╞" + repeat_string("═", width - 2) + "╡\n";
 
   if(!str)
     str = "help";
+
   path = tp->query_path();
 
   for(i = 0; i < sizeof(path); i++) {
@@ -41,42 +36,40 @@ mixed main(/** @type {STD_PLAYER} */ object tp, string str) {
         file = cmd->query_help(tp);
 
       if(err)
-        return _error("This is a problem with " +
-          str + "\nPlease inform an admin.");
+        return _error("This is a problem with '%s'. Please inform an admin.",
+          str);
 
-      if(!file) return _error("The command " + str +
-        " exists but there is no help file for it.\n"
-        " Please inform an admin.");
-
-      output += border;
-      output += sprintf("%|*s\n", width, str);
-      output += border + "\n";
-      output += (file + "\n");
+      if(!file)
+        return _error("The command '%s' exists but there is no help file for "
+          "it. Please inform an admin.", str);
 
       tp->page(output);
+
       return 1;
     }
   }
 
   path = HELP_PATH;
+
   if(devp(tp))
     path += DEV_PATH;
+
   if(adminp(tp))
-    path += ({"/doc/admin/"});
+    path += ADMIN_PATH;
 
   for(i = 0; i < sizeof(path); i++) {
     if(file_exists(path[i] + str)) {
       file = read_file(path[i] + str);
-      output += border;
-      output += ("\t\t  Help file for topic '"+  capitalize(str) + "'\n");
-      output += border + "\n";
+
       output += (file + "\n");
 
       tp->page(output);
       return 1;
     }
   }
+
   log_file(LOG_HELP, "Not found: " + str + "\n");
+
   return _error("Unable to find help file for: " + str);
 }
 

@@ -11,7 +11,7 @@
 // Variables
 private nosave int _contents_can_hear = 1, _environment_can_hear = 1;
 
-void receive_message(string type, string msg) {
+void receive_message(string _type, string msg) {
   do_receive(msg, DIRECT_MSG);
 }
 

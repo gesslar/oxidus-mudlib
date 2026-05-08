@@ -443,3 +443,39 @@ int touch(string file) {
 
   return file_size(file) != -1;
 }
+
+/**
+ * Resolves a path to its on-disk source file, preferring .lpc over .c.
+ *
+ * Any existing .lpc or .c extension on the input is stripped, then the
+ * function probes for a sibling .lpc file and falls back to .c. If neither
+ * exists the .lpc form is returned anyway as a default — callers that need
+ * to know whether the file is real should check file_size() on the result.
+ *
+ * @param {string} path_and_file - Path to a source file, with or without
+ *                                 a .lpc / .c extension
+ * @returns {string} Path to the existing source file, preferring .lpc; or
+ *                   the .lpc form if no source file is found
+ * @example
+ * source_file("/cmds/object/work");      // -> "/cmds/object/work.lpc"
+ * source_file("/cmds/file/pwd.c");       // -> "/cmds/file/pwd.c"
+ * source_file("/no/such/thing");         // -> "/no/such/thing.lpc"
+ */
+string source_file(string path_and_file) {
+  string temp;
+
+  if(ends_with(path_and_file, ".lpc"))
+    path_and_file = path_and_file[0..<5];
+  else if(ends_with(path_and_file, ".c"))
+    path_and_file = path_and_file[0..<3];
+
+  temp = append(path_and_file, ".lpc");
+  if(file_size(temp) >= 0)
+    return temp;
+
+  temp = append(path_and_file, ".c");
+  if(file_size(temp) >= 0)
+    return temp;
+
+  return append(path_and_file, ".lpc");
+}

@@ -6,7 +6,7 @@
 "\\{\\{RES\\}\\}"
 
 #define ATTRIBUTE_REGEX \
-"\\{\\{(re|it|ul|fl|st|bl|di|ol][0-1])\\}\\}"
+"\\{\\{(re|it|ul|fl|st|bl|di|ol)[0-1]\\}\\}"
 
 // FG: {{000}} - {{fff}} | {{000000}} - {{ffffff}}
 #define TRUE_COLOUR_REGEX    \
@@ -35,7 +35,7 @@ BG_TRUE_COLOUR_REGEX
 #define SYSTEM_OK       "{{009966}}"
 #define SYSTEM_ERROR    "{{CC0000}}"
 #define SYSTEM_WARNING  "{{FF9900}}"
-#define SYSTEM_INFO     "{{FFFF66}}"
+#define SYSTEM_INFO     "{{0099CC}}"
 #define SYSTEM_QUERY    "{{0066FF}}"
 #define SYSTEM_DEBUG    "{{CC00CC}}"
 

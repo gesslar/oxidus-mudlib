@@ -31,28 +31,33 @@ void setup() {
 "returned.";
 }
 
-mixed main(/** @type {STD_PLAYER} */ object caller,
-    string str) {
+mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   string origin, dest;
-  int result;
 
   if(!str || !sscanf(str, "%s %s", origin, dest))
     return _usage(caller);
 
-  origin = resolve_path(
-    caller->query_env("cwd"), origin);
-  dest = resolve_path(
-    caller->query_env("cwd"), dest);
+  origin = resolve_path(caller->query_env("cwd"), origin);
+  dest = resolve_path(caller->query_env("cwd"), dest);
 
   if(!master()->valid_write(origin, caller, "mv")
-  || !master()->valid_write(dest, caller, "mv"))
+      || !master()->valid_write(dest, caller, "mv")
+    ) {
     return _error(caller, "Permission denied.");
+  }
 
-  result = rename(origin, dest);
+  if(file_size(origin) < 0)
+    return _error("No such file '%s'", origin);
 
-  if(result < 0)
-    return _error(caller, "Move failed.");
+  string e = catch {
+    int result = rename(origin, dest);
 
-  return _ok(caller,
-    "Moved %s to %s", origin, dest);
+    if(result < 0)
+      return _error(caller, "Move failed.");
+  };
+
+  if(stringp(e))
+    return _error("Error moving: %s", e);
+
+  return _ok(caller, "Moved %s to %s", origin, dest);
 }

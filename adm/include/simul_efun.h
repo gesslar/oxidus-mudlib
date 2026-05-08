@@ -120,6 +120,7 @@ varargs string temp_file(mixed arg);
 varargs void implode_file(string file, string *lines, int overwrite);
 varargs mixed load_lpml(string file, string root);
 void assure_file(string file);
+string source_file(string path_and_file);
 
 // File: function.c
 int valid_function(mixed f);

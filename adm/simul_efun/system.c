@@ -183,7 +183,7 @@ private nosave mapping _symbols = ([
   "ok"      : ({ ({ SYSTEM_OK,      "" }), ({ "\u2022 ", "o ", "" }) }), // • = bullet point
   "error"   : ({ ({ SYSTEM_ERROR,   "" }), ({ "\u25CF ", "o ", "" }) }), // ● = black circle
   "warn"    : ({ ({ SYSTEM_WARNING, "" }), ({ "\u25B2 ", "o ", "" }) }), // ▲ = black up-pointing triangle
-  "info"    : ({ ({ SYSTEM_INFO,    "" }), ({ "\u25A0 ", "o ", "" }) }), // ■ = black square
+  "info"    : ({ ({ SYSTEM_INFO,    "" }), ({ "\u25E6 ", "o ", "" }) }), // ◦ = white bullet
   "question": ({ ({ SYSTEM_QUERY,   "" }), ({ "\u25C6 ", "o ", "" }) }), // ◆ = black diamond
   "debug"   : ({ ({ SYSTEM_DEBUG,   "" }), ({ "\u25A1 ", "o ", "" }) }), // □ = white square
 ]);
@@ -269,14 +269,17 @@ private int _feedback(string type, mixed args...) {
   class SystemMessage result;
   object tp;
 
-  result = construct_message_from_args(type, args...);
-  if(!result)
-    return 0;
-
   tp = objectp(args[0])
     ? args[0]
     : this_body()
   ;
+
+  if(tp && interactive(tp) && !objectp(args[0]))
+    unshift(ref args, tp);
+
+  result = construct_message_from_args(type, args...);
+  if(!result)
+    return 0;
 
   if(tp && interactive(tp))
     tell(tp, append(result.message, "\n"));
