@@ -74,13 +74,10 @@ public int advance(object tp) {
   if(!can_advance(xp, level))
     return 0;
 
-  xp -= to_next_level;
-  level += 1.0;
+  tp->adjust_level(1.0);
+  tp->adjust_xp(-to_next_level);
 
-  tp->set_level(level);
-  tp->set_xp(xp);
-
-  emit(SIG_PLAYER_ADVANCED, tp, level);
+  emit(SIG_PLAYER_ADVANCED, tp, tp->query_level());
 
   return 1;
 }

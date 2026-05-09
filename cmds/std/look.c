@@ -41,7 +41,7 @@ mixed main(/** @type {STD_PLAYER} */ object tp, string arguments) {
  * This function will highlight the specified keywords in the provided string
  * using a colour determined by the user's preferences or a default value.
  *
- * @param {object} tp - The player object
+ * @param {STD_BODY} tp - The player object
  * @param {string} str - The string to be processed
  * @param {string*} keys - The list of keywords to highlight
  * @returns {string} The processed string with highlighted keywords
@@ -79,11 +79,22 @@ private string highlight_view(object tp, string str, string *keys) {
   return str;
 }
 
-private mixed render_room(object tp, object room, int brief) {
+/**
+ * Renders a full description of a room to the player.
+ *
+ * Outputs the room's short, long, exits, doors, and any users or objects
+ * present. For developers, optionally prefixes with the room's filename and
+ * virtual master.
+ *
+ * @param {STD_PLAYER} tp - The player looking.
+ * @param {STD_ROOM} room - The room being rendered.
+ * @returns {mixed} 1 on success, or an error string.
+ */
+private mixed render_room(object tp, object room) {
   string *exits, *doors;
   object *users, *objects;
   string result = "";
-  mixed data, datum;
+  mixed data;
 
   if(!objectp(room))
     return "You see nothing because you have no environment!\n";
@@ -123,6 +134,7 @@ private mixed render_room(object tp, object room, int brief) {
   } else {
     data = "There are no exits here.\n";
   }
+
   if(data)
     result += "\n" + data;
 
@@ -136,6 +148,7 @@ private mixed render_room(object tp, object room, int brief) {
         data += sprintf("The %s door is closed.\n", door);
     }
   }
+
   if(data)
     result += data;
 
@@ -147,6 +160,7 @@ private mixed render_room(object tp, object room, int brief) {
       data = implode(map(users, (: get_short($1, 1) + " (" + file_name($1) + ")" :)), "\n");
     else
       data = implode(map(users, (: get_short($1, 1) :)), "\n");
+
     result += data + "\n";
   }
 
@@ -155,13 +169,27 @@ private mixed render_room(object tp, object room, int brief) {
       data = implode(map(objects, (: get_short($1, 1) + " (" + file_name($1) + ")" :)), "\n");
     else
       data = implode(map(objects, (: get_short($1, 1) :)), "\n");
-    result += data + "\n";
+
+    result += "\n" + data + "\n";
   }
 
   tell(tp, result);
   return 1;
 }
 
+/**
+ * Renders a description of a specific target in the player's view.
+ *
+ * Looks for a room item matching the target string first; failing that,
+ * resolves an object in the player's inventory or in the room. Routes to
+ * render_living() if the resolved object is a living. Honours an optional
+ * "here" suffix to constrain the search to the room.
+ *
+ * @param {STD_PLAYER} tp - The player looking.
+ * @param {STD_ROOM} room - The room the player is in.
+ * @param {string} target - The target description, lower-cased.
+ * @returns {mixed} 1 on success, or an error string.
+ */
 private mixed render_object(object tp, object room, string target) {
   object ob;
   string name = tp->query_name();
@@ -211,6 +239,7 @@ private mixed render_object(object tp, object room, string target) {
   temp = get_short(ob, 1);
   if(stringp(temp))
     desc += temp + "\n";
+
   temp = get_long(ob, 1);
   if(stringp(temp))
     desc += "\n" + temp + "\n";
@@ -221,14 +250,25 @@ private mixed render_object(object tp, object room, string target) {
 
   tell(ob, name + " looks at you.");
   tell_down(room, name + " looks at " + get_short(ob) + ".\n", null, ({ tp, ob }));
-
   tell(tp, desc);
 
   return 1;
 }
 
 
-private mixed render_living(object tp, object room, object target, int brief) {
+/**
+ * Renders a description of a living target.
+ *
+ * Outputs the target's short and long descriptions, a sentence describing
+ * race/gender/hair/eyes, and a list of equipped and wielded items. Notifies
+ * the target and the room of the look action.
+ *
+ * @param {STD_PLAYER} tp - The player looking.
+ * @param {STD_ROOM} room - The room the player and target are in.
+ * @param {STD_BODY} target - The living being looked at.
+ * @returns {mixed} 1 on success.
+ */
+private mixed render_living(object tp, object room, object target) {
   string temp, result = "";
   string name;
   mapping equipment, wielded;
@@ -239,10 +279,12 @@ private mixed render_living(object tp, object room, object target, int brief) {
   temp = get_short(target, 1);
   if(stringp(temp))
     result += temp + "\n";
+
   temp = get_long(target, 1);
   if(stringp(temp))
     if(strlen(result) && strlen(temp))
       temp += "\n";
+
   result += temp;
 
   race = target->query_race();
@@ -314,7 +356,6 @@ private mixed render_living(object tp, object room, object target, int brief) {
   equipment = target->query_equipped();
   if(sizeof(equipment) || sizeof(wielded)) {
     string *slots = keys(wielded) + keys(equipment);
-    int max = max(map(slots, (: strlen :)));
 
     result += "\n";
     foreach(slot in slots) {
@@ -331,8 +372,20 @@ private mixed render_living(object tp, object room, object target, int brief) {
   return 1;
 }
 
-private mixed render_container(object tp, object room, string arg) {
-  object ob;
+/**
+ * Renders the contents of a container the player can see.
+ *
+ * Resolves the container from the player's inventory or surroundings, and
+ * displays its short with a status line (locked/closed) and contents (if
+ * visible — open, or transparent when closed). Honours an optional "here"
+ * suffix to constrain the search to the room.
+ *
+ * @param {STD_PLAYER} tp - The player looking.
+ * @param {string} arg - The target description.
+ * @returns {mixed} A description string, or an error string.
+ */
+private mixed render_container(object tp, string arg) {
+  /** @type {STD_CONTAINER} */ object ob;
   string target;
   int here_flag;
   string desc = "";
@@ -352,18 +405,18 @@ private mixed render_container(object tp, object room, string arg) {
   }
 
   if(ob->is_locked())
-    desc += ob->query_short()+" is locked.\n";
+    desc += (/** @type {STD_ITEM} */ (ob))->query_short() + " is locked.\n";
   else if(ob->is_closed())
-    desc += ob->query_short()+" is closed.\n";
+    desc += (/** @type {STD_ITEM} */ (ob))->query_short() + " is closed.\n";
 
   if(!ob->is_closed() || (ob->is_closed() && !ob->is_opaque())) {
     object *contents = find_targets(tp, null, ob);
 
     if(sizeof(contents) > 0) {
-      desc += ob->query_short()+" contains:\n";
+      desc += (/** @type {STD_ITEM} */ (ob))->query_short() + " contains:\n";
       desc += implode(map(contents, (: get_short($1, 1) :)), "\n") + "\n";
     } else {
-      desc += ob->query_short()+" is empty.\n";
+      desc += (/** @type {STD_ITEM} */ (ob))->query_short() + " is empty.\n";
     }
   }
 
@@ -376,10 +429,11 @@ private mixed render_container(object tp, object room, string arg) {
 }
 
 string query_help(object _caller) {
-  return(
+  return
     "SYNTAX: look [<in/at>] <object> [<on/in> <object>]\n\n"
     "This command will allow you to look at objects in your environment. "
     "If no argument is supplied, it will show you the whole room. You can "
-    "also look at specific objects by typing 'look <object>' or 'look at object'. "
-    "You might also try looking into an object by typing 'look in <object>'.");
+    "also look at specific objects by typing 'look <object>' or 'look at "
+    "object'. You might also try looking into an object by typing 'look "
+    "in <object>'.";
 }

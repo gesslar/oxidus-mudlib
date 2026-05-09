@@ -12,13 +12,15 @@
  */
 
 #include <gmcp_defines.h>
+#include <item.h>
 
 inherit STD_OBJECT;
 inherit STD_VALUE;
 
 inherit EXT_MATERIAL;
 
-private nosave mapping _spawn_info = ([]);
+private nosave mapping __spawn_info = ([]);
+private nosave int __fixed = false;
 
 /**
  * Sets the spawn information for this item.
@@ -28,7 +30,7 @@ private nosave mapping _spawn_info = ([]);
  * @param {mapping} info - Mapping of spawn information
  */
 void set_spawn_info(mapping info) {
-  _spawn_info = info;
+  __spawn_info = info;
 }
 
 /**
@@ -38,7 +40,7 @@ void set_spawn_info(mapping info) {
  * @param {mixed} value - The information value
  */
 void add_spawn_info(string key, mixed value) {
-  _spawn_info[key] = value;
+  __spawn_info[key] = value;
 }
 
 /**
@@ -48,7 +50,7 @@ void add_spawn_info(string key, mixed value) {
  * @returns {mixed} The requested spawn information
  */
 mixed query_spawn_info(string key) {
-  return _spawn_info[key];
+  return __spawn_info[key];
 }
 
 /**
@@ -57,7 +59,7 @@ mixed query_spawn_info(string key) {
  * @returns {mapping} Copy of the spawn information mapping
  */
 mapping query_all_spawn_info() {
-  return copy(_spawn_info);
+  return copy(__spawn_info);
 }
 
 /**
@@ -74,6 +76,9 @@ int allow_move(mixed dest) {
   object ob;
   /** @type {STD_CONTAINER} */
   object env = environment();
+
+  if(is_fixed())
+    return MOVE_FIXED;
 
   if(stringp(dest))
     catch(ob = load_object(dest));
@@ -237,4 +242,12 @@ int move(mixed dest) {
 
     return MOVE_DESTRUCTED;
   }
+}
+
+void set_fixed(int fixed) {
+  __fixed = !!fixed;
+}
+
+int is_fixed() {
+  return __fixed;
 }

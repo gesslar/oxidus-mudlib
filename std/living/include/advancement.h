@@ -6,7 +6,7 @@ float query_tnl() ;
 float query_level() ;
 float query_effective_level() ;
 float set_level(float l) ;
-float add_level(float l) ;
+float adjust_level(float l) ;
 float query_level_mod() ;
 float set_level_mod(float l) ;
 float adjust_level_mod(float l) ;

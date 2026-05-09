@@ -14,8 +14,7 @@ inherit STD_ACT;
 
 mixed main(object tp, string args) {
   string target;
-  object source;
-  object room;
+  /** @type {STD_ROOM} */ object room;
   int here_flag;
   object ob;
   string *doors;

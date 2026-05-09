@@ -349,11 +349,11 @@ int modify_skill_level(string skill, int level) {
 
 /**
  * Adjust all skills for NPCs based on their level.
- * @param {float} _level - The NPC's level (unused; skills are
+ * @param {float} __level - The NPC's level (unused; skills are
  *   reset to near-zero regardless)
  * @returns {int} 1 if adjustments were made, 0 otherwise
  */
-public int adjust_skills_by_npc_level(float _level) {
+public int adjust_skills_by_npc_level(float __level) {
   if(nullp(skills) || !mapp(skills))
     return 0;
 
