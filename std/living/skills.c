@@ -286,8 +286,7 @@ varargs float improve_skill(string skill, float progress) {
       new_level = query_skill_level(skill, 1);
 
       if(new_level > level)
-        tell(this_object(),
-          "You have improved your " + skill + " skill.\n");
+        tell(this_object(), "{{9c6}}You have improved your {{re1}}" + skill + "{{re0}} skill.{{res}}\n");
 
       return progress;
     }

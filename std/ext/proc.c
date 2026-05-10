@@ -147,20 +147,16 @@ string can_proc() {
   int now = time();
   string result;
 
-  debug("can_proc: Checking for procs.");
   // If there are no procs, return false
   if(!sizeof(__procs))
     return false;
 
-  debug("can_proc: There are %d procs.", sizeof(__procs));
-
   // If the proc chance is 0, return false
   if(__proc_chance <= 0.0)
     return false;
-  debug("can_proc: Proc chance is %f.", __proc_chance);
 
   float roll = random_float(100.0);
-  debug("can_proc: Proc roll %f.", roll);
+
   if(roll > __proc_chance)
     return false;
 
@@ -174,16 +170,13 @@ string can_proc() {
     }
   }
 
-  debug("can_proc: Procs: %O", procs);
-
   if(!sizeof(procs))
     return false;
 
-  debug("can_proc: Final procs: %O", procs);
   // Now let's check which proc can occur. This is based on the weight of
   // the proc.
   result = element_of_weighted(procs);
-  debug("can_proc: Result: %s", result);
+
   return result;
 }
 
@@ -196,11 +189,8 @@ varargs void proc(string name, mixed args...) {
   mapping proc = query_proc(name);
   mixed func;
 
-  debug("proc: Calling proc %s.", name);
-  if(nullp(proc)) {
-    debug("proc: Proc %s not found.", name);
+  if(nullp(proc))
     return;
-  }
 
   func = proc["function"];
 

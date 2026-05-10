@@ -88,8 +88,9 @@ void combat_round() {
     GMCP_LBL_CHAR_STATUS_CURRENT_ENEMIES: keys(__current_enemies),
   ]));
 
-  if(find_call_out(__next_combat_round) == -1)
+  if(find_call_out(__next_combat_round) == -1) {
     next_round();
+  }
 }
 
 /**
@@ -157,7 +158,7 @@ varargs void swing(int count, int multi) {
   if(!valid_enemy(enemy))
     return;
 
-  if(query_mp() <= 0.0) {
+  if(pcp(this_object()) && query_mp() < 1.0) {
     tell(this_object(), "You are too exhausted to attack.\n");
     return;
   }
@@ -266,7 +267,9 @@ public int can_strike(object enemy, mixed weapon) {
           - enemy->query_skill_level(defense_skill)
   ;
 
-  debug("Chance = %O", chance);
+  debug("+ Chance = %O", chance);
+  chance = diminish(chance, 10.0);
+  debug("- Chance = %O", chance);
   result = random_float(100.0);
 
   enemy->use_skill(defense_skill);
@@ -372,11 +375,11 @@ void strike_enemy(object enemy, object weapon) {
   add_threat(enemy, dam);
   add_seen_threat(enemy, dam);
 
-  if(weapon && weapon->is_weapon())
+  if(weapon && weapon->is_weapon()) {
     if(stringp(proc = call_if(weapon, "can_proc"))) {
-      _debug("Proccing %O", proc);
       call_if(weapon, "proc", proc, this_object(), enemy);
     }
+  }
 }
 
 /**
@@ -426,8 +429,7 @@ mapping query_weapon_info(object weapon) {
 }
 
 /**
- * Returns whether this body is currently attacking the given
- * victim.
+ * Returns whether this body is currently attacking the given victim.
  *
  * @param {STD_BODY} victim - The body to test.
  * @returns {int} 1 if engaged with victim, 0 otherwise.

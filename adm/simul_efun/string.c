@@ -370,22 +370,21 @@ varargs mixed from_string(string str, int flag) {
  * @returns {string} The string representation of the value.
  */
 string stringify(mixed val) {
-    if(nullp(val))
-        return "0";
-    if(intp(val))
-        return sprintf("%d", val);
-    if(floatp(val))
-        return sprintf("%f", val);
-    if(stringp(val))
-        return val;
-    if(objectp(val))
-        return file_name(val);
-    if(mapp(val))
-        return save_variable(val);
-    if(pointerp(val))
-        return save_variable(val);
-    return "";
-
+  if(nullp(val))
+    return "0";
+  if(intp(val))
+    return sprintf("%d", val);
+  if(floatp(val))
+    return sprintf("%f", val);
+  if(stringp(val))
+    return val;
+  if(objectp(val))
+    return file_name(val);
+  if(mapp(val))
+    return save_variable(val);
+  if(pointerp(val))
+    return save_variable(val);
+  return "";
 }
 
 // TODO: maybe use a define?

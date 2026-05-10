@@ -255,3 +255,16 @@ int evaluate_number(int number, string condition) {
   condition = replace_string(condition, " ", "");
   return evaluate_compound_condition(number, condition);
 }
+
+float diminish(mixed val, mixed scale) {
+  float mult, trinum;
+
+  if(val < 0)
+    return -diminish(-val, scale);
+
+  mult = val / to_float(scale);
+
+  trinum = (sqrt(8.0 * mult + 1.0) - 1.0) / 2.0;
+
+  return trinum * scale;
+}

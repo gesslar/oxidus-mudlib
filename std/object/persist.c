@@ -19,26 +19,26 @@
 #include <persist.h>
 
 private nosave int save_recurse;
-private nosave mixed *saved_vars = ({ });
+private nosave mapping saved_vars = ([]);
 
 /**
  * Marks variables to be included when the object is saved.
  *
  * Variables must be explicitly marked for saving using this function.
  *
- * @param {mixed*} vars - Variable names to mark for saving
+ * @param {mapping} vars - Variable names to mark for saving
  */
-protected void save_var(mixed *vars...) {
-  saved_vars = distinct_array(({ saved_vars..., vars... }));
+protected void save_var(mapping vars) {
+  saved_vars += vars;
 }
 
 // ###Security problem here - Beek. What is it used for anyway?
 /**
  * Returns the list of variables that will be saved.
  *
- * @returns {string*} Array of variable names marked for saving
+ * @returns {mapping} Array of variable names marked for saving
  */
-public string *get_saved_vars() { return copy(saved_vars); }
+public mapping get_saved_vars() { return copy(saved_vars); }
 
 /**
  * Sets whether saving should recursively include inventory items.
@@ -59,20 +59,24 @@ protected void set_save_recurse(int flag) { save_recurse = flag; }
  * @returns {string} Serialized object state
  */
 varargs string save_to_string(int recursep) {
-  string *elements, element;
+  mapping elements;
   mapping map = ([]);
   mapping tmp;
 
   event(({ this_object() }), "saving");
 
-//### setting a property based on a function arg?  Gross.
+  //### setting a property based on a function arg?  Gross.
   set_save_recurse(recursep);
 
-  if(sizeof(elements = distinct_array(copy(saved_vars)) - ({ 0 }))) {
-    tmp = ([ ]);
+  if(sizeof(elements = copy(saved_vars))) {
+    tmp = ([]);
 
-    foreach(element in elements)
-      tmp[element] = fetch_variable(element);
+    foreach(string element, string func in elements) {
+      tmp[element] = ([
+        "value": fetch_variable(element),
+        "func": func,
+      ]);
+    }
 
     if(sizeof(tmp))
       map["#vars#"] = tmp;
@@ -100,9 +104,6 @@ varargs string save_to_string(int recursep) {
  */
 void load_from_string(mixed value, int recurse) {
   mixed data;
-  mixed val;
-  string key;
-  string obj;
   object ob;
 
   if(!mapp(value))
@@ -110,25 +111,25 @@ void load_from_string(mixed value, int recurse) {
   else
     data = value;
 
-  foreach(key, val in data) {
-    if(key == "#vars#") {
-      string var;
-      mixed vval;
-
-      foreach(var, vval in val) {
-        if(member_array(var, saved_vars) != -1)
-          store_variable(var, vval);
-        else
-          continue;
+  foreach(string save_key, mapping restore in data) {
+    if(save_key == "#vars#") {
+      foreach(string var_name, mapping var_data in restore) {
+        if(!nullp(saved_vars[var_name])) {
+          if(function_exists(var_data["func"], this_object())) {
+            call_other(this_object(), var_data["func"], var_data["value"]);
+          } else {
+            store_variable(var_name, var_data["value"]);
+          }
+        }
       }
     }
   }
 
   if(data["#inventory#"]) {
-    foreach(obj in data["#inventory#"]) {
+    foreach(string obj in data["#inventory#"]) {
       mixed result;
 
-      val = restore_variable(obj);
+      mixed val = restore_variable(obj);
       result = catch(ob = new(val["#base_name#"]));
       if(intp(result) && result == 0)
         ob->load_from_string(val, recurse + 1);

@@ -1,5 +1,6 @@
 /**
  * @file /std/object/value.c
+ *
  * Handles monetary value tracking for physical objects.
  *
  * @created 2024-08-01 - Gesslar
@@ -19,7 +20,13 @@
  *
  * @type {int}
  */
-protected nosave int _value = null;
+protected nosave int __value = null;
+
+protected init_value() {
+  save_var(([
+    "__value": "set_value",
+  ]));
+}
 
 /**
  * Sets the value of the object.
@@ -30,9 +37,7 @@ protected nosave int _value = null;
  * @param {int} value - The value to set
  */
 void set_value(int value) {
-  save_var("_value");
-
-  _value = value;
+  __value = value;
 }
 
 /**
@@ -41,7 +46,7 @@ void set_value(int value) {
  * @returns {int} The object's value in the lowest denomination of currency
  */
 int query_value() {
-  return _value;
+  return __value;
 }
 
 /**
@@ -50,5 +55,5 @@ int query_value() {
  * @param {int} value - The amount to add (or subtract if negative)
  */
 void adjust_value(int value) {
-  _value += value;
+  __value += value;
 }

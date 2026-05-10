@@ -22,6 +22,10 @@ inherit EXT_MATERIAL;
 private nosave mapping __spawn_info = ([]);
 private nosave int __fixed = false;
 
+void std_setup() {
+  init_value();
+}
+
 /**
  * Sets the spawn information for this item.
  *

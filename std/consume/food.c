@@ -19,8 +19,12 @@ string consume_message();
 
 void mudlib_setup() {
   set_edible(1);
-  save_var("_uses", "_max_uses", "_use_status_message");
   add_extra_long("consume", (: consume_message :));
+  save_var(([
+    "_uses": "set_uses",
+    "_max_uses": "set_max_uses",
+    "_use_status_message": "set_use_status_message"
+  ]));
 }
 
 /**

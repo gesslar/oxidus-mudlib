@@ -28,6 +28,9 @@
 varargs void setup_chain(mixed args...) {
   int x;
 
+  // Intended for the most base stup in /std
+  call_if(this_object(), "std_setup", args...);
+
   // Intended for objects at their very mudlib level
   call_if(this_object(), "mudlib_setup", args...);
 

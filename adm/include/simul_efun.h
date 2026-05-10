@@ -169,6 +169,7 @@ int between(float val, float min, float max);
 varargs float remainder(mixed a, mixed b);
 int sum(mixed *arr);
 int evaluate_number(int number, string condition);
+float diminish(mixed val, mixed scale);
 
 // File: object.c
 int caller_is(mixed ob);

@@ -178,8 +178,6 @@ private void load_mobs() {
 
     mob_files[mob_data] = mob["weight"];
   });
-
-  debug("mob_files %O", mob_files);
 }
 
 /**

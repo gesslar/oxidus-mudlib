@@ -155,23 +155,24 @@ private mixed render_room(object tp, object room) {
   users = find_targets(tp, null, room, (: living($1) && $1 != $(tp) :));
   objects = find_targets(tp, null, room, (: !living($1) :));
 
+  string *inv = ({});
+
   if(sizeof(users) > 0) {
     if(devp(tp))
-      data = implode(map(users, (: get_short($1, 1) + " (" + file_name($1) + ")" :)), "\n");
+      inv += ({implode(map(users, (: get_short($1, 1) + " (" + file_name($1) + ")" :)), "\n")});
     else
-      data = implode(map(users, (: get_short($1, 1) :)), "\n");
-
-    result += data + "\n";
+      inv += ({implode(map(users, (: get_short($1, 1) :)), "\n")});
   }
 
   if(sizeof(objects) > 0) {
     if(devp(tp))
-      data = implode(map(objects, (: get_short($1, 1) + " (" + file_name($1) + ")" :)), "\n");
+      inv += ({implode(map(objects, (: get_short($1, 1) + " (" + file_name($1) + ")" :)), "\n")});
     else
-      data = implode(map(objects, (: get_short($1, 1) :)), "\n");
-
-    result += "\n" + data + "\n";
+      inv += ({implode(map(objects, (: get_short($1, 1) :)), "\n")});
   }
+
+  if(sizeof(inv))
+    result += "\n" + implode(inv, "\n") + "\n";
 
   tell(tp, result);
   return 1;

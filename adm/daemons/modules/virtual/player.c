@@ -24,7 +24,7 @@ public nomask object compile_object(string file) {
   e = catch(ob = new(STD_PLAYER));
   if(e || !ob) {
     log_file("VIRTUAL", e);
-    debug("Error: :" + e ?? "Unable to instantiate virtual player object.");
+    debug("Error: " + e ?? "Unable to instantiate virtual player object.");
     return 0;
   }
 

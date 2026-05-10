@@ -653,7 +653,6 @@ public varargs mixed rest(string method, string url,
       error("Unsupported method: " + method);
   }
 
-  debug("query %O\n", q);
   return query(db, q, callback);
 }
 
