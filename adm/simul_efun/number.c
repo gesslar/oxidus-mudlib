@@ -72,7 +72,7 @@ int between(float val, float min, float max) {
  * @returns {float} The floored remainder of `a` divided by `b`.
  */
 varargs float remainder(mixed a, mixed b) {
-  int result;
+  float result;
 
   if(intp(a)) a = to_float(a);
   if(intp(b)) b = to_float(b);

@@ -13,13 +13,13 @@
 inherit __DIR__ "inventory";
 inherit __DIR__ "contents";
 
-private nosave int _ignore_capacity = 0;
-private nosave int _ignore_mass = 0;
-private nosave int _closeable = 0;
-private nosave int _lockable = 0;
-private nosave int _closed = 0;
-private nosave int _locked = 0;
-private nosave int _opaque = 1;
+private nosave int __ignore_capacity = 0;
+private nosave int __ignore_mass = 0;
+private nosave int __closeable = 0;
+private nosave int __lockable = 0;
+private nosave int __closed = 0;
+private nosave int __locked = 0;
+private nosave int __opaque = 1;
 
 /**
  * Checks if the inventory of this object is accessible from the perspective
@@ -161,7 +161,7 @@ void event_gmcp_item_received(object ob, object new_env) {
 void set_ignore_capacity(int i) {
   rehash_capacity();
 
-  _ignore_capacity = !!i;
+  __ignore_capacity = !!i;
 }
 
 /**
@@ -170,7 +170,7 @@ void set_ignore_capacity(int i) {
  * @returns {int} 1 if ignoring capacity, 0 if enforcing capacity limits
  */
 int ignore_capacity() {
-  return _ignore_capacity;
+  return __ignore_capacity;
 }
 
 /**
@@ -181,7 +181,7 @@ int ignore_capacity() {
 void set_ignore_mass(int i) {
   rehash_capacity();
 
-  _ignore_mass = !!i;
+  __ignore_mass = !!i;
 }
 
 /**
@@ -190,7 +190,7 @@ void set_ignore_mass(int i) {
  * @returns {int} 1 if ignoring mass, 0 if enforcing mass limits
  */
 int ignore_mass() {
-  return _ignore_mass;
+  return __ignore_mass;
 }
 
 /**
@@ -199,7 +199,7 @@ int ignore_mass() {
  * @param {int} i - 1 for closeable, 0 for not closeable
  */
 void set_closeable(int i) {
-  _closeable = !!i;
+  __closeable = !!i;
 }
 
 /**
@@ -208,7 +208,7 @@ void set_closeable(int i) {
  * @returns {int} 1 if closeable, 0 if not closeable
  */
 int is_closeable() {
-  return _closeable;
+  return __closeable;
 }
 
 /**
@@ -217,7 +217,7 @@ int is_closeable() {
  * @param {int} i - 1 for lockable, 0 for not lockable
  */
 void set_lockable(int i) {
-  _lockable = !!i;
+  __lockable = !!i;
 }
 
 /**
@@ -226,7 +226,7 @@ void set_lockable(int i) {
  * @returns {int} 1 if lockable, 0 if not lockable
  */
 int is_lockable() {
-  return _lockable;
+  return __lockable;
 }
 
 /**
@@ -235,7 +235,7 @@ int is_lockable() {
  * @param {int} i - 1 for closed, 0 for open
  */
 void set_closed(int i) {
-  _closed = !!i;
+  __closed = !!i;
 }
 
 /**
@@ -244,7 +244,7 @@ void set_closed(int i) {
  * @returns {int} 1 if closed, 0 if open
  */
 int is_closed() {
-  return _closed;
+  return __closed;
 }
 
 mixed can_close_container() {
@@ -273,7 +273,7 @@ mixed can_open_container() {
  * @param {int} i - 1 for locked, 0 for unlocked
  */
 void set_locked(int i) {
-  _locked = !!i;
+  __locked = !!i;
 }
 
 /**
@@ -282,7 +282,7 @@ void set_locked(int i) {
  * @returns {int} 1 if locked, 0 if unlocked
  */
 int is_locked() {
-  return _locked;
+  return __locked;
 }
 
 /**
@@ -291,7 +291,7 @@ int is_locked() {
  * @param {int} i - 1 for opaque (contents hidden), 0 for transparent
  */
 void set_opaque(int i) {
-  _opaque = !!i;
+  __opaque = !!i;
 }
 
 /**
@@ -300,7 +300,7 @@ void set_opaque(int i) {
  * @returns {int} 1 if opaque (contents hidden), 0 if transparent
  */
 int is_opaque() {
-  return _opaque;
+  return __opaque;
 }
 
 private nosave string _key_id;

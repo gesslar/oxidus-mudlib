@@ -12,12 +12,10 @@
 
 inherit STD_ACT;
 
-mixed main(object tp, string args) {
-  object room;
+mixed main(/** @type {STD_BODY} */ object tp, string args) {
+  /** @type {STD_ROOM} */ object room;
   string target;
-  object source;
   int here_flag;
-  object ob;
   string *doors;
 
   if(!args)
@@ -25,7 +23,6 @@ mixed main(object tp, string args) {
 
   room = environment(tp);
   if(sizeof(doors = room->id_door(args))) {
-    object other_room;
     string door;
 
     if(sizeof(doors) > 1)
@@ -33,17 +30,17 @@ mixed main(object tp, string args) {
 
     door = doors[0];
 
-    if(room->query_door_locked(door))
+    if(room->is_door_locked(door))
       return "It's locked.";
 
-    if(!room->query_door_open(door))
+    if(!room->is_door_open(door))
       room->set_door_open(door, true, true);
     else
       return sprintf("The way leading %s is already open.", room->query_door_name(door));
 
     tp->simple_action("$N $vopen the $o.\n", room->query_door_name(door));
 
-    other_room = room->query_exit_dest(door);
+    /** @type {STD_ROOM} */ object other_room = room->query_exit_dest(door);
     if(other_room) {
       foreach(string dir in other_room->query_exit_ids()) {
         if(other_room->query_exit_dest(dir) == room) {
@@ -60,23 +57,25 @@ mixed main(object tp, string args) {
   else
     target = args;
 
+  /** @type {STD_CONTAINER} */ object cont;
+
   if(here_flag) {
-    if(!ob = find_target(target, environment(tp)))
+    if(!cont = find_target(tp, target, environment(tp)))
       return "You do not see that here.";
   } else {
-    if(!ob = find_target(tp, target, tp))
-      if(!ob = find_target(tp, target))
+    if(!cont = find_target(tp, target, tp))
+      if(!cont = find_target(tp, target))
         return "You do not see " + target + " anywhere.";
   }
 
-  if(!ob->closeable())
+  if(!cont->is_closeable())
     return "You cannot open that.";
 
-  if(!ob->is_closed())
+  if(!cont->is_closed())
     return "It is already open.";
 
-  ob->set_closed(0);
-  tp->simple_action("$N $vopen $o.\n", ob);
+  cont->set_closed(0);
+  tp->simple_action("$N $vopen $o.\n", cont);
 
   return 1;
 }

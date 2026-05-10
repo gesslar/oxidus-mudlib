@@ -243,7 +243,10 @@ int remove_door_id(string direction, string id) {
   if(nullp(door = _doors[direction]))
     return null;
 
-  door.id = remove_array_element(door.id, id);
+  int pos = member_array(id, door.id);
+
+  if(pos != -1)
+    eject(ref door.id, pos);
 
   _doors[direction] = door;
 
@@ -376,7 +379,7 @@ string *id_door(string id) {
 void reset_doors() {
   string *exits = query_exit_ids();
 
-  foreach(string dir, class Door door in _doors) {
+  foreach(string dir, class Door _door in _doors) {
     string other_room_file;
 
     // Sanity check.
@@ -386,7 +389,7 @@ void reset_doors() {
     }
 
     if(other_room_file = query_exit(dir)) {
-      object other_room;
+      /** @type {STD_ROOM} */ object other_room;
 
       other_room = find_object(other_room_file);
 

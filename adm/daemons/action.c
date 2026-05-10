@@ -31,7 +31,7 @@ inherit STD_DAEMON;
  * @returns {string} The appropriate short description
  */
 private string short(mixed x) {
-  assert(stringp(x) || objectp(x) && (has(x, "query_name") || has(x, "query_name")));
+  assert(stringp(x) || objectp(x) && (has(x, "query_name") || has(x, "query_short")));
 
   if(stringp(x))
     return /** @type {string} */ (x);

@@ -12,9 +12,9 @@
 
 #include <exits.h>
 
-private nosave mapping _exits = ([]);
-private nosave mapping _pre_exit_funcs = ([]);
-private nosave mapping _post_exit_funcs = ([]);
+private nosave mapping __exits = ([]);
+private nosave mapping __pre_exit_funcs = ([]);
+private nosave mapping __post_exit_funcs = ([]);
 
 /**
  * Sets the exits for a room, replacing any existing exits.
@@ -23,7 +23,7 @@ private nosave mapping _post_exit_funcs = ([]);
  * @returns {mapping} The new exits mapping (copy)
  */
 mapping set_exits(mapping exit) {
-  _exits = exit;
+  __exits = exit;
 
   return query_exits();
 }
@@ -34,7 +34,7 @@ mapping set_exits(mapping exit) {
  * @returns {mapping} A copy of the exits mapping
  */
 mapping query_exits() {
-  return copy(_exits);
+  return copy(__exits);
 }
 
 /**
@@ -43,7 +43,7 @@ mapping query_exits() {
  * @returns {string*} Array of exit direction strings
  */
 string *query_exit_ids() {
-  return keys(_exits);
+  return keys(__exits);
 }
 
 /**
@@ -56,10 +56,10 @@ string *query_exit_ids() {
  * @returns {string} The destination path, or null if exit doesn't exist
  */
 string query_exit(string id) {
-  if(nullp(_exits[id]))
+  if(nullp(__exits[id]))
     return null;
 
-  mixed dest = _exits[id];
+  mixed dest = __exits[id];
   if(stringp(dest))
     return resolve_path(query_directory(), dest);
 
@@ -79,7 +79,7 @@ string query_exit(string id) {
  * @returns {object} The destination room object, or null if not found
  */
 varargs object query_exit_dest(string id, int loaded) {
-  mixed dest = _exits[id];
+  mixed dest = __exits[id];
 
   if(!dest)
     return null;
@@ -131,7 +131,7 @@ varargs object *query_exit_dests(int loaded) {
  * @returns {int} 1 if the exit exists, 0 if not
  */
 int valid_exit(string exit) {
-  return !nullp(_exits[exit]);
+  return !nullp(__exits[exit]);
 }
 
 /**
@@ -141,10 +141,10 @@ int valid_exit(string exit) {
  * @returns {mapping} The updated exits mapping (copy)
  */
 mapping remove_exit(string id) {
-  if(nullp(_exits[id]))
+  if(nullp(__exits[id]))
     return query_exits();
 
-  map_delete(_exits, id);
+  map_delete(__exits, id);
 
   return query_exits();
 }
@@ -157,7 +157,7 @@ mapping remove_exit(string id) {
  * @returns {mapping} The updated exits mapping (copy)
  */
 mapping add_exit(string id, string path) {
-  _exits[id] = path;
+  __exits[id] = path;
 
   return query_exits();
 }
@@ -169,7 +169,7 @@ mapping add_exit(string id, string path) {
  * @returns {int} 1 if a pre-exit function exists, 0 if not
  */
 int has_pre_exit_func(string dir) {
-  return !nullp(_pre_exit_funcs[dir]);
+  return !nullp(__pre_exit_funcs[dir]);
 }
 
 /**
@@ -179,7 +179,7 @@ int has_pre_exit_func(string dir) {
  * @returns {int} 1 if a post-exit function exists, 0 if not
  */
 int has_post_exit_func(string dir) {
-  return !nullp(_post_exit_funcs[dir]);
+  return !nullp(__post_exit_funcs[dir]);
 }
 
 /**
@@ -191,12 +191,12 @@ int has_post_exit_func(string dir) {
  * @param {mixed} func - Function pointer or method name to call
  */
 void add_pre_exit_func(string dir, mixed func) {
-  map_delete(_pre_exit_funcs, dir);
+  map_delete(__pre_exit_funcs, dir);
 
   if(!valid_function(dir) && !stringp(func))
     return;
 
-  _pre_exit_funcs[dir] = func;
+  __pre_exit_funcs[dir] = func;
 }
 
 /**
@@ -208,12 +208,12 @@ void add_pre_exit_func(string dir, mixed func) {
  * @param {mixed} func - Function pointer or method name to call
  */
 void add_post_exit_func(string dir, mixed func) {
-  map_delete(_post_exit_funcs, dir);
+  map_delete(__post_exit_funcs, dir);
 
   if(!valid_function(dir) && !stringp(func))
     return;
 
-  _post_exit_funcs[dir] = func;
+  __post_exit_funcs[dir] = func;
 }
 
 /**
@@ -222,7 +222,7 @@ void add_post_exit_func(string dir, mixed func) {
  * @param {string} dir - The exit direction
  */
 void remove_pre_exit_func(string dir) {
-  map_delete(_pre_exit_funcs, dir);
+  map_delete(__pre_exit_funcs, dir);
 }
 
 /**
@@ -231,7 +231,7 @@ void remove_pre_exit_func(string dir) {
  * @param {string} dir - The exit direction
  */
 void remove_post_exit_func(string dir) {
-  map_delete(_post_exit_funcs, dir);
+  map_delete(__post_exit_funcs, dir);
 }
 
 /**
@@ -241,7 +241,7 @@ void remove_post_exit_func(string dir) {
  * @returns {mixed} Function pointer or method name, or null if none exists
  */
 mixed query_pre_exit_func(string dir) {
-  return _pre_exit_funcs[dir];
+  return __pre_exit_funcs[dir];
 }
 
 /**
@@ -251,7 +251,7 @@ mixed query_pre_exit_func(string dir) {
  * @returns {mixed} Function pointer or method name, or null if none exists
  */
 mixed query_post_exit_func(string dir) {
-  return _post_exit_funcs[dir];
+  return __post_exit_funcs[dir];
 }
 
 /**
@@ -261,14 +261,14 @@ mixed query_post_exit_func(string dir) {
  * @param {object} who - The object trying to use the exit
  */
 void evaluate_pre_exit_func(string dir, object who) {
-  if(stringp(_pre_exit_funcs[dir])) {
-   catch(call_other(this_object(), _pre_exit_funcs[dir], who));
+  if(stringp(__pre_exit_funcs[dir])) {
+   catch(call_other(this_object(), __pre_exit_funcs[dir], who));
 
    return;
   }
 
-  if(valid_function(_pre_exit_funcs[dir])) {
-    function f = _pre_exit_funcs[dir];
+  if(valid_function(__pre_exit_funcs[dir])) {
+    function f = __pre_exit_funcs[dir];
 
     return f(who);
   }
@@ -281,14 +281,14 @@ void evaluate_pre_exit_func(string dir, object who) {
  * @param {object} who - The object that used the exit
  */
 void evaluate_post_exit_func(string dir, object who) {
-  if(stringp(_post_exit_funcs[dir])) {
-    catch(call_other(this_object(), _pre_exit_funcs[dir], who));
+  if(stringp(__post_exit_funcs[dir])) {
+    catch(call_other(this_object(), __post_exit_funcs[dir], who));
 
     return;
   }
 
-  if(valid_function(_post_exit_funcs[dir])) {
-    function f = _post_exit_funcs[dir];
+  if(valid_function(__post_exit_funcs[dir])) {
+    function f = __post_exit_funcs[dir];
 
     return f(who);
   }

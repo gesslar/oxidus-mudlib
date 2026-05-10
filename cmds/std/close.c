@@ -12,19 +12,17 @@
 
 inherit STD_ACT;
 
-mixed main(object tp, string args) {
+mixed main(/** @type {STD_BODY} */ object tp, string args) {
   string target;
   /** @type {STD_ROOM} */ object room;
-  int here_flag;
-  object ob;
   string *doors;
+  int here_flag;
 
   if(!args)
     return "Close what?";
 
   room = environment(tp);
   if(sizeof(doors = room->id_door(args))) {
-    object other_room;
     string door;
 
     if(sizeof(doors) > 1)
@@ -32,17 +30,17 @@ mixed main(object tp, string args) {
 
     door = doors[0];
 
-    if(room->query_door_locked(door))
+    if(room->is_door_locked(door))
       return "It's locked.";
 
-    if(room->query_door_open(door))
+    if(room->is_door_open(door))
       room->set_door_open(door, false, true);
     else
       return sprintf("The way leading %s is already closed.", room->query_door_name(door));
 
     tp->simple_action("$N $vclose the $o.\n", room->query_door_name(door));
 
-    other_room = room->query_exit_dest(door);
+    /** @type {STD_ROOM} */ object other_room = room->query_exit_dest(door);
     if(other_room) {
       foreach(string dir in other_room->query_exit_ids()) {
         if(other_room->query_exit_dest(dir) == room) {
@@ -59,23 +57,25 @@ mixed main(object tp, string args) {
   else
     target = args;
 
+  /** @type {STD_CONTAINER} */ object cont;
+
   if(here_flag) {
-    if(!ob = find_target(target, room))
+    if(!cont = find_target(tp, target, room))
       return "You do not see that here.";
   } else {
-    if(!ob = find_target(tp, target, tp))
-      if(!ob = find_target(tp, target))
+    if(!cont = find_target(tp, target, tp))
+      if(!cont = find_target(tp, target))
         return "You do not see " + target + " anywhere.";
   }
 
-  if(!ob->closeable())
+  if(!cont->is_closeable())
     return "You cannot close that.";
 
-  if(ob->is_closed())
+  if(cont->is_closed())
     return "It is already closed.";
 
-  ob->set_closed(1);
-  tp->simple_action("$N $vclose $o.\n", ob);
+  cont->set_closed(1);
+  tp->simple_action("$N $vclose $o.\n", cont);
 
   return 1;
 }

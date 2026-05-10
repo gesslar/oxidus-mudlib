@@ -20,7 +20,7 @@ void setup() {
 "change their current target if they are already attacking someone else.";
 }
 
-mixed main(object caller, string args) {
+mixed main(/** @type {STD_PLAYER} */ object caller, string _args) {
   object *npcs;
 
   npcs = present_npcs(environment(caller));

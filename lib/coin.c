@@ -93,7 +93,7 @@ int move(mixed dest) {
       return MOVE_OK;
     }
 
-    result = ::move(dest);
+    return ::move(dest);
   }
 }
 

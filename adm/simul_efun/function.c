@@ -111,31 +111,29 @@ varargs string call_trace(int colour) {
 
   n = sizeof(programs);
 
-  if(colour || !colour) {
-    object source = this_body();
-    function match_body = (: $(source) && objectp($(source)) && living($(source)) && $(source) == $1 :);
+  object source = this_body();
+  function match_body = (: $(source) && objectp($(source)) && living($(source)) && $(source) == $1 :);
 
-    colours = map(colours, (:"{{"+$1[1..]+"}}":));
+  colours = map(colours, (:"{{"+$1[1..]+"}}":));
 
-    // We don't want to include the call_trace() function itself
-    res += reduce(objects[1..],
-      function(string acc, object obj, int index,object *_objs,
-        string *programs, string *lines, string *functions, string *origins, string *cols, function match_body) {
-          return sprintf("%s[%s%s{{res}}] %s%s{{res}}:%s%s{{res}}->%s%s{{res}}() (%s%s{{res}})\n",
-            acc,
-            match_body(obj) ? cols[5] : cols[0],
-            match_body(obj) ? sprintf("%s", file_name(obj)) : sprintf("%O", obj),
-            cols[1],
-            programs[index+1],
-            cols[2],
-            lines[index+1],
-            cols[3],
-            functions[index+1],
-            cols[4],
-            origins[index+1]
-          );
-      }, "", programs, lines, functions, origins, colours, match_body);
-  }
+  // We don't want to include the call_trace() function itself
+  res += reduce(objects[1..],
+    function(string acc, object obj, int index,object *_objs,
+      string *programs, string *lines, string *functions, string *origins, string *cols, function match_body) {
+        return sprintf("%s[%s%s{{res}}] %s%s{{res}}:%s%s{{res}}->%s%s{{res}}() (%s%s{{res}})\n",
+          acc,
+          match_body(obj) ? cols[5] : cols[0],
+          match_body(obj) ? sprintf("%s", file_name(obj)) : sprintf("%O", obj),
+          cols[1],
+          programs[index+1],
+          cols[2],
+          lines[index+1],
+          cols[3],
+          functions[index+1],
+          cols[4],
+          origins[index+1]
+        );
+    }, "", programs, lines, functions, origins, colours, match_body);
 
   if(!colour)
     res = replace_string(res, "{{res}}", "");

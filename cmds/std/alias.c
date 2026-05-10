@@ -48,6 +48,11 @@ mixed main(/** @type {STD_PLAYER} */ object tp,
   return _error("No such alias `%s` defined.", args);
 }
 
+/**
+ *
+ * @param {STD_BODY} tp
+ * @param {int} global
+ */
 private mixed list_aliases(object tp, int global) {
   mapping data = tp->get_aliases(global);
   string *sorted_keys, header, footer;

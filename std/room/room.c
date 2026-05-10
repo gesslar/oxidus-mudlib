@@ -22,7 +22,7 @@ inherit __DIR__ "terrain";
 inherit __DIR__ "zone";
 inherit __DIR__ "door";
 
-private nosave int *_size = ({1, 1, 1});
+private nosave int *__size = ({1, 1, 1});
 
 /**
  * Sets up the room with default values.
@@ -98,7 +98,7 @@ mapping gmcp_room_info() {
     "doors"      : doors,
     "environment": query_room_environment() || query_terrain(),
     "coords"     : COORD_D->get_coordinates(base_name()),
-    "size"       : _size,
+    "size"       : __size,
     "type"       : room_type,
     "subtype"    : room_subtype,
     "icon"       : room_icon,
@@ -158,7 +158,7 @@ int query_room_colour() { return room_colour; }
  * @param {int*} size - Array of 3 integers representing width, length, height
  */
 void set_room_size(int *size) {
-  _size = size;
+  __size = size;
 }
 
 /**
@@ -166,7 +166,7 @@ void set_room_size(int *size) {
  *
  * @returns {int*} Array of 3 integers representing width, length, height
  */
-int *query_room_size() { return _size; }
+int *query_room_size() { return __size; }
 
 private nosave float _base_move_cost = 2.0;
 

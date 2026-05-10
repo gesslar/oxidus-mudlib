@@ -23,9 +23,8 @@ private nosave mapping extra_short = ([ ]), extra_long = ([ ]);
  * Can be a string or function that returns a string.
  *
  * @param {string|function} str - The short description or function to call
- * @returns {int} Always returns 1
  */
-int set_short(mixed str) {
+void set_short(mixed str) {
   short = str;
 
   if(environment())
@@ -40,7 +39,7 @@ int set_short(mixed str) {
  * @param {object} [viewer=this_body()] - The object viewing this description
  * @returns {string} The short description, or 0 if none exists
  */
-string query_short(object viewer: (: this_body() :)) {
+varargs string query_short(object viewer: (: this_body() :)) {
   function f = valid_function(short) ? short : null;
 
   string result = f ? f(viewer) : short;
@@ -55,9 +54,8 @@ string query_short(object viewer: (: this_body() :)) {
  * Can be a string or function that returns a string.
  *
  * @param {string|function} str - The long description or function to call
- * @returns {int} Always returns 1
  */
-int set_long(mixed str) {
+void set_long(mixed str) {
   long = str;
 }
 
@@ -69,7 +67,7 @@ int set_long(mixed str) {
  * @param {object} [viewer=this_body()] - The object viewing this description
  * @returns {string} The long description, or 0 if none exists
  */
-string query_long(object viewer: (: this_body() :)) {
+varargs string query_long(object viewer: (: this_body() :)) {
   function f = valid_function(long) ? long : null;
 
   string result = f ? f(viewer) : long;
