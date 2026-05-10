@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/remove.c
+ * @file /cmds/action/remove.c
  *
  * Command to remove worn items.
  *

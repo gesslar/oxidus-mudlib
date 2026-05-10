@@ -174,14 +174,14 @@ Inherits `STD_ITEM` + `EXT_POTABLE`. Ready-to-use drink inheritable.
 
 ## Commands
 
-All four player commands live under `cmds/std/` and follow the same shape: resolve the target with `find_target`, type-check it, check `query_uses()`, then call the public `*_obj` wrapper.
+All four player commands live under `cmds/action/` and follow the same shape: resolve the target with `find_target`, type-check it, check `query_uses()`, then call the public `*_obj` wrapper.
 
 | Command | Type check | Wrapper called |
 |---|---|---|
-| `cmds/std/eat.c` | `is_edible()` | `eat_obj(tp)` |
-| `cmds/std/nibble.c` | `is_food()` | `nibble_obj(tp)` |
-| `cmds/std/drink.c` | `is_drink()` | `drink_obj(tp)` |
-| `cmds/std/sip.c` | `is_drink()` | `sip_obj(tp)` |
+| `cmds/action/eat.c` | `is_edible()` | `eat_obj(tp)` |
+| `cmds/action/nibble.c` | `is_food()` | `nibble_obj(tp)` |
+| `cmds/action/drink.c` | `is_drink()` | `drink_obj(tp)` |
+| `cmds/action/sip.c` | `is_drink()` | `sip_obj(tp)` |
 
 Never call the protected `eat`/`nibble`/`drink`/`sip` directly via `->` — it will fail at runtime.
 

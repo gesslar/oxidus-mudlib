@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/test.c
+ * @file /cmds/action/test.c
  *
  * Test command stub.
  *

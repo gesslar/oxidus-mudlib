@@ -53,6 +53,6 @@ void bite(object attacker, object defender) {
   } else {
     attacker->targetted_action("$N $vswing $p $o wildly, missing $t.",
       defender, this_object());
-    defender->use_skill("combat.defense.dodge");
+    defender->use_skill("combat.defence.dodge");
   }
 }

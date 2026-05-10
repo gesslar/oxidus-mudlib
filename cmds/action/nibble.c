@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/nibble.c
+ * @file /cmds/action/nibble.c
  *
  * Nibble command.
  *

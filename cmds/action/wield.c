@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/wield.c
+ * @file /cmds/action/wield.c
  *
  * Wield command.
  *

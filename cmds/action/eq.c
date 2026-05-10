@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/eq.c
+ * @file /cmds/action/eq.c
  *
  * List all your equipped items.
  *

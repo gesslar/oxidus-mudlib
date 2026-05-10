@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/get.c
+ * @file /cmds/action/get.c
  *
  * Standard command to get objects from the environment or containers.
  *

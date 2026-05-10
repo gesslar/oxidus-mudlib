@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/wear.c
+ * @file /cmds/action/wear.c
  *
  * Wear command.
  *

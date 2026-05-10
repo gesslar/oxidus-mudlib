@@ -16,7 +16,7 @@
 
 inherit STD_CLOTHING;
 
-private mapping __defense = ([ ]);
+private mapping __defence = ([ ]);
 private float __ac = 0.0;
 
 void mudlib_setup() {
@@ -25,7 +25,7 @@ void mudlib_setup() {
   set_slot("torso");
   set_long("This is a piece of chest armour.");
   set_mass(1);
-  set_defense(([
+  set_defence(([
     "slashing" : 1.0,
     "piercing" : 1.0,
     "bludgeoning" : 1.0,
@@ -90,8 +90,8 @@ varargs int unequip(object tp, int silent) {
  * @param {([ string: float ])} def - Defence values keyed by
  *                                    damage type
  */
-public void set_defense(mapping def) {
-  __defense = def;
+public void set_defence(mapping def) {
+  __defence = def;
 }
 
 /**
@@ -100,9 +100,9 @@ public void set_defense(mapping def) {
  * @param {string} type - The damage type to defend against
  * @param {float} amount - The defence value
  */
-public void add_defense(string type, float amount) {
-    if(!__defense) __defense = ([ ]);
-    __defense[type] = amount;
+public void add_defence(string type, float amount) {
+    if(!__defence) __defence = ([ ]);
+    __defence[type] = amount;
 }
 
 /**
@@ -111,8 +111,8 @@ public void add_defense(string type, float amount) {
  * @returns {([ string: float ])} Defence values keyed by
  *                                damage type
  */
-public mapping query_defense() {
-    return __defense;
+public mapping query_defence() {
+    return __defence;
 }
 
 /**
@@ -121,9 +121,9 @@ public mapping query_defense() {
  * @param {string} type - The damage type to query
  * @returns {float} The defence value, or 0.0 if not set
  */
-public float query_defense_amount(string type) {
-    if(!__defense) return 0.0;
-    return __defense[type];
+public float query_defence_amount(string type) {
+    if(!__defence) return 0.0;
+    return __defence[type];
 }
 
 /**

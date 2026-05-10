@@ -18,5 +18,5 @@ varargs void virtual_setup(mapping data) {
   data["value"] && set_value(data["value"]);
   data["slot"] && set_slot(data["slot"]);
   data["ac"] && set_ac(data["ac"]);
-  data["defense"] && set_defense(data["defense"]);
+  data["defence"] && set_defence(data["defence"]);
 }

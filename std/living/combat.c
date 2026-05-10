@@ -38,7 +38,7 @@ private nosave float __attack_speed = 2.0;
 private nosave int __next_combat_round = 0;
 
 /** @type {([ string: float ])} */
-private nosave mapping __defense = ([]);
+private nosave mapping __defence = ([]);
 
 private nosave float __ac = 0.0;
 private nosave float __spell_ac = 0.0;
@@ -175,7 +175,7 @@ varargs void swing(int count, int multi) {
       multi = 0;
     } else {
       weapon = _wielded[main_slot];
-      if(random(100) < 5 + query_skill("combat.melee"))
+      if(random(100) < 5 + query_raw_skill("combat.melee"))
         multi = 1;
     }
   }
@@ -183,7 +183,7 @@ varargs void swing(int count, int multi) {
   if(can_strike(enemy, weapon)) {
     strike_enemy(enemy, weapon);
   } else {
-    enemy->use_skill("combat.defense.dodge");
+    enemy->use_skill("combat.defence.dodge");
     fail_strike(enemy, weapon);
   }
 
@@ -212,10 +212,10 @@ int next_round() {
  * argument selects how the roll is computed:
  *
  *   - object (or null) — physical attack against the enemy's
- *     AC, defended by combat.defense.dodge.
+ *     AC, defended by combat.defence.dodge.
  *   - string — treated as a skill name (e.g. an ability or
- *     spell). Spell paths defend against combat.defense.evade,
- *     other skill paths against combat.defense.dodge, and the
+ *     spell). Spell paths defend against combat.defence.evade,
+ *     other skill paths against combat.defence.dodge, and the
  *     enemy's spell AC is used in place of physical AC.
  *
  * The defending skill is exercised regardless of outcome.
@@ -236,7 +236,7 @@ public int can_strike(object enemy, mixed weapon) {
   float vlvl = enemy->query_effective_level();
   float result;
   string skill_name;
-  string defense_skill;
+  string defence_skill;
   float skill;
   mapping weapon_info;
 
@@ -244,14 +244,14 @@ public int can_strike(object enemy, mixed weapon) {
     weapon_info = query_weapon_info(weapon);
     skill_name = weapon_info["skill"];
     ac = enemy->query_ac();
-    defense_skill = "combat.defense.dodge";
+    defence_skill = "combat.defence.dodge";
   } else if(stringp(weapon)) {
     skill_name = weapon;
     ac = enemy->query_spell_ac();
     if(strsrch(weapon, ".spell.") != -1)
-      defense_skill = "combat.defense.evade";
+      defence_skill = "combat.defence.evade";
     else
-      defense_skill = "combat.defense.dodge";
+      defence_skill = "combat.defence.dodge";
   } else
     return 0;
 
@@ -264,15 +264,13 @@ public int can_strike(object enemy, mixed weapon) {
           + (lvl - vlvl)
           + skill
           - (ac * 2.0)
-          - enemy->query_skill_level(defense_skill)
+          - enemy->query_skill_level(defence_skill)
   ;
 
-  debug("+ Chance = %O", chance);
-  chance = diminish(chance, 10.0);
   debug("- Chance = %O", chance);
   result = random_float(100.0);
 
-  enemy->use_skill(defense_skill);
+  enemy->use_skill(defence_skill);
 
   return result < chance;
 }
@@ -354,8 +352,8 @@ void strike_enemy(object enemy, object weapon) {
     + query_effective_level()
     + skill
     - enemy->query_effective_level()
-    - enemy->query_defense_amount(wtype)
-    - enemy->query_skill_level("combat.defense")
+    - enemy->query_defence_amount(wtype)
+    - enemy->query_skill_level("combat.defence")
   ;
 
   use_skill(skill_name);
@@ -793,8 +791,8 @@ float query_attack_speed() {
  * @param {([ string: float ])} def - New defence mapping keyed
  *                                    by damage type.
  */
-void set_defense(mapping def) {
-  __defense = def;
+void set_defence(mapping def) {
+  __defence = def;
 
   adjust_protection();
 }
@@ -806,11 +804,11 @@ void set_defense(mapping def) {
  * @param {string} type - The damage type (e.g. "fire", "slashing").
  * @param {float} amount - Defence value for that type.
  */
-void add_defense(string type, float amount) {
-  if(!__defense)
-    __defense = ([ ]);
+void add_defence(string type, float amount) {
+  if(!__defence)
+    __defence = ([ ]);
 
-  __defense[type] = amount;
+  __defence[type] = amount;
 
   adjust_protection();
 }
@@ -821,8 +819,8 @@ void add_defense(string type, float amount) {
  * @returns {([ string: float ])} Damage-type to defence-value
  *          mapping.
  */
-mapping query_defense() {
-  return copy(__defense);
+mapping query_defence() {
+  return copy(__defence);
 }
 
 /**
@@ -831,11 +829,11 @@ mapping query_defense() {
  * @param {string} type - The damage type to look up.
  * @returns {float} The defence value, or 0.0 if not configured.
  */
-float query_defense_amount(string type) {
-  if(!__defense)
+float query_defence_amount(string type) {
+  if(!__defence)
     return 0.0;
 
-  return __defense[type];
+  return __defence[type];
 }
 
 /**
@@ -850,18 +848,18 @@ mapping adjust_protection() {
   object *obs = values(_equipment), ob;
 
   { // Defenses
-    __defense = ([]);
+    __defence = ([]);
     foreach(ob in obs) {
-      mapping def = ob->query_defense();
+      mapping def = ob->query_defence();
 
       if(!mapp(def))
         continue;
 
       foreach(string type, float amount in def) {
-        if(!__defense[type])
-          __defense[type] = 0.0;
+        if(!__defence[type])
+          __defence[type] = 0.0;
 
-        __defense[type] += amount;
+        __defence[type] += amount;
       }
     }
   }
@@ -872,7 +870,7 @@ mapping adjust_protection() {
       __ac += ob->query_ac();
   }
 
-  return __defense;
+  return __defence;
 }
 
 /**

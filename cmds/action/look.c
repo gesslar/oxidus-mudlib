@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/look.c
+ * @file /cmds/action/look.c
  *
  * Look command for viewing rooms, objects, and livings.
  *

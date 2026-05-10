@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/go.c
+ * @file /cmds/action/go.c
  *
  * The go command.
  *
@@ -10,7 +10,7 @@
  * 2024-02-03 - Gesslar - Created
  */
 
-inherit STD_CMD;
+inherit STD_ACT;
 
 mixed main(/** @type {STD_BODY} */ object tp, string arg) {
     mixed dest;

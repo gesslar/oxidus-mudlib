@@ -61,7 +61,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
         tp->simple_action(
           "The motes of light disperse harmlessly."
         );
-        victim->use_skill("combat.defense.evade");
+        victim->use_skill("combat.defence.evade");
       }
 
       victim->start_attack(tp);

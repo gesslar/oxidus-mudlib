@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/drop.c
+ * @file /cmds/action/drop.c
  *
  * Standard command to drop objects from inventory.
  *
@@ -26,11 +26,13 @@ void setup() {
 "See also: get, put\n";
 }
 
-mixed main(object tp, string arg) {
+mixed main(/** @type {STD_BODY} */ object tp, string arg) {
   object room = environment(tp);
 
   if(!arg)
     return "Drop what?";
+
+  /** @type {STD_ITEM} */ object item;
 
   if(arg == "all") {
     object *inv = find_targets(tp, 0, tp);
@@ -38,8 +40,8 @@ mixed main(object tp, string arg) {
     if(!sizeof(inv))
       return "You don't have anything in your inventory.\n";
 
-    foreach(object item in inv) {
-      if(item->prevent_drop())
+    foreach(item in inv) {
+      if(call_if(item, "prevent_drop"))
         tp->my_action("$N $vcannot drop $p $o.", item);
       else if(item->move(room))
         tp->my_action("$N could not drop $p $o.", item);
@@ -52,8 +54,8 @@ mixed main(object tp, string arg) {
     if(!sizeof(inv))
       return "You don't have any '" + arg + "' in your inventory.\n";
 
-    foreach(object item in inv) {
-      if(item->prevent_drop())
+    foreach(item in inv) {
+      if(call_if(item, "prevent_drop"))
         tp->my_action("$N $vcannot drop $p $o.", item);
       else if(item->move(room))
         tp->simple_action("$N could not drop $p $o.", item);
@@ -61,21 +63,21 @@ mixed main(object tp, string arg) {
         tp->simple_action("$N $vdrop $p $o.", item);
     }
   } else {
-    object ob = find_target(tp, arg, tp);
+    item = find_target(tp, arg, tp);
     string name;
 
-    if(!ob)
-      return "You don't have a '" + arg + "' in your inventory.\n";
+    if(!item)
+      return "You don't have "+article(arg)+" '" + arg + "' in your inventory.\n";
 
-    name = ob->query_real_name();
+    name = item->query_real_name();
 
-    if(ob->prevent_drop())
+    if(call_if(item, "prevent_drop"))
       return "You cannot drop " + name + ".\n";
 
-    if(ob->move(room))
+    if(item->move(room))
       return "You could not drop " + name + ".\n";
 
-    tp->simple_action("$N $vdrop $p $o.", ob);
+    tp->simple_action("$N $vdrop $p $o.", item);
   }
 
   return 1;

@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/put.c
+ * @file /cmds/action/put.c
  *
  * Command to put an object into a container.
  *

@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/travel.c
+ * @file /cmds/action/travel.c
  *
  * Command to run to common destinations from your current
  * location. Requires GMCP.
@@ -13,7 +13,7 @@
 
 #include <gmcp_defines.h>
 
-inherit STD_CMD;
+inherit STD_ACT;
 
 private nosave mapping destinations;
 private nosave string *dests;

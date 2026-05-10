@@ -236,7 +236,7 @@ These are checked before PATH-based commands.
 ## Complete Example: Simple Action Command
 
 ```lpc
-// /cmds/std/eat.c
+// /cmds/action/eat.c
 
 inherit STD_ACT;
 
@@ -264,7 +264,7 @@ mixed main(object tp, string str) {
 ## Complete Example: Multi-Option Command with Help
 
 ```lpc
-// /cmds/std/drop.c
+// /cmds/action/drop.c
 
 inherit STD_ACT;
 

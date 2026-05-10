@@ -11,34 +11,32 @@
 
 inherit STD_DAEMON;
 
-private nosave mapping messages;
-private nosave mapping evals;
+private nosave mapping __messages;
 
 void setup() {
   set_no_clean(1);
 
-  messages = from_string(read_file("/adm/etc/message/combat.txt"));
-  evals = allocate_mapping(keys(messages), (: keys($(messages)[$1]) :));
+  __messages = load_lpml("/adm/etc/message/combat.lpml");
 }
 
 string get_message(string type, int damage) {
-  mixed *options = evals[type];
-  mixed mess;
+  mapping options = __messages[type] ?? ([]);
 
-  if(!options)
+  if(!sizeof(options))
     return 0;
 
-  options = filter(options, (: evaluate_number($(damage), $1) :));
+  string key = find_key(options, (: evaluate_number($(damage), $2) :));
 
-  if(sizeof(options) != 1)
+  if(!key)
     return 0;
 
-  mess = messages[type][options[0]];
+  mixed mess = options[key];
+
   if(stringp(mess))
     return mess;
 
   if(pointerp(mess))
     return element_of(mess);
 
-    return 0;
+  return 0;
 }

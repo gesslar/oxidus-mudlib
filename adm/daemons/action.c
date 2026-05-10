@@ -40,7 +40,7 @@ private string short(mixed x) {
     if(living(x))
       return /** @type {string} */ (x->query_name());
     else
-      return /** @type {string} */ (x->query_name() || x->query_short());
+      return /** @type {string} */ (x->query_short() || x->query_name());
   }
 
   return /** @type {string} */ (x);
@@ -106,9 +106,12 @@ string the_short(mixed x) {
  * @param {STD_ITEM*} obs - Array of objects to process
  * @param {string} res - The result string so far
  * @param {mapping} has - Mapping tracking which objects have been mentioned
+ * @param {int} strip_article - If true, drop any leading article from the
+ *                              bare-short branch (used when preceded by
+ *                              a possessive token such as $p/$P)
  * @returns {mixed*} Array containing the modified result string and processed objects
  */
-mixed *handle_obs(mixed *obs, string res, mapping has) {
+mixed *handle_obs(mixed *obs, string res, mapping has, int strip_article) {
   string *ret = ({});
   mapping items = ([]);
   string t_short;
@@ -158,6 +161,13 @@ mixed *handle_obs(mixed *obs, string res, mapping has) {
         else
           ret += ({ capitalize(the_short(ob)) });
       }
+    } else if(strip_article) {
+      foreach(mixed ob in obs) {
+        if(items[ob]>1)
+          ret += ({ items[ob] + " " + pluralize(remove_article(short(ob))) });
+        else
+          ret += ({ remove_article(short(ob)) });
+      }
     } else {
       foreach(mixed ob in obs) {
         if(items[ob]>1)
@@ -182,9 +192,12 @@ mixed *handle_obs(mixed *obs, string res, mapping has) {
  * @param {mixed} ob - The object to process
  * @param {string} res - The result string so far
  * @param {mapping} has - Mapping tracking which objects have been mentioned
+ * @param {int} strip_article - If true, drop any leading article from the
+ *                              bare-short branch (used when preceded by
+ *                              a possessive token such as $p/$P)
  * @returns {mixed*} Array containing the modified result string and processed object
  */
-mixed *handle_ob(mixed ob, string res, mapping has) {
+mixed *handle_ob(mixed ob, string res, mapping has, int strip_article) {
   string bit;
 
   if(objectp(ob) && has[ob]) {
@@ -202,6 +215,8 @@ mixed *handle_ob(mixed ob, string res, mapping has) {
     } else if(res[<4..<1] == "The ") {
       res = res[0..<5];
       bit = capitalize(the_short(ob));
+    } else if(strip_article) {
+      bit = remove_article(short(ob));
     } else {
       bit = short(ob);
     }
@@ -242,6 +257,7 @@ varargs string compose_message(object forwhom, string msg, object *who, mixed *o
   string bit;
   mapping has = ([]);
   mixed tmp;
+  int strip_article = 0;
 
   fmt = reg_assoc(msg, ({ "\\$[NnVvTtPpOoRrBb][a-z0-9]*" }), ({ 1 }));
   fmt = fmt[0] ; // ignore the token info for now
@@ -275,21 +291,21 @@ varargs string compose_message(object forwhom, string msg, object *who, mixed *o
 
         if(pointerp(ob)) {
           if(sizeof(ob)) {
-            tmp = handle_obs(ob, res, has);
+            tmp = handle_obs(ob, res, has, strip_article);
             res = tmp[0];
             ob = tmp[1];
             bit = simple_list(ob);
             } else {
               tmp = ({ res });
               for(int z = 0; z < sizeof(ob); z++) {
-                tmp = handle_ob(ob[z], res, has);
+                tmp = handle_ob(ob[z], res, has, strip_article);
                 ob[z] = tmp[1];
               }
               res = tmp[0];
               bit = simple_list(ob);
             }
         } else {
-          tmp = handle_ob(ob, res, has);
+          tmp = handle_ob(ob, res, has, strip_article);
           res = tmp[0];
           bit = tmp[1];
         }
@@ -434,6 +450,11 @@ varargs string compose_message(object forwhom, string msg, object *who, mixed *o
       bit = capitalize(bit);
 
     res += bit + fmt[i+1];
+
+    // Track whether this token was a possessive ($p/$P) so the next
+    // $o can drop any leading article from its short.
+    strip_article = (c == 'p' || c == 'P');
+
     i += 2;
   }
 

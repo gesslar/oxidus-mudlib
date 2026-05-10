@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/give.c
+ * @file /cmds/action/give.c
  *
  * Command to give an item to another living.
  *
@@ -12,7 +12,7 @@
  * 2006-05-05 - Tacitus - Last edited
  */
 
-inherit STD_CMD;
+inherit STD_ACT;
 
 void setup() {
   help_text =

@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/close.c
+ * @file /cmds/action/close.c
  *
  * Command to close a container or door.
  *

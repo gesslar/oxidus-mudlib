@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/duel.c
+ * @file /cmds/action/duel.c
  *
  * Command to start combat with another living.
  *

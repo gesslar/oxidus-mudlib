@@ -265,12 +265,22 @@ varargs void implode_file(string file, string *lines, int overwrite) {
  * mapping cfg = load_lpml("/d/village/spawn.lpml");
  */
 varargs mixed load_lpml(string file, string root) {
+  string contents, old_privs;
+
   assert_arg(stringp(file) && truthy(file), 1, "File must be a non-zero length string.");
 
   if(!file_exists(file) || file_size(file) == 0)
     return "";
 
-  return lpml_decode(read_file(file), root);
+  old_privs = query_privs();
+  set_privs(this_object(), query_privs(previous_object()));
+  contents = read_file(file);
+  set_privs(this_object(), old_privs);
+
+  if(stringp(root) && truthy(root))
+    return lpml_decode(contents, root);
+  else
+    return lpml_decode(contents);
 }
 
 /**

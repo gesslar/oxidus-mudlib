@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/use.c
+ * @file /cmds/action/use.c
  *
  * General use command for things and stuff.
  *

@@ -1,12 +1,30 @@
 /**
  * @file /std/living/skills.c
- * Trainable skills for living objects
+ *
+ * Trainable skills for living objects.
+ *
+ * Skills are stored as a nested tree where each node carries a float
+ * "level" (integer part = effective level, fractional part = progress
+ * toward the next level) and a "subskills" submapping. Dot-paths
+ * (e.g. "combat.melee.slashing") address nodes within the tree.
+ *
+ * Improvement is use-based: callers invoke use_skill() and a small,
+ * randomised amount of progress is distributed along the skill's path
+ * from root to leaf. NPCs are seeded at setup with every skill set to
+ * level * 3.0 so that query_skill_level() is honest in combat math
+ * without any special-case branching.
  *
  * @created 2024-07-31 - Gesslar
- * @last_modified 2024-07-31 - Gesslar
+ * @last_modified 2026-05-10 - Gesslar
  *
  * @history
  * 2024-07-31 - Gesslar - Created
+ * 2026-05-10 - Gesslar - Documentation pass; NPC skills seeded at
+ *                        level*3 instead of zero so query_skill_level
+ *                        reflects them; dropped NPC shortcut in
+ *                        query_skill, then renamed query_skill to
+ *                        query_raw_skill so the name advertises its
+ *                        no-floor / no-boon semantics.
  */
 
 #include <skills.h>
@@ -16,17 +34,27 @@
 
 private nomask mapping skills = ([]);
 
+/**
+ * Reset the skill tree to an empty mapping, discarding all skills
+ * and progress.
+ */
 void wipe_skills() {
   skills = ([]);
 }
 
 /**
- * Initialise missing skills from the given mapping.
- * @param {mapping} skill_set - A mapping of skill categories and skills
- * @param {string} curr_path - The current path in the skill hierarchy
+ * Walk a config-shaped skill tree and create any missing skills at
+ * level 1.0. Submappings recurse into nested categories; arrays of
+ * strings are treated as leaf-skill names rooted at the current
+ * path.
+ *
+ * @param {mapping} skill_set - A mapping of skill categories. Values
+ *                              may be submappings (recurse) or arrays
+ *                              of leaf names.
+ * @param {string} [curr_path] - The dot-path of the current recursion
+ *                               level. Omit on the initial call.
  */
-varargs void initialize_missing_skills(mapping skill_set,
-    string curr_path) {
+varargs void initialize_missing_skills(mapping skill_set, string curr_path) {
   string cat;
   mixed element;
 
@@ -51,10 +79,15 @@ varargs void initialize_missing_skills(mapping skill_set,
 }
 
 /**
- * Add a skill to the living object.
- * @param {string} skill - The name of the skill
- * @param {float} level - The level of the skill with fractional
- *   progress
+ * Create a skill at the given dot-path, building intermediate nodes
+ * at level 1.0 as needed. Existing nodes along the path are
+ * preserved — this function does not overwrite a skill that already
+ * exists.
+ *
+ * @param {string} skill - The dot-path of the skill to create.
+ * @param {float} level - The starting level for the leaf node. Must
+ *                        be >= 1.0.
+ * @returns {int} 1 on success, null on invalid input.
  */
 varargs int add_skill(string skill, float level) {
   string *path = explode(skill, ".");
@@ -78,6 +111,16 @@ varargs int add_skill(string skill, float level) {
   return 1;
 }
 
+/**
+ * Remove a skill node from the tree.
+ *
+ * Walks the dot-path; if any intermediate node is missing the call
+ * is a no-op and returns 0. Only the addressed leaf is removed —
+ * intermediate nodes are left in place even if they become empty.
+ *
+ * @param {string} skill - The dot-path of the skill to remove.
+ * @returns {int} 1 if removed, 0 if not found, null on invalid input.
+ */
 int remove_skill(string skill) {
   string *path;
   mapping current = skills;
@@ -106,20 +149,20 @@ int remove_skill(string skill) {
 }
 
 /**
- * Get the level of a skill.
- * @param {string} skill - The name of the skill
- * @returns {float} The raw float level of the skill. For NPCs, returns query_level() * 3.0.
+ * Get the raw float level of a skill — no flooring, no boon
+ * modifier. Use query_skill_level() for combat math.
+ *
+ * @param {string} skill - The dot-path of the skill.
+ * @returns {float} The raw float level, or null if the skill is not
+ *                  found or input is invalid.
  */
-float query_skill(string skill) {
+float query_raw_skill(string skill) {
   string *path = explode(skill, ".");
   mapping current = skills;
   int x, sz;
 
   if(!stringp(skill))
     return null;
-
-  if(function_exists("is_npc") && is_npc())
-    return query_level() * 3.0;
 
   sz = sizeof(path);
   for(x = 0; x < sz; x++) {
@@ -134,11 +177,17 @@ float query_skill(string skill) {
 }
 
 /**
- * Get the floored level of a skill, optionally
- *   including boon modifiers.
- * @param {string} skill - The name of the skill
- * @param {int} raw - If true, return without boon modifiers
- * @returns {float} The floored skill level
+ * Get the floored level of a skill, optionally including boon
+ * modifiers.
+ *
+ * Combat formulas use this function rather than query_raw_skill()
+ * because the boon modifier is applied here.
+ *
+ * @param {string} skill - The dot-path of the skill.
+ * @param {int} [raw] - If truthy, omit boon modifiers.
+ * @returns {float} The floored level (with the boon modifier applied
+ *                  unless raw is set), or null if the skill is not
+ *                  found or input is invalid.
  */
 varargs float query_skill_level(string skill, int raw) {
   string *path = explode(skill, ".");
@@ -168,10 +217,13 @@ varargs float query_skill_level(string skill, int raw) {
 }
 
 /**
- * Set the level of a skill.
- * @param {string} skill - The name of the skill
- * @param {float} level - The level of the skill with fractional
- *   progress
+ * Replace a skill's float level. Intermediate nodes must already
+ * exist — this function will not create them.
+ *
+ * @param {string} skill - The dot-path of the skill.
+ * @param {float} level - The new level value (must be >= 1.0).
+ * @returns {int} 1 on success, 0 if an intermediate is missing,
+ *                null on invalid input.
  */
 int set_skill_level(string skill, float level) {
   string *path = explode(skill, ".");
@@ -196,16 +248,19 @@ int set_skill_level(string skill, float level) {
 }
 
 /**
- * Get the skills of the living object.
- * @returns {mapping} The skills of the living object
+ * Get a copy of the entire skill tree.
+ *
+ * @returns {mapping} A copy of the skills mapping.
  */
 mapping query_skills() {
   return copy(skills);
 }
 
 /**
- * Set the skills of the living object.
- * @param {mapping} s - The skills mapping to set
+ * Replace the skill tree wholesale. No-op when the argument is not
+ * a mapping; the input is copied before being stored.
+ *
+ * @param {mapping} s - The skills mapping to install.
  */
 void set_skills(mapping s) {
   if(!mapp(s))
@@ -214,9 +269,13 @@ void set_skills(mapping s) {
 }
 
 /**
- * Use a skill with a chance to improve it.
- * @param {string} skill - The name of the skill
- * @returns {int} 1 if the skill was improved, 0 otherwise
+ * Invoke a skill, granting it a 20% chance to improve. If the
+ * skill does not yet exist, it is created at level 1.0 via
+ * assure_skill() and no improvement is rolled this call.
+ *
+ * @param {string} skill - The dot-path of the skill being used.
+ * @returns {int} 1 if the skill improved this call, 0 otherwise,
+ *                null on invalid input.
  */
 int use_skill(string skill) {
   float chance_to_improve = 20.0;
@@ -224,7 +283,7 @@ int use_skill(string skill) {
   if(!stringp(skill))
     return null;
 
-  if(query_skill(skill)) {
+  if(query_raw_skill(skill)) {
     if(random_float(100.0) < chance_to_improve) {
       improve_skill(skill);
       return 1;
@@ -237,20 +296,34 @@ int use_skill(string skill) {
 }
 
 /**
- * Get the path of a skill.
- * @param {string} skill - The name of the skill
- * @returns {string*} The path of the skill
+ * Split a dot-path into its components.
+ *
+ * @param {string} skill - A skill dot-path (e.g. "combat.melee").
+ * @returns {string*} The path components.
  */
 string *query_skill_path(string skill) {
   return explode(skill, ".");
 }
 
 /**
- * Train a skill. If progress is null, automatically
- *   selects a skill from a weighted distribution among the skill
- *   tree path and applies a random amount of progress.
- * @param {string} skill - The name of the skill
- * @param {float} progress - The fractional progress to add
+ * Apply progress to a skill.
+ *
+ * When progress is omitted (the standard use_skill() path), a
+ * random skill from the dot-path is chosen via a weighted
+ * distribution that favours leaves over roots, and a tiny progress
+ * amount (random_float(0.01)) is applied to it. Parent skills
+ * therefore grow organically as their children are used.
+ *
+ * When progress is supplied, it is applied directly to the named
+ * skill without weighted path selection. If the integer level rises
+ * as a result, a notification is sent to the living object.
+ *
+ * @param {string} skill - The dot-path of the skill.
+ * @param {float} [progress] - Fractional progress to add. Omit to
+ *                             use the weighted random path.
+ * @returns {float} The progress actually applied, 0 if an
+ *                  intermediate is missing, or null on invalid
+ *                  input.
  */
 varargs float improve_skill(string skill, float progress) {
   string *path = explode(skill, ".");
@@ -296,6 +369,14 @@ varargs float improve_skill(string skill, float progress) {
   return null;
 }
 
+/**
+ * Get the progress toward the next level for a skill.
+ *
+ * @param {string} skill - The dot-path of the skill.
+ * @returns {int} The fractional part of the level expressed as
+ *                0-99, or null if the skill is not found or input
+ *                is invalid.
+ */
 int query_skill_progress(string skill) {
   string *path;
   mapping current = skills;
@@ -324,6 +405,19 @@ int query_skill_progress(string skill) {
   return null;
 }
 
+/**
+ * Set a skill's level to an integer value, replacing whatever was
+ * stored.
+ *
+ * Unlike set_skill_level(), this accepts an int and does not
+ * enforce a minimum level. Intermediate nodes must already exist —
+ * this function will not create them.
+ *
+ * @param {string} skill - The dot-path of the skill.
+ * @param {int} level - The new level value.
+ * @returns {int} 1 on success, 0 if an intermediate is missing,
+ *                null on invalid input.
+ */
 int modify_skill_level(string skill, int level) {
   string *path = explode(skill, ".");
   mapping current = skills;
@@ -347,27 +441,35 @@ int modify_skill_level(string skill, int level) {
 }
 
 /**
- * Adjust all skills for NPCs based on their level.
- * @param {float} __level - The NPC's level (unused; skills are
- *   reset to near-zero regardless)
- * @returns {int} 1 if adjustments were made, 0 otherwise
+ * Seed every NPC skill to level * 3.0 so that query_skill_level()
+ * is honest for combat math. Called from npc.c::set_level() after
+ * the level is updated.
+ *
+ * @param {float} level - The NPC's current level. Each skill is
+ *                        stored as level * 3.0.
+ * @returns {int} 1 if the skill tree was traversed, 0 if there were
+ *                no skills to adjust.
  */
-public int adjust_skills_by_npc_level(float __level) {
+public int adjust_skills_by_npc_level(float level) {
   if(nullp(skills) || !mapp(skills))
     return 0;
 
-  adjust_skill_levels(skills);
+  adjust_skill_levels(skills, level);
 
   return 1;
 }
 
 /**
- * Helper to recursively reset NPC skill levels.
- * @param {mapping} current_skills - The current mapping of skills
- *   to adjust
+ * Recursively set every skill's level to level * 3.0. NPC-only —
+ * errors out if called on a user.
+ *
+ * @param {mapping} current_skills - The skills submapping at the
+ *                                   current recursion depth.
+ * @param {float} level - The NPC's current level.
+ * @returns {mapping} The same submapping, mutated in place.
+ * @errors If invoked on a user (userp()).
  */
-private nomask mapping adjust_skill_levels(
-    mapping current_skills) {
+private nomask mapping adjust_skill_levels(mapping current_skills, float level) {
   string sk;
   mixed skill_data;
 
@@ -376,25 +478,26 @@ private nomask mapping adjust_skill_levels(
 
   foreach(sk, skill_data in current_skills) {
     if(mapp(skill_data) && mapp(skill_data["subskills"]))
-      adjust_skill_levels(skill_data["subskills"]);
+      adjust_skill_levels(skill_data["subskills"], level);
 
-    current_skills[sk]["level"] = random_float(0.01);
+    current_skills[sk]["level"] = level * 3.0;
   }
 
   return current_skills;
 }
 
 /**
- * Assure that an entire skill path exists. If not,
- *   create it and set the level to 1.0.
- * @param {string} skill - The name of the skill
- * @returns {int} 1 if the skill was assured, 0 otherwise
+ * Ensure a skill exists. If it does not, create it at level 1.0
+ * and notify the living object that they have gained a new skill.
+ *
+ * @param {string} skill - The dot-path of the skill.
+ * @returns {int} 1 if the skill exists (or was just created), 0
+ *                if creation failed.
  */
 int assure_skill(string skill) {
-  if(nullp(query_skill(skill))) {
+  if(nullp(query_raw_skill(skill))) {
     if(add_skill(skill, 1.0)) {
-      tell(this_object(),
-        "You have gained a new skill: " + skill + ".\n");
+      tell(this_object(), "{{9c6}}You have gained a new skill: {{re1}}" + skill + "{{re0}}.{{res}}\n");
       return 1;
     } else {
       return 0;

@@ -1,85 +1,119 @@
 /**
- * @file /std/user/damage.c
- * Damage object for livings
+ * @file /std/living/damage.c
+ *
+ * Damage delivery and receipt for living objects. Provides the
+ * attacker-side entry point (deliver_damage) and the victim-side
+ * resolution (receive_damage), where the type-specific defence
+ * value, the global DAMAGE_LEVEL_MODIFIER, and the level difference
+ * combine to mitigate the incoming hit before it is applied to HP.
+ * Records last-damaged-by and killed-by attribution as side
+ * effects.
  *
  * @created 2024-07-25 - Gesslar
- * @last_modified 2024-07-25 - Gesslar
+ * @last_modified 2026-05-10 - Gesslar
  *
  * @history
  * 2024-07-25 - Gesslar - Created
+ * 2026-05-10 - Gesslar - Documentation pass
  */
 
 #include <damage.h>
 #include <vitals.h>
 
 // Functions from other objects
-float query_defense_amount(string type);
+float query_defence_amount(string type);
 float query_effective_level();
 object set_last_damaged_by(object ob);
 object set_killed_by(object ob);
 
+/**
+ * Deliver a damage event to a victim. Validates inputs and routes
+ * the call to the victim's receive_damage(), which is where
+ * defence reduction, level scaling, and HP application happen.
+ *
+ * @param {STD_BODY} victim - The body to damage.
+ * @param {float} damage - The pre-mitigation damage amount. Must
+ *                         be non-negative.
+ * @param {string} type - The damage type (e.g. "slashing", "fire").
+ *                        Used by the victim to look up the
+ *                        matching defence value.
+ * @returns {float} The actual damage applied after the victim's
+ *                  reductions, or 0 if the victim is missing or
+ *                  the input damage was negative.
+ */
 float deliver_damage(object victim, float damage, string type) {
-    if(!victim)
-        return 0;
+  if(!victim)
+    return 0;
 
-    if(damage < 0)
-        return 0;
+  if(damage < 0)
+    return 0;
 
-    return victim->receive_damage(this_object(), damage, type);
+  return victim->receive_damage(this_object(), damage, type);
 }
 
 /**
- * Calculates the damage received by the victim based on the attacker's level,
- * defense amount, and a damage level modifier.
+ * Apply damage to this body after defence reduction and level-
+ * difference scaling.
  *
- * @param {object} attacker - The attacker object.
- * @param {float} damage - The initial damage value.
- * @param {string} type - The type of damage.
- * @returns {float} The final damage after applying reductions and level-based modifications.
+ * The victim's defence amount for the given type is converted to
+ * a percentage reduction. The global DAMAGE_LEVEL_MODIFIER is then
+ * scaled by the level difference (attacker - victim) and used to
+ * adjust that reduction: a higher-level attacker erodes the
+ * victim's defence, a lower-level attacker has its damage further
+ * reduced. After clamping at zero, the result is subtracted from
+ * HP. If the body is already dead the call is a no-op. If this
+ * hit brings HP to zero, the attacker is recorded as the killer.
+ *
+ * @param {STD_BODY} attacker - The body dealing the damage.
+ * @param {float} damage - The pre-mitigation damage amount.
+ * @param {string} type - The damage type for defence lookup.
+ * @returns {float} The damage actually applied to HP, or 0 if the
+ *                  attacker is missing, the input was negative, or
+ *                  the body was already dead.
  */
 float receive_damage(object attacker, float damage, string type) {
-    float def, red, mod, level, alevel, level_difference;
+  float def, red, mod, level, alevel, level_difference;
 
-    if(!attacker)
-        return 0.0;
+  if(!attacker)
+    return 0.0;
 
-    if(damage < 0.0)
-        return 0.0;
+  if(damage < 0.0)
+    return 0.0;
 
-    def = query_defense_amount(type);
-    red = percent_of(def, damage);
+  def = query_defence_amount(type);
+  red = percent_of(def, damage);
 
-    // The global damage level modifier
-    mod = mud_config("DAMAGE_LEVEL_MODIFIER");
+  // The global damage level modifier
+  mod = mud_config("DAMAGE_LEVEL_MODIFIER");
 
-    // The level of the attacker and the victim
-    level = query_effective_level();
-    alevel = attacker->query_effective_level();
+  // The level of the attacker and the victim
+  level = query_effective_level();
+  alevel = attacker->query_effective_level();
 
-    // The difference in levels between the attacker and the victim
-    level_difference = alevel - level;
+  // The difference in levels between the attacker and the victim
+  level_difference = alevel - level;
 
-    // The damage level modifier is multiplied by the difference in levels
-    mod = mod * level_difference;
-    red -= percent_of(mod, damage);
+  // The damage level modifier is multiplied by the difference in levels
+  mod = mod * level_difference;
+  red -= percent_of(mod, damage);
 
-    // The damage is reduced by the level modifier
-    damage -= red;
+  // The damage is reduced by the level modifier
+  damage -= red;
 
-    if(damage < 0.0)
-        damage = 0.0;
+  if(damage < 0.0)
+    damage = 0.0;
 
-    if(query_hp() <= 0.0)
-        return 0.0;
+  if(query_hp() <= 0.0)
+    return 0.0;
 
-    // Take the damage
-    adjust_hp(-damage);
+  // Take the damage
+  adjust_hp(-damage);
 
-    // Set the last damaged by object
-    set_last_damaged_by(attacker);
+  // Set the last damaged by object
+  set_last_damaged_by(attacker);
 
-    if(query_hp() <= 0.0)
-        set_killed_by(attacker);
+  if(query_hp() <= 0.0)
+    set_killed_by(attacker);
 
-    return damage;
+  return damage;
 }

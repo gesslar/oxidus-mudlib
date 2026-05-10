@@ -147,7 +147,7 @@ private int evaluate_simple_condition(int number, string condition) {
     return exclude ? (of(set, number) == -1) : (of(set, number) != -1);
   }
 
-  throw("Invalid condition format: " + condition);
+  error("Invalid condition format: " + condition);
 }
 
 /**

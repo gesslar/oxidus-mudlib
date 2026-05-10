@@ -1,7 +1,7 @@
 /**
- * @file /cmds/std/sip.c
+ * @file /cmds/action/drink.c
  *
- * Sip command.
+ * Drink command.
  *
  * @created 2024-08-06 - Gesslar
  * @last_modified 2024-08-06 - Gesslar
@@ -12,6 +12,12 @@
 
 inherit STD_ACT;
 
+/**
+ *
+ * @param {STD_BODY} tp - The player
+ * @param {string} str - The item to be drunk.
+ * @returns {string | int} 1 if successful, an error message otherwise.
+ */
 mixed main(object tp, string str) {
   /** @type {STD_DRINK} */ object ob;
   int uses;
@@ -20,15 +26,15 @@ mixed main(object tp, string str) {
     return "You don't have that.";
 
   if(!ob->is_drink())
-    return "You can't sip from that.";
+    return "You can't drink that.";
 
   uses = ob->query_uses();
 
   if(uses < 1)
-    return "There is nothing left to sip.";
+    return "There is nothing left to drink.";
 
-  if(!ob->sip_obj(tp))
-    return "You couldn't sip from that.";
+  if(!ob->drink_obj(tp))
+    return "You couldn't drink that.";
 
   return 1;
 }

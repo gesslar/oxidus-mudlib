@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/say.c
+ * @file /cmds/action/say.c
  *
  * A command to say something to the room.
  *

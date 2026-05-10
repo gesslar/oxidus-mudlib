@@ -57,7 +57,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
         tp->use_skill("combat.melee.unarmed");
       } else {
         tp->targetted_action("$N $vtry to punch $t, but $vmiss.", victim);
-        victim->use_skill("combat.defense.dodge");
+        victim->use_skill("combat.defence.dodge");
       }
 
       victim->start_attack(tp);

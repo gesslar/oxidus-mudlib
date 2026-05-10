@@ -1,12 +1,21 @@
 /**
- * @file /std/user/advancement.c
- * Advancement object for players
+ * @file /std/living/advancement.c
+ *
+ * Per-living XP and level state. Tracks current level, a temporary
+ * level modifier (used by boons and curses), and accumulated
+ * experience. Pushes Char.Status GMCP updates to players whenever
+ * any of these change. The XP-to-level formula and the advance() /
+ * earn_xp() flow live in ADVANCE_D — this file only owns the
+ * per-body fields and their accessors.
  *
  * @created 2024-07-24 - Gesslar
- * @last_modified 2024-07-24 - Gesslar
+ * @last_modified 2026-05-10 - Gesslar
  *
  * @history
  * 2024-07-24 - Gesslar - Created
+ * 2026-05-10 - Gesslar - Documentation pass; fixed set_xp to
+ *                        actually set the value; aligned on_advance
+ *                        with the SIG_PLAYER_ADVANCED slot signature.
  */
 
 #include <advancement.h>
@@ -16,22 +25,51 @@ private float __level = 1.0;
 private float __level_mod = 0.0;
 private int __xp = 0;
 
+/**
+ * Get the living's accumulated experience.
+ *
+ * @returns {int} The current XP total.
+ */
 int query_xp() {
   return __xp;
 }
 
+/**
+ * Get the XP required to reach the next level from the current
+ * level.
+ *
+ * @returns {float} The TNL value reported by ADVANCE_D.
+ */
 float query_tnl() {
   return ADVANCE_D->to_next_level(__level);
 }
 
+/**
+ * Get the living's current level (no modifier applied).
+ *
+ * @returns {float} The level value.
+ */
 float query_level() {
   return __level;
 }
 
+/**
+ * Get the level used for combat math: current level plus any
+ * temporary modifier from boons or curses.
+ *
+ * @returns {float} __level + __level_mod.
+ */
 float query_effective_level() {
   return __level + __level_mod;
 }
 
+/**
+ * Replace the current level. Sends a Char.Status GMCP update if
+ * this body is a user.
+ *
+ * @param {float} l - The new level value.
+ * @returns {float} The new level.
+ */
 float set_level(float l) {
   __level = to_float(l);
 
@@ -46,6 +84,13 @@ float set_level(float l) {
   return __level;
 }
 
+/**
+ * Adjust the current level by a delta. Sends a Char.Status GMCP
+ * update if this body is a user.
+ *
+ * @param {float} l - Level delta to apply.
+ * @returns {float} The new level.
+ */
 float adjust_level(float l) {
   __level += to_float(l);
 
@@ -60,20 +105,46 @@ float adjust_level(float l) {
   return __level;
 }
 
+/**
+ * Get the temporary level modifier.
+ *
+ * @returns {float} The current modifier value.
+ */
 float query_level_mod() {
   return __level_mod;
 }
 
+/**
+ * Replace the temporary level modifier. Routes through
+ * adjust_level_mod() so any future side-effect logic lives in one
+ * place.
+ *
+ * @param {float} l - The desired modifier value.
+ * @returns {float} The new modifier value.
+ */
 float set_level_mod(float l) {
   return adjust_level_mod(l - __level_mod);
 }
 
+/**
+ * Adjust the temporary level modifier by a delta.
+ *
+ * @param {float} l - Modifier delta to apply.
+ * @returns {float} The new modifier value.
+ */
 float adjust_level_mod(float l) {
   __level_mod += to_float(l);
 
   return __level_mod;
 }
 
+/**
+ * Adjust XP by a delta. Sends a Char.Status GMCP update if this
+ * body is a user.
+ *
+ * @param {int} amount - XP delta to apply (negative to spend).
+ * @returns {int} The new XP total.
+ */
 int adjust_xp(int amount) {
   __xp += amount;
 
@@ -88,17 +159,24 @@ int adjust_xp(int amount) {
   return __xp;
 }
 
+/**
+ * Replace the current XP total. Computes the delta needed and
+ * routes through adjust_xp() so the GMCP update fires.
+ *
+ * @param {int} amount - The new XP value.
+ * @returns {int} The new XP total.
+ */
 int set_xp(int amount) {
-  int delta;
-
-  if(__xp < 0)
-    delta = amount;
-  else
-    delta = amount;
-
-  return adjust_xp(delta);
+  return adjust_xp(amount - __xp);
 }
 
-void on_advance(object tp) {
-  tell(tp, "You have advanced to level " + to_int(query_level()) + "!\n");
+/**
+ * Slot for SIG_PLAYER_ADVANCED — wired in player.c on setup. Tells
+ * the player they have advanced.
+ *
+ * @param {STD_BODY} tp - The body that advanced.
+ * @param {float} l - The new level.
+ */
+void on_advance(object tp, float l) {
+  tell(tp, "{{933}}You have advanced to level {{re1}}" + to_int(l) + "{{re0}}!{{res}}\n");
 }

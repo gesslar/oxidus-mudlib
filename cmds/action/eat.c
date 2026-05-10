@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/eat.c
+ * @file /cmds/action/eat.c
  *
  * Eat command.
  *

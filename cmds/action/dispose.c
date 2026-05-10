@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/dispose.c
+ * @file /cmds/action/dispose.c
  *
  * Command to dispose of dead bodies.
  *

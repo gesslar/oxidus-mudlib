@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/open.c
+ * @file /cmds/action/open.c
  *
  * Command to open a container or door.
  *

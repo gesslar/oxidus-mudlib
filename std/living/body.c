@@ -57,6 +57,7 @@ void mudlib_setup() {
 
   if(!query_pref("prompt"))
     set_pref("prompt", ">");
+
   set_log_level(0);
   set_prevent_get(1);
   // TODO figure out how we were getting this twice and then
