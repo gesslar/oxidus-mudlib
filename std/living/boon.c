@@ -14,8 +14,10 @@
 #include <living.h>
 #include <skills.h>
 
-private nomask mapping boons = ([]);
-private nomask mapping curses = ([]);
+private nomask mapping __boons = ([]);
+private nomask mapping __curses = ([]);
+private nomask mapping __boon_obj = ([]);
+private nomask mapping __curse_obj = ([]);
 
 private nomask nosave int BOON = 1;
 private nomask nosave int CURSE = 2;
@@ -23,14 +25,19 @@ private nomask nosave int CURSE = 2;
 // Forward declarations for private helpers
 private nomask mapping get_store(int which);
 private nomask int apply(int which, string name, string cl, string type, int amt, int dur);
+private nomask int apply_object(int which, object ob, int dur);
 private nomask int query(int which, string cl, string type);
+private nomask mapping query_object(int which, function f);
 private nomask void process(int which);
 private nomask int remove_by_tag(int which, string cl, string type, int tag);
+private nomask void remove_object_by_tag(int which, int tag, int expired);
 private nomask int remove_by_name(int which, string cl, string type, string name);
 
 public nomask void init_boon() {
-  boons = boons || ([]);
-  curses = curses || ([]);
+  __boons ??= ([]);
+  __curses ??= ([]);
+  __boon_obj ??= ([]);
+  __curse_obj ??= ([]);
 }
 
 public nomask int boon(
@@ -40,6 +47,13 @@ public nomask int boon(
   return apply(BOON, name, cl, type, amt, dur);
 }
 
+public nomask int boon_object(
+  object ob,
+  int dur
+) {
+  return apply_object(BOON, ob, dur);
+}
+
 public nomask int curse(
   string name, string cl, string type,
   int amt, int dur
@@ -47,20 +61,35 @@ public nomask int curse(
   return apply(CURSE, name, cl, type, amt, dur);
 }
 
+public nomask int curse_object(
+  object ob,
+  int dur
+) {
+  return apply_object(CURSE, ob, dur);
+}
+
 public nomask int query_boon(string cl, string type) {
   return query(BOON, cl, type);
+}
+
+public nomask mapping query_boon_object(function f) {
+  return query_object(BOON, f);
 }
 
 public nomask int query_curse(string cl, string type) {
   return query(CURSE, cl, type);
 }
 
+public nomask mapping query_curse_object(function f) {
+  return query_object(CURSE, f);
+}
+
 public mapping query_boon_data() {
-  return copy(boons);
+  return copy(__boons);
 }
 
 public mapping query_curse_data() {
-  return copy(curses);
+  return copy(__curses);
 }
 
 public nomask int query_effective_boon(
@@ -75,10 +104,18 @@ public nomask int remove_boon(
   return remove_by_tag(BOON, cl, type, tag);
 }
 
+public nomask void remove_boon_object(int tag) {
+  return remove_object_by_tag(BOON, tag, false);
+}
+
 public nomask int remove_curse(
   string cl, string type, int tag
 ) {
   return remove_by_tag(CURSE, cl, type, tag);
+}
+
+public nomask void remove_curse_object(int tag) {
+  return remove_object_by_tag(CURSE, tag, false);
 }
 
 public nomask int remove_boon_by_name(
@@ -101,7 +138,15 @@ protected nomask void process_boon() {
 // --- Private helpers ---
 
 private nomask mapping get_store(int which) {
-  return which == BOON ? boons : curses;
+  return which == BOON ? __boons : __curses;
+}
+
+private nomask mapping get_obj_store(int which) {
+  mapping store = which == BOON ? __boon_obj : __curse_obj;
+
+  each(store, (: !objectp($2["object"]) && map_delete($1) :));
+
+  return store;
 }
 
 private nomask int apply(
@@ -134,6 +179,29 @@ private nomask int apply(
   return tag;
 }
 
+private nomask int apply_object(
+  int which,
+  object ob,
+  int dur
+) {
+  mapping src = get_obj_store(which);
+  int tag = time_ns();
+
+  if(!objectp(ob) || nullp(dur) || !intp(dur) || dur < 0)
+    return 0;
+
+  mapping found = find_key(src, (: $2["object"] == $(ob) :));
+  if(found)
+    return 0;
+
+  src[tag] = ([
+    "object": ob,
+    "expires" : time() + dur,
+  ]);
+
+  return tag;
+}
+
 private nomask int query(
   int which, string cl, string type
 ) {
@@ -150,8 +218,17 @@ private nomask int query(
   return total;
 }
 
+private nomask mapping query_object(
+  int which, function f
+) {
+  mapping src = get_obj_store(which);
+  int *cles = find_keys(src, (: evaluate(f, $(2)) :));
+
+  return copy(filter(src, (: includes($(cles), $1) :)));
+}
+
 private nomask void process(int which) {
-  mapping src = get_store(which);
+  mapping src = get_store(which), src_obj = get_obj_store(which);
   int now = time();
   string cl, type;
   mapping class_data, type_data;
@@ -192,6 +269,14 @@ private nomask void process(int which) {
     if(!sizeof(src[e_cl]))
       map_delete(src, e_cl);
   }
+
+  // Now handle objects separately. The object itself should handle its own
+  // messaging. We're just removing it here.
+  foreach(int tag, mapping item in src_obj) {
+    if(item["expires"] < now) {
+      remove_object_by_tag(which, tag, true);
+    }
+  }
 }
 
 private nomask int remove_by_tag(
@@ -213,6 +298,25 @@ private nomask int remove_by_tag(
     map_delete(src, cl);
 
   return 1;
+}
+
+private nomask void remove_object_by_tag(
+  int which, int tag, int expired
+) {
+  mapping src = get_obj_store(which);
+  mapping item = src[tag];
+  /** @type {STD_ITEM} */ object ob = item["object"];
+
+  catch(call_if(ob, "expire_obj", expired));
+
+  if(objectp(ob))
+    catch(ob->remove());
+
+  if(objectp(ob))
+    catch(destruct(ob));
+
+  map_delete(src, tag);
+
 }
 
 private nomask int remove_by_name(

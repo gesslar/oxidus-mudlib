@@ -20,9 +20,9 @@
  * @param {mixed} f - Function pointer to validate
  * @returns {f is function} 1 if function is valid and callable, 0 otherwise
  * @example
- * function f = (: object->method :);
+ * function f = (: object->method() :);
  * if(valid_function(f)) {
- *     evaluate(f);
+ *   evaluate(f);
  * }
  */
 int valid_function(mixed f) {

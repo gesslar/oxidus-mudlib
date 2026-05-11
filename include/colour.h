@@ -17,10 +17,10 @@
 
 // BG: ^^000^^ - ^^fff^^ | ^^000000^^ - ^^ffffff^^
 #define BG_TRUE_COLOUR_REGEX \
-"\\^\\^((?:"                 \
+"\\{\\^((?:"                 \
 "[a-fA-F0-9]{6}"       "|"  \
 "[a-fA-F0-9]{3}"            \
-"))\\^\\^"
+"))\\^\\}"
 
 #define COLOUR_REGEX      \
 RESET_REGEX           "|" \

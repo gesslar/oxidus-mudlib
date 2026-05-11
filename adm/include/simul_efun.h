@@ -170,6 +170,11 @@ varargs float remainder(mixed a, mixed b);
 int sum(mixed *arr);
 int evaluate_number(int number, string condition);
 float diminish(mixed val, mixed scale);
+float dim_square_root(mixed val, mixed scale);
+float dim_logarithmic(mixed val, mixed scale);
+float dim_hyperbolic(mixed val, mixed scale);
+float dim_exponential_decay(mixed val, mixed scale);
+varargs float dim_sigmoid(mixed val, mixed scale, mixed k);
 
 // File: object.c
 int caller_is(mixed ob);

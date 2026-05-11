@@ -268,3 +268,109 @@ float diminish(mixed val, mixed scale) {
 
   return trinum * scale;
 }
+
+/**
+ * Square-root diminishing return on `val`, scaled by `scale`.
+ * Output grows as the square root of the input ratio: doubling
+ * `val` multiplies the output by sqrt(2). Output equals `scale`
+ * when `val == scale`. Unbounded above.
+ *
+ * @param {mixed} val - The input value.
+ * @param {mixed} scale - The scale factor.
+ * @returns {float} The diminished value.
+ */
+float dim_square_root(mixed val, mixed scale) {
+  float mult;
+
+  if(val < 0)
+    return -dim_square_root(-val, scale);
+
+  mult = val / to_float(scale);
+
+  return sqrt(mult) * scale;
+}
+
+/**
+ * Logarithmic diminishing return on `val`, scaled by `scale`.
+ * Computes `scale * ln(1 + val/scale)`. Output is 0 at `val == 0`
+ * and grows ever more slowly as `val` increases. Unbounded above.
+ *
+ * @param {mixed} val - The input value.
+ * @param {mixed} scale - The scale factor.
+ * @returns {float} The diminished value.
+ */
+float dim_logarithmic(mixed val, mixed scale) {
+  float mult;
+
+  if(val < 0)
+    return -dim_logarithmic(-val, scale);
+
+  mult = val / to_float(scale);
+
+  return log(1.0 + mult) * scale;
+}
+
+/**
+ * Hyperbolic (Michaelis-Menten) diminishing return on `val`,
+ * scaled by `scale`. Output asymptotically approaches `scale` as
+ * `val` grows without bound, and equals `scale / 2` when
+ * `val == scale`.
+ *
+ * @param {mixed} val - The input value.
+ * @param {mixed} scale - The scale factor and asymptotic ceiling.
+ * @returns {float} The diminished value, bounded by `scale`.
+ */
+float dim_hyperbolic(mixed val, mixed scale) {
+  float v, s;
+
+  if(val < 0)
+    return -dim_hyperbolic(-val, scale);
+
+  v = to_float(val);
+  s = to_float(scale);
+
+  return (s * v) / (s + v);
+}
+
+/**
+ * Exponential-decay diminishing return on `val`, scaled by `scale`.
+ * Computes `scale * (1 - e^(-val/scale))`. Output asymptotically
+ * approaches `scale` as `val` grows, and equals roughly
+ * `0.632 * scale` (i.e. `1 - 1/e`) when `val == scale`.
+ *
+ * @param {mixed} val - The input value.
+ * @param {mixed} scale - The scale factor and asymptotic ceiling.
+ * @returns {float} The diminished value, bounded by `scale`.
+ */
+float dim_exponential_decay(mixed val, mixed scale) {
+  float mult;
+
+  if(val < 0)
+    return -dim_exponential_decay(-val, scale);
+
+  mult = val / to_float(scale);
+
+  return (1.0 - exp(-mult)) * scale;
+}
+
+/**
+ * Sigmoid (zero-anchored logistic) diminishing return on `val`,
+ * scaled by `scale`. Computes `scale * (2/(1 + e^-(val/scale)) - 1)`,
+ * producing an S-shaped curve that is 0 at `val == 0`, equals
+ * roughly `0.462 * scale` when `val == scale`, and asymptotically
+ * approaches `scale` as `val` grows.
+ *
+ * @param {mixed} val - The input value.
+ * @param {mixed} scale - The scale factor and asymptotic ceiling.
+ * @returns {float} The diminished value, bounded by `scale`.
+ */
+varargs float dim_sigmoid(mixed val, mixed scale, mixed k) {
+  float mult;
+
+  if(val < 0)
+    return -dim_sigmoid(-val, scale, k);
+
+  mult = to_float(val) * to_float(k);
+
+  return (2.0 / (1.0 + exp(-mult)) - 1.0) * to_float(scale);
+}

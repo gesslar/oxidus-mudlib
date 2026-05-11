@@ -9,7 +9,7 @@
  * @returns {string} The adjusted colour as a `{{RRGGBB}}` colour code
  */
 string gradient_hex(string hex, float step) {
-  int *rgb = COLOUR_D->hext_to_rgb(hex);
+  int *rgb = COLOUR_D->hex_to_rgb(hex);
   float *frgb;
 
   frgb = map(rgb, (: to_float :));

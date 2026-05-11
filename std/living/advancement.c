@@ -178,5 +178,5 @@ int set_xp(int amount) {
  * @param {float} l - The new level.
  */
 void on_advance(object tp, float l) {
-  tell(tp, "{{933}}You have advanced to level {{re1}}" + to_int(l) + "{{re0}}!{{res}}\n");
+  tell(tp, "{^fc0^}{{222}}You have advanced to level {{ul1}}" + to_int(l) + "{{ul0}}!{{res}}\n");
 }

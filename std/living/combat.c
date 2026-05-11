@@ -144,7 +144,6 @@ varargs void swing(int count, int multi) {
   object enemy = highest_threat();
   object weapon;
   string *slots = query_weapon_slots();
-  mapping _wielded;
 
   if(nullp(count))
     count = 1;
@@ -163,19 +162,21 @@ varargs void swing(int count, int multi) {
     return;
   }
 
-  _wielded = query_wielded();
-  _wielded = filter(_wielded, (: objectp($2) :));
-  if(sizeof(_wielded)) {
+  mapping wielded = query_wielded();
+  wielded = filter(wielded, (: objectp($2) :));
+
+  if(sizeof(wielded)) {
     string main_slot = slots[0];
+
     if(multi) {
-      object *poss;
-      poss = filter(_wielded, (: $1 != $(main_slot) :));
-      poss = distinct_array(values(_wielded));
-      weapon = element_of(poss);
+      mapping off_hand = filter(wielded, (: $1 != $(main_slot) :));
+      object *possible = distinct_array(values(off_hand));
+      weapon = element_of(possible);
       multi = 0;
     } else {
-      weapon = _wielded[main_slot];
-      if(random(100) < 5 + query_raw_skill("combat.melee"))
+      weapon = wielded[main_slot];
+
+      if(random(100) < 5 + query_skill_level("combat.melee"))
         multi = 1;
     }
   }
@@ -222,12 +223,10 @@ int next_round() {
  *
  * @public
  * @param {STD_BODY} enemy - The body being struck.
- * @param {object | string} weapon - Wielded weapon, null for
- *                                   unarmed/default, or a skill
- *                                   name string for spells and
- *                                   abilities.
- * @returns {int} 1 if the strike lands, 0 if it misses or the
- *                weapon argument is of an unsupported type.
+ * @param {object | string} weapon - Wielded weapon, null for unarmed/default,
+ *  or a skill name string for spells and abilities.
+ * @returns {int} 1 if the strike lands, 0 if it misses or the weapon argument
+ *  is of an unsupported type.
  */
 public int can_strike(object enemy, mixed weapon) {
   float ac;
@@ -248,8 +247,8 @@ public int can_strike(object enemy, mixed weapon) {
   } else if(stringp(weapon)) {
     skill_name = weapon;
     ac = enemy->query_spell_ac();
-    if(strsrch(weapon, ".spell.") != -1)
-      defence_skill = "combat.defence.evade";
+    if(strsrch(weapon, "arcane.") == 0)
+      defence_skill = "arcane.combat.evade";
     else
       defence_skill = "combat.defence.dodge";
   } else
@@ -267,7 +266,9 @@ public int can_strike(object enemy, mixed weapon) {
           - enemy->query_skill_level(defence_skill)
   ;
 
-  debug("- Chance = %O", chance);
+  debug("->  Chance = %O", chance);
+  chance = 50.0 + dim_sigmoid(chance - 50.0, 45.0, 0.03);
+  debug("->> Chance = %O", chance);
   result = random_float(100.0);
 
   enemy->use_skill(defence_skill);
@@ -281,8 +282,7 @@ public int can_strike(object enemy, mixed weapon) {
  *
  * @private
  * @param {STD_BODY} enemy - The body that dodged.
- * @param {object} weapon - The weapon used (may be null for
- *                          unarmed or NPC defaults).
+ * @param {object} weapon - The weapon used (may be null for unarmed or NPC defaults).
  */
 private fail_strike(object enemy, object weapon) {
   string wname, wtype;
@@ -847,7 +847,7 @@ mapping adjust_protection() {
   mapping _equipment = query_equipped();
   object *obs = values(_equipment), ob;
 
-  { // Defenses
+  { // Defences
     __defence = ([]);
     foreach(ob in obs) {
       mapping def = ob->query_defence();

@@ -48,20 +48,20 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
       if(!same_env_check(tp, victim))
         return;
 
-      if(tp->can_strike(victim, "combat.spell.light")) {
+      if(tp->can_strike(victim, "arcane.discipline.light")) {
         float damage = 5.0 + tp->query_damage();
 
         tp->targetted_action(
-          "{{FF0033}}Motes of light strike $t!{{res}}",
+          "{{"+COLOUR_D->random_bright_hex()+"}}Motes of light strike $t!{{res}}",
           victim
         );
         tp->deliver_damage(victim, damage, "light");
-        tp->use_skill("combat.spell.light");
+        tp->use_skill("arcane.discipline.light", 0.15);
       } else {
         tp->simple_action(
           "The motes of light disperse harmlessly."
         );
-        victim->use_skill("combat.defence.evade");
+        victim->use_skill("arcane.combat.evade", 0.1);
       }
 
       victim->start_attack(tp);

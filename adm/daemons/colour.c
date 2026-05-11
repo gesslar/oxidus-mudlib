@@ -18,11 +18,11 @@ inherit STD_DAEMON;
 inherit DM_CSS;
 
 // Forward declarations
-int *hext_to_rgb(string hex);
+int *hex_to_rgb(string hex);
 int colour_to_greyscale(int colour_code);
 int colourp(string text);
 private int too_dark_check();
-private string cached(string tag);
+private string cached(string tag, int bg);
 private void normalize_hex(string ref hex);
 public int *colour_to_rgb(int colour_code);
 public int rgb_to_colour(int r, int g, int b);
@@ -36,6 +36,8 @@ string wrap(string str, int wrap_at, int indent_at);
 int get_luminance(int *rgb);
 float get_accessible_luminance_multiplier(int *rgb);
 public string rgb_to_hex(int *rgb);
+int *random_bright_rgb();
+string random_bright_hex();
 void cache256();
 void cache_attributes();
 void resync();
@@ -80,9 +82,9 @@ private int too_dark_check() {
  * @returns {string} The cached colour sequence or newly generated one
  * @private
  */
-private string cached(string tag) {
+private string cached(string tag, int bg) {
   if(!cache[tag])
-    cache[tag] = hex_to_sequence(tag);
+    cache[tag] = hex_to_sequence(tag, bg);
 
   return cache[tag];
 }
@@ -167,22 +169,31 @@ public string substitute_colour(string text, string mode) {
   sz = sizeof(matches);
 
   if(mode == "on") {
+    string good;
+
     while(sz--) {
-      if(!matches[sz])
-        continue;
+      switch(matches[sz]) {
+        case 1: { // fg
+          if(good = cached(tags[sz], 0))
+            tags[sz] = good;
+          else
+            tags[sz] = cache[tags[sz]] = hex_to_sequence(tags[sz]);
 
-      string good;
+          break;
+        }
 
-      if(matches[sz] == 2) {
-        if(good = cached(tags[sz]))
-          tags[sz] = good;
-        else
-          tags[sz] = cache[tags[sz]] = hex_to_sequence(tags[sz], 1);
-      } else {
-        if(good = cached(tags[sz]))
-          tags[sz] = good;
-        else
-          tags[sz] = cache[tags[sz]] = hex_to_sequence(tags[sz]);
+        case 2: { // bg
+          if(good = cached(tags[sz], 1))
+            tags[sz] = good;
+          else
+            tags[sz] = cache[tags[sz]] = hex_to_sequence(tags[sz], 1);
+
+          break;
+        }
+
+        default: { // nuffin
+          break;
+        }
       }
     }
   } else {
@@ -408,6 +419,33 @@ float get_accessible_luminance_multiplier(int *rgb) {
   return lum >= minimum_luminance ? 1.0 : minimum_luminance / lum;
 }
 
+/**
+ * Pick a random RGB triple in the bright range. Each channel is
+ * 80-255, so the result avoids the dark end of the spectrum and
+ * stays legible on most terminals without needing the dark-colour
+ * fix-up pass.
+ *
+ * @returns {int*} A 3-element array of { r, g, b }, each in 80-255.
+ */
+int *random_bright_rgb() {
+  return ({
+    80 + random(176),
+    80 + random(176),
+    80 + random(176),
+  });
+}
+
+/**
+ * Pick a random bright colour and return its hex form. Convenience
+ * wrapper over random_bright_rgb() + rgb_to_hex().
+ *
+ * @returns {string} A 6-character hex code (no leading "#").
+ */
+string random_bright_hex() {
+  int *rgb = random_bright_rgb();
+
+  return rgb_to_hex(rgb);
+}
 
 /**
  * Substitutes dark colours with more visible alternatives.
@@ -425,7 +463,7 @@ string substitute_too_dark(string hex) {
   if(find_index(base_colours(), (: $1[0] == $(hex) :)) > -1)
     return hex;
 
-  rgb = hext_to_rgb(hex);
+  rgb = hex_to_rgb(hex);
 
   scale = get_accessible_luminance_multiplier(rgb);
   if(scale == 1.0)
@@ -611,7 +649,7 @@ public string rgb_to_sequence(int *rgb, int mode) {
   return sprintf("\e[%d;2;%d;%d;%dm", bg, r, g, b);
 }
 
-int *hext_to_rgb(string hex) {
+int *hex_to_rgb(string hex) {
   int r, g, b;
 
   normalize_hex(ref hex);
@@ -633,7 +671,7 @@ int *hext_to_rgb(string hex) {
 varargs string hex_to_sequence(string hex, int mode) {
   int *rgb;
 
-  rgb = hext_to_rgb(hex);
+  rgb = hex_to_rgb(hex);
 
   return rgb_to_sequence(rgb, mode);
 }
