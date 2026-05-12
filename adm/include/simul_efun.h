@@ -150,6 +150,8 @@ mixed lpml_encode(string text);
 
 // File: mapping.c
 string pretty_map(mapping map);
+varargs mixed find_key(mapping map, mixed value, mixed arg...);
+varargs mixed *find_keys(mapping map, mixed value, mixed arg...);
 
 // File: messaging.c
 varargs void tell_up(object ob, string str, int msg_type, mixed exclude);
