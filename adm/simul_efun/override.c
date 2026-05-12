@@ -231,3 +231,10 @@ void debug_message(string str) {
   efun::debug_message(sprintf("%s %s", timestamp, str));
   master()->log_file("debug.log", sprintf("%s %s\n", timestamp, str));
 }
+
+string typeof(mixed val) {
+  if(nullp(val))
+    return "undefined";
+
+  return efun::typeof(val);
+}
