@@ -1,5 +1,6 @@
 /**
  * @file /cmds/spell/wither.c
+ *
  * Wither spell.
  *
  * @created 2026-05-11 - Gesslar
