@@ -357,6 +357,7 @@ private mixed render_living(object tp, object room, object target) {
   equipment = target->query_equipped();
   if(sizeof(equipment) || sizeof(wielded)) {
     string *slots = keys(wielded) + keys(equipment);
+    int max = max(map(slots, (: strlen :)));
 
     result += "\n";
     foreach(slot in slots) {

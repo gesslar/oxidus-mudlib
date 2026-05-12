@@ -17,7 +17,7 @@
   value: 25,
   slot: "torso",
   ac: 2.0,
-  defense: {
+  defence: {
     slashing: 2.0,
     piercing: 1.0,
     bludgeoning: 1.0,

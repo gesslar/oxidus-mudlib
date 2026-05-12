@@ -1,11 +1,10 @@
 /**
  * @file /std/living/combat.c
  *
- * Combat module for living objects. Drives the per-round attack
- * loop, threat tracking for current and recently-seen enemies,
- * hit-chance and damage resolution, defence and AC aggregation
- * from equipment, and the weapon/damage fields NPCs use to fight
- * without wielded equipment.
+ * Combat module for living objects. Drives the per-round attack loop, threat
+ * tracking for current and recently-seen enemies, hit-chance and damage
+ * resolution, defence and AC aggregation from equipment, and the weapon/damage
+ * fields NPCs use to fight without wielded equipment.
  *
  * @created 2024-07-24 - Gesslar
  * @last_modified 2024-07-24 - Gesslar
@@ -52,10 +51,10 @@ private nosave object __killed_by_ob;
 private nosave int __no_combat = 0;
 
 /**
- * Per-tick combat heartbeat. Stops the loop if dead or
- * unconscious, prunes stale enemies, picks the highest-threat
- * target, executes a swing, broadcasts the GMCP combat status,
- * and schedules the next round if one is not already pending.
+ * Per-tick combat heartbeat. Stops the loop if dead or unconscious, prunes
+ * stale enemies, picks the highest-threat target, executes a swing, broadcasts
+ * the GMCP combat status, and schedules the next round if one is not already
+ * pending.
  */
 void combat_round() {
   /** @type {STD_BODY} */ object victim;
@@ -94,10 +93,9 @@ void combat_round() {
 }
 
 /**
- * Begin attacking a victim. Adds it to the current and seen
- * enemy tables, schedules the first combat round, and tells the
- * victim to start attacking back. NPCs also push the victim
- * into combat memory.
+ * Begin attacking a victim. Adds it to the current and seen enemy tables,
+ * schedules the first combat round, and tells the victim to start attacking
+ * back. NPCs also push the victim into combat memory.
  *
  * @param {STD_BODY} victim - The body to engage.
  * @returns {int} 1 if a new engagement was started, 0 if the
@@ -127,16 +125,15 @@ int start_attack(object victim) {
 }
 
 /**
- * Recursively performs a sequence of attack swings against the
- * current highest-threat enemy. Picks the main weapon for the
- * first swing and may roll into an off-hand swing for the next
- * iteration based on the combat.melee skill. Stops early if the
- * attacker is exhausted, the enemy is invalid, or count is
- * exhausted.
+ * Recursively performs a sequence of attack swings against the current
+ * highest-threat enemy. Picks the main weapon for the first swing and may roll
+ * into an off-hand swing for the next iteration based on the combat.melee
+ * skill. Stops early if the attacker is exhausted, the enemy is invalid, or
+ * count is exhausted.
  *
  * @param {int} [count=1] - Remaining swings to perform.
- * @param {int} [multi] - Non-zero if this iteration should pick
- *                        an off-hand weapon instead of the main.
+ * @param {int} [multi] - Non-zero if this iteration should pick an off-hand
+ *  weapon instead of the main.
  */
 varargs void swing(int count, int multi) {
   multi = !!multi;
@@ -192,9 +189,8 @@ varargs void swing(int count, int multi) {
 }
 
 /**
- * Schedules the next combat round. Adds up to 1.5 seconds of
- * jitter to the configured attack speed so attackers do not all
- * fire on the same tick.
+ * Schedules the next combat round. Adds up to 1.5 seconds of jitter to the
+ * configured attack speed so attackers do not all fire on the same tick.
  *
  * @returns {int} The call_out handle for the scheduled round.
  */
@@ -209,15 +205,15 @@ int next_round() {
 }
 
 /**
- * Rolls the hit chance for an attempted strike. The weapon
- * argument selects how the roll is computed:
+ * Rolls the hit chance for an attempted strike. The weapon argument selects
+ * how the roll is computed:
  *
- *   - object (or null) — physical attack against the enemy's
- *     AC, defended by combat.defence.dodge.
- *   - string — treated as a skill name (e.g. an ability or
- *     spell). Spell paths defend against combat.defence.evade,
- *     other skill paths against combat.defence.dodge, and the
- *     enemy's spell AC is used in place of physical AC.
+ *  - object (or null) — physical attack against the enemy's AC, defended by
+ *    combat.defence.dodge.
+ *  - string — treated as a skill name (e.g. an ability or spell). Spell paths
+ *    defend against combat.defence.evade, other skill paths against
+ *    combat.defence.dodge, and the enemy's spell AC is used in place of
+ *    physical AC.
  *
  * The defending skill is exercised regardless of outcome.
  *
@@ -277,12 +273,13 @@ public int can_strike(object enemy, mixed weapon) {
 }
 
 /**
- * Emits the miss messages for a failed strike to the attacker,
- * the victim, and the surrounding environment.
+ * Emits the miss messages for a failed strike to the attacker, the victim, and
+ * the surrounding environment.
  *
  * @private
  * @param {STD_BODY} enemy - The body that dodged.
- * @param {object} weapon - The weapon used (may be null for unarmed or NPC defaults).
+ * @param {object} weapon - The weapon used (may be null for unarmed or NPC
+ *  defaults).
  */
 private fail_strike(object enemy, object weapon) {
   string wname, wtype;
@@ -301,14 +298,12 @@ private fail_strike(object enemy, object weapon) {
 }
 
 /**
- * Resolves a successful strike. Computes damage from a base
- * percentage of the enemy's max HP plus level and skill bonuses,
- * minus the enemy's level, type-specific defence, and combat
- * defence skill, with a hidden bonus when the enemy is past
- * exhaustion. Sends the hit messages, exercises the weapon
- * skill, delivers damage, drains the attacker's MP, records
- * threat in both the current and seen tables, and triggers any
- * weapon proc.
+ * Resolves a successful strike. Computes damage from a base percentage of the
+ * enemy's max HP plus level and skill bonuses, minus the enemy's level,
+ * type-specific defence, and combat defence skill, with a hidden bonus when
+ * the enemy is past exhaustion. Sends the hit messages, exercises the weapon
+ * skill, delivers damage, drains the attacker's MP, records threat in both the
+ * current and seen tables, and triggers any weapon proc.
  *
  * @param {STD_BODY} enemy - The body being struck.
  * @param {STD_WEAPON} [weapon] - The weapon used, or null for unarmed
@@ -381,19 +376,16 @@ void strike_enemy(object enemy, object weapon) {
 }
 
 /**
- * Resolves the descriptive fields used when striking with a
- * given weapon. For an actual weapon object the name, damage
- * type, derived combat skill, and damage coefficient are read
- * from the weapon. For unarmed players the result is fists with
- * the unarmed combat skill. For NPCs without a weapon the
- * configured weapon name and type are used along with the
- * NPC's base damage.
+ * Resolves the descriptive fields used when striking with a given weapon. For
+ * an actual weapon object the name, damage type, derived combat skill, and
+ * damage coefficient are read from the weapon. For unarmed players the result
+ * is fists with the unarmed combat skill. For NPCs without a weapon the
+ * configured weapon name and type are used along with the NPC's base damage.
  *
- * @param {STD_WEAPON} weapon - The weapon object, or null for
- *                          unarmed or NPC defaults.
- * @returns {([ string: mixed ])} Mapping with keys "name"
- *          (string), "type" (string), "skill" (string), and
- *          "base" (float).
+ * @param {STD_WEAPON} weapon - The weapon object, or null for unarmed or NPC
+ *  defaults.
+ * @returns {([ string: mixed ])} Mapping with keys "name" (string), "type"
+ *  (string), "skill" (string), and "base" (float).
  */
 mapping query_weapon_info(object weapon) {
   string wname, wtype;
@@ -443,15 +435,14 @@ int attacking(object victim) {
 }
 
 /**
- * Removes the victim from the current enemy table, optionally
- * also from the seen-enemies table.
+ * Removes the victim from the current enemy table, optionally also from the
+ * seen-enemies table.
  *
  * @param {STD_BODY} victim - The body to disengage from.
- * @param {int} [seen] - If non-zero, also drop the victim from
- *                       the seen-enemies table.
- * @returns {int} 1 if a removal occurred, 0 if neither table
- *                contained the victim, -1 if victim was missing
- *                or not currently engaged.
+ * @param {int} [seen] - If non-zero, also drop the victim from the
+ *  seen-enemies table.
+ * @returns {int} 1 if a removal occurred, 0 if neither table contained the
+ *  victim, -1 if victim was missing or not currently engaged.
  */
 varargs int stop_attack(object victim, int seen) {
   if(!victim)
@@ -474,9 +465,9 @@ varargs int stop_attack(object victim, int seen) {
 }
 
 /**
- * Disengages from every current enemy. Cancels the pending
- * combat round, clears the current enemy table, broadcasts an
- * empty GMCP combat status, and runs a final cleanup pass.
+ * Disengages from every current enemy. Cancels the pending combat round,
+ * clears the current enemy table, broadcasts an empty GMCP combat status, and
+ * runs a final cleanup pass.
  */
 void stop_all_attacks() {
   if(find_call_out(__next_combat_round) != -1)
@@ -499,17 +490,15 @@ void stop_all_attacks() {
 /**
  * Returns whether this body has any current enemies.
  *
- * @returns {int} 1 if engaged with at least one enemy, 0
- *                otherwise.
+ * @returns {int} 1 if engaged with at least one enemy, 0 otherwise.
  */
 int in_combat() {
   return sizeof(__current_enemies) > 0;
 }
 
 /**
- * Returns whether the victim has been seen recently — i.e. is
- * tracked in the seen-enemies table even if not currently
- * engaged.
+ * Returns whether the victim has been seen recently — i.e. is tracked in the
+ * seen-enemies table even if not currently engaged.
  *
  * @param {STD_BODY} victim - The body to test.
  * @returns {int} 1 if present in the seen table, 0 otherwise.
@@ -543,8 +532,8 @@ int current_enemy(object victim) {
 /**
  * Returns a shallow copy of the current enemy threat table.
  *
- * @returns {([ STD_BODY: float ])} Copy of the current enemies
- *          mapping, keyed by enemy and valued by threat.
+ * @returns {([ STD_BODY: float ])} Copy of the current enemies mapping, keyed
+ *  by enemy and valued by threat.
  */
 mapping current_enemies() {
   return copy(__current_enemies);
@@ -553,8 +542,8 @@ mapping current_enemies() {
 /**
  * Returns the current enemy with the highest accumulated threat.
  *
- * @returns {STD_BODY} The highest-threat enemy, or 0 if no
- *                     current enemies exist.
+ * @returns {STD_BODY} The highest-threat enemy, or 0 if no current enemies
+ *  exist.
  */
 object highest_threat() {
   object *enemies;
@@ -638,10 +627,9 @@ object lowest_seen_threat() {
 }
 
 /**
- * Filters the current enemy table down to valid enemies. If the
- * table empties as a result, clears the next-round handle,
- * tells the body that combat is over (when alive), and broadcasts
- * an empty GMCP combat status.
+ * Filters the current enemy table down to valid enemies. If the table empties
+ * as a result, clears the next-round handle, tells the body that combat is
+ * over (when alive), and broadcasts an empty GMCP combat status.
  */
 void clean_up_enemies() {
   if(is_dead())
@@ -666,12 +654,11 @@ void clean_up_enemies() {
 }
 
 /**
- * Tests whether an enemy is still a valid combat target — same
- * environment as this body and not already dead.
+ * Tests whether an enemy is still a valid combat target — same environment as
+ * this body and not already dead.
  *
- * Declared varargs so it can be passed directly as a filter
- * callback over the threat mappings, where the iterator hands
- * in a value alongside the key.
+ * Declared varargs so it can be passed directly as a filter callback over the
+ * threat mappings, where the iterator hands in a value alongside the key.
  *
  * @param {STD_BODY} enemy - The candidate enemy.
  * @returns {int} 1 if still a valid target, 0 otherwise.
@@ -687,18 +674,17 @@ varargs int valid_enemy(object enemy) {
 }
 
 /**
- * Filters the seen-enemies table down to entries that are still
- * valid (objects that are not dead).
+ * Filters the seen-enemies table down to entries that are still valid (objects
+ * that are not dead).
  */
 void clean_up_seen_enemies() {
   __seen_enemies = filter(__seen_enemies, (: valid_seen_enemy :));
 }
 
 /**
- * Tests whether a seen-enemy entry is still worth keeping —
- * the value must be a live object. Unlike valid_enemy, no
- * environment check is performed; seen enemies can be tracked
- * across rooms.
+ * Tests whether a seen-enemy entry is still worth keeping — the value must be
+ * a live object. Unlike valid_enemy, no environment check is performed; seen
+ * enemies can be tracked across rooms.
  *
  * @param {STD_BODY} enemy - The candidate seen enemy.
  * @returns {int} 1 if the entry should be retained, 0 otherwise.
@@ -714,13 +700,12 @@ varargs int valid_seen_enemy(object enemy) {
 }
 
 /**
- * Adds threat for a current enemy and returns the new
- * accumulated total. No-op if the enemy is no longer valid.
+ * Adds threat for a current enemy and returns the new accumulated total. No-op
+ * if the enemy is no longer valid.
  *
  * @param {STD_BODY} enemy - The enemy whose threat to adjust.
  * @param {float} amount - Threat to add (may be negative).
- * @returns {float} The new threat total, or 0.0 if the enemy
- *                  was rejected.
+ * @returns {float} The new threat total, or 0.0 if the enemy was rejected.
  */
 float add_threat(object enemy, float amount) {
   if(!valid_enemy(enemy))
@@ -732,14 +717,13 @@ float add_threat(object enemy, float amount) {
 }
 
 /**
- * Adds threat for a seen enemy and returns the new accumulated
- * total. No-op if the seen entry is no longer valid.
+ * Adds threat for a seen enemy and returns the new accumulated total. No-op if
+ * the seen entry is no longer valid.
  *
- * @param {STD_BODY} enemy - The enemy whose seen threat to
- *                           adjust.
+ * @param {STD_BODY} enemy - The enemy whose seen threat to adjust.
  * @param {float} amount - Threat to add (may be negative).
- * @returns {float} The new seen-threat total, or 0.0 if the
- *                  entry was rejected.
+ * @returns {float} The new seen-threat total, or 0.0 if the entry was
+ *  rejected.
  */
 float add_seen_threat(object enemy, float amount) {
   if(!valid_seen_enemy(enemy))
@@ -751,8 +735,8 @@ float add_seen_threat(object enemy, float amount) {
 }
 
 /**
- * Adjusts the attack speed by a delta and clamps the result to
- * the legal range of 0.5 to 10.0 seconds per round.
+ * Adjusts the attack speed by a delta and clamps the result to the legal range
+ * of 0.5 to 10.0 seconds per round.
  *
  * @param {float} amount - Delta to apply (may be negative).
  * @returns {float} The new clamped attack speed.
@@ -766,8 +750,8 @@ float add_attack_speed(float amount) {
 }
 
 /**
- * Sets the raw attack speed in seconds per round. No clamping
- * is applied; callers are responsible for staying in range.
+ * Sets the raw attack speed in seconds per round. No clamping is applied;
+ * callers are responsible for staying in range.
  *
  * @param {float} speed - The new attack speed in seconds.
  */
@@ -785,11 +769,10 @@ float query_attack_speed() {
 }
 
 /**
- * Replaces the per-type defence mapping wholesale and triggers
- * a recompute from equipment.
+ * Replaces the per-type defence mapping wholesale and triggers a recompute
+ * from equipment.
  *
- * @param {([ string: float ])} def - New defence mapping keyed
- *                                    by damage type.
+ * @param {([ string: float ])} def - New defence mapping keyed by damage type.
  */
 void set_defence(mapping def) {
   __defence = def;
@@ -798,8 +781,8 @@ void set_defence(mapping def) {
 }
 
 /**
- * Sets a single damage-type defence value and triggers a
- * recompute from equipment.
+ * Sets a single damage-type defence value and triggers a recompute from
+ * equipment.
  *
  * @param {string} type - The damage type (e.g. "fire", "slashing").
  * @param {float} amount - Defence value for that type.
@@ -816,8 +799,7 @@ void add_defence(string type, float amount) {
 /**
  * Returns a shallow copy of the per-type defence mapping.
  *
- * @returns {([ string: float ])} Damage-type to defence-value
- *          mapping.
+ * @returns {([ string: float ])} Damage-type to defence-value mapping.
  */
 mapping query_defence() {
   return copy(__defence);
@@ -837,9 +819,9 @@ float query_defence_amount(string type) {
 }
 
 /**
- * Recomputes the per-type defence mapping and total AC by
- * summing the corresponding values from every equipped item.
- * Called whenever defences are set or equipment changes.
+ * Recomputes the per-type defence mapping and total AC by summing the
+ * corresponding values from every equipped item. Called whenever defences are
+ * set or equipment changes.
  *
  * @returns {([ string: float ])} The recomputed defence mapping.
  */
@@ -874,8 +856,8 @@ mapping adjust_protection() {
 }
 
 /**
- * Returns the cached total armour class aggregated across all
- * equipped items by adjust_protection().
+ * Returns the cached total armour class aggregated across all equipped items
+ * by adjust_protection().
  *
  * @returns {float} The current total AC.
  */
@@ -884,8 +866,8 @@ float query_ac() {
 }
 
 /**
- * Returns the cached total armour class aggregated across all
- * equipped items by adjust_protection().
+ * Returns the cached total armour class aggregated across all equipped items
+ * by adjust_protection().
  *
  * @returns {float} The current total AC.
  */
@@ -903,8 +885,8 @@ object last_damaged_by() {
 }
 
 /**
- * Records a body as the most recent source of damage. Called
- * from the damage pipeline.
+ * Records a body as the most recent source of damage. Called from the damage
+ * pipeline.
  *
  * @param {STD_BODY} ob - The damaging body.
  * @returns {STD_BODY} The same body that was set.
@@ -924,8 +906,8 @@ object killed_by() {
 }
 
 /**
- * Records the body credited with killing this one. Called from
- * the death sequence.
+ * Records the body credited with killing this one. Called from the death
+ * sequence.
  *
  * @param {STD_BODY} ob - The killer.
  * @returns {STD_BODY} The same body that was set.
@@ -938,51 +920,48 @@ object set_killed_by(object ob) {
 // The following are generally used by NPCs, but are available for special
 // circumstances for players.
 
-private nomask float _damage = 0.0;
-private nomask string _weapon_name = "fist";
-private nomask string _weapon_type = "bludgeoning";
+private nomask float __damage = 0.0;
+private nomask string __weapon_name = "fist";
+private nomask string __weapon_type = "bludgeoning";
 
 /**
- * Sets the NPC default base damage. Negative values are
- * rejected.
+ * Sets the NPC default base damage. Negative values are rejected.
  *
  * @param {float} x - The new base damage (must be >= 0).
  * @returns {float} The new damage, or 0.0 if rejected.
  */
 float set_damage(float x) {
-  if(x < 0.0)
+  if(x <= 0.0)
     return 0.0;
 
-  return _damage = x;
+  return __damage = x;
 }
 
 /**
- * Returns a randomised damage roll for unarmed/NPC attacks. If
- * no base damage has been configured, the roll scales with the
- * NPC's level.
+ * Returns a randomised damage roll for unarmed/NPC attacks. If no base damage
+ * has been configured, the roll scales with the NPC's level.
  *
  * @returns {float} A randomised damage value.
  */
 float query_damage() {
-  if(_damage <= 0.0)
-    return random_float(query_level() * 2.0);
+  if(__damage <= 0.0)
+    return query_level() + random_float(query_level());
 
-  return random_float(_damage);
+  return random_float(__damage);
 }
 
 /**
- * Sets the NPC default weapon name (used in combat messages
- * when no real weapon is wielded). Non-string values are
- * ignored.
+ * Sets the NPC default weapon name (used in combat messages when no real
+ * weapon is wielded). Non-string values are ignored.
  *
  * @param {string} str - The new weapon name.
  * @returns {string} The current weapon name after the call.
  */
 string set_weapon_name(string str) {
   if(!stringp(str))
-    return _weapon_name;
+    return __weapon_name;
 
-  return _weapon_name = str;
+  return __weapon_name = str;
 }
 
 /**
@@ -991,21 +970,21 @@ string set_weapon_name(string str) {
  * @returns {string} The configured weapon name.
  */
 string query_weapon_name() {
-  return _weapon_name;
+  return __weapon_name;
 }
 
 /**
- * Sets the NPC default damage type (used when no real weapon
- * is wielded). Non-string values are ignored.
+ * Sets the NPC default damage type (used when no real weapon is wielded).
+ * Non-string values are ignored.
  *
  * @param {string} str - The new damage type.
  * @returns {string} The current damage type after the call.
  */
 string set_weapon_type(string str) {
   if(!stringp(str))
-    return _weapon_type;
+    return __weapon_type;
 
-  return _weapon_type = str;
+  return __weapon_type = str;
 }
 
 /**
@@ -1014,15 +993,14 @@ string set_weapon_type(string str) {
  * @returns {string} The configured damage type.
  */
 string query_weapon_type() {
-  return _weapon_type;
+  return __weapon_type;
 }
 
 /**
- * Tests whether combat with the given victim is allowed in the
- * current context. Probes optional hooks on the victim and the
- * environment via call_other — any responder that returns
- * truthy vetoes the attack. Targets that do not implement these
- * hooks simply return 0, which is the common case.
+ * Tests whether combat with the given victim is allowed in the current
+ * context. Probes optional hooks on the victim and the environment via
+ * call_other — any responder that returns truthy vetoes the attack. Targets
+ * that do not implement these hooks simply return 0, which is the common case.
  *
  * @param {object} victim - The object that would be attacked.
  *                          Any object is accepted; the relevant
@@ -1045,8 +1023,8 @@ mixed prevent_combat(object victim) {
 }
 
 /**
- * Sets the no-combat flag. When set, this body cannot be
- * targeted by attackers (@link prevent_combat).
+ * Sets the no-combat flag. When set, this body cannot be targeted by attackers
+ * (@link prevent_combat).
  *
  * @param {int} x - Truthy to enable, zero to disable.
  */

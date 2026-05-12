@@ -48,6 +48,8 @@ float deliver_damage(object victim, float damage, string type) {
   if(damage < 0)
     return 0;
 
+  tell(this_object(), sprintf("delivering %O %O damage\n", damage, type));
+
   return victim->receive_damage(this_object(), damage, type);
 }
 

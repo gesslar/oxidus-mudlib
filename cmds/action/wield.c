@@ -12,10 +12,41 @@
 
 inherit STD_ACT;
 
+void setup() {
+  usage_text =
+"wield - List the weapons you are currently wielding.\n"
+"wield <weapon> - Wield a weapon in your primary hand.\n";
+  help_text =
+"Wield a weapon. With no argument, lists the weapons you are "
+"currently wielding. Otherwise, wields the named weapon in your "
+"primary hand.\n\n"
+"See also: unwield, eq\n";
+}
+
 mixed main(/** @type {STD_BODY} */ object tp, string str) {
   /** @type {STD_WEAPON} */
   object ob;
   mixed result;
+
+  if(!str) {
+    mapping wielded = tp->query_wielded();
+    string *slots, slot;
+    string out;
+    int max;
+
+    if(!sizeof(wielded))
+      return "You are not wielding anything.";
+
+    slots = keys(wielded);
+    max = max(map(slots, (: strlen :)));
+
+    out = "You are wielding the following weapons:\n\n";
+    foreach(slot in slots)
+      out += sprintf("%*s : %s\n", max, capitalize(slot),
+        get_short(wielded[slot]));
+
+    return out;
+  }
 
   if(!ob = find_target(tp, str, tp))
     return "You do not have that item.";

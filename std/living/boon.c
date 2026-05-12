@@ -144,7 +144,7 @@ private nomask mapping get_store(int which) {
 private nomask mapping get_obj_store(int which) {
   mapping store = which == BOON ? __boon_obj : __curse_obj;
 
-  each(store, (: !objectp($2["object"]) && map_delete($1) :));
+  each(store, (: !objectp($2["object"]) && map_delete($(store), $1) :));
 
   return store;
 }
@@ -211,7 +211,7 @@ private nomask int query(
   if(!of(cl, src) || !of(type, src[cl]))
     return 0;
 
-  foreach(mapping data in src[cl][type]) {
+  foreach(int tag, mapping data in src[cl][type]) {
     total += data["amt"];
   }
 
@@ -222,7 +222,7 @@ private nomask mapping query_object(
   int which, function f
 ) {
   mapping src = get_obj_store(which);
-  int *cles = find_keys(src, (: evaluate(f, $(2)) :));
+  int *cles = find_keys(src, (: evaluate($(f), $1) :));
 
   return copy(filter(src, (: includes($(cles), $1) :)));
 }
