@@ -1,5 +1,6 @@
 /**
  * @file /cmds/spell/shard.c
+ *
  * Shard spell.
  *
  * @created 2026-05-11 - Gesslar

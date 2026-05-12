@@ -961,6 +961,12 @@ File headers should use this format:
  */
 ```
 
+Structural rules — each of these blank lines is required:
+
+- A blank line **between `@file` and the description**.
+- A blank line **between the description and the `@created` block**.
+- A blank line **between `@last_modified` and `@history`**.
+
 When encountering file headers that do not follow this format, update them.
 Preserve the existing information (author, dates, history) but restructure
 into the standard format. Clarify any vague or unclear descriptions.

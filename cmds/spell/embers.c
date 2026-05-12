@@ -1,5 +1,6 @@
 /**
  * @file /cmds/spell/embers.c
+ *
  * Embers spell.
  *
  * @created 2026-05-11 - Gesslar

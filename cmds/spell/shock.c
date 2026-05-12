@@ -1,5 +1,6 @@
 /**
  * @file /cmds/spell/shock.c
+ *
  * Shock spell.
  *
  * @created 2026-05-11 - Gesslar
