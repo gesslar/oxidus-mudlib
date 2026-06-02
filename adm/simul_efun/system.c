@@ -118,7 +118,13 @@ string arch() {
 /**
  * Retrieves a specific configuration value from the MUD config.
  *
- * @param {string} str - The configuration key to retrieve.
+ * Thin wrapper around `CONFIG_D->get_mud_config`. The key may be a
+ * flat top-level key (`"PORT"`) or a dot-separated path into nested
+ * mappings (`"RESOURCE.GLOBAL_SPAWN_CHANCE"`); the daemon resolves
+ * dotted paths via `dot_walk`.
+ *
+ * @param {string} str - The configuration key or dot-separated path
+ *                       to retrieve.
  * @returns {mixed} The configuration value.
  */
 mixed mud_config(string str) {
@@ -132,7 +138,7 @@ mixed mud_config(string str) {
  * @returns {string} The log directory.
  */
 string log_dir() {
-  return (string)get_config(__LOG_DIR__);
+  return CONFIG_D->get_mud_config("LOG_DIR");
 }
 
 /**
@@ -233,13 +239,14 @@ class SystemMessage {
 private varargs class SystemMessage construct_message_from_args(string type, mixed args...) {
   string str;
   class SystemMessage system_message;
-  object ob;
 
   if(!sizeof(args))
     return 0;
 
   if(!stringp(args[0]) && !objectp(args[0]))
     return 0;
+
+  /** @type {STD_PLAYER} */ object ob;
 
   if(objectp(args[0])) {
     ob = args[0];
@@ -250,11 +257,26 @@ private varargs class SystemMessage construct_message_from_args(string type, mix
     args = args[1..];
   }
 
+  int include_decoration = 0;
+
+  if(!(objectp(ob) && interactive(ob))) {
+    include_decoration = 0;
+  } else {
+    if(ob->has_screenreader()) {
+      include_decoration = 0;
+    } else {
+      include_decoration =
+        ob->query_pref("feedback", "on") == "on"
+        ? true
+        : false;
+    }
+  }
+
   system_message = new(class SystemMessage,
     type: type,
     message: _format_message(
       type,
-      objectp(ob) && interactive(ob),
+      include_decoration,
       str,
       args...
     )

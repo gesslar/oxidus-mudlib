@@ -190,8 +190,7 @@ private nomask int apply_object(
   if(!objectp(ob) || nullp(dur) || !intp(dur) || dur < 0)
     return 0;
 
-  mapping found = find_key(src, (: $2["object"] == $(ob) :));
-  if(found)
+  if(find_key(src, (: $1["object"] == $(ob) :)))
     return 0;
 
   src[tag] = ([

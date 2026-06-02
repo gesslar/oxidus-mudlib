@@ -16,189 +16,189 @@
 #include <module.h>
 #include <combat.h>
 
-private nomask float hp, max_hp, sp, max_sp, mp, max_mp;
-private nomask int dead = false;
-private nomask nosave int tick;
-private nomask nosave int regen_interval_pulses; // Number of pulses to trigger a regen
+private nomask float __hp, __max_hp, __sp, __max_sp, __mp, __max_mp;
+private nomask int __dead = false;
+private nomask nosave int __tick;
+private nomask nosave int __regen_interval_pulses; // Number of pulses to trigger a regen
 
 void init_vitals() {
-  hp = hp || 100.0;
-  max_hp = max_hp || 100.0;
-  sp = sp || 100.0;
-  max_sp = max_sp || 100.0;
-  mp = mp || 100.0;
-  max_mp = max_mp || 100.0;
+  __hp = __hp ?? 100.0;
+  __max_hp = __max_hp ?? 100.0;
+  __sp = __sp ?? 100.0;
+  __max_sp = __max_sp ?? 100.0;
+  __mp = __mp || 100.0;
+  __max_mp = __max_mp ?? 100.0;
 
   // Calculate regen interval based on the product of HEART_PULSE and
   // HEARTBEATS_TO_REGEN.
   update_regen_interval();
 }
 
-float query_hp() { return hp; }
+float query_hp() { return __hp; }
 varargs float query_max_hp(int raw) {
   if(raw)
-    return max_hp;
+    return __max_hp;
 
-  return max_hp + query_effective_boon("vital", "max_hp");
+  return __max_hp + query_effective_boon("vital", "max_hp");
 }
-float hp_ratio() { return percent(hp, query_max_hp()); }
+float hp_ratio() { return percent(query_hp(), query_max_hp()); }
 
-float query_sp() { return sp; }
+float query_sp() { return __sp; }
 varargs float query_max_sp(int raw) {
   if(raw)
-    return max_sp;
+    return __max_sp;
 
-  return max_sp + query_effective_boon("vital", "max_sp");
+  return __max_sp + query_effective_boon("vital", "max_sp");
 }
-float sp_ratio() { return percent(sp, query_max_sp()); }
+float sp_ratio() { return percent(query_sp(), query_max_sp()); }
 
-float query_mp() { return mp; }
+float query_mp() { return __mp; }
 varargs float query_max_mp(int raw) {
   if(raw)
-    return max_mp;
+    return __max_mp;
 
-  return max_mp + query_effective_boon("vital", "max_mp");
+  return __max_mp + query_effective_boon("vital", "max_mp");
 }
-float mp_ratio() { return percent(mp, query_max_mp()); }
+float mp_ratio() { return percent(query_mp(), query_max_mp()); }
 
 void set_hp(float x) {
-  hp = to_float(x);
+  __hp = to_float(x);
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_HP: sprintf("%.2f", hp),
+    GMCP_LBL_CHAR_VITALS_HP: sprintf("%.2f", __hp),
   ]));
 }
 void set_max_hp(float x) {
-  max_hp = to_float(x);
+  __max_hp = to_float(x);
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_MAX_HP: sprintf("%.2f", max_hp),
+    GMCP_LBL_CHAR_VITALS_MAX_HP: sprintf("%.2f", __max_hp),
   ]));
 }
 
 void set_sp(float x) {
-  sp = to_float(x);
+  __sp = to_float(x);
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_SP: sprintf("%.2f", sp),
+    GMCP_LBL_CHAR_VITALS_SP: sprintf("%.2f", __sp),
   ]));
 }
 
 void set_max_sp(float x) {
-  max_sp = to_float(x);
+  __max_sp = to_float(x);
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_MAX_SP: sprintf("%.2f", max_sp),
+    GMCP_LBL_CHAR_VITALS_MAX_SP: sprintf("%.2f", __max_sp),
   ]));
 }
 
 void set_mp(float x) {
-  mp = to_float(x);
+  __mp = to_float(x);
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_MP: sprintf("%.2f", mp),
+    GMCP_LBL_CHAR_VITALS_MP: sprintf("%.2f", __mp),
   ]));
 }
 
 void set_max_mp(float x) {
-  max_mp = to_float(x);
+  __max_mp = to_float(x);
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_MAX_MP: sprintf("%.2f", max_mp),
+    GMCP_LBL_CHAR_VITALS_MAX_MP: sprintf("%.2f", __max_mp),
   ]));
 }
 
 float adjust_hp(float x) {
-  hp += to_float(x);
+  __hp += to_float(x);
 
-  if(hp > max_hp)
-    hp = max_hp;
+  if(__hp > __max_hp)
+    __hp = __max_hp;
 
-  if(hp <= 0.0)
-      hp = 0.0;
+  if(__hp <= 0.0)
+      __hp = 0.0;
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_HP: sprintf("%.2f", hp),
+    GMCP_LBL_CHAR_VITALS_HP: sprintf("%.2f", __hp),
   ]));
 
-  return hp;
+  return __hp;
 }
 
 float adjust_max_hp(float x) {
-  max_hp += to_float(x);
+  __max_hp += to_float(x);
 
-  if(max_hp < 0.0)
-    max_hp = 0.0;
+  if(__max_hp < 0.0)
+    __max_hp = 0.0;
 
-  if(hp > max_hp)
-    hp = max_hp;
+  if(__hp > __max_hp)
+    __hp = __max_hp;
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_HP: sprintf("%.2f", hp),
-    GMCP_LBL_CHAR_VITALS_MAX_HP: sprintf("%.2f", max_hp),
+    GMCP_LBL_CHAR_VITALS_HP: sprintf("%.2f", __hp),
+    GMCP_LBL_CHAR_VITALS_MAX_HP: sprintf("%.2f", __max_hp),
   ]));
 
-  return max_hp;
+  return __max_hp;
 }
 
 float adjust_sp(float x) {
-  sp += to_float(x);
+  __sp += to_float(x);
 
-  if(sp > max_sp)
-    sp = max_sp;
+  if(__sp > __max_sp)
+    __sp = __max_sp;
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_SP: sprintf("%.2f", sp),
+    GMCP_LBL_CHAR_VITALS_SP: sprintf("%.2f", __sp),
   ]));
 
-  return sp;
+  return __sp;
 }
 
 float adjust_max_sp(float x) {
-  max_sp += to_float(x);
+  __max_sp += to_float(x);
 
-  if(max_sp < 0.0)
-    max_sp = 0.0;
+  if(__max_sp < 0.0)
+    __max_sp = 0.0;
 
-  if(sp > max_sp)
-    sp = max_sp;
+  if(__sp > __max_sp)
+    __sp = __max_sp;
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_SP: sprintf("%.2f", sp),
-    GMCP_LBL_CHAR_VITALS_MAX_SP: sprintf("%.2f", max_sp),
+    GMCP_LBL_CHAR_VITALS_SP: sprintf("%.2f", __sp),
+    GMCP_LBL_CHAR_VITALS_MAX_SP: sprintf("%.2f", __max_sp),
   ]));
 
-  return max_sp;
+  return __max_sp;
 }
 
 float adjust_mp(float x) {
-  mp += to_float(x);
+  __mp += to_float(x);
 
-  if(mp > max_mp)
-    mp = max_mp;
+  if(__mp > __max_mp)
+    __mp = __max_mp;
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_MP: sprintf("%.2f", mp),
+    GMCP_LBL_CHAR_VITALS_MP: sprintf("%.2f", __mp),
   ]));
 
-  return mp;
+  return __mp;
 }
 
 float adjust_max_mp(float x) {
-  max_mp += to_float(x);
+  __max_mp += to_float(x);
 
-  if(max_mp < 0.0)
-    max_mp = 0.0;
+  if(__max_mp < 0.0)
+    __max_mp = 0.0;
 
-  if(mp > max_mp)
-    mp = max_mp;
+  if(__mp > __max_mp)
+    __mp = __max_mp;
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_VITALS, ([
-    GMCP_LBL_CHAR_VITALS_MP: sprintf("%.2f", mp),
-    GMCP_LBL_CHAR_VITALS_MAX_MP: sprintf("%.2f", max_mp),
+    GMCP_LBL_CHAR_VITALS_MP: sprintf("%.2f", __mp),
+    GMCP_LBL_CHAR_VITALS_MAX_MP: sprintf("%.2f", __max_mp),
   ]));
 
-  return max_mp;
+  return __max_mp;
 }
 
 protected void heal_tick(int force: (: 0 :)) {
@@ -210,15 +210,15 @@ protected void heal_tick(int force: (: 0 :)) {
   if(in_combat())
     return;
 
-  if(++tick >= regen_interval_pulses || force) {
+  if(++__tick >= __regen_interval_pulses || force) {
     if(!force)
-      tick = 0;
+      __tick = 0;
 
-    if(hp < max_hp)
+    if(__hp < __max_hp)
       adjust_hp(rate["hp"]);
-    if(sp < max_sp)
+    if(__sp < __max_sp)
       adjust_sp(rate["sp"]);
-    if(mp < max_mp)
+    if(__mp < __max_mp)
       adjust_mp(rate["mp"]);
   }
 }
@@ -241,8 +241,8 @@ int add_heart_rate(int x) {
 // This function calculates the number of pulses needed based on HEART_PULSE and HEARTBEATS_TO_REGEN
 void update_regen_interval() {
   // Calculate the number of pulses for the regen interval
-  regen_interval_pulses = to_int((mud_config("HEART_PULSE") * mud_config("HEARTBEATS_TO_REGEN")) / 1000.0); // Convert ms to seconds
-  tick = 0;
+  __regen_interval_pulses = to_int((mud_config("HEART_PULSE") * mud_config("HEARTBEATS_TO_REGEN")) / 1000.0); // Convert ms to seconds
+  __tick = 0;
 }
 
 // This function initializes the healing process
@@ -256,7 +256,7 @@ int query_heart_rate() {
 }
 
 int query_regen_duration() {
-  return regen_interval_pulses;
+  return __regen_interval_pulses;
 }
 
 void restore() {
@@ -266,9 +266,9 @@ void restore() {
 }
 
 int set_dead(int x) {
-  dead = !!x;
+  __dead = !!x;
 
-  return dead;
+  return __dead;
 }
 
 float *query_condition() {
@@ -346,4 +346,4 @@ string *query_condition_string() {
   return result;
 }
 
-int is_dead() { return dead; }
+int is_dead() { return __dead; }

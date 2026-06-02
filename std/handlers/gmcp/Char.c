@@ -4,6 +4,9 @@
 inherit __DIR__ "gmcp_module";
 
 void Login(string submodule, mapping data) {
+  if(!data)
+    return;
+
   object login = previous_object();
 
   switch(submodule) {
@@ -11,10 +14,13 @@ void Login(string submodule, mapping data) {
       string username, account_name, password, character, curr, test;
       mapping account;
 
+      if(!data["account"])
+        return;
+
       username = lower_case(data["account"]);
       sscanf(username, "%s@%s", character, account_name);
 
-      account = ACCOUNT_D->load_accoubt(account_name);
+      account = ACCOUNT_D->load_account(account_name);
       password = data["password"];
 
       if(!account || !account["password"]) {

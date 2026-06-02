@@ -21,6 +21,7 @@ inherit EXT_MATERIAL;
 
 private nosave mapping __spawn_info = ([]);
 private nosave int __fixed = false;
+private nosave int __post_spawn_fixed = false;
 
 void std_setup() {
   init_value();
@@ -248,10 +249,62 @@ int move(mixed dest) {
   }
 }
 
+/**
+ * Marks the item as fixed or releases it.
+ *
+ * A fixed item cannot be moved out of its current environment; any attempt
+ * returns MOVE_FIXED from allow_move().
+ *
+ * @param {int} fixed - Non-zero to fix the item, zero to release it.
+ */
 void set_fixed(int fixed) {
   __fixed = !!fixed;
 }
 
+/**
+ * Returns whether the item is currently fixed in place.
+ *
+ * @returns {int} 1 if the item is fixed, 0 otherwise.
+ */
 int is_fixed() {
   return __fixed;
+}
+
+/**
+ * Marks whether the item should be fixed in place after spawning.
+ *
+ * Items with this flag set are intended to be made fixed by the spawning
+ * machinery once they have been placed in the world. This is queried at spawn
+ * time and does not itself alter the live fixed state — use set_fixed() for
+ * that.
+ *
+ * @param {int} setting - 1 to mark the item as post-spawn fixed, 0 to clear
+ *  the flag.
+ * @errors If setting is null or not exactly 0 or 1.
+ */
+void set_post_spawn_fixed(int setting) {
+  assert_arg(
+    !nullp(setting) && (setting == 0 || setting == 1),
+    1,
+    "Setting must be 1 or 0. Got: "+sprintf("%O", setting)
+  );
+
+  __post_spawn_fixed = !!setting;
+}
+
+/**
+ * Returns whether the item is marked to be fixed after spawning.
+ *
+ * @returns {int} 1 if the post-spawn fixed flag is set, 0 otherwise.
+ */
+int query_post_spawn_fixed() {
+  return __post_spawn_fixed;
+}
+
+int query_invis() {
+  return false;
+}
+
+int query_hidden() {
+  return false;
 }

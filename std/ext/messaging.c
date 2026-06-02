@@ -41,10 +41,6 @@ int query_environment_can_hear() {
 // and all of the contents of that object, excluding the object passed as the
 // second argument.
 varargs void receive_up(string msg, object *exclude, int msg_type) {
-  object env;
-  object *contents;
-  int i;
-
   do_receive(msg, msg_type);
 
   if(!query_environment_can_hear())
@@ -58,9 +54,9 @@ varargs void receive_up(string msg, object *exclude, int msg_type) {
 
   exclude += ({ this_object() });
 
-  env = environment();
+  /** @type {EXT_MESSAGING} */ object env = environment();
   if(env) {
-    contents = all_inventory(env);
+    /** @type {EXT_MESSAGING*} */ object *contents = all_inventory(env);
     contents -= exclude;
     contents->receive_up(msg, exclude, msg_type);
 
@@ -74,9 +70,6 @@ varargs void receive_up(string msg, object *exclude, int msg_type) {
 // tell_down() is a function that sends a message to all of the contents of an
 // object, excluding the object passed as the second argument.
 varargs void receive_down(string msg, object *exclude, int msg_type) {
-  object *contents;
-  int i;
-
   do_receive(msg, msg_type);
 
   if(!query_contents_can_hear())
@@ -88,7 +81,7 @@ varargs void receive_down(string msg, object *exclude, int msg_type) {
   if(!pointerp(exclude))
     exclude = ({});
 
-  contents = all_inventory();
+  /** @type {EXT_MESSAGING*} */ object *contents = all_inventory();
   contents -= exclude;
   contents->receive_down(msg, exclude, msg_type);
 }
@@ -97,9 +90,6 @@ varargs void receive_down(string msg, object *exclude, int msg_type) {
 // and all of the contents of that object, excluding the object passed as the
 // second argument.
 varargs void receive_all(string msg, object *exclude, int msg_type) {
-  object env;
-  object *contents;
-
   if(objectp(exclude))
     exclude = ({ exclude });
 
@@ -117,13 +107,13 @@ varargs void receive_all(string msg, object *exclude, int msg_type) {
 
   exclude += ({ this_object() });
 
-  env = environment();
+  /** @type {EXT_MESSAGING} */ object env = environment();
   if(env && member_array(env, exclude) == -1) {
     exclude += ({ env });
     env->receive_all(msg, exclude, msg_type);
   }
 
-  contents = all_inventory() - exclude;
+  /** @type {EXT_MESSAGING*} */ object *contents = all_inventory() - exclude;
 
   if(sizeof(contents)) {
     contents->receive_all(msg, exclude, msg_type);

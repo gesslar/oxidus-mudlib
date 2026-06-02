@@ -24,7 +24,7 @@ void setup() {
            "sharp and serviceable, and the blade is straight and true.");
   set_mass(50);
   set_hands(1);
-  set_dc(1);
+  set_dc(1.5);
   set_damage_type("piercing");
   set_value(10);
 
@@ -32,7 +32,7 @@ void setup() {
     ({ "bite", (: bite :) }),
   }));
 
-  set_proc_chance(100.0);
+  set_proc_chance(15.0);
 }
 
 /**
@@ -42,10 +42,10 @@ void setup() {
  */
 void bite(object attacker, object defender) {
   if(attacker->can_strike(defender)) {
-    float damage = percent_of(25.0, query_dc());
+    float damage = query_dc();
 
     attacker->targetted_action(
-      "$P $o strikes $t viciously, biting deep into $p1 flesh.",
+      "{{555}}$P $o strikes $t viciously, biting deep into $p1 flesh.{{res}}",
       defender, this_object());
 
     attacker->deliver_damage(defender, damage, "piercing");

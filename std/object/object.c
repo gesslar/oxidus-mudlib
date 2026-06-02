@@ -31,7 +31,7 @@ inherit EXT_MESSAGING;
 
 private nomask nosave function *__destruct_functions = ({});
 private nomask nosave function *__reset_functions = ({});
-private string real_name, short, long;
+private string __real_name, __short, __long;
 private nosave string __name;
 protected nosave mixed *__create_args = ({});
 private nosave string __virtual_master = 0;
@@ -53,7 +53,7 @@ private varargs void create(mixed args...) {
   set_notify_destruct(1);
 
   __create_args = args;
-  if(!real_name) {
+  if(!__real_name) {
     if(__name)
       set_real_name(__name);
     else
@@ -191,14 +191,14 @@ string set_real_name(string str) {
      previous_object() != this_object())
     return 0;
 
-  real_name = lower_case(str);
+  __real_name = lower_case(str);
 
   if(living())
-    set_living_name(real_name);
+    set_living_name(__real_name);
 
   rehash_ids();
 
-  return real_name;
+  return __real_name;
 }
 
 /**
@@ -207,7 +207,7 @@ string set_real_name(string str) {
  * @returns {string} The real name
  */
 string query_real_name() {
-  return real_name;
+  return __real_name;
 }
 
 /**
@@ -229,7 +229,7 @@ string set_name(string str) {
   else
     __name = str;
 
-  if(!real_name) {
+  if(!__real_name) {
     result = set_real_name(__name);
 
     if(!result)

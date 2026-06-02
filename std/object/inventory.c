@@ -136,6 +136,8 @@ varargs object add_inventory(mixed file, string uuid, mixed *args...) {
     return 0;
   }
 
+  ob->query_post_spawn_fixed() && ob->set_fixed(1);
+
   event(this_object(), "object_spawned", ob);
 
   return ob;

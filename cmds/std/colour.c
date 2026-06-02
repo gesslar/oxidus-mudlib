@@ -25,10 +25,10 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
 
   switch(cmd) {
     case "on":
-      caller->set_env("colour", "on");
+      caller->set_pref("colour", "on");
       return _ok(caller, "Colour on.");
     case "off":
-      caller->set_env("colour", "off");
+      caller->set_pref("colour", "off");
       return _ok(caller, "Colour off.");
     case "list":
       return _info(caller,

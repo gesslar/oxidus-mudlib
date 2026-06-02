@@ -13,6 +13,7 @@ log
 trace_lpcc.json
 /home/*
 !/home/*/.keep
+.local
 
 # Keep all .keep files
 !.keep

@@ -136,3 +136,58 @@ varargs mixed *find_keys(mapping map, mixed value, mixed arg...) {
 
   return result;
 }
+
+/**
+ * Walks a dotted path through nested mappings and returns the value
+ * at the destination, or `undefined` if any intermediate hop is
+ * missing or not a mapping.
+ *
+ * The path is split on `.`; each segment is looked up in the
+ * current mapping. The final segment's value is returned as-is
+ * (it may itself be a mapping). Intermediate non-mapping values
+ * abort the walk and yield `undefined`.
+ *
+ * @param {mapping} map - The root mapping to walk.
+ * @param {string} path - Dot-separated path to follow
+ *                        (e.g. `"player.stats.hp"`).
+ * @returns {mixed} The value at `path`, or `undefined` if the
+ *                  path can't be fully resolved.
+ * @example
+ * mapping data = ([
+ *   "player": ([
+ *     "name": "Alice",
+ *     "stats": ([ "hp": 100, "mp": 40 ]),
+ *   ]),
+ * ]);
+ *
+ * dot_walk(data, "player.name");      // "Alice"
+ * dot_walk(data, "player.stats.hp");  // 100
+ * dot_walk(data, "player.stats");     // the nested mapping
+ * dot_walk(data, "player.gear.head"); // undefined (no "gear" key)
+ */
+mixed dot_walk(mapping map, string path) {
+  assert_arg(
+    mapp(map),
+    1,
+    "Map must be a mapping."
+  );
+
+  assert_arg(
+    stringp(path),
+    2,
+    "Path must be a string."
+  );
+
+  string *parts = explode(path, ".");
+
+  if(sizeof(parts) == 0)
+    return undefined;
+
+  if(sizeof(parts) == 1)
+    return map[parts[0]];
+
+  if(mapp(map[parts[0]]))
+    return dot_walk(map[parts[0]], implode(parts[1..], "."));
+
+  return undefined;
+}

@@ -1,18 +1,28 @@
 /**
  * @file /adm/daemons/alarm.c
  *
- * Alarm daemon responsible for scheduling and executing timed events.
- * Alarms are read from /adm/etc/alarms/*.txt and can be overridden by the Config daemon.
+ * Alarm daemon. Schedules and executes recurring or one-shot events
+ * defined in the configured alarms directory (see the ALARMS_PATH
+ * config key) or registered at runtime via add_once() / add_alarm().
+ * Re-evaluates the full alarm list once per wall-clock minute and
+ * dispatches any alarm whose pattern matches the current minute.
+ * Persists registered alarms via the standard daemon save/restore
+ * cycle.
  *
- * Supported alarm types:
- * - B (Boot)    - Executes after s seconds from boot
- * - O (Once)    - Executes once at y-m-D@H:M
- * - H (Hourly)  - Executes at minute M of every hour
- * - D (Daily)   - Executes at H:M every day
- * - W (Weekly)  - Executes on day D at H:M
- * - Y (Yearly)  - Executes on month m, day D at H:M
+ * Each alarm has a one-character type and a pattern string:
  *
- * Target files must inherit CLASS_ALARM to access alarm information.
+ *   B = Boot    - seconds-after-boot
+ *   O = Once    - YY-MM-DD@HH:MM
+ *   H = Hourly  - MM
+ *   D = Daily   - HH:MM
+ *   W = Weekly  - D@HH:MM  (D = day-of-week, Sunday = 0)
+ *   M = Monthly - D@HH:MM  (D = day-of-month)
+ *   Y = Yearly  - MM-DD@HH:MM
+ *
+ * When an alarm fires, the configured function is call_other()'d on
+ * the target file with the Alarm class as its only argument. The
+ * target file must inherit CLASS_ALARM so it can unpack the alarm
+ * arguments and metadata.
  *
  * @created 2024-02-25 - Gesslar
  * @last_modified 2024-02-25 - Gesslar
@@ -28,14 +38,18 @@ inherit STD_DAEMON;
 inherit CLASS_ALARM;
 
 // Functions
-private int next_minute_start();
-private nomask parse_alarm_in_file(string file);
+public void reload_alarms();
+public varargs int add_alarm(string type, string master, string pattern,
+                             string file, string func, mixed args...);
+public int remove_alarm(string id);
+public class Alarm find_alarm_by_id(string id);
+private nomask void parse_alarm_in_file(string alarm_file);
 private string *parse_alarm_line(string line);
 public class Alarm create_alarm(string *parts, int silent);
 public int calculate_alarm_time(class Alarm alarm, int next);
+private int next_minute_start();
 public int validate_alarm(class Alarm alarm, int silent);
-public void reload_alarms();
-private void execute_alarm(class Alarm alarm);
+public void execute_alarm(class Alarm alarm);
 
 // Variables
 private nomask class Alarm *alarms = ({});
@@ -68,58 +82,122 @@ void post_restore() {
 }
 
 /**
- * Reloads all alarm definitions from disk.
+ * Rebuilds the in-memory alarm list from the on-disk config files.
  *
- * Reads and parses all .txt files in the alarms directory, creating
- * alarm objects for each valid definition.
+ * Clears the current alarm list, scans the configured ALARMS_PATH for
+ * `*.txt` files, and parses each one into Alarm entries. Persists the
+ * resulting list via save_data().
+ *
+ * @returns {void}
  */
 void reload_alarms() {
+  string alarm_file, *alarm_files;
+  string alarm_path = mud_config("ALARMS_PATH");
+
   alarms = ({});
 
-  string alarm_path = mud_config("ALARMS_PATH");
-  string *alarm_files = get_dir(alarm_path + "*.txt");
+  alarm_files = get_dir(alarm_path + "*.txt");
+  if(!sizeof(alarm_files))
+    return;
+
   alarm_files = map(alarm_files, (: $2 + $1 :), alarm_path);
 
-  if(!sizeof(alarms)) {
-    foreach(string alarm_file in alarm_files) {
-      parse_alarm_in_file(alarm_file);
-    }
-  }
+  foreach(alarm_file in alarm_files)
+    parse_alarm_in_file(alarm_file);
 
   save_data();
 }
 
 /**
- * Creates a one-time alarm programmatically.
+ * Registers a one-shot ("O" type) alarm at runtime.
  *
- * @param {string} master - Whether this is a master alarm ("true" or "false")
- * @param {string} pattern - Time pattern in y-m-D@H:M format
- * @param {string} file - Target file to execute the alarm in
- * @param {string} func - Function to call when alarm triggers
- * @param {...mixed} args - Optional arguments to pass to the function
- * @returns {int} 1 on success, 0 on failure
- * @throws If invalid arguments are provided
+ * Thin wrapper around add_alarm() that fixes the type to "O". The
+ * alarm will fire once at `pattern` and then be removed by
+ * poll_alarms().
+ *
+ * @param {string} master - "true" if the alarm targets the master
+ *     file, anything else otherwise. Stored on the alarm as a 0/1
+ *     flag in alarm.master.
+ * @param {string} pattern - When to fire, in YY-MM-DD@HH:MM form.
+ * @param {string} file - Absolute path to the target object.
+ * @param {string} func - Function on the target to invoke.
+ * @param {...mixed} args - Optional trailing arguments handed to the
+ *     target function when the alarm fires.
+ * @returns {int} 1 on success, 0 if the alarm failed validation.
+ * @throws If any of master, pattern, file, or func is null.
  */
-varargs int add_once(string master, string pattern, string file, string func, mixed args...) {
-  if(!master || !pattern || !file || !func) {
+varargs int add_once(string master, string pattern, string file,
+                     string func, mixed args...) {
+  return add_alarm("O", master, pattern, file, func, args...);
+}
+
+/**
+ * Registers an alarm of any type at runtime.
+ *
+ * Builds an Alarm from the supplied parts, validates it, appends it
+ * to the in-memory alarm list, and persists the list via save_data().
+ * For type "O", this is the canonical add path used by add_once().
+ * For recurring types, note that reload_alarms() will discard any
+ * alarms not present in the on-disk config.
+ *
+ * @param {string} type - One-character alarm type ("O", "H", "D",
+ *     "W", "M", "Y"). "B" alarms must come from config files.
+ * @param {string} master - "true" if the alarm targets the master
+ *     file, anything else otherwise.
+ * @param {string} pattern - Pattern string in the format expected by
+ *     calculate_alarm_time() for the given type.
+ * @param {string} file - Absolute path to the target object.
+ * @param {string} func - Function on the target to invoke.
+ * @param {...mixed} args - Optional trailing arguments handed to the
+ *     target function when the alarm fires.
+ * @returns {int} 1 on success, 0 if the alarm failed validation.
+ * @throws If any of type, master, pattern, file, or func is null.
+ */
+varargs int add_alarm(string type, string master, string pattern,
+                      string file, string func, mixed args...) {
+  class Alarm alarm;
+  string *parts;
+
+  if(!type || !master || !pattern || !file || !func) {
     throw("Invalid arguments");
     return 0;
   }
 
-  string *parts = ({
-    "O",
+  parts = ({
+    type,
     pattern,
     master,
     file,
-    func
-  }) + map(args, (: ""+$1 :));
+    func,
+    args
+  });
 
-  class Alarm alarm = create_alarm(parts, 1);
+  alarm = create_alarm(parts, 1);
 
   if(alarm == null)
     return 0;
 
   alarms += ({ alarm });
+  save_data();
+  return 1;
+}
+
+/**
+ * Removes an alarm by its generated id.
+ *
+ * Looks the alarm up via find_alarm_by_id() and, if found, removes it
+ * from the in-memory list and persists the change.
+ *
+ * @param {string} id - The alarm id assigned in create_alarm().
+ * @returns {int} 1 if an alarm was removed, 0 if no alarm matched.
+ */
+int remove_alarm(string id) {
+  class Alarm alarm = find_alarm_by_id(id);
+
+  if(alarm == null)
+    return 0;
+
+  alarms -= ({ alarm });
   save_data();
   return 1;
 }
@@ -133,41 +211,44 @@ varargs int add_once(string master, string pattern, string file, string func, mi
  * - Handles one-time alarm cleanup
  * - Updates alarm states and saves changes
  */
- void poll_alarms() {
+void poll_alarms() {
   int i, now, next_minute, until_next_poll;
 
   now = time();
   next_minute = next_minute_start();
-  until_next_poll = next_minute - now + 1; // Adjust to ensure it's right after the minute starts.
+  // Adjust to ensure it's right after the minute starts.
+  until_next_poll = next_minute - now + 1;
 
   if(find_call_out(cid) != -1)
     remove_call_out(cid);
 
   cid = call_out_walltime("poll_alarms", until_next_poll);
 
-  // We need to run sizeof alarms times, because we might remove an alarm
+  // Iterate sizeof alarms times, because we might remove an alarm.
   for(i = 0; i < sizeof(alarms); i++) {
     class Alarm alarm = alarms[i];
-    // Initially check for the current or immediate next occurrence (not forced future)
+    // Immediate next occurrence (not forced future).
     int next_current = calculate_alarm_time(alarm, 0);
-    // Then force check for the strictly next occurrence (future)
 
-    // Decide to trigger based on the immediate next occurrence time
-    if(now >= next_current && (now <= next_current + 59) && alarm.last_run < next_current) {
-      // Execute the alarm, considering the grace period and ensuring it hasn't been executed for this occurrence.
-      alarm.last_run = now; // Update last_run to mark this execution.
-      call_out((: execute_alarm :), 0.01, alarm); // Schedule the alarm execution.
+    // Trigger based on the immediate next occurrence time.
+    if(now >= next_current &&
+       (now <= next_current + 59) &&
+       alarm.last_run < next_current) {
+      // Within the grace period, and not yet executed this occurrence.
+      alarm.last_run = now;
+      call_out("execute_alarm", 0.01, alarm);
 
-      // Now remove the alarm if it's a one-time alarm
+      // Drop one-shot alarms once they have fired.
       if(alarm.type == "O") {
         alarms = splice(alarms, i, 1);
-        i--; // Decrement the index to account for the removed alarm
+        i--;
       }
     } else {
+      // Drop one-shot alarms whose target time has already passed.
       if(alarm.type == "O") {
         if(now > next_current) {
           alarms = splice(alarms, i, 1);
-          i--; // Decrement the index to account for the removed alarm
+          i--;
         }
       }
     }
@@ -175,45 +256,61 @@ varargs int add_once(string master, string pattern, string file, string func, mi
 }
 
 /**
- * Executes a scheduled alarm by calling its target function.
+ * Loads the alarm's target file and invokes its handler.
  *
- * Loads the target object if necessary and calls the specified function
- * with the alarm object as an argument.
+ * Looks up alarm.file on disk, loads the object, and calls alarm.func
+ * on it with the alarm itself as the argument. Any failure (missing
+ * file, load error, runtime error in the handler) is logged to
+ * system/alarm rather than propagated. Persists the daemon state via
+ * save_data() after each execution.
  *
- * @param {class Alarm} alarm - The alarm to execute
+ * @param {class Alarm} alarm - The alarm to execute.
+ * @returns {void}
  */
 void execute_alarm(class Alarm alarm) {
-  string err;
+  mixed err;
   object ob;
 
   if(!cfile_exists(alarm.file)) {
-    log_file("system/alarm", "[%s] File %s does not exist\n", ctime(), alarm.file);
+    log_file("system/alarm", "[%s] File %s does not exist\n",
+      ctime(), alarm.file);
     return;
   }
 
   if(err = catch(ob = load_object(alarm.file))) {
-    log_file("system/alarm", "[%s] Unable to load file %s: %O\n", ctime(), alarm.file, err);
+    log_file("system/alarm", "[%s] Unable to load file %s: %O\n",
+      ctime(), alarm.file, err);
     return;
   }
 
   if(!ob) {
-    log_file("system/alarm", "[%s] Unable to load file %s\n", ctime(), alarm.file);
+    log_file("system/alarm", "[%s] Unable to load file %s\n",
+      ctime(), alarm.file);
     return;
   }
-  err = catch(call_other(ob, alarm.func, alarm));
+
+  err = catch(call_other(ob, alarm.func, alarm.args));
   if(err) {
-    log_file("system/alarm", "[%s] Error executing alarm %s: %O\n", ctime(), alarm.func, err);
+    log_file("system/alarm", "[%s] Error executing alarm %s: %O\n",
+      ctime(), alarm.func, err);
   }
 
   save_data();
 }
 
 /**
- * Parses an alarm definition file and creates alarm objects.
+ * Parses a single alarm config file and appends its alarms.
  *
- * @param {string} alarm_file - Path to the alarm definition file
+ * Reads `alarm_file` line by line, tokenises each line via
+ * parse_alarm_line(), and builds an Alarm via create_alarm() for any
+ * line that yields enough parts. Invalid lines are silently skipped
+ * (validation failures are logged inside create_alarm()).
+ *
+ * @param {string} alarm_file - Absolute path to a .txt file under the
+ *     configured ALARMS_PATH.
+ * @returns {void}
  */
-void parse_alarm_in_file(string alarm_file) {
+private nomask void parse_alarm_in_file(string alarm_file) {
   string *lines, line;
 
   if(!file_exists(alarm_file))
@@ -274,22 +371,26 @@ string *parse_alarm_line(string line) {
 }
 
 /**
- * Creates a new alarm object from parsed components.
+ * Builds and validates an Alarm from parsed parts.
  *
- * @param {string *} parts - Array of alarm definition components:
- *   [0] - Alarm type (B/O/H/D/W/Y)
- *   [1] - Time pattern
- *   [2] - Master flag
- *   [3] - Target file
- *   [4] - Target function
- *   [5+] - Optional arguments
- * @param {int} silent - Whether to throw errors (0) or log them (1)
- * @returns {class Alarm} The created alarm object, or null on failure
+ * Expects `parts` in the order ({ type, pattern, master, file, func,
+ * args... }). String arguments are run through from_string() so that
+ * literal representations in the config file are converted to the
+ * appropriate value type before storage. The resulting alarm is
+ * assigned a UUID-based id and then handed to validate_alarm(); if
+ * validation fails, returns null.
+ *
+ * @param {string *} parts - The parsed config line. At least 5
+ *     elements are required.
+ * @param {int} silent - When non-zero, validation failures return
+ *     null quietly instead of throwing.
+ * @returns {class Alarm} The constructed alarm, or null if the parts
+ *     list is too short or validation failed.
  */
 class Alarm create_alarm(string *parts, int silent) {
   class Alarm alarm;
   string type, pattern, master, file, func, *args;
-  string err;;
+  mixed err;
 
   err = catch {
     if(sizeof(parts) >= 5) {
@@ -302,8 +403,9 @@ class Alarm create_alarm(string *parts, int silent) {
         args = parts[5..];
         args = map(args, (: stringp($1) ? from_string($1) : $1 :));
       }
-    } else
+    } else {
       return null;
+    }
   };
   if(err) {
     log_file("system/alarm", "[%s] Error in create_alarm: %O",
@@ -342,7 +444,7 @@ int calculate_alarm_time(class Alarm alarm, int next) {
   int alarm_time = -1;
   string alarm_time_str, alarm_date_time;
   int year, month, alarm_wday, hours, minutes;
-  string err;;
+  mixed err;
 
   err = catch {
     switch(alarm.type) {
@@ -377,38 +479,40 @@ int calculate_alarm_time(class Alarm alarm, int next) {
       }
 
       case "W": {
-        // Weekly alarms run on a specific day of the week at a specified time
+        // Weekly alarms run on a specific day of the week at a given time.
         string next_day_str;
         int day_diff;
-        int current_wday = to_int(strftime("%w", current_time)); // Day of the week, Sunday as 0
-        sscanf(alarm.pattern, "%d@%d:%d", alarm_wday, hours, minutes); // Extract target day and time
+        // Day of the week, Sunday as 0.
+        int current_wday = to_int(strftime("%w", current_time));
+        sscanf(alarm.pattern, "%d@%d:%d", alarm_wday, hours, minutes);
         day_diff = (alarm_wday - current_wday + 7) % 7;
-        if(day_diff == 0 && next == 1) // If today is the target day but we need the next occurrence
-          day_diff = 7;
 
-        alarm_time = current_time + (day_diff * 86400); // Move to the correct day
-        // Recalculate the alarm time to get the exact timestamp
-        next_day_str = strftime("%Y-%m-%d ", alarm_time) + sprintf("%02d:%02d", hours, minutes);
+        // Build this week's candidate timestamp (today if today is the
+        // target day, otherwise the next occurrence of that weekday).
+        alarm_time = current_time + (day_diff * 86400);
+        next_day_str = strftime("%Y-%m-%d ", alarm_time) +
+          sprintf("%02d:%02d", hours, minutes);
         alarm_time = strptime("%Y-%m-%d %H:%M", next_day_str);
+
+        // Roll a full week only if the candidate is already in the past
+        // and the caller asked for the strictly-future occurrence.
+        if(alarm_time <= current_time && next == 1)
+          alarm_time += 7 * 86400;
+
         break;
       }
 
       case "M": {
-        // Pre-declared variables reused for clarity
-        int current_day, current_hour, current_minute;
-
-        // Extract day, hour, and minute from the alarm pattern
+        // Extract day, hour, and minute from the alarm pattern.
         sscanf(alarm.pattern, "%d@%d:%d", alarm_wday, hours, minutes);
 
-        // Ensure 'year' and 'month' reflect the current time
-        year = to_int(strftime("%Y", current_time)); // Already declared
-        month = to_int(strftime("%m", current_time)); // Already declared
-        current_day = to_int(strftime("%d", current_time));
-        current_hour = to_int(strftime("%H", current_time));
-        current_minute = to_int(strftime("%M", current_time));
+        // Pull current year/month for this-month construction.
+        year = to_int(strftime("%Y", current_time));
+        month = to_int(strftime("%m", current_time));
 
-        // Construct the alarm time string for this month
-        alarm_date_time = sprintf("%04d-%02d-%02d %02d:%02d", year, month, alarm_wday, hours, minutes);
+        // Construct the alarm time string for this month.
+        alarm_date_time = sprintf("%04d-%02d-%02d %02d:%02d",
+          year, month, alarm_wday, hours, minutes);
         alarm_time = strptime("%Y-%m-%d %H:%M", alarm_date_time);
 
         if(alarm_time <= current_time && next == 1) {
@@ -542,25 +646,29 @@ void execute_boot_alarms() {
  * @throws If validation fails and silent is 0
  */
 int validate_alarm(class Alarm alarm, int silent) {
-  string err;
+  mixed err;
   object ob;
 
   if(!cfile_exists(alarm.file)) {
-    log_file("system/alarm", "[%s] File %s does not exist\n%O", ctime(), alarm.file, alarm);
+    log_file("system/alarm", "[%s] File %s does not exist\n%O",
+      ctime(), alarm.file, alarm);
     if(!silent)
       throw("File does not exist");
     return 0;
   }
 
   if(err = catch(ob = load_object(alarm.file))) {
-    log_file("system/alarm", "[%s] Unable to load file %s: %O\n%O", ctime(), alarm.file, err, alarm);
+    log_file("system/alarm", "[%s] Unable to load file %s: %O\n%O",
+      ctime(), alarm.file, err, alarm);
     if(!silent)
       throw("Unable to load file");
     return 0;
   }
 
   if(!function_exists(alarm.func, ob)) {
-    log_file("system/alarm", "[%s] Function %s does not exist in file %s\n%O", ctime(), alarm.func, alarm.file, alarm);
+    log_file("system/alarm",
+      "[%s] Function %s does not exist in file %s\n%O",
+      ctime(), alarm.func, alarm.file, alarm);
     if(!silent)
       throw("Function does not exist");
     return 0;
@@ -570,7 +678,8 @@ int validate_alarm(class Alarm alarm, int silent) {
     int time = calculate_alarm_time(alarm, 0);
 
     if(time < time()) {
-      log_file("system/alarm", "[%s] Time is in the past\n%O", ctime(), alarm);
+      log_file("system/alarm", "[%s] Time is in the past\n%O",
+        ctime(), alarm);
       if(!silent)
         throw("Time is in the past");
       return 0;
@@ -600,5 +709,8 @@ varargs void test_alarm(class Alarm alarm) {
   if(!alarm)
     return;
 
-  log_file("alarms", sprintf("Alarm %O: %O called at %s", alarm.args..., ctime()));
+  debug_message(sprintf("Alarm %O: %O called at %s",
+    alarm.args..., ctime()));
+  log_file("alarms",
+    sprintf("Alarm %O: %O called at %s", alarm.args..., ctime()));
 }

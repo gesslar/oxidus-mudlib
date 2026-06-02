@@ -363,8 +363,12 @@ private mixed lpml_decode_parse_object(mixed* parse) {
     } else if(ch == '\'') {
       key = lpml_decode_parse_string(parse, '\'');
     } else if(lpml_is_identifier_start(ch)) {
-      // Could be identifier or start of spacey key
-      // Parse as identifier first
+      // Could be a plain identifier or the start of a spacey key. Try the
+      // fast path (plain identifier) first, remembering where we started.
+      int key_pos  = parse[LPML_DECODE_PARSE_POS];
+      int key_char = parse[LPML_DECODE_PARSE_CHAR];
+      int key_line = parse[LPML_DECODE_PARSE_LINE];
+
       key = lpml_decode_parse_identifier(parse);
 
       // Check if next non-whitespace is ':' or if there's more (spacey key)
@@ -372,10 +376,14 @@ private mixed lpml_decode_parse_object(mixed* parse) {
       ch = parse[LPML_DECODE_PARSE_TEXT][parse[LPML_DECODE_PARSE_POS]];
 
       if(ch != ':') {
-        // Not a simple identifier - must be a spacey key
-        // We already parsed part of it, so read the rest
-        string rest = lpml_decode_parse_spacey_key(parse);
-        key = key + " " + rest;
+        // Not a plain identifier (e.g. it contains '-' or other non-ident
+        // characters, or interior spaces). Rewind to the start of the key and
+        // let the spacey-key reader consume it verbatim, so punctuation is
+        // preserved and only the ends are trimmed.
+        parse[LPML_DECODE_PARSE_POS]  = key_pos;
+        parse[LPML_DECODE_PARSE_CHAR] = key_char;
+        parse[LPML_DECODE_PARSE_LINE] = key_line;
+        key = lpml_decode_parse_spacey_key(parse);
       }
     } else {
       // YAML-style spacey key - read until ':'

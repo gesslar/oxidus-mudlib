@@ -58,14 +58,14 @@
 #include <boon.h>
 #include <npc.h>
 
-private nomask mapping skills = ([]);
+private nomask mapping __skills = ([]);
 
 /**
  * Reset the skill tree to an empty mapping, discarding all skills
  * and progress.
  */
 void wipe_skills() {
-  skills = ([]);
+  __skills = ([]);
 }
 
 /**
@@ -117,7 +117,7 @@ varargs void initialize_missing_skills(mapping skill_set, string curr_path) {
  */
 varargs int add_skill(string skill, float level) {
   string *path = explode(skill, ".");
-  mapping current = skills;
+  mapping current = __skills;
   int x, sz;
 
   if(!stringp(skill) || nullp(level) || level < 1.0)
@@ -149,7 +149,7 @@ varargs int add_skill(string skill, float level) {
  */
 int remove_skill(string skill) {
   string *path;
-  mapping current = skills;
+  mapping current = __skills;
   int x, sz;
 
   if(!stringp(skill))
@@ -186,7 +186,7 @@ int remove_skill(string skill) {
  */
 private nomask mapping find_skill_node(string skill) {
   string *path;
-  mapping current = skills;
+  mapping current = __skills;
   int x, sz;
 
   if(!stringp(skill))
@@ -320,7 +320,7 @@ int set_skill_level(string skill, float level) {
  * @returns {mapping} A copy of the skills mapping.
  */
 mapping query_skills() {
-  return copy(skills);
+  return copy(__skills);
 }
 
 /**
@@ -332,7 +332,7 @@ mapping query_skills() {
 void set_skills(mapping s) {
   if(!mapp(s))
     return;
-  skills = copy(s);
+  __skills = copy(s);
 }
 
 /**
@@ -519,10 +519,10 @@ int modify_skill_level(string skill, int level) {
  *                no skills to adjust.
  */
 public int adjust_skills_by_npc_level(float level) {
-  if(nullp(skills) || !mapp(skills))
+  if(nullp(__skills) || !mapp(__skills))
     return 0;
 
-  adjust_skill_levels(skills, level);
+  adjust_skill_levels(__skills, level);
 
   return 1;
 }
@@ -533,11 +533,10 @@ public int adjust_skills_by_npc_level(float level) {
  *
  * @param {mapping} current_skills - The skills submapping at the
  *                                   current recursion depth.
- * @param {float} level - The NPC's current level.
  * @returns {mapping} The same submapping, mutated in place.
  * @errors If invoked on a user (userp()).
  */
-private nomask mapping adjust_skill_levels(mapping current_skills, float level) {
+private nomask mapping adjust_skill_levels(mapping current_skills) {
   string sk;
   mixed skill_data;
 

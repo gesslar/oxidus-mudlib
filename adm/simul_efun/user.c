@@ -120,7 +120,7 @@ string account_file(string name) {
  * @returns {int} 1 if the account is valid, otherwise 0.
  */
 int valid_account(string name) {
-  return mapp(ACCOUNT_D->load_accoubt(name));
+  return mapp(ACCOUNT_D->load_account(name));
 }
 
 /**

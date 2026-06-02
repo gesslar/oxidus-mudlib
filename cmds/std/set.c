@@ -35,7 +35,7 @@ void setup() {
 private void prompt_colour_result(string input, object tp, string variable);
 
 mixed main(/** @type {STD_PLAYER} */ object tp, string str) {
-  string var_name, var_value, *keys;
+  string var_name, var_value, *cles;
   mapping data;
   int i;
 
@@ -47,8 +47,8 @@ mixed main(/** @type {STD_PLAYER} */ object tp, string str) {
       if(!sizeof(data))
         return _info("No preferences currently set.");
 
-      keys = keys(data);
-      keys = sort_array(keys, 1);
+      cles = keys(data);
+      cles = sort_array(keys, 1);
       tell(tp, "Current preferences:\n\n");
 
       for(i = 0; i < sizeof(keys); i ++)
@@ -92,7 +92,11 @@ mixed main(/** @type {STD_PLAYER} */ object tp, string str) {
   return 1;
 }
 
-private void prompt_colour_result(string result, object tp, string variable) {
+private void prompt_colour_result(
+  string result,
+  /** @type {STD_PLAYER} */ object tp,
+  string variable
+) {
   switch(result) {
     case "cancel":
       _ok(tp, "You opt not to set this value at this time.");

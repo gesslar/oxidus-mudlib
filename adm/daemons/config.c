@@ -44,11 +44,22 @@ void setup() {
 /**
  * Retrieves a configuration value by key.
  *
- * @param {string} key - The configuration key to look up
- * @returns {mixed} The value associated with the key
- * @errors If config is null, key is missing, or key is invalid
+ * The key may be a flat top-level key (`"PORT"`) or a dot-separated
+ * path into nested mappings (`"RESOURCE.GLOBAL_SPAWN_CHANCE"`).
+ * Dotted paths are resolved via `dot_walk`, so any hop that misses
+ * a key — or hits a non-mapping intermediate — surfaces the same
+ * "Invalid key" error as a missing top-level key.
+ *
+ * @param {string} key - The configuration key or dot-separated path
+ *                       to look up.
+ * @returns {mixed} The value at `key`. Sub-mappings are returned
+ *                  as-is when the path stops at a non-leaf.
+ * @errors If config is null, key is missing, or the path cannot be
+ *         resolved.
  */
 public mixed get_mud_config(string key) {
+  mixed value;
+
   if(!loaded)
     return null;
 
@@ -58,11 +69,12 @@ public mixed get_mud_config(string key) {
   if(!key)
     error("get_mud_config: Missing key.");
 
-  if(nullp(config[key]))
-    // return null;
+  value = dot_walk(config, key);
+
+  if(nullp(value))
     error("get_mud_config: Invalid key: " + key + ".");
 
-  return config[key];
+  return value;
 }
 
 /**

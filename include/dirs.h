@@ -12,9 +12,12 @@
 #define DIR_DAEMON_MODULES      DIR_DAEMONS "modules/"
 #define DIR_DAEMONS             DIR_ADM "daemons/"
 #define DIR_DOMAIN              "/d/"
+#define DIR_ETC                 "/etc/"
+#define DIR_ETC_RESOURCE        DIR_ETC "resource/"
 #define DIR_LIB                 "/lib/"
 #define DIR_OBJ                 "/obj/"
 #define DIR_OBJ_MUDLIB          DIR_OBJ "mudlib/"
+#define DIR_OBJ_NODE            DIR_OBJ "node/"
 #define DIR_STD                 "/std/"
 #define DIR_STD_AREA            DIR_STD "area/"
 #define DIR_STD_CLASSES         DIR_STD "classes/"
@@ -25,6 +28,7 @@
 #define DIR_STD_LIVING          DIR_STD "living/"
 #define DIR_STD_MODULES         DIR_STD "modules/"
 #define DIR_STD_OBJECT          DIR_STD "object/"
+#define DIR_STD_ROOM            DIR_STD "room/"
 #define DIR_STD_TEST            DIR_STD "test/"
 
 #endif // __DIRS_H__

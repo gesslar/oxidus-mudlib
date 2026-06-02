@@ -232,9 +232,20 @@ void debug_message(string str) {
   master()->log_file("debug.log", sprintf("%s %s\n", timestamp, str));
 }
 
+/**
+ * @efun_override typeof
+ *
+ * Override of the typeof() efun that distinguishes `null`/undefined
+ * values from the driver's normal type names. Returns `T_UNDEFINED`
+ * for null inputs; otherwise delegates to the driver `typeof`.
+ *
+ * @param {mixed} val - The value to type-check.
+ * @returns {string} The type name, or `T_UNDEFINED` when `val` is
+ *                   null/undefined.
+ */
 string typeof(mixed val) {
   if(nullp(val))
-    return "undefined";
+    return T_UNDEFINED;
 
   return efun::typeof(val);
 }
