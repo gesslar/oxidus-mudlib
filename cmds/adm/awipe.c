@@ -40,19 +40,27 @@ void confirm_awipe(string str, object caller, string account) {
 
   _info(caller, "Wiping account '%s' with %d character(s).", account, sizeof(characters));
 
+  // First pass: strip every character of its group memberships and persist the
+  // result before doing any destructive filesystem work, so a later failure
+  // can't leave the changes unwritten or leak the editor clone.
   /** @type {OBJ_SECURITY_EDITOR} */ object security_editor = new(OBJ_SECURITY_EDITOR);
 
   foreach(string user in characters) {
-    object body;
-
-    _info(caller, "Wiping character '%s'.", capitalize(user));
-    _info(caller, "Stripping user of system group memberships.");
+    _info(caller, "Stripping character '%s' of system group memberships.", capitalize(user));
 
     foreach(mixed group in security_editor->list_groups()) {
       if(is_member(user, group))
         _info(caller, "Removing from group: %s.", group);
       security_editor->disable_membership(user, group);
     }
+  }
+
+  security_editor->write_state(0);
+  security_editor->remove();
+
+  // Second pass: disconnect any logged-in bodies and delete user directories.
+  foreach(string user in characters) {
+    object body;
 
     if(body = find_player(user)) {
       _info(caller, "Disconnecting user '" + user + "'.");
@@ -78,9 +86,6 @@ void confirm_awipe(string str, object caller, string account) {
       }
     }
   }
-
-  security_editor->write_state(0);
-  security_editor->remove();
 
   string account_file = account_file(account);
 
