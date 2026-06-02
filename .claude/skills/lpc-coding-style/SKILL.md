@@ -72,52 +72,52 @@ Keywords that precede an expression get a space after:
   ```lpc
   // Single-statement if — no braces
   if(condition)
-    doSomething();
+    do_something();
 
   // Single-statement if/else — no braces
   if(condition)
-    doSomething();
+    do_something();
   else
-    doOtherThing();
+    do_other_thing();
 
   // Multi-statement branch — ALL branches get braces
   if(condition) {
-    doSomething();
-    doMore();
+    do_something();
+    do_more();
   } else {
-    doOtherThing();
+    do_other_thing();
   }
 
   // Single-statement while — no braces
   while(condition)
-    doSomething();
+    do_something();
 
   // Single-statement for — no braces
   for(int i = 0; i < sz; i++)
-    doSomething(i);
+    do_something(i);
 
   // Switch: single-statement cases — no braces
   switch(value) {
     case 1:
-      doSomething();
+      do_something();
       break;
     case 2:
-      doOtherThing();
+      do_other_thing();
       break;
     default:
-      doDefault();
+      do_default();
       break;
   }
 
   // Switch: multi-statement case — that case gets braces
   switch(value) {
     case 1: {
-      doSomething();
-      doMore();
+      do_something();
+      do_more();
       break;
     }
     case 2:
-      doOtherThing();
+      do_other_thing();
       break;
   }
   ```
@@ -132,12 +132,12 @@ Prefer declaring locals near their first use inside the narrowest scope that mak
 
 Always use an explicit visibility modifier (`private`, `protected`, or `public`) on file-global variables. Global variables should be `private` by default. Only widen to `protected` or `public` when external objects or inheritors genuinely need direct access (which is rare — prefer accessor functions).
 
-File-global variables must be prefixed with `__` (double underscore). This serves three purposes: collision reduction when multiple inherits define similarly named variables, shadow evasion so locals never accidentally mask a global, and clear taxonomy — a `__` prefix immediately signals "file-global" at every use site.
+File-global variables are preferred to be prefixed with `__` (double underscore). This is a soft preference, not a hard rule — existing files without the prefix are fine and need not be churned. When you do use it, it serves three purposes: collision reduction when multiple inherits define similarly named variables, shadow evasion so locals never accidentally mask a global, and clear taxonomy — a `__` prefix immediately signals "file-global" at every use site. Favour adding it on new globals; leave established bare names alone unless you're already reworking that file.
 
 ```lpc
-private nosave mapping __cmdHandlers = ([]);
-private string *__cmdPaths = ({});
-private nosave string *__cmdHistory = ({});
+private nosave mapping __cmd_handlers = ([]);
+private string *__cmd_paths = ({});
+private nosave string *__cmd_history = ({});
 ```
 
 ### Functions
@@ -154,23 +154,23 @@ Default to `private`. Widen to `protected` or `public` only when there is a conc
 
 ## Naming Conventions
 
-### camelCase (Primary Convention)
+### snake_case (Primary Convention)
 
-All identifiers use **camelCase** (lowercase first letter, uppercase on subsequent word boundaries):
+All identifiers use **snake_case** (lowercase words separated by underscores):
 
-- **Function names:** `queryName()`, `setValue()`, `findTarget()`, `calculateDamage()`
-- **Variable names:** `maxHealth`, `currentEnemy`, `regenInterval`, `attackSpeed`
-- **Function parameters:** `object targetObject`, `string playerName`, `int damageAmount`
+- **Function names:** `query_name()`, `set_value()`, `find_target()`, `calculate_damage()`
+- **Variable names:** `max_health`, `current_enemy`, `regen_interval`, `attack_speed`
+- **Function parameters:** `object target_object`, `string player_name`, `int damage_amount`
 
 Accessor functions use the prefix `query` rather than `get`:
-- `queryLevel()`, `queryName()`, `queryMaxHp()`
+- `query_level()`, `query_name()`, `query_max_hp()`
 
 Mutator functions use the prefix `set`:
-- `setLevel()`, `setName()`, `setMaxHp()`
+- `set_level()`, `set_name()`, `set_max_hp()`
 
 ### Private Functions
 
-Do **not** use an underscore `_` prefix to denote private functions — the `private` keyword is sufficient. Private helpers follow the same camelCase convention as all other functions.
+Do **not** use an underscore `_` prefix to denote private functions — the `private` keyword is sufficient. Private helpers follow the same snake_case convention as all other functions.
 
 ### Local Variable Names
 
@@ -192,7 +192,7 @@ elsewhere.
 
 ### Renaming Functions
 
-When renaming a function (e.g., converting from `camelCase` to `snake_case`), you **must** search the entire codebase for all call-sites and update them. This includes:
+When renaming a function (e.g., converting from `snake_case` to `camelCase`, or any other rename), you **must** search the entire codebase for all call-sites and update them. This includes:
 
 - Direct calls: `function_name()`
 - `call_other` string references: `call_other(ob, "function_name")`
@@ -211,15 +211,18 @@ Use Grep to find all occurrences of the old name before making the change. A ren
 
 ```lpc
 // Function names
-mixed queryEffectiveBoon(string cl, string type) { ... }
-void processExpiredBuffs() { ... }
-object findNearestEnemy(object tp) { ... }
+mixed query_effective_boon(string cl, string type) { ... }
+void process_expired_buffs() { ... }
+object find_nearest_enemy(object tp) { ... }
 
 // Variable names
-int regenInterval;
-string targetName;
-mapping currentEnemies = ([]);
-float attackSpeed = 2.0;
+int regen_interval;
+string target_name;
+mapping current_enemies = ([]);
+float attack_speed = 2.0;
+
+// File-global variables (soft __ preference)
+private nosave mapping __current_enemies = ([]);
 
 // Constants
 #define MAX_CAPACITY 100
@@ -258,7 +261,7 @@ Always place a blank line **before** a `return` statement, unless the `return` i
 ### Examples
 
 ```lpc
-void doWork(int value) {
+void do_work(int value) {
   if(value < 0)
     value = 0;
 
@@ -270,13 +273,13 @@ void doWork(int value) {
   }
 
   for(int i = 0; i < sizeof(items); i++)
-    handleItem(items[i]);
+    handle_item(items[i]);
 
   return result;
 }
 
 // return as only statement — no blank line needed
-int queryValue() {
+int query_value() {
   return value;
 }
 ```
