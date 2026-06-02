@@ -45,17 +45,17 @@ handshake well under that.
 ## Security Protocol
 
 **NEVER** put credentials directly in command lines. Use environment
-variables:
+variables (these are already set in the environment):
 
 ```bash
-export MUD_HOST=localhost
-export MUD_PORT=1336
-export MUD_ACCOUNT=youraccount
-export MUD_CHARACTER=yourcharacter
-export MUD_PASS=yourpassword
+export OX_TELNET_HOST=127.0.0.1
+export OX_TELNET_PORT=1336
+export OX_TELNET_USERNAME=character@account
+export OX_TELNET_PASSWORD=yourpassword
 ```
 
-The combined login string is `"$MUD_CHARACTER@$MUD_ACCOUNT"`.
+`OX_TELNET_USERNAME` is already the combined `character@account` login
+string — send it verbatim at the account prompt.
 
 ## Login Sequence
 
@@ -131,7 +131,7 @@ one-line description before each command keeps it readable.
 ### Single Command
 
 ```bash
-bash -lc '(sleep 0.5; printf "%s\n" "$MUD_CHARACTER@$MUD_ACCOUNT"; sleep 0.6; printf "%s\n" "$MUD_PASS"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; printf "claude %s\n" "DESCRIPTION"; sleep 0.4; printf "%s\n" "COMMAND"; sleep 1.5; printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$MUD_HOST" "$MUD_PORT"'
+bash -lc '(sleep 0.5; printf "%s\n" "$OX_TELNET_USERNAME"; sleep 0.6; printf "%s\n" "$OX_TELNET_PASSWORD"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; printf "claude %s\n" "DESCRIPTION"; sleep 0.4; printf "%s\n" "COMMAND"; sleep 1.5; printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$OX_TELNET_HOST" "$OX_TELNET_PORT"'
 ```
 
 Replace `DESCRIPTION` with what you're doing and `COMMAND` with the actual
@@ -140,10 +140,10 @@ command.
 ### Multiple Commands
 
 ```bash
-bash -lc '(sleep 0.5; printf "%s\n" "$MUD_CHARACTER@$MUD_ACCOUNT"; sleep 0.6; printf "%s\n" "$MUD_PASS"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; \
+bash -lc '(sleep 0.5; printf "%s\n" "$OX_TELNET_USERNAME"; sleep 0.6; printf "%s\n" "$OX_TELNET_PASSWORD"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; \
 printf "claude %s\n" "DESCRIPTION_1"; sleep 0.4; printf "%s\n" "COMMAND_1"; sleep 1.5; \
 printf "claude %s\n" "DESCRIPTION_2"; sleep 0.4; printf "%s\n" "COMMAND_2"; sleep 1.5; \
-printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$MUD_HOST" "$MUD_PORT"'
+printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$OX_TELNET_HOST" "$OX_TELNET_PORT"'
 ```
 
 Add more `printf "claude ...\n"; sleep 0.4; printf "%s\n" "..."; sleep 1.5;`
@@ -158,34 +158,34 @@ them if output is truncated.
 ### Update / Reload a File
 
 ```bash
-bash -lc '(sleep 0.5; printf "%s\n" "$MUD_CHARACTER@$MUD_ACCOUNT"; sleep 0.6; printf "%s\n" "$MUD_PASS"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; \
+bash -lc '(sleep 0.5; printf "%s\n" "$OX_TELNET_USERNAME"; sleep 0.6; printf "%s\n" "$OX_TELNET_PASSWORD"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; \
 printf "claude updating /path/to/file.c\n"; sleep 0.4; printf "update %s\n" "/path/to/file.c"; sleep 1.5; \
-printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$MUD_HOST" "$MUD_PORT"'
+printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$OX_TELNET_HOST" "$OX_TELNET_PORT"'
 ```
 
 ### Run a Command and Read Output
 
 ```bash
-bash -lc '(sleep 0.5; printf "%s\n" "$MUD_CHARACTER@$MUD_ACCOUNT"; sleep 0.6; printf "%s\n" "$MUD_PASS"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; \
+bash -lc '(sleep 0.5; printf "%s\n" "$OX_TELNET_USERNAME"; sleep 0.6; printf "%s\n" "$OX_TELNET_PASSWORD"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; \
 printf "claude running COMMAND\n"; sleep 0.4; printf "%s\n" "COMMAND"; sleep 1.5; \
-printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$MUD_HOST" "$MUD_PORT"'
+printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$OX_TELNET_HOST" "$OX_TELNET_PORT"'
 ```
 
 ### Update Then Test
 
 ```bash
-bash -lc '(sleep 0.5; printf "%s\n" "$MUD_CHARACTER@$MUD_ACCOUNT"; sleep 0.6; printf "%s\n" "$MUD_PASS"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; \
+bash -lc '(sleep 0.5; printf "%s\n" "$OX_TELNET_USERNAME"; sleep 0.6; printf "%s\n" "$OX_TELNET_PASSWORD"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; \
 printf "claude updating /path/to/file.c\n"; sleep 0.4; printf "update %s\n" "/path/to/file.c"; sleep 1.5; \
 printf "claude testing the change\n"; sleep 0.4; printf "%s\n" "COMMAND_THAT_USES_IT"; sleep 1.5; \
-printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$MUD_HOST" "$MUD_PORT"'
+printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$OX_TELNET_HOST" "$OX_TELNET_PORT"'
 ```
 
 ### Verify Colour Rendering
 
 ```bash
-bash -lc '(sleep 0.5; printf "%s\n" "$MUD_CHARACTER@$MUD_ACCOUNT"; sleep 0.6; printf "%s\n" "$MUD_PASS"; sleep 1.5; printf "colour on\n"; sleep 0.4; \
+bash -lc '(sleep 0.5; printf "%s\n" "$OX_TELNET_USERNAME"; sleep 0.6; printf "%s\n" "$OX_TELNET_PASSWORD"; sleep 1.5; printf "colour on\n"; sleep 0.4; \
 printf "claude checking colour rendering\n"; sleep 0.4; printf "%s\n" "COMMAND"; sleep 1.5; \
-printf "colour off\n"; sleep 0.4; printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$MUD_HOST" "$MUD_PORT"'
+printf "colour off\n"; sleep 0.4; printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$OX_TELNET_HOST" "$OX_TELNET_PORT"'
 ```
 
 ## Important Rules
