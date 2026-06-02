@@ -1,10 +1,10 @@
 /**
  * @file /std/equip/weapon.c
+ *
  * Standard weapon object providing wield/unwield functionality.
  *
- * Manages hand requirements, damage coefficient, damage type,
- * equip/unequip checks, and GMCP updates when weapon state
- * changes.
+ * Manages hand requirements, damage class, damage type, equip/unequip checks,
+ * and GMCP updates when weapon state changes.
  *
  * @created 2024-08-04 - Gesslar
  * @last_modified 2024-08-04 - Gesslar
@@ -48,8 +48,8 @@ void set_slot(string str) {
 }
 
 /**
- * Sets the identifiers for this object, automatically adding
- * "weapon" as an additional ID.
+ * Sets the identifiers for this object, automatically adding "weapon" as an
+ * additional ID.
  *
  * @override
  * @param {mixed} ids - The identifier(s) to set
@@ -60,13 +60,12 @@ void set_id(mixed ids) {
 }
 
 /**
- * Sets the damage coefficient for this weapon.
+ * Sets the damage class for this weapon.
  *
- * Accepts a numeric value (int or float) or a function that
- * returns the coefficient dynamically.
+ * Accepts a numeric value (int or float) or a function that returns the
+ * class dynamically.
  *
- * @param {float | int | function} x - The damage coefficient
- *                                     value or callable
+ * @param {float | int | function} x - The damage class value or callable
  * @errors If the argument is null or an invalid type
  */
 void set_dc(mixed x) {
@@ -76,28 +75,31 @@ void set_dc(mixed x) {
   if(!valid_function(x) && !floatp(x) && !intp(x))
     error("Bad argument 1 to set_dc().\n");
 
+  if(intp(x))
+    x = to_float((int)x);
+
   __dc = x;
 }
 
 /**
- * Returns the current damage coefficient for this weapon.
+ * Returns the current damage class for this weapon.
  *
- * If the coefficient was set as a function, it is evaluated
- * and the result returned.
+ * If the class was set as a function, it is evaluated and the result returned.
  *
- * @returns {float} The damage coefficient
+ * @returns {float} The damage class.
  */
 float query_dc() {
   function f = valid_function(__dc) ? __dc : null;
+  mixed result = f ? f() : __dc;
 
-  return f ? f() : __dc;
+  return to_float(result);
 }
 
 /**
  * Sets the damage type dealt by this weapon.
  *
- * @param {string} dt - The damage type (e.g. "bludgeoning",
- *                      "slashing", "piercing")
+ * @param {string} dt - The damage type (e.g. "bludgeoning", "slashing",
+ *  "piercing")
  */
 void set_damage_type(string dt) {
   __damage_type = dt;
@@ -122,11 +124,10 @@ string query_slot() {
 }
 
 /**
- * Checks whether this weapon can be wielded by the specified
- * living.
+ * Checks whether this weapon can be wielded by the specified living.
  *
- * Delegates to an optional equip_check() function on this object.
- * If no such function exists, wielding is allowed by default.
+ * Delegates to an optional equip_check() function on this object. If no such
+ * function exists, wielding is allowed by default.
  *
  * @param {STD_BODY} tp - The living attempting to wield
  * @returns {mixed} 1 if wielding is allowed, or an error string
@@ -138,9 +139,9 @@ mixed can_equip(object tp) {
 /**
  * Wields this weapon on the given living in the specified slot.
  *
- * Verifies the weapon is in the living's inventory, is not
- * already wielded, and the slot is available. On success, marks
- * the weapon as wielded and sends a GMCP update.
+ * Verifies the weapon is in the living's inventory, is not already wielded,
+ * and the slot is available. On success, marks the weapon as wielded and sends
+ * a GMCP update.
  *
  * @param {STD_BODY} tp - The living to wield on
  * @param {string} slot - The body slot to wield in
@@ -173,12 +174,10 @@ mixed equip(object tp, string slot) {
 }
 
 /**
- * Checks whether this weapon can be unwielded by the specified
- * living.
+ * Checks whether this weapon can be unwielded by the specified living.
  *
- * Delegates to an optional unequip_check() function on this
- * object. If no such function exists, unwielding is allowed by
- * default.
+ * Delegates to an optional unequip_check() function on this object. If no such
+ * function exists, unwielding is allowed by default.
  *
  * @param {STD_BODY} tp - The living attempting to unwield
  * @returns {mixed} 1 if unwielding is allowed, or an error string
@@ -190,15 +189,13 @@ mixed can_unequip(object tp) {
 /**
  * Unwields this weapon from the given living.
  *
- * Verifies the weapon is currently wielded and that the living
- * does not still have it equipped. On success, marks the weapon
- * as unwielded, emits an action message (unless silent), and
- * sends a GMCP update.
+ * Verifies the weapon is currently wielded and that the living does not still
+ * have it equipped. On success, marks the weapon as unwielded, emits an action
+ * message (unless silent), and sends a GMCP update.
  *
- * @param {STD_BODY} tp - The living to unwield from; defaults
- *                        to environment() if not provided
- * @param {int} [silent] - If true, suppress the unwield action
- *                         message
+ * @param {STD_BODY} tp - The living to unwield from; defaults to environment()
+ *  if not provided
+ * @param {int} [silent] - If true, suppress the unwield action message
  * @returns {int} 1 on success, 0 on failure
  */
 varargs int unequip(object tp, int silent) {
@@ -226,8 +223,8 @@ varargs int unequip(object tp, int silent) {
 }
 
 /**
- * Moves this object to a new destination, automatically
- * unwielding it if it was wielded.
+ * Moves this object to a new destination, automatically unwielding it if it
+ * was wielded.
  *
  * @override
  * @param {mixed} dest - The destination object or path

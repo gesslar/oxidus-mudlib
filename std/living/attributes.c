@@ -12,61 +12,61 @@
 #include <attributes.h>
 #include <boon.h>
 
-private nomask nosave string *default_attributes = ({});
-private nomask mapping attributes = ([]);
+private nomask nosave string *__default_attributes = ({});
+private nomask mapping __attributes = ([]);
 
 void init_attributes() {
     string key;
     mixed data;
 
-    default_attributes = mud_config("ATTRIBUTES");
+    __default_attributes = mud_config("ATTRIBUTES");
 
-    attributes = attributes || ([]);
+    __attributes ??= ([]);
 
-    foreach(key in default_attributes) {
-        if(!of(key, attributes)) {
-            attributes[key] = 5;
+    foreach(key in __default_attributes) {
+        if(!of(key, __attributes)) {
+            __attributes[key] = 5;
         }
     }
 
-    foreach(key, data in attributes) {
-        if(!of(key, default_attributes)) {
-            map_delete(attributes, key);
+    foreach(key, data in __attributes) {
+        if(!of(key, __default_attributes)) {
+            map_delete(__attributes, key);
         }
     }
 }
 
 int set_attribute(string key, int value) {
-    if(!of(key, attributes)) {
+    if(!of(key, __attributes)) {
         return null;
     }
 
-    attributes[key] = value;
+    __attributes[key] = value;
 
-    return attributes[key];
+    return __attributes[key];
 }
 
 varargs int query_attribute(string key, int raw) {
-    if(!of(key, attributes)) {
+    if(!of(key, __attributes)) {
         return null;
     }
 
     if(raw)
-        return attributes[key];
+        return __attributes[key];
 
-    return attributes[key] + query_effective_boon("attribute", key);
+    return __attributes[key] + query_effective_boon("attribute", key);
 }
 
 int modify_attribute(string key, int value) {
-    if(!of(key, attributes)) {
+    if(!of(key, __attributes)) {
         return null;
     }
 
-    attributes[key] += value;
+    __attributes[key] += value;
 
-    return attributes[key];
+    return __attributes[key];
 }
 
 mapping query_attributes() {
-    return copy(attributes);
+    return copy(__attributes);
 }

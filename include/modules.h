@@ -3,8 +3,9 @@
 
 #include <dirs.h>
 
-#define M_MOBILE  DIR_STD_MODULES "module"
+#define M_MOBILE    DIR_STD_MODULES "module"
+#define M_RESOURCE  DIR_STD_MODULES "room/resource"
 
-#define DM_CSS    DIR_DAEMON_MODULES "colour/css"
+#define DM_CSS      DIR_DAEMON_MODULES "colour/css"
 
 #endif // __MODULES_H__

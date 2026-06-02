@@ -34,7 +34,6 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string user) {
 
 void confirm_nuke(string str, object caller, string user) {
   object body;
-  string *dir;
 
   if(str != "y" && str != "yes") {
     _info(caller, "Abort [nuke]: Aborting nuke.");
@@ -47,7 +46,7 @@ void confirm_nuke(string str, object caller, string user) {
 
   foreach(mixed group in security_editor->list_groups()) {
     if(is_member(user, group))
-      _info(caller, "* Removing from group: %s.", group);
+      _info(caller, "Removing from group: %s.", group);
     security_editor->disable_membership(user, group);
   }
 
@@ -65,17 +64,24 @@ void confirm_nuke(string str, object caller, string user) {
     }
   }
 
-  _info(caller, "Deleting pfile for user '%s'.", capitalize(user));
+  string account_name = ACCOUNT_D->character_account(user);
+  if(account_name) {
+    _info(caller, "Detaching character from account '%s'.", account_name);
+    ACCOUNT_D->remove_character(account_name, user);
+  }
 
-  dir = get_dir(user_data_directory(user));
-  foreach(string file in dir) {
-    _info(caller, "* Deleting file: %s.", file);
-    if(!rm(user_data_directory(user) + file)) {
-      _error(caller, "Error while deleting %s in user directory.", file);
+  string user_dir = user_data_directory(user);
+  if(directory_exists(user_dir)) {
+    mixed err;
+
+    _info(caller, "Deleting user directory for user '%s'.", capitalize(user));
+    err = catch(recursive_delete(as_directory(user_dir), true));
+
+    if(err) {
+      _error(caller, "Error while deleting user directory: %s", err);
       return;
     }
   }
-  rmdir(user_data_directory(user));
 
   _ok(caller, "User '%s' has been removed.", capitalize(user));
   log_file(LOG_NUKE, capitalize(query_privs(caller)) + " nukes " + capitalize(user) + " on " + ctime(time()) + "\n");

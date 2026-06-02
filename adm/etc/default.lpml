@@ -3,6 +3,7 @@
   LIB_NAME: "gLPU",
   OPEN_STATUS: "Mudlib Development",
   ADMIN_EMAIL: "gesslar@gmail.com",
+  LOG_DIR: "/log/",
   LOG_CATCH: "/log/catch",
   LOG_RUNTIME: "/log/runtime",
   TMP_DIR: "/tmp/",
@@ -145,4 +146,9 @@
   },
   COIN_VALUE_PER_LEVEL: 15,
   COIN_VARIANCE: 0.25,
+  // Resources
+  RESOURCE: {
+    GLOBAL_SPAWN_CHANCE: 5.5,
+    GLOBAL_SPAWN_FREQUENCY: 18000
+  },
 }

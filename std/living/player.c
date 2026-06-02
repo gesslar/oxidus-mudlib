@@ -40,12 +40,13 @@ void setup_body() {
   !query_race() && set_race(mud_config("DEFAULT_RACE"));
   !query_level() && set_level(1.0);
   !query_env("cwd") && set_env("cwd", "/doc");
-  !query_short() && set_short(query_name());
+  !query_short() && set_short(capitalize(query_name()));
   !query_pref("colour") && set_pref("colour", "on");
   !query_pref("auto_tune") && set_pref("auto_tune", "all");
   !query_pref("biff") && set_pref("biff", "on");
   !query_pref("prompt") && set_pref("prompt", ">");
   set_level_mod(0.0);
+  nullp(query_xp()) && set_xp(0);
   init_living();
   rehash_capacity();
   update_regen_interval();
@@ -97,12 +98,17 @@ void exit_world() {
   string *cmds;
   int i;
 
-  if(this_body() != this_object()) return;
+  if(this_body() != this_object())
+    return;
 
   if(file_size(home_path(query_real_name()) + ".quit") > 0) {
     cmds = explode(read_file(home_path(query_real_name()) + ".quit"), "\n");
-    if(sizeof(cmds) <= 0) return;
-    for(i = 0; i < sizeof(cmds); i ++) catch(command(cmds[i]));
+
+    if(sizeof(cmds) <= 0)
+      return;
+
+    for(i = 0; i < sizeof(cmds); i ++)
+      catch(command(cmds[i]));
   }
 
   set_last_login(time());
@@ -446,39 +452,42 @@ void restore_inventory() {
 void wipe_inventory() {
   string file;
 
-  if(!is_member(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
+  if(!is_member(query_privs(previous_object() ? previous_object() : this_body()), "admin")
+    && this_body() != this_object()
+  )
+    return 0;
 
   file = user_inventory_data(query_real_name());
+
   rm(file);
 }
 
 /**
- * Saves the player body's variables to the save file and
- * triggers an inventory save. Requires admin privileges,
- * self-call, or the quit command.
+ * Saves the player body's variables to the save file and triggers an inventory
+ * save. Requires admin privileges, self-call, or the quit command.
  *
  * @public
- * @returns {int} The result of save_object(), or 0 on
- *                permission failure
+ * @returns {int} 1 for success or 0 for failure
  */
 int save_body() {
   int result;
 
-  if(!is_member(query_privs(previous_object() ? previous_object() : this_body()), "admin") &&
-    this_body() != this_object() &&
-    base_name(previous_object()) != CMD_QUIT) return 0;
+  if(!is_member(query_privs(previous_object() ? previous_object() : this_body()), "admin")
+    && this_body() != this_object()
+    && base_name(previous_object()) != CMD_QUIT
+  )
+    return 0;
 
   catch(result = save_object(user_body_data(query_real_name())));
 
   save_inventory();
 
-  return result;
+  return !!result;
 }
 
 /**
- * Whether the player is using a screenreader, as indicated
- * by the SCREEN_READER environment variable or the
- * screenreader preference.
+ * Whether the player is using a screenreader, as indicated by the
+ * SCREEN_READER environment variable or the screenreader preference.
  *
  * @public
  * @returns {int} 1 if a screenreader is active, 0 otherwise

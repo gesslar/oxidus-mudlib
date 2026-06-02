@@ -11,10 +11,10 @@
 #include <gmcp_defines.h>
 #include "/std/object/include/contents.h"
 
-private nomask mapping _wealth = ([]);
+private nomask mapping __wealth = ([]);
 
 int query_total_coins() {
-  return sum(values(_wealth));
+  return sum(values(__wealth));
 }
 
 int query_total_wealth() {
@@ -22,30 +22,30 @@ int query_total_wealth() {
   mixed *config = mud_config("CURRENCY");
 
   foreach(mixed *c in config)
-    total += _wealth[c[0]] * c[1];
+    total += __wealth[c[0]] * c[1];
 
   return total;
 }
 
 mapping query_all_wealth() {
-  return copy(_wealth);
+  return copy(__wealth);
 }
 
 int query_wealth(string currency) {
-  return _wealth[currency];
+  return __wealth[currency];
 }
 
 mixed adjust_wealth(string currency, int amount) {
   int mass;
 
-  if(nullp(_wealth))
-    _wealth = ([]);
+  if(nullp(__wealth))
+    __wealth = ([]);
 
   if(!CURRENCY_D->valid_currency_type(currency))
     return "That is not a valid currency type.\n";
 
   if(amount < 0)
-    if(_wealth[currency] - amount < 0)
+    if(__wealth[currency] - amount < 0)
       return "You don't have that many coins.\n";
 
   if(mud_config("USE_MASS")) {
@@ -54,15 +54,15 @@ mixed adjust_wealth(string currency, int amount) {
       return "You are overburdened and cannot carry the coins.\n";
   }
 
-  _wealth[currency] += amount;
+  __wealth[currency] += amount;
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_STATUS, ([
-    GMCP_LBL_CHAR_STATUS_WEALTH : ([ currency : sprintf("%d", _wealth[currency]) ])
+    GMCP_LBL_CHAR_STATUS_WEALTH : ([ currency : sprintf("%d", __wealth[currency]) ])
   ]));
 
   rehash_capacity();
 
-  return _wealth[currency];
+  return __wealth[currency];
 }
 
 mapping set_wealth(mapping w) {
@@ -82,16 +82,16 @@ mapping set_wealth(mapping w) {
 
   rehash_capacity();
 
-  return _wealth = w;
+  return __wealth = w;
 }
 
 void init_wealth() {
-  if(nullp(_wealth))
-    _wealth = ([]);
+  if(nullp(__wealth))
+    __wealth = ([]);
 }
 
 void wipe_wealth() {
-  _wealth = ([]);
+  __wealth = ([]);
 
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_STATUS, ([
     GMCP_LBL_CHAR_STATUS_WEALTH : ([ ])

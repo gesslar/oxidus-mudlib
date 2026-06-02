@@ -168,6 +168,8 @@ varargs int move(mixed ob) {
   if(env)
     set_last_location(env);
 
+  save_body();
+
   return result;
 }
 

@@ -16,6 +16,7 @@
 #define LOG_FORCE    "adm/force"
 #define LOG_PROMOTE  "adm/promote"
 #define LOG_NUKE     "adm/nuke"
+#define LOG_AWIPE    "adm/awipe"
 #define LOG_HELP     "help.log"
 
 #define ARCHIVE_STAMP "%Y%m%d-%H%M"

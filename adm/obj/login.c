@@ -197,7 +197,7 @@ private void get_account(string str) {
   }
 #endif
 
-  __account = ACCOUNT_D->load_accoubt(__name);
+  __account = ACCOUNT_D->load_account(__name);
 
   if(!__account) {
     if(LOCKDOWN_D->query_player_lock()) {
@@ -283,7 +283,7 @@ private void get_password(string str, int i) {
         return dest_me();
       }
 
-      __account = ACCOUNT_D->load_accoubt(__account["name"]);
+      __account = ACCOUNT_D->load_account(__account["name"]);
     }
 
     _question("Please enter your password again to verify: ");

@@ -20,6 +20,7 @@
 
 #include <advancement.h>
 #include <gmcp_defines.h>
+#include "/std/living/include/player.h"
 
 private float __level = 1.0;
 private float __level_mod = 0.0;
@@ -81,6 +82,8 @@ float set_level(float l) {
     ]));
   }
 
+  save_body();
+
   return __level;
 }
 
@@ -135,6 +138,8 @@ float set_level_mod(float l) {
 float adjust_level_mod(float l) {
   __level_mod += to_float(l);
 
+  save_body();
+
   return __level_mod;
 }
 
@@ -155,6 +160,8 @@ int adjust_xp(int amount) {
       GMCP_LBL_CHAR_STATUS_LEVEL: __level,
     ]));
   }
+
+  save_body();
 
   return __xp;
 }

@@ -121,6 +121,10 @@ varargs void implode_file(string file, string *lines, int overwrite);
 varargs mixed load_lpml(string file, string root);
 void assure_file(string file);
 string source_file(string path_and_file);
+mapping as_directory(string str);
+mapping as_file(string str);
+varargs mapping read_directory(string directory, string pattern);
+void recursive_delete(mapping dir, int include_self);
 
 // File: function.c
 int valid_function(mixed f);
@@ -152,6 +156,7 @@ mixed lpml_encode(string text);
 string pretty_map(mapping map);
 varargs mixed find_key(mapping map, mixed value, mixed arg...);
 varargs mixed *find_keys(mapping map, mixed value, mixed arg...);
+mixed dot_walk(mapping map, string path);
 
 // File: messaging.c
 varargs void tell_up(object ob, string str, int msg_type, mixed exclude);
@@ -257,7 +262,7 @@ varargs mixed from_string(string str, int flag);
 string stringify(mixed val);
 string add_commas(mixed number);
 string reverse_string(string str);
-int reverse_strsrch(string str, string sub, int start);
+varargs int reverse_strsrch(string str, string sub, int start);
 varargs int pcre_strsrch(string str, string pattern, int start);
 int colourp(string str);
 string all_caps(string str);

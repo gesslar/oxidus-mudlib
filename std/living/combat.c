@@ -378,7 +378,7 @@ void strike_enemy(object enemy, object weapon) {
 /**
  * Resolves the descriptive fields used when striking with a given weapon. For
  * an actual weapon object the name, damage type, derived combat skill, and
- * damage coefficient are read from the weapon. For unarmed players the result
+ * damage class are read from the weapon. For unarmed players the result
  * is fists with the unarmed combat skill. For NPCs without a weapon the
  * configured weapon name and type are used along with the NPC's base damage.
  *

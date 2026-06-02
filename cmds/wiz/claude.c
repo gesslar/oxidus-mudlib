@@ -1,0 +1,44 @@
+/**
+ * @file /cmds/wiz/claude.c
+ *
+ * Activity-logging command for automated Claude agent sessions. Records
+ * a timestamped, one-line description of what the agent is about to do
+ * to the "claude" log, and pings any online admins so they can follow
+ * along in real time. Used by the workflow documented in the mud-telnet
+ * skill.
+ *
+ * @created 2026-06-01 - Gesslar
+ * @last_modified 2026-06-01 - Gesslar
+ *
+ * @history
+ * 2026-06-01 - Gesslar - Created
+ */
+
+inherit STD_CMD;
+
+mixed main(object tp, string arg) {
+  object *admins;
+
+  if(!arg || !strlen(arg))
+    return _error(tp, "Usage: claude <description of activity>");
+
+  log_file("claude", sprintf("[%s] %s\n", ldatetime(time()), arg));
+
+  admins = filter(users(), (: adminp($1) && $1 != $(tp) :));
+
+  foreach(object admin in admins)
+    tell(admin, sprintf("\n{{ff8800}}[CLAUDE]{{res}} %s\n", arg));
+
+  return _ok(tp, "Activity logged.");
+}
+
+string query_help(
+  /** @type {STD_BODY} */ object _tp
+) {
+  return
+"SYNTAX: claude <description of activity>\n\n"
+"Logs a timestamped, one-line description of what the Claude agent is "
+"about to do to the 'claude' log file, and notifies any online admins. "
+"Intended for automated telnet sessions so agent activity is auditable "
+"and visible in real time.\n";
+}

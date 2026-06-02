@@ -11,21 +11,21 @@
 
 inherit STD_CMD;
 
-mixed main(object caller, string arg) {
+mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   string logfile;
   int morelines;
   string *out;
 
   if(!arg) {
-    if(file_exists("/log/compile")) {
-      logfile = "/log/compile";
+    if(file_exists(log_dir() + "compile")) {
+      logfile = log_dir() + "compile";
     }
     if(file_exists(home_path(query_privs(this_body())) + "log")) {
       logfile = home_path(query_privs(this_body())) + "log";
     }
   } else {
-    if(file_exists("/log/" + arg)) {
-      logfile = "/log/" + arg;
+    if(file_exists(log_dir() + arg)) {
+      logfile = log_dir() + arg;
     } else {
       return notify_fail("Error [log]: Logfile '/log/" + arg +"' doesn't exist.\n");
     }
@@ -46,7 +46,7 @@ mixed main(object caller, string arg) {
   return out;
 }
 
-string help(object caller) {
+string help(object _caller) {
   return " SYNTAX: log <logfile>\n\n"
     "This command allows you to see the tail (ending) of different\n"
     "logfiles. If you do not provide an argument and there is a file\n"

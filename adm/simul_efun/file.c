@@ -139,18 +139,10 @@ varargs string tail(string path, int line_count) {
     end = start; // Move the end position for the next read
   }
 
-  // Trim the result to exactly the number of lines requested
+  // Trim the result to at most the number of lines requested
   lines = explode(result, "\n");
   start_index = (sizeof(lines) > line_count) ? sizeof(lines) - line_count : 0;
   result = implode(lines[start_index..], "\n");
-
-  // Add a newline at the beginning if we trimmed lines
-  if(start_index > 0)
-    result = "\n" + result;
-
-  // Pad with empty lines if we have fewer lines than requested
-  if(sizeof(lines) < line_count)
-    result = implode(allocate(line_count - sizeof(lines), ""), "\n") + result;
 
   return result;
 }
@@ -488,4 +480,171 @@ string source_file(string path_and_file) {
     return temp;
 
   return append(path_and_file, ".lpc");
+}
+
+/**
+ * Builds a directory entry mapping for a single path.
+ *
+ * Splits the bare name into base and extension and pairs it with the full
+ * path and access time pulled from get_dir(). Used by read_directory() to
+ * describe subdirectories and by recursive_delete() to seed its walk.
+ *
+ * @param {string} str - Path to an existing directory
+ * @returns {mapping} ([ "name", "base", "ext", "path", "directory" ]),
+ *   or 0 if the path cannot be read
+ */
+mapping as_directory(string str) {
+  mixed *info;
+  string name, base, ext;
+  int dot;
+
+  assert_arg(stringp(str) && truthy(str), 1, "Invalid path: "+sprintf("%O", str));
+
+  info = get_dir(str, -1);
+  if(!sizeof(info))
+    return 0;
+
+  name = info[0][0];
+  dot = reverse_strsrch(name, ".");
+  if(dot == -1) {
+    base = name;
+    ext = "";
+  } else {
+    base = name[0..dot-1];
+    ext = name[dot+1..];
+  }
+
+  return ([
+    "name": name,
+    "base": base,
+    "ext": ext,
+    "path": str,
+    "directory": true,
+  ]);
+}
+
+/**
+ * Builds a file entry mapping for a single path.
+ *
+ * Splits the bare name into base and extension and pairs it with the full
+ * path, size, and access time pulled from get_dir(). Used by
+ * read_directory() to describe files.
+ *
+ * @param {string} str - Path to an existing file
+ * @returns {mapping} ([ "name", "base", "ext", "path", "file" ]),
+ *   or 0 if the path cannot be read
+ */
+mapping as_file(string str) {
+  mixed *info;
+  string name, base, ext;
+  int dot;
+
+  assert_arg(stringp(str) && truthy(str), 1, "Invalid path: "+sprintf("%O", str));
+
+  info = get_dir(str, -1);
+  if(!sizeof(info))
+    return 0;
+
+  name = info[0][0];
+  dot = reverse_strsrch(name, ".");
+  if(dot == -1) {
+    base = name;
+    ext = "";
+  } else {
+    base = name[0..dot-1];
+    ext = name[dot+1..];
+  }
+
+  return ([
+    "name": name,
+    "base": base,
+    "ext": ext,
+    "path": str,
+    "file": true,
+  ]);
+}
+
+/**
+ * Reads a directory and returns its contents partitioned into files and
+ * subdirectories.
+ *
+ * Each entry is a mapping carrying the bare name split into base/extension,
+ * the full path, and metadata. File entries include size and access time;
+ * directory entries include access time only. If a pattern is supplied it is
+ * appended to the directory and passed through to get_dir(), so standard
+ * wildcard matching applies (e.g. "*.c").
+ *
+ * @param {string} directory - Path to an existing directory
+ * @param {string} [pattern] - Optional glob pattern appended to the directory
+ * @returns {mapping} ([
+ *   "files": ({ ([ "name", "base", "ext", "path", "size", "accessed" ]) ... }),
+ *   "directories": ({ ([ "name", "base", "ext", "path", "accessed" ]) ... }),
+ * ])
+ * @example
+ * mapping listing = read_directory("/cmds/object");
+ * mapping lpc_only = read_directory("/cmds/object", "*.lpc");
+ */
+varargs mapping read_directory(string directory, string pattern) {
+  assert_arg(
+    stringp(directory) && truthy(directory) && file_size(directory) == -2,
+    1,
+    "Invalid directory: "+sprintf("%O", directory)
+  );
+
+  assert_arg(
+    nullp(pattern) || (stringp(pattern) && truthy(pattern)),
+    2,
+    "Invalid pattern: "+sprintf("%O", pattern)
+  );
+
+  mapping result = ([
+    "files": ({}),
+    "directories": ({}),
+  ]);
+
+  string original_directory = append(directory, "/");
+  directory = append(original_directory, pattern ?? "");
+
+  mixed *read = get_dir(directory, -1);
+
+  each(read, function(mixed *data, int _, mixed *__, mapping result, string dir) {
+    string path = sprintf("%s%s", dir, data[0]);
+
+    if(data[1] == -2)
+      result["directories"] += ({ as_directory(path) });
+    else
+      result["files"] += ({ as_file(path) });
+  }, result, original_directory);
+
+  return result;
+}
+
+/**
+ * Recursively deletes a directory's contents, and optionally the directory
+ * itself.
+ *
+ * @param {mapping} dir - A directory entry as produced by as_directory()
+ * @param {int} [include_self=0] - When true, remove the directory itself once
+ *   it has been emptied
+ * @errors If dir["path"] is not an existing directory (propagated from
+ *   read_directory()), or if a listed entry no longer exists when rm() is
+ *   called on it.
+ */
+void recursive_delete(mapping dir, int include_self: (: 0 :)) {
+  mapping listing = read_directory(dir["path"]);
+
+  foreach(mapping entry in listing["files"]) {
+    if(!rm(entry["path"])) {
+      error(sprintf("Unable to delete %O", entry["path"]));
+    }
+  }
+
+  foreach(mapping entry in listing["directories"])
+    recursive_delete(entry, true);
+
+  if(include_self) {
+    if(!rmdir(dir["path"])) {
+      error(sprintf("Unable to delete %O", dir["path"]));
+    }
+  }
 }

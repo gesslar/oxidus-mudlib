@@ -21,7 +21,7 @@ inherit STD_DAEMON;
 
 // Forward declarations
 public int create_account(string name, string password);
-public mapping load_accoubt(string name);
+public mapping load_account(string name);
 public string write_account(string name, string key, mixed data);
 public mixed read_account(string name, string key);
 public int valid_manip(string name);
@@ -99,7 +99,7 @@ public int create_account(string name, string password) {
  * @param {AccountName} name - The account name to load
  * @returns {AccountRecord} The account data if found, null otherwise
  */
-public mapping load_accoubt(string name) {
+public mapping load_account(string name) {
   if(!valid_manip(name))
     return null;
 
@@ -142,7 +142,7 @@ string write_account(string name, string key, mixed data) {
   if(!data)
     return false;
 
-  mapping account = load_accoubt(name);
+  mapping account = load_account(name);
   if(!account)
     return false;
 
@@ -172,7 +172,7 @@ mixed read_account(string name, string key) {
   if(!key || !stringp(key))
     return false;
 
-  mapping account = load_accoubt(name);
+  mapping account = load_account(name);
   if(!account)
     return false;
 
@@ -196,6 +196,9 @@ int valid_manip(string name) {
 
   if(!prev && !caller)
     return false;
+
+  if(adminp(caller))
+    return true;
 
   if(!is_member(query_privs(prev), "admin")
       && query_privs(prev) != name
@@ -259,7 +262,7 @@ int add_character(string account_name, string str) {
 
   str = lower_case(str);
 
-  mapping account = load_accoubt(account_name);
+  mapping account = load_account(account_name);
   if(!account)
     return false;
 
@@ -298,7 +301,7 @@ int remove_character(string account_name, string character_name) {
 
   character_name = lower_case(character_name);
 
-  mapping account = load_accoubt(account_name);
+  mapping account = load_account(account_name);
   if(!account)
     return false;
 
@@ -346,7 +349,7 @@ string* account_characters(string account_name) {
   if(!accounts[account_name])
     return null;
 
-  mapping account = load_accoubt(account_name);
+  mapping account = load_account(account_name);
   if(!account)
     return false;
 

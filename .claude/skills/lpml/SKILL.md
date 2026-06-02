@@ -74,17 +74,19 @@ These features go beyond JSON5:
 
 ### Spacey Keys
 
-Keys with spaces do not require quotes. The parser reads everything from the start of the key until it finds `:`. Leading and trailing whitespace is trimmed.
+An unquoted key can be almost anything, YAML-style. The parser reads everything from the start of the key until the **first** `:`, then trims surrounding whitespace — so spaces, hyphens, dots, digits, and UTF-8 letters are all valid unquoted.
 
 ```lpml
 {
   hit points: 100,
   max hit points: 120,
   experience points: 1500,
+  admin-heal: "sound.wav",   // hyphens are fine
+  café: "value",             // UTF-8 letters too
 }
 ```
 
-Spacey keys work alongside quoted keys and standard unquoted keys.
+The first `:` always ends the key — this is where LPML differs from YAML, which ends a key only at a colon *followed by whitespace*. Quote a key only when it must contain a literal `:`. Spacey keys work alongside quoted keys and standard unquoted keys.
 
 ### String Concatenation
 

@@ -13,6 +13,10 @@ void create(mixed _args...) {
   setup_chain();
 }
 
+void heart_beat() {
+  evaluate_heart_beat();
+}
+
 int is_daemon() {
   return 1;
 }

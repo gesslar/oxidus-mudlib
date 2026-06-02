@@ -31,6 +31,7 @@ void virtual_setup(mixed _args...) {
   __DIR__ "wastes_daemon"->setup_long(this_object());
 
   add_reset((: repopulate :));
+  add_module(M_RESOURCE, (["stone" : 5]));
 }
 
 public void repopulate() {

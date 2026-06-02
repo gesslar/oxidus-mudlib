@@ -9,6 +9,10 @@
  * 2024-07-23 - Gesslar - Created
  */
 
+/**
+ *
+ * @param {STD_ITEM} target - The thing to see or not.
+ */
 int can_see(object target) {
     if(!objectp(target))
         return 0;

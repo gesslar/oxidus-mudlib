@@ -12,8 +12,6 @@
  * 2026-03-23 - Gesslar - Modernised to current coding standards
  */
 
-#include <simul_efun.h>
-
 inherit STD_OBJECT;
 
 #define FILE_GROUPDATA  "/adm/etc/groups"
@@ -73,7 +71,7 @@ private void parse_files() {
   parse_access();
 }
 
-private void parse_group() {
+void parse_group() {
   integrity_check();
 
   string *arr = parse(read_file(FILE_GROUPDATA));
@@ -88,9 +86,11 @@ private void parse_group() {
     string group, str;
     if(sscanf(arr[i], "(%s)%s", group, str) != 2) {
       tell_me("Error [security]: Invalid format of data in "
-        "group data.");
+        "group data."
+      );
       tell_me("Security alert: Ignoring group on line "
-        + (i + 1));
+        + (i + 1)
+      );
       continue;
     }
 
@@ -98,11 +98,13 @@ private void parse_group() {
     int msz = sizeof(members);
 
     for(int n = 0; n < msz; n++) {
-      if(!file_size(user_data_file(members[n]))
-      && !sscanf(members[n], "[%*s]")) {
+      string file = user_data_file(members[n]);
+
+      if(!file_size(file) && !sscanf(members[n], "[%*s]")) {
         tell_me("Error [security]: Unknown user detected.");
-        tell_me("Security alert: User '" + members[n]
-          + "' ignored for group '" + group + "'.");
+        tell_me(
+          "Security alert: User '" + members[n] + "' ignored for group '" + group + "'."
+        );
         members -= ({ members[n] });
         msz--;
         continue;

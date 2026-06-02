@@ -125,6 +125,8 @@ protected void epilog(int _load_empty) {
     }
     debug_message(out);
   }
+
+  emit(SIG_SYS_BOOT);
 }
 
 void tune_into_error() {
