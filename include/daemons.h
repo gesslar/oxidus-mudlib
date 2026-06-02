@@ -20,7 +20,6 @@
 #define CURRENCY_D      DIR_DAEMONS "currency"
 #define DB_D            DIR_DAEMONS "db"
 #define DEATH_D         DIR_DAEMONS "death"
-#define GA_SERVER       DIR_DAEMONS "ga_server"
 #define GH_ISSUES_D     DIR_DAEMONS "github_issues"
 #define GMCP_D          DIR_DAEMONS "gmcp"
 #define GRAPEVINE_D     DIR_DAEMONS "grapevine"
