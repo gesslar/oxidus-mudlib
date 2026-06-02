@@ -525,6 +525,10 @@ private varargs mixed lpml_decode_parse_string(mixed* parse, int quote_char) {
 
     if(ch == '\\') {
       esc_state = !esc_state;
+      // A completed backslash pair (\\) is itself an escape that needs
+      // collapsing, so flag it the same way other escapes are flagged.
+      if(!esc_state)
+        esc_active++;
     } else if(ch == quote_char) {
       if(esc_state) {
         esc_state = 0;
@@ -615,18 +619,11 @@ private varargs mixed lpml_decode_parse_string(mixed* parse, int quote_char) {
           if(h0 != -1 && h1 != -1 && h2 != -1 && h3 != -1) {
             codepoint = (h0 << 12) | (h1 << 8) | (h2 << 4) | h3;
 
-            if(codepoint < 0x80) {
-              uout += sprintf("%c", codepoint);
-            } else if(codepoint < 0x800) {
-              uout += sprintf("%c%c",
-                0xC0 | (codepoint >> 6),
-                0x80 | (codepoint & 0x3F));
-            } else {
-              uout += sprintf("%c%c%c",
-                0xE0 | (codepoint >> 12),
-                0x80 | ((codepoint >> 6) & 0x3F),
-                0x80 | (codepoint & 0x3F));
-            }
+            // out is a codepoint string (string_decode'd above), and "%c"
+            // already UTF-8-encodes the codepoint on output. Emit the
+            // codepoint directly; splitting it into bytes here would
+            // double-encode (é -> "Ã©").
+            uout += sprintf("%c", codepoint);
 
             ui += 5;  // skip past \uXXXX (loop will increment once more)
             continue;
