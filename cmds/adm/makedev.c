@@ -35,6 +35,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
     body->add_path("/cmds/wiz/");
     body->add_path("/cmds/object/");
     body->add_path("/cmds/file/");
+    body->save_body();
     return 1;
   }
 

@@ -100,7 +100,11 @@ void parse_group() {
     for(int n = 0; n < msz; n++) {
       string file = user_data_file(members[n]);
 
-      if(!file_size(file) && !sscanf(members[n], "[%*s]")) {
+      // A member may be a real user, a [special] priv, or a (group)
+      // reference for nesting one group inside another.
+      if(!file_size(file)
+      && !sscanf(members[n], "[%*s]")
+      && !sscanf(members[n], "(%*s)")) {
         tell_me("Error [security]: Unknown user detected.");
         tell_me(
           "Security alert: User '" + members[n] + "' ignored for group '" + group + "'."

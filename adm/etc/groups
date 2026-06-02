@@ -1,4 +1,5 @@
 (developer)gesslar:claude
-(admin)[admin]:[daemon]:[master]:[cmd_admin]:[adm_obj]:gesslar
+(admin)[admin]:[daemon]:[master]:[cmd_admin]:[adm_obj]:(owner):claude
 (soul)(admin)
+(owner)gesslar
 (doc)(admin)
