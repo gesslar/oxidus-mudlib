@@ -152,6 +152,28 @@ Always use an explicit visibility modifier (`private`, `protected`, or `public`)
 
 Default to `private`. Widen to `protected` or `public` only when there is a concrete need.
 
+#### Choosing the modifier — by call mechanism
+
+"Concrete need" is decided by *how* the function is reached, which is a
+caller fact, not a style preference. Map it directly:
+
+- Reached via `call_other` / `ob->fn()` / `master()->fn()` → must be
+  **`public`**; only `public` survives a `call_other`. (Verify by
+  grepping for `->fn` / `master()->fn`.)
+- Called by an inheriting object as an inherited lfun (e.g. `master.c`
+  inherits `valid.c` and calls `parse_group();` at boot) → **`protected`**;
+  `private` is file-scope only and would hide it from the inheritor.
+- Called only within the defining file → **`private`**.
+- **Driver applies** (`valid_*`, `create`, `heart_beat`, `setup`, etc.) →
+  the driver invokes these directly and ignores our visibility entirely,
+  so make them **`private`** like any other internal function. Do *not*
+  widen an apply just because "the driver calls it."
+
+When unsure whether something has an external caller, grep for it
+(`->name`, `"name"`, `master()->name`) rather than guessing — examining
+adjacent files reveals convention, not the inheritance topology or call
+sites that actually determine visibility.
+
 ## Naming Conventions
 
 ### snake_case (Primary Convention)

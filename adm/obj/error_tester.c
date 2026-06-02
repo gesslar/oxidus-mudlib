@@ -24,7 +24,7 @@ private nosave string *exclude = ({
   "ATTIC", ".git", ".vscode", "tmp", "TMP", "u",
   "log", "doc", "plans", "players", "data", "_attic",
   "weapon2", "removed", "cards", "fluffos", ".github", "ARCHIVE",
-  "archive", "home", "node_modules",
+  "archive", "home", "node_modules", ".claude", "tests",
 });
 
 private nosave int file_call_out = 0;
@@ -56,6 +56,7 @@ void do_check(object who) {
 
   started = time_frac();
   message("info", "=== STARTING THE ERROR FINDER ===\n", notify);
+  message("info", "=== "+sprintf("Running as %s", query_privs(this_object()))+" ===\n", notify);
 
   dirs_to_check = ({ "/" });
 
