@@ -122,7 +122,7 @@ string colour(string str) {
  * @returns {string} The simple list string.
  */
 varargs string simple_list(string *arr, string conjunction) {
-  assert_arg(pointerp(arr) && sizeof(arr) && uniform_array(arr, T_STRING), 1, "Invalid, empty, or missing array.");
+  assert_arg(pointerp(arr) && sizeof(arr) && uniformp(arr, T_STRING), 1, "Invalid, empty, or missing array.");
 
   conjunction = conjunction || "and";
 

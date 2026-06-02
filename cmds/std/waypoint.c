@@ -73,7 +73,7 @@ private mixed list_waypoints(object tp) {
     wps = ({});
 
   sz = sizeof(wps);
-  wps = array_fill(wps, ({}), max_waypoints-sz);
+  wps = fill_array(wps, ({}), max_waypoints-sz);
   sz = sizeof(wps);
   for(num = 0; num < sz; num++) {
     if(sizeof(wps[num])) {

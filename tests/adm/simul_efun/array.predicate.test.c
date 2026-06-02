@@ -3,7 +3,7 @@
  * @file /tests/adm/simul_efun/array.predicate.test.c
  *
  * Tests for boolean-query simul_efuns in
- * /adm/simul_efun/array.c — uniform_array(), includes(),
+ * /adm/simul_efun/array.c — uniformp(), includes(),
  * in_array(), same_array(), same_array_precisely(),
  * every(), some(), intersects(), and in_range().
  */
@@ -13,18 +13,18 @@
 inherit STD_TEST;
 
 void setup() {
-  describe("uniform_array", ({
+  describe("uniformp", ({
     test("empty array is uniform", function() {
-      ASSERT_EQ(1, uniform_array(({}), "string"));
+      ASSERT_EQ(1, uniformp(({}), "string"));
     }),
     test("uniform string array returns 1", function() {
-      ASSERT_EQ(1, uniform_array(({ "a", "b", "c" }), "string"));
+      ASSERT_EQ(1, uniformp(({ "a", "b", "c" }), "string"));
     }),
     test("mixed types return 0", function() {
-      ASSERT_EQ(0, uniform_array(({ "a", 1, "b" }), "string"));
+      ASSERT_EQ(0, uniformp(({ "a", 1, "b" }), "string"));
     }),
     test("uniform int array returns 1", function() {
-      ASSERT_EQ(1, uniform_array(({ 1, 2, 3 }), "int"));
+      ASSERT_EQ(1, uniformp(({ 1, 2, 3 }), "int"));
     }),
   }));
 

@@ -26,7 +26,7 @@ varargs void page(mixed text, mixed *cb, int no_colour) {
   if(!pointerp(text))
     return 0;
 
-  if(!uniform_array(text, T_STRING))
+  if(!uniformp(text, T_STRING))
     return 0;
 
   more_lines = to_int(query_pref("morelines")) || mud_config("MORELINES");

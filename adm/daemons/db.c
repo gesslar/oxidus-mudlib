@@ -517,8 +517,8 @@ public string statement_from_mapping(mapping data) {
     if(!stringp(k))
       continue;
 
-    array_push(ref columns, escape_ident(k));
-    array_push(ref values, escape_value(v));
+    push(ref columns, escape_ident(k));
+    push(ref values, escape_value(v));
   }
 
   if(!sizeof(columns))

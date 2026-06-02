@@ -57,7 +57,7 @@ string has(object ob, mixed function_names) {
 
   if(stringp(function_names))
     return function_exists(function_names, ob);
-  if(pointerp(function_names) && uniform_array(function_names, T_STRING))
+  if(pointerp(function_names) && uniformp(function_names, T_STRING))
     return eval_first(function_names, (: function_exists($1, $(ob)) :));
 
   return null;

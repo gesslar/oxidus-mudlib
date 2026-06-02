@@ -399,7 +399,7 @@ string ansi256_to_3hex(int ansi) {
 }
 
 int get_luminance(int *rgb) {
-  assert_arg(uniform_array(rgb, T_INT), 1, "Invalid value.");
+  assert_arg(uniformp(rgb, T_INT), 1, "Invalid value.");
   assert_arg(every(rgb, (: !nullp($1) && clamped($1, 0, 255) :)), 1, "Invalid value.");
 
   return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
