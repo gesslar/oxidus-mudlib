@@ -35,29 +35,28 @@ void setup() {
 private void prompt_colour_result(string input, object tp, string variable);
 
 mixed main(/** @type {STD_PLAYER} */ object tp, string str) {
-  string var_name, var_value, *cles;
-  mapping data;
-  int i;
+  string var_name, var_value;
 
   if(!str) {
-    data = tp->list_pref();
+    mapping data = tp->list_pref();
+
     if(!mapp(data)) {
       return _info("No preferences currently set.");
     } else {
       if(!sizeof(data))
         return _info("No preferences currently set.");
 
-      cles = keys(data);
-      cles = sort_array(keys, 1);
-      tell(tp, "Current preferences:\n\n");
+      string *cles = keys(data);
+      cles = sort_array(cles, -1);
 
-      for(i = 0; i < sizeof(keys); i ++)
-        tell(tp,
-          sprintf("%-20s : %-20s\n", keys[i], data[keys[i]]),
-          NO_COLOUR
-        );
+      string *out = ({ "Current preferences:", ""});
 
-      return 1;
+      int sz = sizeof(cles);
+      while(sz--) {
+        push(ref out, sprintf("%-20s : %O", cles[sz], data[cles[sz]]));
+      }
+
+      return out;
     }
   }
 
