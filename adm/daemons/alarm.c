@@ -268,10 +268,11 @@ void poll_alarms() {
  * system/alarm rather than propagated. Persists the daemon state via
  * save_data() after each execution.
  *
+ * @private
  * @param {class Alarm} alarm - The alarm to execute.
  * @returns {void}
  */
-void execute_alarm(class Alarm alarm) {
+private void execute_alarm(class Alarm alarm) {
   mixed err;
   object ob;
 
