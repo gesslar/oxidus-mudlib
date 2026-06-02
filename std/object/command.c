@@ -13,7 +13,6 @@
  * 2026-03-29 - Gesslar - Updated documentation to LPCDoc standards
  */
 
-#include "/std/living/include/alias.h"
 #include "/std/living/include/pager.h"
 #include <command.h>
 

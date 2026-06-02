@@ -28,9 +28,7 @@ inherit EXT_REF;
 #define SYNTAX \
   "Syntax: call [-<uid>] " \
   "<object>;<function>;<arg>;<arg>\n"
-#define FUNC_LIST \
-  ({ "query_skills", "query_nicknames", \
-     "query_aliases" })
+#define FUNC_LIST ({ "query_skills", "query_nicknames", })
 #define TAB "\t"
 
 private mixed do_call(object ob, string func, mixed args);
