@@ -27,7 +27,6 @@
 #define LINES_D         DIR_DAEMONS "lines"
 #define LOCKDOWN_D      DIR_DAEMONS "lockdown_d"
 #define LOOT_D          DIR_DAEMONS "loot"
-#define MAIL_D          DIR_DAEMONS "mail_d"
 #define MESS_D          DIR_DAEMONS "message"
 #define MOVE_D          DIR_DAEMONS "movement"
 #define MSSP_D          DIR_DAEMONS "mssp"
