@@ -34,7 +34,6 @@
 #define RESOURCE_D      DIR_DAEMONS "resource"
 #define SHUTDOWN_D      DIR_DAEMONS "shutdown"
 #define SIGNAL_D        DIR_DAEMONS "signal"
-#define SOUL_D          DIR_DAEMONS "soul_d"
 #define SWAP_D          DIR_DAEMONS "swap"
 #define TIME_D          DIR_DAEMONS "time"
 #define VIRTUAL_D       DIR_DAEMONS "virtual"

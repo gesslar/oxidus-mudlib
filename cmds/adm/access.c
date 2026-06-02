@@ -267,7 +267,7 @@ int input_delete_group(string str, object caller) {
     return 1;
   }
 
-  if(str == "admin" || str == "soul") {
+  if(str == "admin") {
     tell_me("\nError:  group '" + str + "' cannot be deleted.\n\t"
       + "The group is a system group and is required for proper functionality of the mudlib.\n");
     input_main_menu("2", caller);
