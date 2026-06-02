@@ -26,7 +26,7 @@ void init_vitals() {
   __max_hp = __max_hp ?? 100.0;
   __sp = __sp ?? 100.0;
   __max_sp = __max_sp ?? 100.0;
-  __mp = __mp || 100.0;
+  __mp = __mp ?? 100.0;
   __max_mp = __max_mp ?? 100.0;
 
   // Calculate regen interval based on the product of HEART_PULSE and

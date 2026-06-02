@@ -533,10 +533,11 @@ public int adjust_skills_by_npc_level(float level) {
  *
  * @param {mapping} current_skills - The skills submapping at the
  *                                   current recursion depth.
+ * @param {float} level - The NPC's current level.
  * @returns {mapping} The same submapping, mutated in place.
  * @errors If invoked on a user (userp()).
  */
-private nomask mapping adjust_skill_levels(mapping current_skills) {
+private nomask mapping adjust_skill_levels(mapping current_skills, float level) {
   string sk;
   mixed skill_data;
 
