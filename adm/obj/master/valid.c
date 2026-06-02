@@ -418,9 +418,6 @@ private int valid_read(string file, object user, string func) {
   if(func == "file_size")
     return 1;
 
-  if(func == "restore_object" && member_array(find_object("/adm/daemons/finger_d.c"), all_previous_objects()) != -1)
-    return 1;
-
   if(file && sscanf(file, "/home/%*s/%s/%s", tmp, tmp2)) {
     if(name == tmp || name == "[home_" + tmp + "]")
       return 1;
