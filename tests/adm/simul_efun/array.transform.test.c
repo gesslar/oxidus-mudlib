@@ -3,11 +3,9 @@
  * @file /tests/adm/simul_efun/array.transform.test.c
  *
  * Tests for the return-new-array simul_efuns in
- * /adm/simul_efun/array.c. Covers distinct_array,
- * uniq_array, reverse_array, array_shuffle, flatten,
- * flatten_array, slice, splice, merge_array,
- * remove_array_element, exclude_array, intersection,
- * array_fill, array_pad, and pad_array.
+ * /adm/simul_efun/array.c. Covers distinct_array, uniq_array, reverse_array,
+ * shuffle_array, flatten, slice, splice, merge_arrays, remove_array_element,
+ * intersection, fill_array, and pad_array.
  */
 
 #include <test.h>
@@ -80,32 +78,32 @@ void setup() {
     }),
   }));
 
-  describe("array_shuffle", ({
+  describe("shuffle_array", ({
     test("preserves length", function() {
       mixed *src = ({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
-      ASSERT_EQ(sizeof(src), sizeof(array_shuffle(src)));
+      ASSERT_EQ(sizeof(src), sizeof(shuffle_array(src)));
     }),
     test("preserves elements (loose comparison)", function() {
       mixed *src = ({ "a", "b", "c", "d", "e" });
       // same() with loose=1 ignores order — the shuffled array
       // must contain exactly the same multiset of elements.
-      ASSERT_EQ(src, array_shuffle(src));
+      ASSERT_EQ(src, shuffle_array(src));
     }),
     test("does not mutate the original", function() {
       mixed *original = ({ 1, 2, 3, 4, 5 });
-      array_shuffle(original);
+      shuffle_array(original);
       ASSERT_EQ(1,
         same_array(({ 1, 2, 3, 4, 5 }), original, 1));
     }),
     test("empty array shuffles to empty array", function() {
-      ASSERT_EQ(({}), array_shuffle(({})));
+      ASSERT_EQ(({}), shuffle_array(({})));
     }),
     test("single element shuffles to itself", function() {
       ASSERT_EQ(1,
-        same_array(({ 7 }), array_shuffle(({ 7 })), 1));
+        same_array(({ 7 }), shuffle_array(({ 7 })), 1));
     }),
     test("non-array input errors", function() {
-      string err = catch(array_shuffle(0));
+      string err = catch(shuffle_array(0));
       ASSERT_NE(0, err);
     }),
   }));
@@ -144,14 +142,6 @@ void setup() {
     test("non-array input errors", function() {
       string err = catch(flatten("flat"));
       ASSERT_NE(0, err);
-    }),
-  }));
-
-  describe("flatten_array", ({
-    test("alias forwards to flatten", function() {
-      ASSERT_EQ(1,
-        same_array(({ 1, 2, 3 }),
-                   flatten_array(({ ({ 1 }), ({ 2, 3 }) })), 1));
     }),
   }));
 
@@ -220,34 +210,34 @@ void setup() {
     }),
   }));
 
-  describe("merge_array", ({
+  describe("merge_arrays", ({
     test("inserts in the middle", function() {
       ASSERT_EQ(1,
         same_array(({ 1, 2, "a", "b", 3, 4 }),
-                   merge_array(({ 1, 2, 3, 4 }),
+                   merge_arrays(({ 1, 2, 3, 4 }),
                                ({ "a", "b" }), 2), 1));
     }),
     test("at <= 0 prepends new_array", function() {
       ASSERT_EQ(1,
         same_array(({ "a", "b", 1, 2 }),
-                   merge_array(({ 1, 2 }), ({ "a", "b" }), 0), 1));
+                   merge_arrays(({ 1, 2 }), ({ "a", "b" }), 0), 1));
     }),
     test("at >= sizeof(array) appends new_array", function() {
       ASSERT_EQ(1,
         same_array(({ 1, 2, "a", "b" }),
-                   merge_array(({ 1, 2 }), ({ "a", "b" }), 5), 1));
+                   merge_arrays(({ 1, 2 }), ({ "a", "b" }), 5), 1));
     }),
     test("non-array first argument coerces to empty", function() {
       ASSERT_EQ(1,
         same_array(({ "a", "b" }),
-                   merge_array(0, ({ "a", "b" }), 0), 1));
+                   merge_arrays(0, ({ "a", "b" }), 0), 1));
     }),
     test("non-array second argument coerces to empty", function() {
       ASSERT_EQ(1,
-        same_array(({ 1, 2 }), merge_array(({ 1, 2 }), 0, 1), 1));
+        same_array(({ 1, 2 }), merge_arrays(({ 1, 2 }), 0, 1), 1));
     }),
     test("empty + empty stays empty", function() {
-      ASSERT_EQ(({}), merge_array(({}), ({}), 0));
+      ASSERT_EQ(({}), merge_arrays(({}), ({}), 0));
     }),
   }));
 
@@ -278,14 +268,6 @@ void setup() {
       ASSERT_EQ(1,
         same_array(({ 1, 2, 3 }),
                    remove_array_element(({ 1, 2, 3 }), 5, 2), 1));
-    }),
-  }));
-
-  describe("exclude_array", ({
-    test("alias forwards to remove_array_element", function() {
-      ASSERT_EQ(1,
-        same_array(({ 1, 5 }),
-                   exclude_array(({ 1, 2, 3, 4, 5 }), 1, 3), 1));
     }),
   }));
 
@@ -328,74 +310,41 @@ void setup() {
     }),
   }));
 
-  describe("array_fill", ({
+  describe("fill_array", ({
     test("fills at default position (end of array)", function() {
       // start_index defaults to len, so the fill is appended.
       ASSERT_EQ(1,
         same_array(({ 1, 2, 0, 0, 0 }),
-                   array_fill(({ 1, 2 }), 0, 3), 1));
+                   fill_array(({ 1, 2 }), 0, 3), 1));
     }),
     test("fills with custom value", function() {
       ASSERT_EQ(1,
         same_array(({ 1, 2, "x", "x" }),
-                   array_fill(({ 1, 2 }), "x", 2), 1));
+                   fill_array(({ 1, 2 }), "x", 2), 1));
     }),
     test("fills at the beginning when start_index=0", function() {
       ASSERT_EQ(1,
         same_array(({ 9, 9, 1, 2 }),
-                   array_fill(({ 1, 2 }), 9, 2, 0), 1));
+                   fill_array(({ 1, 2 }), 9, 2, 0), 1));
     }),
     test("fills in the middle", function() {
       ASSERT_EQ(1,
         same_array(({ 1, 9, 9, 2, 3 }),
-                   array_fill(({ 1, 2, 3 }), 9, 2, 1), 1));
+                   fill_array(({ 1, 2, 3 }), 9, 2, 1), 1));
     }),
     test("non-array input coerces to empty array", function() {
       ASSERT_EQ(1,
         same_array(({ 0, 0, 0 }),
-                   array_fill(0, 0, 3), 1));
+                   fill_array(0, 0, 3), 1));
     }),
     test("null value defaults to 0", function() {
       ASSERT_EQ(1,
         same_array(({ 0, 0 }),
-                   array_fill(({}), 0, 2), 1));
+                   fill_array(({}), 0, 2), 1));
     }),
     test("missing size errors", function() {
-      string err = catch(array_fill(({ 1 }), 0));
+      string err = catch(fill_array(({ 1 }), 0));
       ASSERT_NE(0, err);
-    }),
-  }));
-
-  describe("array_pad", ({
-    test("pads at the end by default", function() {
-      ASSERT_EQ(1,
-        same_array(({ 1, 2, 0, 0, 0 }),
-                   array_pad(({ 1, 2 }), 5, 0), 1));
-    }),
-    test("pads at the beginning when beginning=1", function() {
-      ASSERT_EQ(1,
-        same_array(({ 0, 0, 0, 1, 2 }),
-                   array_pad(({ 1, 2 }), 5, 0, 1), 1));
-    }),
-    test("size <= len truncates", function() {
-      ASSERT_EQ(1,
-        same_array(({ 1, 2, 3 }),
-                   array_pad(({ 1, 2, 3, 4, 5 }), 3, 0), 1));
-    }),
-    test("size equal to len returns same elements", function() {
-      ASSERT_EQ(1,
-        same_array(({ 1, 2, 3 }),
-                   array_pad(({ 1, 2, 3 }), 3, 0), 1));
-    }),
-    test("non-array input coerces to empty and pads", function() {
-      ASSERT_EQ(1,
-        same_array(({ "x", "x", "x" }),
-                   array_pad(0, 3, "x"), 1));
-    }),
-    test("pads with string value", function() {
-      ASSERT_EQ(1,
-        same_array(({ "a", "z", "z" }),
-                   array_pad(({ "a" }), 3, "z"), 1));
     }),
   }));
 

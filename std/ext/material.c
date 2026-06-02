@@ -27,7 +27,7 @@ public nosave string *__materials = ({});
  * @errors If any argument is not a string.
  */
 void add_material(mixed arg...) {
-  assert(uniform_array(arg, T_STRING), "Each argument to add_material must be a string.");
+  assert(uniformp(arg, T_STRING), "Each argument to add_material must be a string.");
 
   foreach(string mat in arg) {
     push(ref __materials, mat);
@@ -41,7 +41,7 @@ void add_material(mixed arg...) {
  * @errors If any argument is not a string.
  */
 void remove_material(mixed arg...) {
-  assert(uniform_array(arg, T_STRING), "Each argument to remove_material must be a string.");
+  assert(uniformp(arg, T_STRING), "Each argument to remove_material must be a string.");
 
   __materials -= arg;
 }
@@ -58,7 +58,7 @@ void remove_material(mixed arg...) {
  * @errors If any argument is not a string.
  */
 int has_material(mixed arg...) {
-  assert(uniform_array(arg, T_STRING), "Each argument to has_material must be a string.");
+  assert(uniformp(arg, T_STRING), "Each argument to has_material must be a string.");
 
   return intersects(arg, __materials);
 }

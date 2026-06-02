@@ -161,7 +161,7 @@ public varargs object add_module(string module_file, mixed args...) {
   }
 
   if(pointerp(existing))
-    __modules[name] = array_push(ref __modules, mod);
+    __modules[name] = push(ref __modules, mod);
   else if(mod->allows_multi())
     __modules[name] = ({ mod });
   else

@@ -36,15 +36,6 @@ void setup() {
     }),
   }));
 
-  describe("array_pop", ({
-    test("alias forwards to pop", function() {
-      mixed *arr = ({ "a", "b" });
-      mixed ret = array_pop(ref arr);
-      ASSERT_EQ("b", ret);
-      ASSERT_EQ(({ "a" }), arr);
-    }),
-  }));
-
   describe("push", ({
     test("returns new size", function() {
       mixed *arr = ({ 1, 2 });
@@ -65,15 +56,6 @@ void setup() {
       mixed *arr = ({ "a" });
       push(ref arr, "a");
       ASSERT_EQ(({ "a", "a" }), arr);
-    }),
-  }));
-
-  describe("array_push", ({
-    test("alias forwards to push", function() {
-      mixed *arr = ({ 1 });
-      int sz = array_push(ref arr, 2);
-      ASSERT_EQ(2, sz);
-      ASSERT_EQ(({ 1, 2 }), arr);
     }),
   }));
 
@@ -100,15 +82,6 @@ void setup() {
     }),
   }));
 
-  describe("array_shift", ({
-    test("alias forwards to shift", function() {
-      mixed *arr = ({ "x", "y" });
-      mixed ret = array_shift(ref arr);
-      ASSERT_EQ("x", ret);
-      ASSERT_EQ(({ "y" }), arr);
-    }),
-  }));
-
   describe("unshift", ({
     test("returns new size", function() {
       mixed *arr = ({ 2, 3 });
@@ -129,15 +102,6 @@ void setup() {
       mixed *arr = ({ "a" });
       unshift(ref arr, "a");
       ASSERT_EQ(({ "a", "a" }), arr);
-    }),
-  }));
-
-  describe("array_unshift", ({
-    test("alias forwards to unshift", function() {
-      mixed *arr = ({ 2 });
-      int sz = array_unshift(ref arr, 1);
-      ASSERT_EQ(2, sz);
-      ASSERT_EQ(({ 1, 2 }), arr);
     }),
   }));
 
@@ -220,15 +184,6 @@ void setup() {
     }),
   }));
 
-  describe("array_eject", ({
-    test("alias forwards to eject", function() {
-      mixed *arr = ({ 1, 2, 3 });
-      mixed ret = array_eject(ref arr, 1);
-      ASSERT_EQ(2, ret);
-      ASSERT_EQ(({ 1, 3 }), arr);
-    }),
-  }));
-
   describe("eject_value", ({
     test("removes first occurrence and returns its index", function() {
       mixed *arr = ({ "apple", "banana", "orange" });
@@ -272,15 +227,6 @@ void setup() {
     }),
   }));
 
-  describe("array_remove", ({
-    test("alias forwards to eject_value", function() {
-      mixed *arr = ({ "a", "b", "c" });
-      int idx = array_remove(ref arr, "b");
-      ASSERT_EQ(1, idx);
-      ASSERT_EQ(({ "a", "c" }), arr);
-    }),
-  }));
-
   describe("eject_value_all", ({
     test("removes all occurrences and returns count", function() {
       mixed *arr = ({ "apple", "banana", "apple", "orange", "apple" });
@@ -308,14 +254,6 @@ void setup() {
     }),
   }));
 
-  describe("array_remove_all", ({
-    test("alias forwards to eject_value_all", function() {
-      mixed *arr = ({ 1, 2, 1, 3 });
-      array_remove_all(ref arr, 1);
-      ASSERT_EQ(({ 2, 3 }), arr);
-    }),
-  }));
-
   describe("insert", ({
     test("inserts at head and returns new size", function() {
       mixed *arr = ({ 2, 3, 4 });
@@ -340,15 +278,6 @@ void setup() {
       int sz = insert(ref arr, "first", 0);
       ASSERT_EQ(1, sz);
       ASSERT_EQ(({ "first" }), arr);
-    }),
-  }));
-
-  describe("array_insert", ({
-    test("alias forwards to insert", function() {
-      mixed *arr = ({ "a", "c" });
-      int sz = array_insert(ref arr, "b", 1);
-      ASSERT_EQ(3, sz);
-      ASSERT_EQ(({ "a", "b", "c" }), arr);
     }),
   }));
 }

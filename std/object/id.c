@@ -59,7 +59,7 @@ void add_id(mixed str) {
   if(!pointerp(str))
     error("Bad argument 1 to add_id().");
 
-  if(!uniform_array(str, T_STRING))
+  if(!uniformp(str, T_STRING))
     error("Bad argument 1 to add_id().");
 
   _ids = distinct_array(_ids + str);
@@ -81,7 +81,7 @@ void add_adj(mixed str) {
   if(!pointerp(str))
     error("Bad argument 1 to add_adj().");
 
-  if(!uniform_array(str, T_STRING))
+  if(!uniformp(str, T_STRING))
     error("Bad argument 1 to add_adj().");
 
   _adj = distinct_array(_adj + str);
@@ -103,7 +103,7 @@ void remove_id(mixed str) {
   if(!pointerp(str))
     error("Bad argument 1 to remove_id().");
 
-  if(!uniform_array(str, T_STRING))
+  if(!uniformp(str, T_STRING))
     error("Bad argument 1 to remove_id().");
 
   _ids = distinct_array(_ids - str);
@@ -125,7 +125,7 @@ void remove_adj(mixed str) {
   if(!pointerp(str))
     error("Bad argument 1 to remove_adj().");
 
-  if(!uniform_array(str, T_STRING))
+  if(!uniformp(str, T_STRING))
     error("Bad argument 1 to remove_adj().");
 
   _adj = distinct_array(_adj - str);

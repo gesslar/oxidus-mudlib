@@ -3,7 +3,7 @@
  * @file /tests/adm/simul_efun/array.misc.test.c
  *
  * Tests for the leftover one-off array simul_efuns:
- * array_item(), array_columns(), and array_sum().
+ * array_columns(), and sum_array().
  */
 
 #include <test.h>
@@ -11,52 +11,28 @@
 inherit STD_TEST;
 
 void setup() {
-  describe("array_item", ({
-    test("returns an element drawn from the input array", function() {
-      mixed *src = ({ "apple", "banana", "cherry", "date" });
-      mixed picked = array_item(src);
-      ASSERT_EQ(1, in_array(picked, src));
-    }),
-    test("returns the only element of a single-element array", function() {
-      ASSERT_EQ("only", array_item(({ "only" })));
-    }),
-    test("works with integer arrays", function() {
-      int *src = ({ 1, 2, 3, 4, 5 });
-      mixed picked = array_item(src);
-      ASSERT_EQ(1, in_array(picked, src));
-    }),
-    test("non-array input errors", function() {
-      string err = catch(array_item("not an array"));
-      ASSERT_NE(0, err);
-    }),
-    test("integer input errors", function() {
-      string err = catch(array_item(42));
-      ASSERT_NE(0, err);
-    }),
-  }));
-
-  describe("array_sum", ({
+  describe("sum_array", ({
     test("sums a populated int array", function() {
-      ASSERT_EQ(15, array_sum(({ 1, 2, 3, 4, 5 })));
+      ASSERT_EQ(15, sum_array(({ 1, 2, 3, 4, 5 })));
     }),
     test("empty array returns 0", function() {
-      ASSERT_EQ(0, array_sum(({})));
+      ASSERT_EQ(0, sum_array(({})));
     }),
     test("single element returns that element", function() {
-      ASSERT_EQ(7, array_sum(({ 7 })));
+      ASSERT_EQ(7, sum_array(({ 7 })));
     }),
     test("handles negative integers", function() {
-      ASSERT_EQ(-5, array_sum(({ 5, -10 })));
+      ASSERT_EQ(-5, sum_array(({ 5, -10 })));
     }),
     test("handles a zero element", function() {
-      ASSERT_EQ(3, array_sum(({ 0, 1, 2 })));
+      ASSERT_EQ(3, sum_array(({ 0, 1, 2 })));
     }),
     test("non-array input errors", function() {
-      string err = catch(array_sum("not an array"));
+      string err = catch(sum_array("not an array"));
       ASSERT_NE(0, err);
     }),
     test("non-int-uniform array errors", function() {
-      string err = catch(array_sum(({ 1, "two", 3 })));
+      string err = catch(sum_array(({ 1, "two", 3 })));
       ASSERT_NE(0, err);
     }),
   }));

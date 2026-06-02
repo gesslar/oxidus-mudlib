@@ -1,22 +1,6 @@
 #include <simul_efun.h>
 
 /**
- * Returns a random element from an array.
- *
- * This is a convenience wrapper around element_of() that retains the older
- * name that some mudlib code still expects.
- *
- * @deprecated Prefer element_of()
- * @param {mixed*} haystack The array to select from
- * @returns {mixed} A random element from the array
- */
-mixed array_item(mixed *haystack) {
-  assert_arg(pointerp(haystack), 1, "Array is required.");
-
-  return element_of(haystack);
-}
-
-/**
  * Returns a new array containing the distinct elements of the input
  * array.
  *
@@ -65,23 +49,13 @@ mixed *uniq_array(mixed *arr) {
  * @returns {mixed*} A new array with specified elements removed.
  */
 varargs mixed *remove_array_element(mixed *arr, int start, int end) {
-  if(!end) end = start;
-  if(start > end) return arr;
-  return arr[0..start-1] + arr[end+1..];
-}
+  if(!end)
+    end = start;
 
-/**
- * Creates a new array excluding elements between the given indices.
- *
- * This is a compatibility wrapper around remove_array_element().
- *
- * @param {mixed*} array The source array
- * @param {int} from Starting index to exclude from
- * @param {int} [to=from] Ending index to exclude to (inclusive)
- * @returns {mixed*} New array with specified elements excluded
- */
-varargs mixed *exclude_array(mixed *array, int from, int to) {
-  return remove_array_element(array, from, to);
+  if(start > end)
+    return arr;
+
+  return arr[0..start-1] + arr[end+1..];
 }
 
 /**
@@ -92,7 +66,7 @@ varargs mixed *exclude_array(mixed *array, int from, int to) {
  * @param {int} at The position to insert at
  * @returns {mixed*} New combined array
  */
-varargs mixed *merge_array(mixed *array, mixed *new_array, int at) {
+varargs mixed *merge_arrays(mixed *array, mixed *new_array, int at) {
   mixed *bottom, *top;
   int len;
 
@@ -100,6 +74,7 @@ varargs mixed *merge_array(mixed *array, mixed *new_array, int at) {
   !pointerp(new_array) && new_array = ({});
 
   len = sizeof(array);
+
   if(at <= 0)
     return new_array + array;
 
@@ -132,6 +107,7 @@ varargs mixed *merge_array(mixed *array, mixed *new_array, int at) {
  */
 varargs mixed *splice(mixed *arr, int start, int delete_count, mixed *items_to_add) {
   mixed *before, *after;
+
   if(!pointerp(items_to_add))
     items_to_add = ({});
 
@@ -185,7 +161,7 @@ varargs mixed* reverse_array(mixed *elements, int in_place) {
  * @param {mixed*} items The array to shuffle
  * @returns {mixed*} New array with elements in random order
  */
-mixed *array_shuffle(mixed *items) {
+mixed *shuffle_array(mixed *items) {
   mixed *arr, temp;
   int i, j;
 
@@ -213,7 +189,7 @@ mixed *array_shuffle(mixed *items) {
  * @returns {int} Returns 1 if all elements are of the specified type, 0
  *                 otherwise.
  */
-int uniform_array(mixed *arr, string type) {
+int uniformp(mixed *arr, string type) {
   int sz = sizeof(arr);
 
   if(!sz)
@@ -228,10 +204,11 @@ int uniform_array(mixed *arr, string type) {
  * @param {int*} nums Array of integers to sum
  * @returns {int} The sum of all elements
  */
-int array_sum(int *nums) {
+int sum_array(int *nums) {
   assert_arg(pointerp(nums), 1, "Invalid array");
-  assert_arg(!sizeof(nums) || uniform_array(nums, "int"), 1,
-             "Array must be empty or contain only integers");
+  assert_arg(!sizeof(nums) || uniformp(nums, T_INT), 1,
+             "Array must be empty or contain only integers"
+            );
 
   return reduce(nums, (: $1 + $2 :), 0);
 }
@@ -247,7 +224,7 @@ int array_sum(int *nums) {
  * @param {int} start_index - The index at which to start filling the array. (optional)
  * @returns {mixed} The filled array.
  */
-varargs mixed array_fill(mixed *arr, mixed value, int size, int start_index) {
+varargs mixed fill_array(mixed *arr, mixed value, int size, int start_index) {
   mixed *work;
   int len;
 
@@ -258,7 +235,7 @@ varargs mixed array_fill(mixed *arr, mixed value, int size, int start_index) {
     value = 0;
 
   if(nullp(size))
-    error("array_fill: size is required");
+    error("fill_array: size is required");
 
   len = sizeof(arr);
 
@@ -271,36 +248,6 @@ varargs mixed array_fill(mixed *arr, mixed value, int size, int start_index) {
     work[size] = value;
 
   return arr[0..start_index-1] + work + arr[start_index..];
-}
-
-/**
- * Returns a new array of the specified size, filled with the
- * specified value. If the array is larger than the specified size,
- * the array is truncated to the specified size.
- *
- * @param {mixed*} arr - The array to pad.
- * @param {int} size - The size of the array to create.
- * @param {mixed} value - The value to fill the array with.
- * @param {int} [beginning] - Whether to fill the array from the beginning. (optional)
- * @returns {mixed} The padded array.
- */
-varargs mixed array_pad(mixed *arr, int size, mixed value, int beginning) {
-  mixed *work;
-  int len;
-
-  !pointerp(arr) && arr = ({});
-
-  len = sizeof(arr);
-
-  if(size <= len)
-    return arr[0..size-1];
-
-  work = allocate(size - len, value);
-
-  if(beginning)
-    return work + arr;
-  else
-    return arr + work;
 }
 
 /**
@@ -523,10 +470,6 @@ mixed pop(mixed ref *arr) {
   return ret;
 }
 
-mixed array_pop(mixed ref *arr) {
-  return pop(ref arr);
-}
-
 /**
  * Adds a new element to the end of the array and returns the new
  * size of the array.
@@ -538,10 +481,6 @@ mixed array_pop(mixed ref *arr) {
 int push(mixed ref *arr, mixed value) {
   arr += ({ value });
   return sizeof(arr);
-}
-
-int array_push(mixed ref *arr, mixed value) {
-  return push(ref arr, value);
 }
 
 /**
@@ -559,10 +498,6 @@ mixed shift(mixed ref *arr) {
   return ret;
 }
 
-mixed array_shift(mixed ref *arr) {
-  return shift(ref arr);
-}
-
 /**
  * Adds a new element to the beginning of the array and returns
  * the new size of the array.
@@ -574,10 +509,6 @@ mixed array_shift(mixed ref *arr) {
 int unshift(mixed ref *arr, mixed value) {
   arr = ({ value }) + arr;
   return sizeof(arr);
-}
-
-int array_unshift(mixed ref *arr, mixed value) {
-  return unshift(ref arr, value);
 }
 
 /**
@@ -824,10 +755,6 @@ mixed eject(mixed ref *arr, int index) {
   return ret;
 }
 
-mixed array_eject(mixed ref *arr, int index) {
-  return eject(ref arr, index);
-}
-
 /**
  * Removes the first occurrence of a value from an array.
  *
@@ -860,10 +787,6 @@ varargs int eject_value(mixed ref *arr, mixed value) {
   eject(ref arr, index);
 
   return index;
-}
-
-varargs int array_remove(mixed ref *arr, mixed value) {
-  return eject_value(ref arr, value);
 }
 
 /**
@@ -900,10 +823,6 @@ varargs int eject_value_all(mixed ref *arr, mixed value) {
   return cnt;
 }
 
-varargs void array_remove_all(mixed ref *arr, mixed value) {
-  eject_value_all(ref arr, value);
-}
-
 /**
  * Inserts an element at a specific index.
  *
@@ -921,10 +840,6 @@ mixed insert(mixed ref *arr, mixed value, int index) {
   arr = arr[0..index-1] + ({value}) + arr[index..];
 
   return sizeof(arr);
-}
-
-mixed array_insert(mixed ref *arr, mixed value, int index) {
-  return insert(ref arr, value, index);
 }
 
 /**
@@ -948,10 +863,6 @@ mixed *flatten(mixed *arr) {
       i++;
 
   return arr;
-}
-
-mixed *flatten_array(mixed *arr) {
-  return flatten(arr);
 }
 
 /**
