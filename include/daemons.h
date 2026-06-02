@@ -8,7 +8,6 @@
 #define ACTION_D        DIR_DAEMONS "action"
 #define ADVANCE_D       DIR_DAEMONS "advance"
 #define ALARM_D         DIR_DAEMONS "alarm"
-#define AUTODOC_D       DIR_DAEMONS "autodoc"
 #define BANK_D          DIR_DAEMONS "bank"
 #define BODY_D          DIR_DAEMONS "body"
 #define BOOT_D          DIR_DAEMONS "boot"
