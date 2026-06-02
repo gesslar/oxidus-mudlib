@@ -16,7 +16,7 @@ void _assert_eq(mixed expected, mixed actual, string where);
 void _assert_ne(mixed expected, mixed actual, string where);
 
 void mudlib_setup() {
-  master()->clear_last_error();
+  // master()->clear_last_error();
 }
 
 private nosave mixed *test_functions = ({});
@@ -43,6 +43,7 @@ varargs int same(mixed x, mixed y, int loose) {
       if(nullp(x))
         return nullp(y);
       // fallthrough, because it was a legit 0
+    case T_UNDEFINED:
     case T_STRING:
     case T_OBJECT:
     case T_FLOAT:
