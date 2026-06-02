@@ -8,7 +8,7 @@
 #define CMD_SHUTDOWN         DIR_CMDS_ADM "shutdown"
 
 // Std commands
-#define CMD_LOOK             DIR_CMDS_STD "look"
+#define CMD_LOOK             DIR_CMDS_ACTION "look"
 #define CMD_QUIT             DIR_CMDS_STD "quit"
 #define CMD_SU               DIR_CMDS_STD "su"
 
