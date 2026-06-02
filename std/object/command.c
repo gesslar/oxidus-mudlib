@@ -342,9 +342,6 @@ public int command_hook(string arg) {
 
   verb = query_verb();
 
-  if(sscanf(alias_parse(verb, arg), "%s %s", verb, arg) != 2)
-    verb = alias_parse(verb, arg);
-
   if(arg == "")
     arg = 0;
 
@@ -376,10 +373,6 @@ public int command_hook(string arg) {
 
   // Communication checks
   catch {
-    if(environment())
-      if(SOUL_D->request_emote(verb, arg))
-        return 1;
-
     // err = catch(load_object(CHAN_D));
     // if(!err) {
       // if(CHAN_D->chat(verb, query_privs(), arg))
