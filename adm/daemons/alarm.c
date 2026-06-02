@@ -163,13 +163,17 @@ varargs int add_alarm(string type, string master, string pattern,
     return 0;
   }
 
+  assert(nullp(args) || pointerp(args), "Args must be null or an array.");
+
+  args ??= ({});
+
   parts = ({
     type,
     pattern,
     master,
     file,
     func,
-    args
+    args...
   });
 
   alarm = create_alarm(parts, 1);
