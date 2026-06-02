@@ -167,6 +167,43 @@ void increment(int ref value) {
 }
 ```
 
+#### Variadic parameters
+
+For a `varargs` rest parameter (declared `type name...` or
+`type *name...`), the variadic marker belongs **inside the type
+braces**, not after the parameter name. The LPC language server only
+recognises `...` as a variadic marker when it appears within the
+`{type}` expression — a `...` written after the name is silently
+swallowed as comment text and conveys nothing to the LSP.
+
+Always use the LPC-style trailing form `{type...}` — the marker mirrors
+the declaration, where `...` follows the type. This is the normative
+form for this project:
+
+```c
+/**
+ * @param {mixed...} arg - Optional trailing arguments forwarded to
+ *                         the callback.
+ */
+void schedule(string func, mixed arg...) {
+  // ...
+}
+```
+
+The JS-style leading form `{...type}` is also accepted by the parser
+and appears in older code, but do **not** use it in new documentation;
+convert it to `{type...}` when you encounter it.
+
+Do **not** write the marker after the name — this does not register as
+variadic:
+
+```c
+/**
+ * @param {mixed} arg... - WRONG: the ... is treated as description
+ *                         text, not a variadic marker.
+ */
+```
+
 ### `@returns`
 
 Documents the return value of a function.

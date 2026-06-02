@@ -1,12 +1,27 @@
-// /adm/daemons/currency.c
-// Currency daemon
-//
-// Created:     2024/02/19: Gesslar
-// Last Change: 2024/02/20: Assistant
+/**
+ * @file /adm/daemons/currency.c
+ *
+ * Currency daemon. Loads the configured currency denominations and
+ * their relative values, exposes ordered lookups, and converts amounts
+ * between denominations.
+ *
+ * @created 2024-02-19 - Gesslar
+ * @last_modified 2024-02-20 - Assistant
+ *
+ * @history
+ * 2024-02-19 - Gesslar - Created
+ * 2024-02-20 - Assistant - Updated
+ */
 
 inherit STD_DAEMON;
 
 // Variables
+
+/**
+ * Maps each currency denomination name to its relative value.
+ *
+ * @type {([ string: int ])}
+ */
 private mapping currency_map;
 private string *currency_order;
 
@@ -26,10 +41,27 @@ void setup() {
   );
 }
 
+/**
+ * Determines whether the given name is a recognised currency
+ * denomination.
+ *
+ * @param {string} currency - The denomination name to check.
+ * @returns {int} 1 if the denomination is valid, 0 otherwise.
+ */
 int valid_currency_type(string currency) {
   return member_array(currency, currency_order) != -1;
 }
 
+/**
+ * Converts an amount from one denomination to another, rounded to the
+ * nearest whole unit.
+ *
+ * @param {int} amount - The amount in the source denomination.
+ * @param {string} from_currency - The source denomination name.
+ * @param {string} to_currency - The target denomination name.
+ * @returns {int} The converted amount, or -1 if either denomination is
+ *                invalid.
+ */
 int convert_currency(int amount, string from_currency, string to_currency) {
   int from_rate, to_rate;
   float result;
@@ -47,6 +79,16 @@ int convert_currency(int amount, string from_currency, string to_currency) {
   return to_int(result + 0.5);
 }
 
+/**
+ * Converts an amount from one denomination to another, returning the
+ * unrounded floating-point result.
+ *
+ * @param {int} amount - The amount in the source denomination.
+ * @param {string} from_currency - The source denomination name.
+ * @param {string} to_currency - The target denomination name.
+ * @returns {float} The converted amount, or -1 if either denomination
+ *                  is invalid.
+ */
 float fconvert_currency(int amount, string from_currency, string to_currency) {
   float from_rate, to_rate;
   float result;
@@ -64,22 +106,49 @@ float fconvert_currency(int amount, string from_currency, string to_currency) {
   return result;
 }
 
+/**
+ * Returns the name of the lowest-valued denomination.
+ *
+ * @returns {string} The lowest-valued currency denomination name.
+ */
 string lowest_currency() {
   return currency_order[0];
 }
 
+/**
+ * Returns the name of the highest-valued denomination.
+ *
+ * @returns {string} The highest-valued currency denomination name.
+ */
 string highest_currency() {
   return currency_order[<1];
 }
 
+/**
+ * Returns all currency denomination names ordered from lowest to
+ * highest value.
+ *
+ * @returns {string*} The ordered list of denomination names.
+ */
 string *currency_list() {
   return currency_order;
 }
 
+/**
+ * Returns the relative value of the given denomination.
+ *
+ * @param {string} currency - The denomination name.
+ * @returns {int} The denomination's relative value.
+ */
 int currency_value(string currency) {
   return currency_map[currency];
 }
 
+/**
+ * Returns a copy of the denomination-to-value mapping.
+ *
+ * @returns {([ string: int ])} A copy of the currency map.
+ */
 mapping get_currency_map() {
   return copy(currency_map);
 }
