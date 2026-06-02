@@ -27,6 +27,7 @@ void parse_group();
 void parse_access();
 string *parse(string *str);
 string *query_group(string group);
+string *expand_group(string group, mapping seen);
 string *track_member(string id, string directory);
 int query_access(string directory, string id, int type);
 int is_member(string user, string group);
@@ -67,7 +68,11 @@ void parse_group() {
 #endif
 
         for(n = 0, sz_members = sizeof(members); n < sz_members; n++) {
-            if(!file_size(user_data_file(members[n])) && !sscanf(members[n], "[%*s]")) {
+            // A member may be a real user, a [special] priv, or a
+            // (group) reference for nesting one group inside another.
+            if(!file_size(user_data_file(members[n]))
+            && !sscanf(members[n], "[%*s]")
+            && !sscanf(members[n], "(%*s)")) {
                 tell_me("Error [security]: Unknown user detected.\n");
                 tell_me("Security alert: User '" + members[n] + "' ignored for group '" + group + "'.\n");
                 members -= ({ members[n] });
@@ -434,6 +439,38 @@ int query_access(string directory, string id, int type) {
     return 0;
 }
 
+/*
+ * Recursively resolves a group into the flat list of its concrete
+ * member ids (real users and [special] privs), following any nested
+ * (group) references. The seen mapping guards against cyclic group
+ * definitions so a misconfigured file can't loop forever.
+ */
+string *expand_group(string group, mapping seen) {
+    string *members, *result;
+    int i, sz;
+
+    // Normalise a "(group)" reference down to its bare group name.
+    if(!groups[group]) sscanf(group, "(%s)", group);
+
+    if(!group || seen[group]) return ({});
+    seen[group] = 1;
+
+    members = groups[group];
+    if(!pointerp(members)) return ({});
+
+    result = ({});
+    for(i = 0, sz = sizeof(members); i < sz; i++) {
+        string sub;
+
+        if(stringp(members[i]) && sscanf(members[i], "(%s)", sub))
+            result += expand_group(members[i], seen);
+        else
+            result += ({ members[i] });
+    }
+
+    return result;
+}
+
 string *track_member(string id, string directory) {
     mapping data = access[directory];
     string *cles = keys(data);
@@ -448,7 +485,7 @@ string *track_member(string id, string directory) {
 #endif
 
     for(i = 0, sz_keys = sizeof(cles); i < sz_keys; i++) {
-        group_data = query_group(cles[i]);
+        group_data = expand_group(cles[i], ([]));
         if(!pointerp(group_data) || sizeof(group_data) < 1) continue;
         if(member_array(id, group_data) != -1) return data[cles[i]];
     }
@@ -470,30 +507,9 @@ string *query_group_names() {
 }
 
 int is_member(string user, string group) {
-    string *data;
-    int i;
-    int sz_data;
-
-    data = ({});
-
     if(!user || !group) return 0;
 
-    data = groups[group];
-    if(!pointerp(data)) return 0;
-
-    for(i = 0, sz_data = sizeof(data); i < sz_data; i++) {
-        string group_name;
-
-        if(!stringp(data[i])) continue;
-
-        if(sscanf(data[i], "(%s)", group_name)) {
-            data += groups[group_name];
-        }
-    }
-
-    if(member_array(user, data) != -1) return 1;
-
-    else return 0;
+    return member_array(user, expand_group(group, ([]))) != -1;
 }
 
 mixed valid_database(object _caller, string _fun, mixed *_info) {

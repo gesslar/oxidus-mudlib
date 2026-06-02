@@ -28,6 +28,10 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   if(!devp(query_privs(body)))
     return _error("That user is not a developer.");
 
+  // An owner outranks a plain admin: only an owner may strip an owner.
+  if(ownerp(body) && !ownerp(caller))
+    return _error("Only an owner may revoke another owner's access.");
+
   _info("Revoking developer access for '%s'.", capitalize(body->query_real_name()));
 
   _ok(body, "Developer Access Revoked.");
