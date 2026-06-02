@@ -75,7 +75,6 @@ void create() {
 
 void flag(string str) {
   if(str == "builddocs") {
-    // call_out((: AUTODOC_D->ci_build() :), 2);
     call_out((: shutdown, 0 :), 10);
   } else {
     debug_message("Unknown flag: " + str);
