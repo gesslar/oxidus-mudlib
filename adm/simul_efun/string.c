@@ -590,7 +590,7 @@ int starts_with(string str, string starting_string) {
   if(len2 > len)
     return false;
 
-  return str[0 .. len2] == starting_string;
+  return str[0 .. len2-1] == starting_string;
 }
 
 /**
