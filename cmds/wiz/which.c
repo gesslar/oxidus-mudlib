@@ -8,14 +8,16 @@
 
 inherit STD_CMD;
 
-mixed main(object caller, string args) {
-  string *command_path = this_body()->query_path();
+mixed main(
+  /** @type {STD_PLAYER} */ object caller,
+  string args
+) {
+  string *command_path = caller->query_path();
   mixed *actions = previous_object()->query_commands();
   int i, is_located = 0;
 
-  if(!args) {
-    return notify_fail("Error: Syntax: which <verb/command>\n");
-  }
+  if(!args)
+    return _error("Syntax: which <verb/command>");
 
   for(i = 0; i < sizeof(command_path); i++) {
     if(file_exists(command_path[i] + args + ".c")) {
@@ -31,22 +33,23 @@ mixed main(object caller, string args) {
     }
   }
 
-  if(environment(previous_object())->valid_exit(args)) {
+  if(/** @type {STD_ROOM} */ (environment(previous_object()))->valid_exit(args)) {
     is_located = 1;
-    tell_me("Local Exit: " +
-      environment(this_body())->query_exit(args) + "\n");
+    tell_me(
+      "Local Exit: " + /** @type {STD_ROOM} */ (environment(this_body()))->query_exit(args) + "\n"
+    );
   }
 
   if(!is_located) {
-    return notify_fail("Error: '" + args
-      + "' not found in " +  implode(command_path, ", ")
-       + " nor via a local add_action, or exit.\n");
+    return _error("Error: '" + args + "' not found in " +
+      simple_list(command_path) + " nor via a local " "add_action, or exit.\n"
+    );
   }
 
   return 1;
 }
 
-string help(object caller) {
+string help(object _caller) {
   return " SYNTAX: which <verb/command>\n\n"
     "This command will search through your command path, through local verbs "
     "added via add_action, and exits for the specified command (aka verb).\n\n"
