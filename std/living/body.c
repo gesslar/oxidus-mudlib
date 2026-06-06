@@ -1,5 +1,6 @@
 /**
  * @file /std/living/body.c
+ *
  * Body object that is shared by players and NPCs.
  *
  * @created 2024-07-29 - Gesslar
@@ -21,6 +22,7 @@ inherit STD_ITEM;
 
 inherit __DIR__ "act";
 inherit __DIR__ "advancement";
+inherit __DIR__ "alias";
 inherit __DIR__ "appearance";
 inherit __DIR__ "attributes";
 inherit __DIR__ "boon";
