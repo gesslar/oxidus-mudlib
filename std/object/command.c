@@ -351,6 +351,11 @@ public int command_hook(string arg) {
   else
     complete = verb;
 
+  string aliased = ALIAS_D->resolve_alias(complete, this_object());
+  if(aliased) {
+    sscanf(aliased, "%s %s", verb, arg) || verb = aliased;
+  }
+
   obs = all_inventory();
   if(environment())
     obs += ({ environment() }) + all_inventory(environment());

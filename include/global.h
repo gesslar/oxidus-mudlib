@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <type.h>
 #include <custom_type.h>
+#include <etc.h>
 
 #define SIMUL_OB     "/adm/obj/simul_efun"
 #define LOGIN_OB     "/adm/obj/login"
@@ -33,5 +34,7 @@
 #define DATE "%F"
 #define TIME "%T"
 #define DATE_TIME "%F %T"
+
+#define NONAME "noname"
 
 #endif // __GLOBAL_H__

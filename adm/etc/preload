@@ -24,7 +24,7 @@
 /adm/daemons/shutdown
 
 # Global Alias Daemon
-/adm/daemons/ga_server
+/adm/daemons/alias
 
 # Finger Daemon
 /adm/daemons/finger_d
