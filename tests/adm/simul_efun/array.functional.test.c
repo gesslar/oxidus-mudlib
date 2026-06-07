@@ -148,7 +148,7 @@ void setup() {
     }),
     test("forwards extra varargs to the predicate", function() {
       ASSERT_EQ(1, find_index(({ 1, 2, 3 }),
-        (: $1 == $2 :), 2));
+        (: $1 == $4 :), 2));
     }),
     test("non-array first arg errors", function() {
       string err = catch(find_index(0, (: 1 :)));
@@ -179,7 +179,7 @@ void setup() {
     }),
     test("forwards extra varargs to the predicate", function() {
       ASSERT_EQ(20, find(({ 10, 20, 30 }),
-        (: $1 == $2 :), 20));
+        (: $1 == $4 :), 20));
     }),
     test("non-array first arg errors", function() {
       string err = catch(find(0, (: 1 :)));
@@ -238,6 +238,16 @@ void setup() {
       // elem in original order: 4.
       ASSERT_EQ(4, eval_last(({ 1, 2, 3, 4 }),
         (: $1 > 1 ? $1 : null :)));
+    }),
+    test("callback receives size as fourth arg", function() {
+      ASSERT_EQ(5, eval_last(({ 10, 20, 30, 40, 50 }),
+        (: $4 :)));
+    }),
+    test("forwards extra varargs to the callback", function() {
+      // $1=elem, $2=idx, $3=src, $4=sz, $5=bonus. Reversed iteration
+      // hits 2 before 1, so the first non-null match is 2 + 5 = 7.
+      ASSERT_EQ(7, eval_last(({ 1, 2, 3 }),
+        (: $1 == 2 ? $1 + $5 : null :), 5));
     }),
     test("returns UNDEFINED when no element yields non-null",
       function() {

@@ -198,6 +198,18 @@ void setup() {
         same_array(({ 0, 1, 2, 3 }),
                    splice(({ 1, 2, 3 }), 0, 0, ({ 0 })), 1));
     }),
+    test("negative start counts from the end", function() {
+      // start=-1 maps to sizeof+(-1) = last index. Insert before it.
+      ASSERT_EQ(1,
+        same_array(({ 1, 2, 3, 99, 4 }),
+                   splice(({ 1, 2, 3, 4 }), -1, 0, ({ 99 })), 1));
+    }),
+    test("negative start with delete removes from the end", function() {
+      // start=-2 maps to index 2; delete_count=1 drops the 3.
+      ASSERT_EQ(1,
+        same_array(({ 1, 2, 99, 4 }),
+                   splice(({ 1, 2, 3, 4 }), -2, 1, ({ 99 })), 1));
+    }),
     test("delete_count beyond end removes to end", function() {
       ASSERT_EQ(1,
         same_array(({ 1 }),
@@ -295,7 +307,7 @@ void setup() {
       // returns elements from it that have a matching element in the
       // larger array under the custom predicate.
       mixed *result = intersection(a, b,
-        (: ($1 % 2 == 0) && ($2 % 2 == 0) :));
+        (: ($1 % 2 == 0) && ($4 % 2 == 0) :));
       // Every element of b is even; 2 and 4 in a are even and match,
       // so every element of b is included in the result.
       ASSERT_EQ(({ 10, 20, 30 }), result);

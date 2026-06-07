@@ -49,7 +49,7 @@ void setup() {
     }),
     test("uses custom comparator when provided", function() {
       ASSERT_EQ(1, includes(({ 1, 2, 3, 4 }), 6,
-        (: $1 + $2 == 10 :)));
+        (: $1 + $4 == 10 :)));
     }),
     test("custom comparator returns 0 when no match", function() {
       ASSERT_EQ(0, includes(({ 1, 2, 3 }), 99,
@@ -66,7 +66,7 @@ void setup() {
     }),
     test("alias accepts an optional comparator", function() {
       ASSERT_EQ(1, in_array(6, ({ 1, 2, 3, 4 }),
-        (: $1 + $2 == 10 :)));
+        (: $1 + $4 == 10 :)));
     }),
   }));
 
