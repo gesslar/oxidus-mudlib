@@ -46,12 +46,16 @@ cp -v ../local_options src/local_options
 rm -rf build
 mkdir build
 cd build
+# OXIDUS_CMAKE_EXTRA lets callers append cmake flags without editing this script.
+# It is empty by default (local builds stay -march=native). The Docker build sets
+# it to "-DMARCH_NATIVE=OFF" so the published driver runs on any x86-64 CPU.
  cmake .. \
      -DPACKAGE_MUDLIB_STATS=OFF \
      -DPACKAGE_DB_MYSQL=0 \
      -DPACKAGE_DB=1 \
      -DPACKAGE_DB_SQLITE=3 \
-     -DPACKAGE_UIDS=OFF
+     -DPACKAGE_UIDS=OFF \
+     ${OXIDUS_CMAKE_EXTRA:-}
 
 make -j "$(nproc)" install
 

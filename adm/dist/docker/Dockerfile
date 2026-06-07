@@ -53,8 +53,12 @@ RUN git clone "${OXIDUS_REPO}" "${OXIDUS_HOME}" \
 # Build the driver via the canonical script. It initialises the fluffos
 # submodule, compiles, installs binaries into adm/dist/bin, copies the driver
 # headers into include/driver, and rewrites config.mud's mudlib/log paths.
+#
+# MARCH_NATIVE=OFF is critical: FluffOS defaults -march=native ON, which would
+# tune the binary to the *build* host's CPU (e.g. a CI runner with AVX-512) and
+# SIGILL on any older CPU at runtime. OFF targets a portable x86-64 baseline.
 WORKDIR ${OXIDUS_HOME}/adm/dist
-RUN ./rebuild
+RUN OXIDUS_CMAKE_EXTRA="-DMARCH_NATIVE=OFF" ./rebuild
 
 # Slim the tree for the runtime stage: keep the FluffOS test certs (used for the
 # optional TLS opt-in) but drop the fluffos source/build tree and git metadata.
