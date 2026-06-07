@@ -180,7 +180,7 @@ void Items(object who, string submodule, mixed arg) {
   // Now we do another switch to build the item data
   switch(submodule) {
     case "List" :
-      items = find_targets(who, null, container, (: $1 != $2, $(who) :));
+      items = find_targets(who, null, container, (: $1 != $2, $(who) :)) ?? ({});
       item_data = ({});
 
       foreach(item in items) {
