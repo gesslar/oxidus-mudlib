@@ -27,7 +27,7 @@
 #define NO_LIGHT
 #define OLD_ED
 #undef ED_INDENT_CASE
-#define ED_INDENT_SPACES 4
+#define ED_INDENT_SPACES 2
 #undef ED_USE_TABS
 #define ED_TAB_WIDTH 8
 #undef RECEIVE_ED

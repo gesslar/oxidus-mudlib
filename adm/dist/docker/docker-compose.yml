@@ -1,0 +1,34 @@
+# Oxidus — local run / build.
+#
+#   docker compose up -d         # build locally and start
+#   docker compose up -d --build # force a rebuild (gets latest fluffos master)
+#   docker compose logs -f       # watch the driver
+#   docker compose down          # stop (state persists in the named volume)
+#
+# To run the published image instead of building, comment out `build:` and
+# uncomment the ghcr image line.
+
+services:
+  oxidus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Pin a specific commit/branch/tag of the mudlib if you like.
+        OXIDUS_REF: main
+    # image: ghcr.io/gesslar/oxidus:latest
+    container_name: oxidus
+    init: true                 # tini as PID 1: clean signal forwarding + zombie reaping
+    restart: unless-stopped
+    stop_grace_period: 30s     # give the driver time to save on shutdown
+    ports:
+      - "1336:1336"            # plain telnet
+      # - "1338:1338"          # TLS telnet (also set OXIDUS_TLS=1 below)
+    # environment:
+    #   OXIDUS_TLS: "1"        # enable TLS telnet using the FluffOS test certs
+    #   OXIDUS_TLS_PORT: "1338"
+    volumes:
+      - oxidus-state:/oxidus/state
+
+volumes:
+  oxidus-state:
