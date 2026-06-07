@@ -111,6 +111,9 @@ varargs mixed *splice(mixed *arr, int start, int delete_count, mixed *items_to_a
   if(!pointerp(items_to_add))
     items_to_add = ({});
 
+  if(start < 0)
+    start = sizeof(arr) + start;
+
   before = arr[0..start - 1];
   after = arr[start + delete_count..];
 
@@ -564,8 +567,9 @@ varargs mixed *slice(mixed *arr, int start, int end) {
  * The function accumulates a result as it processes each element.
  *
  * @param {mixed*} arr Array to reduce
- * @param {function} fun Function taking (accumulator, current_value, index, array)
+ * @param {function} fun Function taking (accumulator, current_value, index, array, ...arg)
  * @param {mixed} [init=arr[0]] Initial value for accumulator
+ * @param {mixed} [arg] Additional arguments passed to the callback starting at $5
  * @returns {mixed} Final accumulated value
  *
  * @example
@@ -869,8 +873,8 @@ mixed *flatten(mixed *arr) {
  * Returns the index of the first element that passes the test function.
  *
  * @param {mixed*} arr - Array to search
- * @param {function} fun - Test function
- * @param {mixed} [extra] - Additional arguments to pass to test function
+ * @param {function} fun - Test function taking (element, index, array, ...extra)
+ * @param {mixed} [extra] - Additional arguments passed to the callback starting at $4
  * @returns {int} Index of first matching element or -1 if none found
  * @errors If arguments are invalid types
  */
@@ -881,7 +885,7 @@ varargs int find_index(mixed *arr, function fun, mixed extra...) {
   assert_arg(valid_function(fun), 2, "Function is required");
 
   for(i = 0, sz = sizeof(arr); i < sz; i++) {
-    if(extra ? fun(arr[i], extra...) : fun(arr[i])) {
+    if(fun(arr[i], i, arr, extra...)) {
       return i;
     }
   }
@@ -893,8 +897,8 @@ varargs int find_index(mixed *arr, function fun, mixed extra...) {
  * Returns the first element that passes the test function.
  *
  * @param {mixed*} arr - Array to search
- * @param {function} fun - Test function
- * @param {mixed} [extra] - Additional arguments to pass to test function
+ * @param {function} fun - Test function taking (element, index, array, ...extra)
+ * @param {mixed} [extra] - Additional arguments passed to the callback starting at $4
  * @returns {mixed} First matching element or null if none found
  * @errors If arguments are invalid types
  */
@@ -928,6 +932,10 @@ int in_range(int index, mixed *arr) {
  *
  * For arrays, the function is called with (element, index, array, ...extra).
  * For mappings, the function is called with (key, value, mapping, ...extra).
+ *
+ * @param {mixed} src - Array or mapping to iterate over
+ * @param {function} fun - Function called per element/pair (see above)
+ * @param {mixed} [extra] - Additional arguments passed to the callback starting at $4
  */
 varargs void each(mixed src, function fun, mixed extra...) {
   assert_arg(pointerp(src) || mapp(src), 1, "Array or mapping required.");
@@ -936,16 +944,15 @@ varargs void each(mixed src, function fun, mixed extra...) {
   if(pointerp(src)) {
     int i, sz;
 
-    for(i = 0, sz = sizeof(src); i < sz; i++) {
-      extra ? fun(src[i], i, src, extra...) : fun(src[i], i, src);
-    }
+    for(i = 0, sz = sizeof(src); i < sz; i++)
+      fun(src[i], i, src, extra...);
   }
 
   if(mapp(src)) {
     mixed key, val;
 
     foreach(key, val in src) {
-      extra ? fun(key, val, src, extra...) : fun(key, val, src);
+      fun(key, val, src, extra...);
     }
   }
 }
@@ -961,7 +968,7 @@ varargs void each(mixed src, function fun, mixed extra...) {
  * @param {mixed*} src - The array to search
  * @param {function} fun - The function to apply to each element (called as
  *                         fun(element, index, array, size, ...extra))
- * @param {mixed...} [extra] - Optional extra arguments passed to the function
+ * @param {mixed...} [extra] - Additional arguments passed to the callback starting at $5
  * @returns {mixed} The first non-null result, or UNDEFINED if none found
  */
 varargs mixed eval_first(mixed *src, function fun, mixed extra...) {
@@ -972,9 +979,7 @@ varargs mixed eval_first(mixed *src, function fun, mixed extra...) {
 
   if((sz = sizeof(src)) > 0) {
     for(; i < sz; i++) {
-      mixed result = extra
-        ? fun(src[i], i,  src, sz, extra...)
-        : fun(src[i], i, src, sz);
+      mixed result = fun(src[i], i,  src, sz, extra...);
 
       if(!nullp(result))
         return result;
@@ -994,7 +999,7 @@ varargs mixed eval_first(mixed *src, function fun, mixed extra...) {
  *
  * @param {mixed*} src The array to search
  * @param {function} fun The function to apply to each element (called as fun(element, index, array, size, ...extra))
- * @param {mixed...} [extra] Optional extra arguments passed to the function
+ * @param {mixed...} [extra] Additional arguments passed to the callback starting at $5
  * @returns {mixed} The last non-null result, or UNDEFINED if none found
  *
  * @example
