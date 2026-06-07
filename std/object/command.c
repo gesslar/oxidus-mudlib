@@ -352,7 +352,10 @@ public int command_hook(string arg) {
     complete = verb;
 
   string aliased = ALIAS_D->resolve_alias(complete, this_object());
+
   if(aliased) {
+    arg = 0;
+
     sscanf(aliased, "%s %s", verb, arg) || verb = aliased;
   }
 
