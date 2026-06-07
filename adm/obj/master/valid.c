@@ -320,7 +320,7 @@ private int valid_object(object ob) {
     name = query_privs(previous_object());
 
   if(!name)
-    name = "noname";
+    name = NONAME;
 
   if(file_name(ob) == "/adm/daemons/login")
     return 1;
@@ -347,9 +347,6 @@ private int valid_override(string _file, string efun_name, string mainfile) {
     return 1;
 
   if(mainfile == "/adm/simul_efun/override.c")
-    return 1;
-
-  if(mainfile == "/adm/simul_efun/overrides.c")
     return 1;
 
   if(efun_name == "this_player" && mainfile == "/adm/simul_efun/object.c")
@@ -408,7 +405,7 @@ private int valid_read(string file, object user, string func) {
     name = query_privs(user);
 
   if(!name)
-    name = "noname";
+    name = NONAME;
 
   if(strlen(file) > strlen(user_data_directory(name))) {
     if(file[0..(strlen(user_data_directory(name))-1)] == user_data_directory(name))
@@ -463,7 +460,7 @@ private int valid_write(string file, object user, string _func) {
     name = query_privs(user);
 
   if(!name)
-    name = "noname";
+    name = NONAME;
 
   if(user == this_object() || user == master())
     return 1;
