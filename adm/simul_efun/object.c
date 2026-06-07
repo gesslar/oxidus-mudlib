@@ -615,7 +615,7 @@ private object *get_all_inventory(object env) {
  *                          calling object will be used.
  * @param {function} f - An optional custom filter function to further filter
  *                       the objects.
- * @returns {object*} An array of located objects or 0 if none are found.
+ * @returns {object* | undefined} An array of located objects or undefined (0) if none are found.
  */
 varargs object *find_targets(object user, string arg, object source, function f) {
   object *obs = ({});
@@ -631,7 +631,7 @@ varargs object *find_targets(object user, string arg, object source, function f)
     env = environment(user);
 
   if(!env)
-    return 0;
+    return undefined;
 
   // Get all inventory objects from the determined environment
   obs = get_all_inventory(env);
