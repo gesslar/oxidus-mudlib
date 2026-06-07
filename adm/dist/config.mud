@@ -42,7 +42,7 @@ global include file : <global.h>
 # like destructing the object. If the function isn't defined by the
 # object, then nothing will happen.
 # This time should be substantially longer than the swapping time.
-time to clean up : 120000
+time to clean up : 300
 
 # How long time until an unused object is swapped out.
 # Machine with too many players and too little memory: 900 (15 minutes)
@@ -110,7 +110,7 @@ default error message : Something went wrong.
 gametick msec : 100
 
 # Number of milliseconds between heartbeats
-heartbeat interval msec : 2000
+heartbeat interval msec : 100
 
 # explode():
 #
@@ -236,11 +236,11 @@ trace : 1
 #   out the previous lines of code to an error) eval_instruction() runs about
 #   twice as fast when this is not defined (for the most common eoperators).
 #
-trace code : 0
+trace code : 1
 
 # TRACE: set this to 1 to collect context information during LPC traces.
 trace lpc execution context : 0
-g
+
 # TRACE: set this to 1 to collect LPC instruction information during LPC traces.
 trace lpc instructions : 0
 

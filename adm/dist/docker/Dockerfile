@@ -1,0 +1,116 @@
+# syntax=docker/dockerfile:1
+#
+# Oxidus mudlib + FluffOS driver, containerised.
+#
+# Reuses the canonical Oxidus build/run methodology in adm/dist:
+#   * adm/dist/rebuild  -> compiles the driver from the fluffos submodule and
+#                          rewrites config.mud with absolute paths.
+#   * adm/dist/run      -> reboot loop (mirrored by docker-entrypoint.sh so it
+#                          behaves correctly as PID 1).
+#
+# Stage 1 clones a pristine copy of the mudlib over public HTTPS and builds the
+# driver. Stage 2 ships only the built tree on a slim runtime base.
+
+############################
+# Stage 1: build
+############################
+FROM debian:bookworm-slim AS builder
+
+# Where the mudlib lives inside the image. The rebuild script bakes this exact
+# path into config.mud, so the runtime stage MUST use the same value.
+ARG OXIDUS_HOME=/oxidus
+# Repo + ref to clone. CI passes the exact commit SHA for a reproducible lib;
+# fluffos itself still tracks master (per the canonical rebuild script).
+ARG OXIDUS_REPO=https://github.com/gesslar/oxidus-mudlib.git
+ARG OXIDUS_REF=main
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Build toolchain + FluffOS build deps (see /mud/fluffos_deps_ubuntu).
+# Note: FluffOS's cmake always runs find_package(MySQL) and requires mysql.h
+# even though rebuild sets PACKAGE_DB_MYSQL=0, so the client headers must be
+# present (matches mysql-devel on the canonical Fedora build host).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential \
+      bison \
+      cmake \
+      git \
+      ca-certificates \
+      libssl-dev \
+      libz-dev \
+      libpcre3-dev \
+      libsqlite3-dev \
+      libpq-dev \
+      libjemalloc-dev \
+      libicu-dev \
+      default-libmysqlclient-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# Pristine clone of the mudlib.
+RUN git clone "${OXIDUS_REPO}" "${OXIDUS_HOME}" \
+ && git -C "${OXIDUS_HOME}" checkout "${OXIDUS_REF}"
+
+# Build the driver via the canonical script. It initialises the fluffos
+# submodule, compiles, installs binaries into adm/dist/bin, copies the driver
+# headers into include/driver, and rewrites config.mud's mudlib/log paths.
+WORKDIR ${OXIDUS_HOME}/adm/dist
+RUN ./rebuild
+
+# Slim the tree for the runtime stage: keep the FluffOS test certs (used for the
+# optional TLS opt-in) but drop the fluffos source/build tree and git metadata.
+RUN set -eux; cd "${OXIDUS_HOME}"; \
+    mkdir -p adm/dist/certs.dist; \
+    cp adm/dist/fluffos/testsuite/etc/cert.pem adm/dist/certs.dist/; \
+    cp adm/dist/fluffos/testsuite/etc/key.pem  adm/dist/certs.dist/; \
+    rm -rf adm/dist/fluffos .git
+
+############################
+# Stage 2: runtime
+############################
+FROM debian:bookworm-slim AS runtime
+
+ARG OXIDUS_HOME=/oxidus
+ENV OXIDUS_HOME=${OXIDUS_HOME}
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Shared libraries the dynamically-linked driver needs at runtime, plus bash
+# (run/entrypoint) and procps (pgrep, used by adm/dist/run's stop helper).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      bash \
+      procps \
+      ca-certificates \
+      libssl3 \
+      zlib1g \
+      libpcre3 \
+      libsqlite3-0 \
+      libpq5 \
+      libjemalloc2 \
+      libicu72 \
+      libstdc++6 \
+      libbz2-1.0 \
+      libmariadb3 \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd -r -m -d /home/oxidus -s /bin/bash oxidus
+
+COPY --from=builder ${OXIDUS_HOME} ${OXIDUS_HOME}
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+# state/ is the single persistence root; the entrypoint symlinks all mutable
+# mudlib paths into it. chown before declaring the VOLUME so a fresh named
+# volume initialises with the right ownership.
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+ && mkdir -p ${OXIDUS_HOME}/state \
+ && chown -R oxidus:oxidus ${OXIDUS_HOME}
+
+USER oxidus
+WORKDIR ${OXIDUS_HOME}
+
+# Plain telnet on 1336; TLS telnet on 1338 is opt-in via OXIDUS_TLS=1 (see
+# docker-entrypoint.sh). EXPOSE is metadata only — you still map the port with
+# -p/ports; listing 1338 keeps the image self-describing and lets `docker run -P`
+# publish it.
+EXPOSE 1336
+EXPOSE 1338
+VOLUME ${OXIDUS_HOME}/state
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
