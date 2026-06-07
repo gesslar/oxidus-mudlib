@@ -250,7 +250,7 @@ public resolve_alias(string input, object who) {
 
   int highest_positional_token_position = -1;
   int highest_input_cursor = -1;
-  int gobble_token_position = -1;
+  int *gobble_token_positions = ({});
 
   // Now we have everything! let's Lupin!
   int i = 0, sz = sizeof(positional_tokens);
@@ -297,16 +297,13 @@ public resolve_alias(string input, object who) {
       else
         result[i] = "";
     } else if(positional_matches[i] == GOBBLE_MATCH) {
-      if(gobble_token_position == -1) {
-        gobble_token_position = i;
-      } else {
-        positional_matches[gobble_token_position] = ""; // nope
-        gobble_token_position = i;
-      }
+      push(ref gobble_token_positions, i);
     }
   }
 
-  if(gobble_token_position > -1) {
+  int sz_gobbles = sizeof(gobble_token_positions);
+
+  if(sz_gobbles) {
     string *gobbled = ({});
 
     if(highest_input_cursor > -1) {
@@ -315,8 +312,13 @@ public resolve_alias(string input, object who) {
       gobbled = input_words;
     }
 
-    result = result[0 .. gobble_token_position-1];
+    int final_gobble_position = pop(ref gobble_token_positions);
+    each(gobble_token_positions, (: $(result)[$1] = "" :));
+
+    result = result[0 .. final_gobble_position-1];
     result += gobbled;
+    result += positional_tokens[final_gobble_position+1..];
+
   }
 
   return trim(implode(result, ""));
