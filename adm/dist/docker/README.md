@@ -4,7 +4,8 @@ A self-contained image of the [Oxidus](https://oxidus.online/) mudlib plus the
 FluffOS driver. The image clones a **pristine** copy of the mudlib and compiles
 the driver from the bundled `fluffos` submodule using the canonical
 `adm/dist/rebuild` script — so a fresh container is a brand-new mudlib, ready to
-play. The first character to log in becomes the superuser.
+play. The first character to log in becomes Oxidus's owner with the highest
+privileges.
 
 ## Quick start (build locally)
 
@@ -52,7 +53,7 @@ mudlib path into that volume, so it survives restarts **and** image upgrades:
 | `adm/etc/certs/`      | TLS certs                                  |
 | `adm/etc/secret/`     | secrets                                    |
 | `adm/etc/alarms/`     | alarm files                               |
-| `adm/etc/first_user`  | superuser-assigned marker                  |
+| `adm/etc/first_user`  | owner-assigned marker                      |
 | `adm/etc/config.lpml` | customised config                          |
 | `adm/etc/mssp.lpml`   | MSSP config                                |
 

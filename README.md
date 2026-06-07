@@ -29,35 +29,98 @@ docker run -d --name oxidus --init \
 - `-p 1336:1336` — exposes the telnet port on the host
 - `-v oxidus-state:/oxidus/state` — named volume holding all game state
 
-Watch it boot until you see `Accepting telnet connections...`:
+That `docker run -d` command **has already started the MUD** — it boots in the
+background the moment the command returns. You see no output because `-d`
+(detached) runs it silently and hands your prompt straight back.
+
+To *watch* it, attach to the logs. `docker logs` replays everything the
+container has printed since it started, and `-f` then follows live output —
+so you'll see the whole boot scroll past, ending at `Initializations complete.`
+once it's listening:
 
 ```bash
-docker logs -f oxidus
+docker logs -f oxidus    # a viewer onto recorded + live output
+                         # Ctrl-C detaches the viewer; the MUD keeps running
 ```
 
-Connect and create a character — **the first character to log in becomes the
-superuser**:
+You can run the above `docker logs` statement at any time to be re-plugged into
+the currently running docker to see any debug messages that the game has
+output. Doing so right after a boot is useful for checking for any issues with
+the boot process.
+
+`Ctrl+C` will exit you from tailing the driver output, but will not stop the
+game or the container.
+
+Connect and create a character — **the first character to log in becomes
+Oxidus's owner with the highest privileges**:
 
 ```bash
 telnet localhost 1336
 ```
 
-Manage it:
+**Start / stop the MUD.** These control the container's lifecycle — whether the
+driver is actually running. Your world is preserved in the volume either way:
 
 ```bash
-docker stop oxidus       # stop (your world is kept in the volume)
-docker start oxidus      # start again
-docker pull ghcr.io/gesslar/oxidus:latest   # upgrade: then `docker rm -f oxidus` and re-run
+docker stop oxidus       # halt the running container
+docker start oxidus      # boot it back up (in the background again)
+docker restart oxidus    # stop + start in one step
 ```
 
-**Reset to a brand-new MUD** (wipes the world — new accounts, superuser on first
-login again):
+Again, after starting or restarting Oxidus, you may opt to review the driver
+output to ensure a clean boot using `docker logs -f oxidus`. Keep it going to
+persist watching driver output, or Ctrl-C to return to the operating system
+prompt.
+
+**Upgrade** to a newer published image:
+
+```bash
+docker pull ghcr.io/gesslar/oxidus:latest   # fetch the newest image
+docker rm -f oxidus                          # remove the old container
+# then re-run the `docker run` command above to recreate it on the new image
+```
+
+**Reset to a brand-new MUD** (wipes the world — new accounts, and the first
+login becomes Oxidus's owner again):
 
 ```bash
 docker rm -f oxidus
 docker volume rm oxidus-state
 # then re-run the `docker run` command above
 ```
+
+### Editing the lib (heads-up: changes are temporary)
+
+The mudlib code is **baked into the image**, not the volume — so every
+`docker pull` gives you a clean, current Oxidus. The trade-off: **any edit to
+the shipped lib is wiped when you recreate the container on a newer image.**
+That's intended — you always land on fresh, stock Oxidus. Only *state* survives
+an update: players, data, logs, and your wizard home directory (`/home/...`).
+So tinker freely; a refresh just resets the lib.
+
+**From inside the game:** log in as a wizard, edit with the in-game tools, and
+`update <path>` to reload.
+
+**From a shell:** the image ships `nano`, `nvim`, and `rg` (ripgrep), so hop in
+and edit directly:
+
+```bash
+docker exec -it oxidus bash
+#  nano /oxidus/std/file.c       # /oxidus is the mudlib root
+#  rg "some_function" /oxidus    # search the lib
+#  then, in the game: update /std/file
+```
+
+Prefer your own editor on the host? Copy out, edit, copy back:
+
+```bash
+docker cp oxidus:/oxidus/std/file.c ./file.c
+docker cp ./file.c oxidus:/oxidus/std/file.c
+```
+
+**Want edits that stick** (real development)? Use Option 2 (clone + build) so the
+lib is yours, or bind-mount a host folder over a lib path
+(`-v "$PWD/d:/oxidus/d"`).
 
 ### Option 2 — Build it yourself (clone, then Docker)
 
@@ -71,7 +134,7 @@ docker compose up -d --build      # build the driver + start the MUD
 docker compose logs -f            # watch it boot ("Accepting telnet connections...")
 ```
 
-Connect (first login is superuser, as above):
+Connect (first login becomes Oxidus's owner, as above):
 
 ```bash
 telnet localhost 1336

@@ -79,6 +79,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Shared libraries the dynamically-linked driver needs at runtime, plus bash
 # (run/entrypoint) and procps (pgrep, used by adm/dist/run's stop helper).
+# neovim/nano/ripgrep are included so you can `docker exec` in and edit/search
+# the lib directly (handy for tinkering — note such edits are wiped on the next
+# image update; see README "Editing the lib").
 RUN apt-get update && apt-get install -y --no-install-recommends \
       bash \
       procps \
@@ -93,6 +96,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libstdc++6 \
       libbz2-1.0 \
       libmariadb3 \
+      neovim \
+      nano \
+      ripgrep \
  && rm -rf /var/lib/apt/lists/* \
  && useradd -r -m -d /home/oxidus -s /bin/bash oxidus
 
