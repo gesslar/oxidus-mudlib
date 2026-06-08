@@ -945,6 +945,7 @@ varargs void each(mixed src, function fun, mixed extra...) {
     int i, sz;
 
     for(i = 0, sz = sizeof(src); i < sz; i++)
+      // @lpc-expect-error: LSP doesn't know how to reach fun() here
       fun(src[i], i, src, extra...);
   }
 
