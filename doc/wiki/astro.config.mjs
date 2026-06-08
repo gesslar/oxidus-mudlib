@@ -46,6 +46,10 @@ export default defineConfig({
 			],
 			sidebar: [
 				{
+					label: 'Guides',
+					autogenerate: { directory: 'guides' },
+				},
+				{
 					label: 'Systems',
 					autogenerate: { directory: 'systems' },
 				},
