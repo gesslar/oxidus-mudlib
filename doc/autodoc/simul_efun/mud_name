@@ -1,7 +1,0 @@
-string mud_name()
-
-Returns
-
-`string` - The name of the MUD.
-
-Returns the name of the MUD.

@@ -1,7 +1,0 @@
-string arch()
-
-Returns
-
-`string` - The system architecture.
-
-Returns the architecture of the system the MUD is running on.

@@ -1,7 +1,0 @@
-string log_dir()
-
-Returns
-
-`string` - The log directory.
-
-Returns the directory where log files are stored.

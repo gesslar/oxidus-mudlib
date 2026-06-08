@@ -1,9 +1,0 @@
-int query_value()
-
-Returns
-
-`int` - The value of the object.
-
-Query the value of the object. The value is returned as an
-integer representing the value in the lowest denomination of
-currency.

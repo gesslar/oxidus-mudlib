@@ -1,7 +1,0 @@
-string tmp_dir()
-
-Returns
-
-`string` - The temporary directory.
-
-Returns the directory where temporary files are stored.

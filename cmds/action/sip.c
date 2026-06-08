@@ -32,3 +32,11 @@ mixed main(object tp, string str) {
 
   return 1;
 }
+
+string query_help(object _caller) {
+  return
+    "SYNTAX: sip <object>\n\n"
+    "This command will allow you to sip from a beverage you are holding. "
+    "Sipping consumes the beverage more slowly than drinking it.\n\n"
+    "See also: drink, eat";
+}

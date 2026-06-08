@@ -79,3 +79,12 @@ mixed main(/** @type {STD_BODY} */ object tp, string args) {
 
   return 1;
 }
+
+string query_help(object _caller) {
+  return
+    "SYNTAX: open <object> [here]\n\n"
+    "This command will allow you to open a container or a door in your "
+    "environment. If you have a container in your inventory and another of "
+    "the same name in the room, append 'here' to open the one in the room.\n\n"
+    "See also: close";
+}

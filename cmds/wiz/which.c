@@ -12,7 +12,7 @@ mixed main(
   /** @type {STD_PLAYER} */ object caller,
   string args
 ) {
-  string *command_path = caller->query_path();
+  string *command_path = caller->get_path();
   mixed *actions = previous_object()->query_commands();
   int i, is_located = 0;
 

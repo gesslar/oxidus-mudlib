@@ -1,7 +1,0 @@
-object shutdown_d()
-
-Returns
-
-`object` - The shutdown daemon.
-
-This simul_efun returns the shutdown daemon.
