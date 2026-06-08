@@ -1,9 +1,0 @@
-string set_log_prefix(string prefix)
-
-The set_log_prefix() function sets the log prefix for the object when using
-the function _log(). The log prefix is a string that will be prepended to all
-log messages.
-
-By default, there is no log prefix.
-
-Related: query_log_prefix, _log, set_log_level, query_log_level

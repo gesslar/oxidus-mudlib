@@ -1,9 +1,0 @@
-int set_log_level(int level)
-
-This sets the log level for the object when using the function _log(). The log
-level is an integer from 0 to 4, with 0 being silent or emergency messages
-and the maximum being 4, which logs everything. The default log level is 1.
-
-For the scale of messages you wish to log, please see help _log.
-
-Related: query_log_level, _log, set_log_prefix, query_log_prefix
