@@ -14,7 +14,7 @@ public mixed evaluate_command(object tp, string command,
   string arg);
 
 // Path functions
-public string *query_path();
+public string *get_path();
 public int add_path(string str);
 public void set_path(mixed path);
 public int rem_path(string str);
