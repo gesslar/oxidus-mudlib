@@ -1,7 +1,0 @@
-int port()
-
-Returns
-
-`int` - The port number.
-
-Returns the port number the MUD is running on.

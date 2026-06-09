@@ -1,9 +1,0 @@
-void adjust_value(int value)
-
-Parameters:
-
-* `int value` - The value to add.
-
-Add to the value of the object. The value is added as an
-integer representing the value in the lowest denomination of
-currency.

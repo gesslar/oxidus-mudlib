@@ -14,34 +14,12 @@
   FIRST_USER: "/adm/etc/first_user",
   ALLOW_SHUTDOWN: [
     "/adm/daemons/shutdown_d",
-    "/adm/daemons/autodoc",
   ],
   LOOK_HIGHLIGHT: "on",
   LOOK_HIGHLIGHT_COLOUR: "669",
   COLOUR_TOO_DARK: "on",
   COLOUR_MININUM_LUMINANCE: 50,
   USE_MASS: true,
-  AUTODOC_SOURCE_DIRS: [
-    "/adm/simul_efun/",
-    "/adm/daemons/",
-    "/std/modules/",
-    "/std/object/",
-  ],
-  DOC_DIR: "/doc/",
-  AUTODOC_ROOT: "/doc/autodoc/",
-  DOCS: {
-    general: [
-      "general",
-      "game",
-    ],
-    developer: [
-      "autodoc/daemon_function",
-      "autodoc/efun_override",
-      "autodoc/simul_efun",
-      "autodoc/module_function",
-      "autodoc/object_function",
-    ],
-  },
   CURRENCY: [
     [
       "copper",
@@ -91,7 +69,6 @@
   UNDERLEVEL_THRESHOLD: 0,
   UNDERLEVEL_XP_BONUS: 0.05,
   ALLOW_RECURSE_RMDIR: [
-    "/adm/daemons/autodoc",
     "/cmds/file/rm",
   ],
   SKILLS: {

@@ -1,9 +1,0 @@
-void emit(int sig, mixed arg...)
-
-Parameters:
-
-* `int sig` - signal number
-* `mixed... arg` - arguments to pass to the signal
-
-Emit a signal to all objects that have registered a slot for
-the signal.

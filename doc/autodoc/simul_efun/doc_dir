@@ -1,7 +1,0 @@
-string doc_dir()
-
-Returns
-
-`string` - The documentation directory.
-
-Returns the directory where documentation files are stored.

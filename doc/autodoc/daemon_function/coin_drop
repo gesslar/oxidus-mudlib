@@ -1,8 +1,0 @@
-void coin_drop(object tp, object source)
-
-Parameters:
-
-* `object tp` - The player to drop the coins for.
-* `object source` - The source of the coins.
-
-Drops coins from the coin table from the source into the source.
