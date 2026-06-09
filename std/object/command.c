@@ -184,7 +184,7 @@ string process_input(string arg) {
  *
  * @returns {string*} Copy of the command paths array
  */
-public string *query_path() {
+public string *get_path() {
   return copy(__cmdPaths);
 }
 
@@ -265,7 +265,7 @@ public void add_wizard_path() {
  * paths only.
  */
 public void remove_wizard_paths() {
-  filter(query_path(), (: rem_path :));
+  filter(get_path(), (: rem_path :));
 
   add_standard_paths();
 }
@@ -434,7 +434,7 @@ public int command_hook(string arg) {
  *          file without extension, or undefined if not found
  */
 public string find_command_path(string verb) {
-  string *paths = query_path();
+  string *paths = get_path();
   string path;
 
   foreach(string p in paths) {
