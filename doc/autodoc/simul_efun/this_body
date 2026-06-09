@@ -1,8 +1,0 @@
-object this_body()
-
-Returns
-
-`object` - The body of the current calling player.
-
-This is a simul_efun that will return the body of the current
-interactive user. It is used as a replacement for this_player().

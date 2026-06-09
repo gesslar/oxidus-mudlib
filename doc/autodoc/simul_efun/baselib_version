@@ -1,7 +1,0 @@
-string baselib_version()
-
-Returns
-
-`string` - The base library version.
-
-Returns the version of the base library.

@@ -1,9 +1,0 @@
-void lazy_query(string db, string q, mixed *callback)
-
-Parameters:
-
-* `string db` - The name of the database to query.
-* `string q` - The SQL query to execute.
-* `mixed* callback` - Callback function to handle the result.
-
-Initiates a lazy (chunked) query execution.

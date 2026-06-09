@@ -1,8 +1,0 @@
-string generate_uuid()
-
-Returns
-
-`string` - A randomly generated version 4 UUID.
-
-Generates a random "version 4" UUID. Version 4 UUIDs are based
-on random numbers.

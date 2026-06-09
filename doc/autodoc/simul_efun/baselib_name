@@ -1,7 +1,0 @@
-string baselib_name()
-
-Returns
-
-`string` - The base library name.
-
-Returns the name of the base library.

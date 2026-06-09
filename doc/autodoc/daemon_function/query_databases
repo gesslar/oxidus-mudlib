@@ -1,7 +1,0 @@
-mapping query_databases()
-
-Returns
-
-`mapping` - A mapping of database names to their file paths.
-
-Retrieves a list of all available databases.

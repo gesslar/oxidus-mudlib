@@ -1,8 +1,0 @@
-void loot_drop(object tp, object source)
-
-Parameters:
-
-* `object tp` - The player to drop the loot for.
-* `object source` - The source of the loot.
-
-Drops loot from the loot table from the source into the source.

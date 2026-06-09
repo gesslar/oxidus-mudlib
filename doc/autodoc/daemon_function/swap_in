@@ -1,8 +1,0 @@
-void swap_in(string label, mixed value)
-
-Parameters:
-
-* `string label` - The identifier for the stored value.
-* `mixed value` - The value to be stored.
-
-Stores a value in the swap daemon under a given label.

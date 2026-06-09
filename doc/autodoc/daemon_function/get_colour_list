@@ -1,7 +1,0 @@
-string get_colour_list()
-
-Returns
-
-{string} A formatted string containing all colour codes and their visual representation.
-
-Generates a formatted list of all available colours.

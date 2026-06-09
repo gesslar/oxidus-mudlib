@@ -1,9 +1,0 @@
-varargs void say(string msg, mixed exclude)
-
-Parameters:
-
-* `string msg` - The message to write.
-* `mixed exclude` - The object or array of objects to exclude from the message.
-
-This function is an override of the say() efun. It will
-write a message to the room using the message() efun.

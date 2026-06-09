@@ -1,7 +1,0 @@
-int query_boot_number()
-
-Returns
-
-`int` - current boot number
-
-Get the current boot number.

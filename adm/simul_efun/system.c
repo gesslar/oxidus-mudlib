@@ -157,7 +157,7 @@ string tmp_dir() {
  */
 
 string doc_dir() {
-  return mud_config("DOC_DIR");
+  return mud_config("DOC.ROOT");
 }
 
 /**

@@ -1,7 +1,0 @@
-string lib_name()
-
-Returns
-
-`string` - The library name.
-
-Returns the name of the library being used by the MUD.

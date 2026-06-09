@@ -1,8 +1,0 @@
-varargs void _debug(mixed str, mixed args...)
-
-Parameters:
-
-* `string str` - The debug message.
-* `mixed [args]` - Optional arguments to format the message.
-
-Logs a debug message, optionally formatted with arguments.

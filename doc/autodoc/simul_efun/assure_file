@@ -1,8 +1,0 @@
-mixed assure_file(string file)
-
-Parameters:
-
-* `string file` - The path of the file to ensure.
-
-Given a file, ensures that the directory structure leading to
-the file exists, creating directories as needed.
