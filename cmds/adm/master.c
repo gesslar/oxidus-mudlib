@@ -22,6 +22,7 @@ void setup() {
     ({"Load master/valid",(: load_object("/adm/obj/master/valid") :)}),
     ({"Load master object",(: load_object("/adm/obj/master") :)}),
     ({"Rehash system configuration",(: CONFIG_D->rehash_config() :)}),
+    ({"Rehash help system",(: HELP_D->rehash() :)}),
   });
 }
 

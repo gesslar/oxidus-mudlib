@@ -37,8 +37,9 @@ private void create() {
  * @returns {string | undefined} The help text
  */
 string query_help(object _caller) {
-
+  return "";
 }
+
 #if 0
 string query_help(object caller) {
   string result;

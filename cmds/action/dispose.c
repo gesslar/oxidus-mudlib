@@ -36,3 +36,10 @@ mixed main(object tp, string str) {
 
   return 1;
 }
+
+string query_help(object _caller) {
+  return
+    "SYNTAX: dispose <corpse>\n\n"
+    "This command will allow you to dispose of a corpse in your environment. "
+    "Only corpses may be disposed of in this manner.";
+}

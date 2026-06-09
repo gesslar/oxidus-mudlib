@@ -32,3 +32,11 @@ mixed main(object tp, string str) {
 
   return 1;
 }
+
+string query_help(object _caller) {
+  return
+    "SYNTAX: nibble <object>\n\n"
+    "This command will allow you to nibble at food you are holding. Nibbling "
+    "consumes the food more slowly than eating it.\n\n"
+    "See also: eat, drink";
+}

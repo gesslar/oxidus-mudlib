@@ -33,3 +33,11 @@ mixed use(/** @type {STD_BODY} */ object tp, string str) {
 
   return result;
 }
+
+string query_help(object _caller) {
+  return
+    "SYNTAX: use <object>\n\n"
+    "This command will allow you to use an object you are carrying or one "
+    "that is present in your environment, provided it is something that can "
+    "be used. The effect depends on the object.";
+}
