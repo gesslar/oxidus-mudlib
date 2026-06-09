@@ -1,9 +1,0 @@
-string query_log_prefix()
-
-The query_log_prefix() function returns the log prefix for the object when
-using the function _log(). The log prefix is a string that will be prepended to
-all log messages.
-
-By default, there is no log prefix.
-
-Related: set_log_prefix, _log, set_log_level, query_log_level

@@ -1,7 +1,0 @@
-# We don't want to keep anything except the .gitignore file. Populate this
-# directory by using the bash command: /adm/bash/docs
-#
-# Continue to use that file to update the docs whenever there are new or
-# updated files in the FluffOS source tree.
-*
-!.gitignore
