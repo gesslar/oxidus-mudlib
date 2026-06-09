@@ -23,6 +23,7 @@
 #define GH_ISSUES_D     DIR_DAEMONS "github_issues"
 #define GMCP_D          DIR_DAEMONS "gmcp"
 #define GRAPEVINE_D     DIR_DAEMONS "grapevine"
+#define HELP_D          DIR_DAEMONS "help"
 #define HTTPC_D         DIR_DAEMONS "httpc"
 #define LINES_D         DIR_DAEMONS "lines"
 #define LOCKDOWN_D      DIR_DAEMONS "lockdown_d"

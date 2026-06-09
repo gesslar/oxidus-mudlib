@@ -43,3 +43,11 @@ mixed main(/** @type {STD_BODY} */ object tp, string arg) {
 
   return 1;
 }
+
+string query_help(object _caller) {
+  return
+    "SYNTAX: duel <living>\n\n"
+    "This command will allow you to engage another living being in your "
+    "environment in combat. You cannot duel while dead or a ghost, nor may "
+    "you duel someone who is dead or a ghost.";
+}

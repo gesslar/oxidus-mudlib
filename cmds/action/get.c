@@ -31,7 +31,10 @@ void setup() {
 "See also: drop, put\n";
 }
 
-mixed main(object tp, string arg) {
+mixed main(
+  /** @type {STD_BODY} */ object tp,
+  string arg
+) {
   object ob;
   object room = environment(tp);
   object source = room;

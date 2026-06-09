@@ -1,83 +1,88 @@
 /**
  * @file /cmds/std/help.c
  *
- * Command to access the help system for topics and commands.
+ * Help command for all things helpful.
  *
- * @created 2005-10-08 - Tacitus @ LPUniversity
- * @last_modified 2006-10-06 - Tacitus
+ * @created 2026-06-07 - Gesslar
+ * @last_modified 2026-06-07 - Gesslar
  *
  * @history
- * 2005-10-08 - Tacitus - Created
- * 2006-10-06 - Tacitus - Last edited
+ * 2026-06-07 - Gesslar - Created
  */
 
 inherit STD_CMD;
 
-private nosave string* HELP_PATH = ({ "/doc/general/", "/doc/game/" });
-private nosave string* DEV_PATH = ({ "/doc/wiz/", "/doc/driver/efun/", "/doc/driver/apply/" });
-private nosave string* ADMIN_PATH = ({ "/doc/admin/" });
+private mixed get_command_help(object tp, string topic);
+private mixed get_file_help(object tp, string topic);
 
-#include <logs.h>
+mixed main(
+  /** @type {STD_PLAYER} */ object tp,
+  string topic
+) {
 
-mixed main(/** @type {STD_PLAYER} */ object tp, string str) {
-  /** @type {STD_CMD} */ object cmd;
-  string file, *path, err, output = "";
-  int i;
+  if(!topic)
+    return _info("help <topic>");
 
-  if(!str)
-    str = "help";
+  function valid_result = (:
+       (stringp($1) && truthy($1))
+    || (pointerp($1) && uniformp($1, T_STRING) && sizeof(filter($1, (: truthy :))))
+  :);
 
-  path = tp->get_path();
+  mixed result;
 
-  for(i = 0; i < sizeof(path); i++) {
-    if(file_exists(path[i] + str + ".c")) {
-      err = catch(cmd = load_object(path[i] + str));
-      if(!err)
-        file = cmd->query_help(tp);
+  result = get_command_help(tp, topic);
+  if(valid_result(result))
+    return result;
 
-      if(err)
-        return _error("This is a problem with '%s'. Please inform an admin.",
-          str);
+  result = get_file_help(tp, topic);
+  if(valid_result(result))
+    return result;
 
-      if(!file)
-        return _error("The command '%s' exists but there is no help file for "
-          "it. Please inform an admin.", str);
-
-      tp->page(output);
-
-      return 1;
-    }
-  }
-
-  path = HELP_PATH;
-
-  if(devp(tp))
-    path += DEV_PATH;
-
-  if(adminp(tp))
-    path += ADMIN_PATH;
-
-  for(i = 0; i < sizeof(path); i++) {
-    if(file_exists(path[i] + str)) {
-      file = read_file(path[i] + str);
-
-      output += (file + "\n");
-
-      tp->page(output);
-      return 1;
-    }
-  }
-
-  log_file(LOG_HELP, "Not found: " + str + "\n");
-
-  return _error("Unable to find help file for: " + str);
+  return result || "No help found for the topic '"+topic+"'.";
 }
 
-string query_help(object _caller) {
-  return
-    "Syntax: help <topic>\n\n"
-    "Whenever you need help or information regarding something in the mud, this "
-    "is the place to come. This command gives you instant access to a wealth of "
-    "information that will be vital to your stay here on " + mud_name() + ". "
-    "Help that you want not written yet? Let us know and we'll get right on it!";
+private mixed get_command_help(
+  /** @type {STD_PLAYER} */ object tp,
+  string topic
+) {
+  string *path = map(tp->get_path(), (: sprintf("%s%s.c", append($1, "/"), $(topic)) :));
+  string *exists = filter(path, (: file_size($1) > -1 :));
+
+  int sz = sizeof(exists);
+
+  if(sz > 1)
+    return "Too many command matches for '"+topic+"'.";
+
+  if(sz < 1)
+    return undefined;
+
+  /** @type {STD_CMD} */ object cmd;
+  string e = catch(cmd = load_object(exists[0]));
+
+  if(e)
+    return "There was a problem loading the help for '"+topic+"'.";
+
+  return cmd->query_help(tp);
+}
+
+private mixed get_file_help(
+  /** @type {STD_PLAYER} */ object tp,
+  string topic
+) {
+  mapping *helps = HELP_D->query_help(topic, tp);
+  string result;
+
+  if(!sizeof(helps))
+    return undefined;
+
+  // single-match render only for now; multi-match handling intentionally TODO
+  mapping help = helps[0];
+
+  result = sprintf(
+    "%s\n%s",
+    help[1]["title"],
+    help[1]["content"]
+  );
+
+  return result;
 }

@@ -52,3 +52,14 @@ mixed main(/** @type {STD_BODY} */ object tp, string arg) {
 
     return 1;
 }
+
+string query_help(object _caller) {
+  return
+    "SYNTAX: go <direction>\n\n"
+    "This command will allow you to move in a given direction, provided there "
+    "is an exit leading that way. Moving costs movement points, and distant "
+    "exits may be too far to reach when you are low on them.\n\n"
+    "Global aliases let you move with less typing: 'n', 's', 'e', 'w', 'ne', "
+    "'nw', 'se', 'sw', 'u' and 'd' expand to 'go north', 'go south', and so "
+    "on.";
+}

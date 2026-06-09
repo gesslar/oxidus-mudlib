@@ -39,3 +39,12 @@ mixed main(/** @type {STD_BODY} */ object tp,
 
   return out;
 }
+
+string query_help(object _caller) {
+  return
+    "SYNTAX: eq\n\n"
+    "This command will list all the items you currently have equipped, "
+    "including the clothing and armour you are wearing and the weapons you "
+    "are wielding, organised by the slot each occupies.\n\n"
+    "See also: wear, wield";
+}

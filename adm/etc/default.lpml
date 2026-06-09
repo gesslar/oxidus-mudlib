@@ -151,4 +151,11 @@
     GLOBAL_SPAWN_CHANCE: 5.5,
     GLOBAL_SPAWN_FREQUENCY: 18000
   },
+  DOC: {
+    ROOT: "/doc/",
+    HELP: {
+      ROOT: "help/",
+      EXCLUDE: [],
+    }
+  }
 }
