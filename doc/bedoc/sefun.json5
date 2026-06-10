@@ -18,7 +18,7 @@
   // Every simul_efun source file.
   input: ["adm/simul_efun/*.c"],
 
-  // The hook writes the real per-function files to /tmp/bedoc. BeDoc still
+  // The hook writes the real per-function files to /doc/sefun. BeDoc still
   // writes one file per source module from the formatter's return value; we
   // send those throwaway module files to a gitignored scratch directory.
   output: "tmp/bedoc",

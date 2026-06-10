@@ -5,7 +5,8 @@
  * from LPC source files, producing the structured `functions` payload consumed
  * by the help formatter.
  *
- * This is adapted from the BeDoc sample LPC parser with gLPU-specific changes:
+ * This is adapted from the BeDoc sample LPC parser with Oxidus-specific
+ * changes:
  *   - the signature regex captures the array `*` return marker,
  *   - blocks that are not attached to a function (file headers, documented
  *     variables) are dropped instead of crashing the run,
@@ -52,8 +53,8 @@ export default class LpcParser {
 
       const startIndex = lines.findIndex(line => this.#regexes.get("block-start").exec(line))
       // The closing `*/` must come after this block's opening — otherwise a
-      // plain `/* ... */` header comment earlier in the file would steal it and
-      // abort the whole file.
+      // plain `/* ... */` header comment earlier in the file would steal it
+      // and abort the whole file.
       const endIndex = lines.findIndex((line, i) =>
         i > startIndex && this.#regexes.get("block-stop").exec(line))
 
