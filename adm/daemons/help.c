@@ -4,10 +4,11 @@
  * Help! Daemon!
  *
  * @created 2026-06-07 - Gesslar
- * @last_modified 2026-06-07 - Gesslar
+ * @last_modified 2026-06-10 - Gesslar
  *
  * @history
  * 2026-06-07 - Gesslar - Created
+ * 2026-06-10 - Gesslar - Fleshed out directory excludes; directory includes
  */
 
 inherit STD_DAEMON;
@@ -42,7 +43,7 @@ void setup() {
           : stringp($1)
             ? __help_root + $1
             : error("Invalid include format in config."),
-        pointerp($1) && sizeof($1) ? $1[1] : "all"
+        pointerp($1) && sizeof($1) > 1 ? $1[1] : "all"
       })
     :)
   );
