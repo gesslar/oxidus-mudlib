@@ -1,0 +1,21 @@
+---
+{
+  title: "dump_socket_status"
+}
+---
+### NAME
+
+    dump_socket_status() - Returns a formatted string displaying the status
+    of all sockets.
+
+### SYNOPSIS
+
+    string dump_socket_status( void );
+
+### DESCRIPTION
+
+    Returns a formatted string displaying the status of all sockets.
+
+### RETURN VALUES
+
+    (string) The formatted socket status information.

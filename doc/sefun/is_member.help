@@ -1,0 +1,28 @@
+---
+{
+  title: "is_member"
+}
+---
+### NAME
+
+    is_member() - Checks if a user is a member of a specified group.
+
+### SYNOPSIS
+
+    int is_member( string user, string group );
+
+### DESCRIPTION
+
+    Checks if a user is a member of a specified group.
+
+### PARAMETERS
+
+    user   (string)
+           The username to check.
+
+    group  (string)
+           The group to check membership in.
+
+### RETURN VALUES
+
+    (int) 1 if the user is a member of the group, otherwise 0.

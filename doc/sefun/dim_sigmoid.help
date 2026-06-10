@@ -1,0 +1,36 @@
+---
+{
+  title: "dim_sigmoid"
+}
+---
+### NAME
+
+    dim_sigmoid() - Sigmoid (zero-anchored logistic) diminishing return on
+    `val`, scaled by `scale`. Computes `scale * (2/(1 + e^-(val/scale)) -
+    1)`, producing an S-shaped curve that is 0 at `val == 0`, equals roughly
+    `0.462 * scale` when `val == scale`, and asymptotically approaches
+    `scale` as `val` grows.
+
+### SYNOPSIS
+
+    varargs float dim_sigmoid( mixed val, mixed scale, mixed k );
+
+### DESCRIPTION
+
+    Sigmoid (zero-anchored logistic) diminishing return on `val`, scaled by
+    `scale`. Computes `scale * (2/(1 + e^-(val/scale)) - 1)`, producing an
+    S-shaped curve that is 0 at `val == 0`, equals roughly `0.462 * scale`
+    when `val == scale`, and asymptotically approaches `scale` as `val`
+    grows.
+
+### PARAMETERS
+
+    val    (mixed)
+           The input value.
+
+    scale  (mixed)
+           The scale factor and asymptotic ceiling.
+
+### RETURN VALUES
+
+    (float) The diminished value, bounded by `scale`.

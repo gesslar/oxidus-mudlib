@@ -1,0 +1,30 @@
+---
+{
+  title: "resolve_path"
+}
+---
+### NAME
+
+    resolve_path() - Resolves a given path relative to the current path,
+    handling special cases such as user directories and relative paths.
+
+### SYNOPSIS
+
+    string resolve_path( string base_dir, string path );
+
+### DESCRIPTION
+
+    Resolves a given path relative to the current path, handling special
+    cases such as user directories and relative paths.
+
+### PARAMETERS
+
+    base_dir  (string)
+              The current path.
+
+    path      (string)
+              The next path to resolve.
+
+### RETURN VALUES
+
+    (string) The resolved absolute path.

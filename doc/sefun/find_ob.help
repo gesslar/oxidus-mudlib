@@ -1,0 +1,33 @@
+---
+{
+  title: "find_ob"
+}
+---
+### NAME
+
+    find_ob() - Finds an object within a container using precise criteria.
+
+### SYNOPSIS
+
+    varargs object find_ob( mixed ob, mixed cont );
+
+### DESCRIPTION
+
+    Finds an object within a container using precise criteria.
+
+### PARAMETERS
+
+    ob    (mixed)
+          Target object or filename
+
+    cont  (mixed, optional)
+          Container to search in
+
+### RETURN VALUES
+
+    (object) Matching object or 0 if not found
+
+### EXAMPLE
+
+    {{di1}}find_ob("sword", this_body());
+    find_ob("/obj/weapon/sword#12", room);{{di0}}

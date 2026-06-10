@@ -1,0 +1,36 @@
+---
+{
+  title: "tell"
+}
+---
+### NAME
+
+    tell() - Sends a direct message to the specified object without
+    considering containment hierarchy.
+
+### SYNOPSIS
+
+    varargs void tell( mixed *args... );
+
+### DESCRIPTION
+
+    Sends a direct message to the specified object without considering
+    containment hierarchy.
+
+### PARAMETERS
+
+    str       (string)
+              The message string to send (sent to previous_object()).
+
+    ob        (object)
+              The object to send the message to.
+
+    str       (string)
+              The message string to send.
+
+    msg_type  (int, optional)
+              The message type.
+
+### ERRORS
+
+    If insufficient arguments are provided.
