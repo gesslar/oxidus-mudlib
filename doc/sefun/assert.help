@@ -1,0 +1,35 @@
+---
+{
+  title: "assert"
+}
+---
+### NAME
+
+    assert() - Verifies a condition, throwing an error if false.
+
+### SYNOPSIS
+
+    varargs void assert( mixed condition, string message );
+
+### DESCRIPTION
+
+    Verifies a condition, throwing an error if false.
+
+    Enhanced assertion checking with custom error messages and evaluation of
+    complex conditions.
+
+### PARAMETERS
+
+    condition  (mixed)
+               Condition to verify
+
+    message    (string, optional, default: "Assertion failed")
+               Error message if condition fails
+
+### ERRORS
+
+    If statement evaluates to false or null
+
+### EXAMPLE
+
+    {{di1}}assert(hp > 0, "Health cannot be negative");{{di0}}

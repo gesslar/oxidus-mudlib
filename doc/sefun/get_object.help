@@ -1,0 +1,35 @@
+---
+{
+  title: "get_object"
+}
+---
+### NAME
+
+    get_object() - Locates a target object using flexible search criteria.
+
+### SYNOPSIS
+
+    varargs object get_object( string str, object player );
+
+### DESCRIPTION
+
+    Locates a target object using flexible search criteria.
+
+    Comprehensive search that looks through environments and inventories for
+    matching objects. Supports special prefixes and location markers.
+
+### PARAMETERS
+
+    str  (string)
+         Search string with optional prefixes
+
+### RETURN VALUES
+
+    (object) First matching object or 0 if none found
+
+### EXAMPLE
+
+    {{di1}}get_object("sword");           // Basic search
+    get_object("@orc");           // Environment of orc
+    get_object("me", this_body()); // The player themselves
+    get_object("here");           // Current room{{di0}}

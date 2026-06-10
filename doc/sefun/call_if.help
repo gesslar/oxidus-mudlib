@@ -1,0 +1,42 @@
+---
+{
+  title: "call_if"
+}
+---
+### NAME
+
+    call_if() - Safely calls a function on an object if it exists.
+
+### SYNOPSIS
+
+    varargs mixed call_if( mixed ob, string func, mixed arg... );
+
+### DESCRIPTION
+
+    Safely calls a function on an object if it exists.
+
+    Attempts to call the named function, returning null if function doesn't
+    exist instead of throwing an error.
+
+    IMPORTANT: function_exists() requires that the needle function have
+    public visibility.
+
+### PARAMETERS
+
+    ob    (object|string)
+          Target object or filename
+
+    func  (string)
+          Function name to call
+
+### RETURN VALUES
+
+    (mixed) Function result or null if function doesn't exist
+
+### ERRORS
+
+    If ob or func arguments are invalid types
+
+### EXAMPLE
+
+    {{di1}}call_if(user, "receive_message", "Hello");{{di0}}

@@ -1,0 +1,33 @@
+---
+{
+  title: "article"
+}
+---
+### NAME
+
+    article() - Determines the appropriate article for a word.
+
+### SYNOPSIS
+
+    varargs string article( string str, int definite );
+
+### DESCRIPTION
+
+    Determines the appropriate article for a word.
+
+### PARAMETERS
+
+    str       (string)
+              Word to check
+
+    definite  (int, optional, default: 0)
+              Use "the" instead of "a/an"
+
+### RETURN VALUES
+
+    (string) Appropriate article (the/a/an)
+
+### EXAMPLE
+
+    {{di1}}article("elephant");     // Returns "an"
+    article("bear", 1);      // Returns "the"{{di0}}

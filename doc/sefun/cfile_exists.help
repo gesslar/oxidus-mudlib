@@ -1,0 +1,33 @@
+---
+{
+  title: "cfile_exists"
+}
+---
+### NAME
+
+    cfile_exists() - Checks if a LPC source file exists.
+
+### SYNOPSIS
+
+    int cfile_exists( string file );
+
+### DESCRIPTION
+
+    Checks if a LPC source file exists.
+
+    Automatically appends ".c" to the filename before checking.
+
+### PARAMETERS
+
+    file  (string)
+          Base path of LPC file without .c extension
+
+### RETURN VALUES
+
+    (int) 1 if source file exists, 0 otherwise
+
+### EXAMPLE
+
+    {{di1}}if(cfile_exists("/cmds/wiz/update")) {
+        compile_object("/cmds/wiz/update");
+    }{{di0}}

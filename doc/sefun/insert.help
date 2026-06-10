@@ -1,0 +1,31 @@
+---
+{
+  title: "insert"
+}
+---
+### NAME
+
+    insert() - Inserts an element at a specific index.
+
+### SYNOPSIS
+
+    mixed insert( mixed ref *arr, mixed value, int index );
+
+### DESCRIPTION
+
+    Inserts an element at a specific index.
+
+### PARAMETERS
+
+    arr    (mixed*)
+           Array to modify
+
+    value  (mixed)
+           Value to insert
+
+    index  (int)
+           Index where to insert
+
+### RETURN VALUES
+
+    (int) New size of array

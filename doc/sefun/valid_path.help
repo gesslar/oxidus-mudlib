@@ -1,0 +1,30 @@
+---
+{
+  title: "valid_path"
+}
+---
+### NAME
+
+    valid_path() - Resolves and validates a path, checking if it exists as
+    either a file or directory.
+
+### SYNOPSIS
+
+    string valid_path( string base_dir, string path );
+
+### DESCRIPTION
+
+    Resolves and validates a path, checking if it exists as either a file or
+    directory.
+
+### PARAMETERS
+
+    base_dir  (string)
+              The base directory to resolve relative paths from.
+
+    path      (string)
+              The path to resolve and validate.
+
+### RETURN VALUES
+
+    (string|int) The resolved absolute path if valid, or 0 if invalid.
