@@ -133,6 +133,11 @@
     HELP: {
       ROOT: "help/",
       EXCLUDE: [],
+      INCLUDE: [
+        ["../driver/apply", "developer"],
+        ["../driver/efun", "developer"],
+        ["../sefun", "developer"],
+      ]
     }
   }
 }

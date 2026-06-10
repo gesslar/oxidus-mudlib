@@ -500,6 +500,8 @@ mapping as_directory(string str) {
 
   assert_arg(stringp(str) && truthy(str), 1, "Invalid path: "+sprintf("%O", str));
 
+  str = chop(str, "/", -1);
+
   info = get_dir(str, -1);
   if(!sizeof(info))
     return 0;

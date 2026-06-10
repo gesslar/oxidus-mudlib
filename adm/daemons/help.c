@@ -18,16 +18,37 @@ public void rehash();
 private void rehash_directory(mapping directory);
 
 private nosave string  __help_root;
-private nosave string *__excludes; // wired, not yet filtered on — intentional
+private nosave string *__excluded_directories;
+private nosave mixed  *__included_directories;
 private nosave mapping __cache = ([]);
 
 void setup() {
   set_no_clean();
 
   __help_root = mud_config("DOC.ROOT") + mud_config("DOC.HELP.ROOT");
-  __excludes = map(
+  __excluded_directories = map(
     mud_config("DOC.HELP.EXCLUDE") ?? ({}),
     (: __help_root + $1 :)
+  );
+  __excluded_directories = map(__excluded_directories,
+    (: resolve_dir("", $1) :)
+  );
+
+  __included_directories = map(
+    mud_config("DOC.HELP.INCLUDE") ?? ({}),
+    (: ({
+        pointerp($1)
+          ? __help_root + $1[0]
+          : stringp($1)
+            ? __help_root + $1
+            : error("Invalid include format in config."),
+        pointerp($1) && sizeof($1) ? $1[1] : "all"
+      })
+    :)
+  );
+
+  __included_directories = map(__included_directories,
+    (: ({ resolve_dir("", $1[0]), $1[1] }) :)
   );
 
   rehash();
@@ -37,20 +58,41 @@ public void rehash() {
   __cache = ([]);
 
   mapping fd = read_directory(__help_root);
+  mixed *directories = map(fd["directories"], (: ({ $1, undefined }) :));
+  mixed *included_directories = map(
+    __included_directories,
+    (: ({ as_directory($1[0]), $1[1] }) :)
+  );
+  included_directories = filter(included_directories, (: $1[0] :));
+  mapping *excluded_directories = map(
+    __excluded_directories,
+    (: as_directory :)
+  );
+  excluded_directories = filter(excluded_directories, (: $1 :));
 
-  int sz = sizeof(fd["directories"]);
+  string *excluded_paths = map(excluded_directories, (: $1["path"] :));
+
+  directories += included_directories;
+  directories = filter(directories, (: !includes($(excluded_paths), $1[0]["path"]) :));
+
+  int sz = sizeof(directories);
 
   while(sz--)
-    call_out_walltime((: rehash_directory, fd["directories"][sz] :), sz * 0.1);
+    call_out_walltime((: rehash_directory, directories[sz] :), sz * 0.1);
 }
 
-private void rehash_directory(mapping directory) {
+private void rehash_directory(mapping directory_entry) {
+  mapping directory = directory_entry[0];
+  string priv = directory_entry[1];
+
   if(file_size(directory["path"]) != -2)
     return;
 
-  mapping fd = read_directory(directory["path"], "*.help");
+  mapping fd = read_directory(directory["path"]);
   mapping *files = fd["files"];
-  mapping help = ([]);
+  mapping help = ([
+    "priv" : priv,
+  ]);
 
   if(!sizeof(files))
     return;
@@ -111,15 +153,17 @@ mapping *query_help(string topic, object who) {
   mapping *result = ({});
 
   foreach(string cat, mapping helps in __cache) {
-    if(cat == "all" || !includes(groups, cat)) {
-      if(helps[topic]) {
-        push(ref result, ({ cat, helps[topic] }));
-      }
-    } else {
-      if(helps[topic] && is_member(name, cat)) {
-        push(ref result, ({ cat, helps[topic] }));
-      }
-    }
+    if(!helps[topic])
+      continue;
+
+    // Includes carry an explicit priv; plain directories fall back to the
+    // directory name acting as its own priv.
+    string priv = helps["priv"] ?? cat;
+
+    if(priv == "all" || !includes(groups, priv))
+      push(ref result, ({ cat, helps[topic] }));
+    else if(is_member(name, priv))
+      push(ref result, ({ cat, helps[topic] }));
   }
 
   return result;
