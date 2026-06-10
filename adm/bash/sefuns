@@ -14,6 +14,6 @@ cd "$LIB" || exit 1
 
 # Clean rebuild: clear out the generated help files (and the scratch module
 # output) first so renamed or removed sefuns don't leave orphans behind.
-rm -f doc/sefun/*.help doc/bedoc/.cache/*.help
+rm -f doc/sefun/*.help tmp/bedoc/*
 
 npx -y @gesslar/bedoc --config doc/bedoc/sefun.json5 "$@"
