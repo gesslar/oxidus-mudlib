@@ -2,15 +2,15 @@
  * @file Help formatter for the gLPU simul_efun help generator.
  *
  * Turns each parsed function into a standalone `.help` document: an LPML
- * frontmatter block carrying the function name as the title, followed by a body
- * laid out like the driver efun docs under `/doc/driver/efun` — `### NAME`,
+ * frontmatter block carrying the function name as the title, followed by a
+ * body laid out like the driver efun docs under `/doc/driver/efun` — `### NAME`,
  * `### SYNOPSIS`, `### DESCRIPTION`, `### PARAMETERS`, `### RETURN VALUES`,
  * `### ERRORS`, and `### EXAMPLE` sections with four-space indented bodies.
  *
  * The complete per-function document is stashed on `ctx.formatted`; the
- * companion Format hook (doc/bedoc/hooks/sefun-help-hooks.js) writes each one to
- * its own file. The pipeline result itself is empty — this formatter emits no
- * combined output.
+ * companion Format hook (doc/bedoc/hooks/sefun-help-hooks.js) writes each one
+ * to its own file. The pipeline result itself is empty — this formatter emits
+ * no combined output.
  *
  * @author gesslar
  */
@@ -61,7 +61,8 @@ export default class HelpFormatter {
     return lines.join("\n")
   }
 
-  // Collapse an array of raw comment lines into paragraphs, splitting on blanks.
+  // Collapse an array of raw comment lines into paragraphs, splitting on
+  // blanks.
   #paragraphs = lines => {
     const paras = []
     let curr = []
@@ -233,14 +234,15 @@ export default class HelpFormatter {
     const frontmatter = `---\n{\n  title: ${JSON.stringify(ctx.name)}\n}\n---`
     const formatted = `${frontmatter}\n${sections.join("\n\n")}\n`
 
-    // Mutate in place so the Format hook's after$formatFunction sees `formatted`
-    // on the same context object.
+    // Mutate in place so the Format hook's after$formatFunction sees
+    // `formatted` on the same context object.
     return Object.assign(ctx, {formatted})
   }
 
   // The per-function `.help` files are written by the Format hook. BeDoc still
   // writes one file per source module from this return value, so we hand back
-  // the concatenated documents — the config routes that to a scratch directory.
+  // the concatenated documents — the config routes that to a scratch
+  // directory.
   #finalize = ctx =>
     Array.isArray(ctx)
       ? ctx.map(fn => fn.formatted).filter(Boolean).join("\n\n")
