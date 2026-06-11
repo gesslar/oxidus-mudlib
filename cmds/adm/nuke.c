@@ -92,6 +92,5 @@ string query_help(object _caller) {
     " SYNTAX: nuke <username>\n\n"
     "This command will delete the target user's pfile, thus removing their account "
     "from " + mud_name() + ". Furthermore it will also remove their membership "
-    "from all groups. This is NON REVERSABLE, so use with discretion.\n\n"
-    " See also: lockdown";
+    "from all groups. This is NON REVERSABLE, so use with discretion.";
 }

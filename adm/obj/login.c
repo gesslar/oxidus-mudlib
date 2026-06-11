@@ -127,24 +127,12 @@ public void gmcp_authenticated(string _username, string char) {
 }
 
 /**
- * Processes account name input. Checks lockdown status, loads
- * the account, and either proceeds to password entry or offers
- * account creation.
+ * Processes account name input. Loads the account and either proceeds to
+ * password entry or offers account creation.
  *
  * @param {string} str - The account name entered by the user
  */
 private void get_account(string str) {
-  load_object(LOCKDOWN_D);
-
-  if(LOCKDOWN_D->is_ip_banned(query_ip_number(this_object()))) {
-    _error(
-      "\nYour IP address, " + query_ip_number(this_object()) +
-      " has been banned from " + mud_name() + ".\n"
-    );
-
-    return dest_me();
-  }
-
   if(!str || strlen(str) < 2) {
     _question("You must select an account: ");
     input_to("get_account");
@@ -159,52 +147,9 @@ private void get_account(string str) {
   if(sscanf(str, "%s@%s", __character, __name) != 2)
     __name = str;
 
-  if(LOCKDOWN_D->query_dev_lock() && wizardp(__name) && !adminp(__name)) {
-    _error(LOCKDOWN_D->query_dev_lock_msg());
-    return dest_me();
-  }
-
-  if(LOCKDOWN_D->query_player_lock()
-    && !adminp(__name)
-    && !wizardp(__name)
-  ) {
-    _error(LOCKDOWN_D->query_player_lock_msg());
-    return dest_me();
-  }
-
-  if(LOCKDOWN_D->query_vip_lock()
-    && !adminp(__name) && !wizardp(__name)
-    && member_array(__name, LOCKDOWN_D->query_play_testers()) == -1) {
-    _error(LOCKDOWN_D->query_vip_lock_msg());
-    return dest_me();
-  }
-
-  // TODO: Figure out how to do guest logins in new account paradigm
-#if 0
-  if(str == "guest") {
-    if(LOCKDOWN_D->query_guest_locked()) {
-      _error(LOCKDOWN_D->query_guest_lock_msg());
-      return dest_me();
-    }
-
-    user->set_name("guest");
-    set_privs(user, "guest");
-    body = create_body("guest");
-    write_file(log_dir() + LOG_LOGIN, capitalize(user->query_real_name()) + " ("+getoid(body)+") logged in from " +
-      query_ip_number(this_object()) + " on " + ctime(time()) + "\n");
-    enter_world(0);
-    return;
-  }
-#endif
-
   __account = ACCOUNT_D->load_account(__name);
 
   if(!__account) {
-    if(LOCKDOWN_D->query_player_lock()) {
-      _error(LOCKDOWN_D->query_player_lock_msg());
-      return dest_me();
-    }
-
     _info("The account %s does not exist.", __name);
     _question("Would you like to create it? ");
     input_to("new_account", __name);

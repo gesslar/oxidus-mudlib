@@ -32,9 +32,6 @@
 # Soul Daemon
 /adm/daemons/soul_d
 
-# Lock-down daemon
-/adm/daemons/lockdown_d
-
 # Mail Daemon
 /adm/daemons/mail_d
 
