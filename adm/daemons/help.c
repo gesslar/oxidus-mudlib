@@ -146,11 +146,12 @@ private void rehash_directory(mapping directory_entry) {
 mapping *query_help(string topic, object who) {
   who ??= this_body();
 
-  string name = who
-    ? query_privs(who)
-    : NONAME;
+  // string name = who
+  //   ? query_privs(who)
+  //   : NONAME;
 
-  string *groups = master()->query_group_names();
+  // it's ok if groups is broken for awhile
+  // string *groups = master()->query_group_names();
   mapping *result = ({});
 
   foreach(string cat, mapping helps in __cache) {
@@ -161,10 +162,12 @@ mapping *query_help(string topic, object who) {
     // directory name acting as its own priv.
     string priv = helps["priv"] ?? cat;
 
-    if(priv == "all" || !includes(groups, priv))
-      push(ref result, ({ cat, helps[topic] }));
-    else if(is_member(name, priv))
-      push(ref result, ({ cat, helps[topic] }));
+    // if(priv == "all" || !includes(groups, priv))
+    //   push(ref result, ({ cat, helps[topic] }));
+    // else if(is_member(name, priv))
+    //   push(ref result, ({ cat, helps[topic] }));
+
+    push(ref result, ({ cat, helps[topic] }));
   }
 
   return result;
