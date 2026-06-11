@@ -10,7 +10,6 @@
   DISPLAY_NEWS: true,
   LOGIN_MSG: "/adm/etc/login/splash",
   LOGIN_NEWS: "/adm/etc/login/motd",
-  FLOGIN_NEWS: "/adm/etc/login/first_login",
   FIRST_USER: "/adm/etc/first_user",
   ALLOW_SHUTDOWN: [
     "/adm/daemons/shutdown_d",
