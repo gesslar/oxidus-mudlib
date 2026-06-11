@@ -107,5 +107,5 @@ string query_help(object _caller) {
     "This command will delete the target account along with every character "
     "associated with it, removing each character's pfile and group memberships "
     "from " + mud_name() + ". This is NON REVERSABLE, so use with discretion.\n\n"
-    " See also: nuke, lockdown";
+    " See also: nuke";
 }

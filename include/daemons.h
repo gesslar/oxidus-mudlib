@@ -26,7 +26,6 @@
 #define HELP_D          DIR_DAEMONS "help"
 #define HTTPC_D         DIR_DAEMONS "httpc"
 #define LINES_D         DIR_DAEMONS "lines"
-#define LOCKDOWN_D      DIR_DAEMONS "lockdown_d"
 #define LOOT_D          DIR_DAEMONS "loot"
 #define MESS_D          DIR_DAEMONS "message"
 #define MOVE_D          DIR_DAEMONS "movement"
