@@ -9,3 +9,19 @@
 int roomp(object ob) {
   return objectp(ob) && call_if(ob, "is_room");
 }
+
+/**
+ * Determine whether the current call originated from the alarm
+ * daemon on behalf of a valid object.
+ *
+ * Intended as a guard inside alarm callbacks: the target object can
+ * confirm that it is genuinely being driven by ALARM_D rather than by
+ * an arbitrary caller before acting on the alarm.
+ *
+ * @param {object} ob - The object the alarm pertains to.
+ * @returns {int} 1 if ob is a valid object and the immediate caller is
+ *                the alarm daemon, otherwise 0.
+ */
+int alarmp(object ob) {
+  return objectp(ob) && file_name(ob) == ALARM_D;
+}

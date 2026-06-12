@@ -196,6 +196,10 @@ varargs mixed *accessible_objects(object container, object pov);
 varargs object *accessible_objects_flat(object container, object pov);
 object shutdown_d();
 
+// File: predicates.c
+int roomp(object ob);
+int alarmp(object ob);
+
 // File: prompt.c
 varargs void prompt_colour(object body, mixed *cb, string prompt);
 void prompt_password(object user, int attempts, mixed *cb);
