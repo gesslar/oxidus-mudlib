@@ -1,5 +1,5 @@
-#ifndef __DESCRTIPTION_H__
-#define __DESCRTIPTION_H__
+#ifndef __DESCRIPTION_H__
+#define __DESCRIPTION_H__
 
 void set_long(mixed str);
 void set_short(mixed str);
@@ -14,4 +14,4 @@ void add_extra_short(string id, mixed str);
 void remove_extra_long(string id);
 void remove_extra_short(string id);
 
-#endif // __DESCRTIPTION_H__
+#endif // __DESCRIPTION_H__
