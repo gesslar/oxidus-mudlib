@@ -81,12 +81,12 @@ string valid_path(string base_dir, string path) {
  *
  * @param {string} base_dir - The base directory to resolve relative paths from.
  * @param {string} path - The file path to resolve and validate.
- * @returns {string|int} The resolved absolute file path if valid, or 0 if invalid.
+ * @returns {string | undefined} The resolved absolute file path if valid, or undefined if invalid.
  */
 string valid_file(string base_dir, string path) {
   string resolved = resolve_path(base_dir, path);
 
-  return file_exists(resolved) ? resolved : 0;
+  return file_exists(resolved) ? resolved : undefined;
 }
 
 /**
