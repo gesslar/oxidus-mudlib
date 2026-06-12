@@ -12,6 +12,7 @@
 #define BANK_D          DIR_DAEMONS "bank"
 #define BODY_D          DIR_DAEMONS "body"
 #define BOOT_D          DIR_DAEMONS "boot"
+#define CACHE_D         DIR_DAEMONS "cache"
 #define CHAN_D          DIR_DAEMONS "channel"
 #define COLOUR_D        DIR_DAEMONS "colour"
 #define CONFIG_D        DIR_DAEMONS "config"
