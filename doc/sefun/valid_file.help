@@ -26,4 +26,5 @@
 
 ### RETURN VALUES
 
-    (string|int) The resolved absolute file path if valid, or 0 if invalid.
+    (string | undefined) The resolved absolute file path if valid, or
+    undefined if invalid.
