@@ -231,8 +231,10 @@ string assure_object_data_dir(object ob);
 // File: security.c
 int is_member(string user, string group);
 int adminp(mixed user);
+varargs int ownerp(mixed user);
 int devp(mixed user);
 int wizardp(mixed user);
+mixed run_as_caller(function f, mixed arg...);
 
 // File: signal.c
 varargs void emit(string sig, mixed arg...);
