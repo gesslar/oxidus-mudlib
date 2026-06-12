@@ -244,7 +244,7 @@ varargs mixed from_string(string str, int flag) {
                 return ret;
             case '[':
                 ret[0] = ([]);
-                str = str[2..];
+                str = ltrim(inner[1..]);
                 while(str[0] != ']') {
                     mixed *tmp;
                     mixed cle;
