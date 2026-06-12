@@ -192,10 +192,11 @@ varargs mixed from_string(string str, int flag) {
     str = replace_string(str, "\"\"", "");
 
     if(str[0] == '(') {
-        switch(str[1]) {
+        string inner = ltrim(str[1..]);
+        switch(inner[0]) {
             case '{':
                 ret[0] = ({});
-                str = ltrim(str[2..]);
+                str = ltrim(inner[1..]);
                 if(str[0] == '}') {
                     // Empty array case
                     str = str[1..];
