@@ -22,4 +22,4 @@
 
 ### RETURN VALUES
 
-    (ob as STD_ROOM) 1 if the object is a room, otherwise 0.
+    (int) 1 if the object is a room, otherwise 0.
