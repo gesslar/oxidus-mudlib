@@ -38,7 +38,7 @@ inherit STD_DAEMON;
 inherit CLASS_ALARM;
 
 // Functions
-public void reload_alarms();
+public void rehash_alarms();
 public varargs int add_alarm(string type, string master, string pattern,
                              string file, string func, mixed args...);
 public int remove_alarm(string id);
@@ -78,7 +78,7 @@ void setup() {
  */
 void post_restore() {
   if(!sizeof(alarms))
-    reload_alarms();
+    rehash_alarms();
 }
 
 /**
@@ -90,7 +90,7 @@ void post_restore() {
  *
  * @returns {void}
  */
-void reload_alarms() {
+void rehash_alarms() {
   string alarm_file, *alarm_files;
   string alarm_path = mud_config("ALARMS_PATH");
 
@@ -137,7 +137,7 @@ varargs int add_once(string master, string pattern, string file,
  * Builds an Alarm from the supplied parts, validates it, appends it
  * to the in-memory alarm list, and persists the list via save_data().
  * For type "O", this is the canonical add path used by add_once().
- * For recurring types, note that reload_alarms() will discard any
+ * For recurring types, note that rehash_alarms() will discard any
  * alarms not present in the on-disk config.
  *
  * @param {string} type - One-character alarm type ("O", "H", "D",
@@ -294,7 +294,11 @@ private void execute_alarm(class Alarm alarm) {
     return;
   }
 
-  err = catch(call_other(ob, alarm.func, alarm.args));
+  if(pointerp(alarm.args) && sizeof(alarm.args))
+    err = catch(call_other(ob, alarm.func, alarm.args...));
+  else
+    err = catch(call_other(ob, alarm.func));
+
   if(err) {
     log_file("system/alarm", "[%s] Error executing alarm %s: %O\n",
       ctime(), alarm.func, err);

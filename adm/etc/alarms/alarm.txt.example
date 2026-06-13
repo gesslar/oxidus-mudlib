@@ -1,7 +1,7 @@
 # Format for an alarm
-# TYPE MASTER PATTERN /FILE FUNCTION [ARGUMENTS]
+# TYPE PATTERN MASTER /FILE FUNCTION [ARGUMENTS]
 #
-# Type: B O H D W Y // B: Boot, O: Once, H: Hourly, D: Daily, W: Weekly, Y: Yearly
+# Type: B O H D W M Y // B: Boot, O: Once, H: Hourly, D: Daily, W: Weekly, M: Monthly, Y: Yearly
 # Master: true, false
 # Pattern: Boot - s
 #          Once - y-m-d@H:M
