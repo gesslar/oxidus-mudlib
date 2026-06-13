@@ -8,60 +8,15 @@
 
 */
 
-/* Preprocessor Statement */
-
 #include <localtime.h>
-#include <logs.h>
 #include <shutdown.h>
 
-/* inherits */
-
+inherit __DIR__ "master/ed";
+inherit __DIR__ "master/logging";
 inherit __DIR__ "master/valid";
-
-/* Functions */
+inherit __DIR__ "master/testing";
 
 private nosave mapping errors = ([]);
-// Deadline timestamp (epoch seconds) until which caught errors are suppressed
-// in error_handler(). 0 means inactive. Auto-expires so a crashed/missing
-// clear_test_mode() call can never leave the master permanently squelched.
-private nosave int testing_in_progress = 0;
-
-/**
- * Enable test-mode error suppression for `duration` seconds. May only be
- * called by an object inheriting STD_TEST_RUNNER. Pass 0 (or negative) to
- * disable.
- *
- * @param {int} duration - Seconds to suppress caught-error logging.
- * @returns {int} 1 on success, 0 if caller is not authorized.
- */
-int set_test_mode(int duration) {
-  object po = previous_object();
-
-  if(!po || !inherits(STD_TEST_RUNNER, po))
-    return 0;
-
-  testing_in_progress = duration > 0 ? time() + duration : 0;
-  return 1;
-}
-
-/**
- * Disable test-mode error suppression. Same priv-check as set_test_mode().
- */
-void clear_test_mode() {
-  object po = previous_object();
-
-  if(!po || !inherits(STD_TEST_RUNNER, po))
-    return;
-
-  testing_in_progress = 0;
-}
-
-/**
- * @returns {int} 1 if test-mode error suppression is currently active.
- */
-int query_test_mode() {
-  return testing_in_progress > time();
-}
 
 void create() {
   // In master/valid.c
@@ -73,15 +28,13 @@ void create() {
   }, 0.01);
 }
 
-void flag(string str) {
-  if(str == "builddocs") {
-    call_out((: shutdown, 0 :), 10);
-  } else {
-    debug_message("Unknown flag: " + str);
-  }
+// -- driver apply
+private flag(string str) {
+  debug_message("Unknown flag: " + str);
 }
 
-protected object connect(int _port) {
+// -- driver apply
+private object connect(int _port) {
   object login_ob;
   string err;
 
@@ -99,7 +52,8 @@ protected object connect(int _port) {
   return login_ob;
 }
 
-protected void epilog(int _load_empty) {
+// -- driver apply
+private void epilog(int _load_empty) {
   string *lines, err;
   int i;
   float time;
@@ -128,168 +82,10 @@ protected void epilog(int _load_empty) {
   emit(SIG_SYS_BOOT);
 }
 
-void tune_into_error() {
-  // CHAN_D->tune("error", query_privs(), 1);
-}
-
-protected void log_error(string _file, string message) {
-  string username;
-
-  if(this_body())
-    username = query_privs(this_body());
-  else
-    username = "(none)";
-
-  if(stringp(username)) {
-    string path = home_path(username);
-    if(directory_exists(path)) {
-      write_file(path + "log", "\n" + message);
-    }
-
-    if(devp(this_body())) {
-        if(this_body()->query_pref("error_output") != "off")
-          tell_me(message);
-      }
-  }
-
-  log_file("compile",
-    "---\n" +
-    ctime() + "\n" +
-    message + "\n" +
-    call_trace()
-  );
-}
-
-// Blatanly stolen from Lima
-int different(string fn, string pr) {
-  sscanf(fn, "%s#%*d", fn);
-  fn += ".c";
-
-  return (fn != pr) && (fn != ("/" + pr));
-}
-
-string trace_line(object obj, string prog, string file, int line) {
-  string ret;
-  string objfn = obj ? file_name(obj) : "<none>";
-
-  ret = objfn;
-  if(different(objfn, prog))
-    ret += sprintf(" (%s)", prog);
-  if(file != prog)
-    ret += sprintf(" at %s:%d\n", file, line);
-  else
-    ret += sprintf(" at line %d\n", line);
-
-  return ret;
-}
-
-varargs string standard_trace(mapping mp, int flag) {
-  string ret;
-  mapping *trace;
-  int i, n;
-
-  ret = ctime(time());
-  ret += "\n";
-  ret += mp["error"] + "Object: " + trace_line(mp["object"], mp["program"], mp["file"], mp["line"]);
-  ret += "\n";
-  trace = mp["trace"];
-
-  n = sizeof(trace);
-
-  for(i = 0; i < n; i++) {
-    if(flag)
-      ret += sprintf("#%d: ", i);
-
-    ret += sprintf("'%s' at %s",
-      trace[i]["function"],
-      trace_line(trace[i]["object"], trace[i]["program"], trace[i]["file"], trace[i]["line"])
-    );
-  }
-
-  return ret;
-}
-
-private nosave string catch_log = "/log/catch";
-private nosave string runtime_log = "/log/runtime";
-
-void error_handler(mapping mp, int caught) {
-  string logfile;
-  string ret;
-
-  // During a test-runner sweep, caught errors are intentional (sad-path
-  // tests). Skip both logging and dev notification. Uncaught errors still
-  // surface. Suppression auto-expires via the testing_in_progress deadline.
-  if(caught && testing_in_progress > time())
-    return;
-
-  logfile = caught ? catch_log : runtime_log;
-  ret = "---\n" + standard_trace(mp, 1);
-  write_file(logfile, ret);
-
-  // TODO Temporary notifications, undo when above fixed
-  message("error", sprintf("(%s) Error logged %s\n%s\n",
-    logfile,
-    ret,
-    trace_line(mp["object"], mp["program"], mp["file"], mp["line"])
-), filter(users(), (: devp :)));
-}
-
-#if 0
-void error_handler(mapping mp, int caught) {
-    string ret;
-    string logfile = caught ? mud_config("LOG_CATCH") : mud_config("LOG_RUNTIME");
-    string what = mp["error"];
-    string userid;
-
-    ret = "---\n" + standard_trace(mp, 1);
-    write_file(logfile, ret);
-
-    // If an object didn't load, they get compile errors. Don't spam
-    // or confuse them
-    // if(what[0..23] == "*Error in loading object")
-    //     return;
-
-    if(this_body()) {
-        userid = query_privs(this_body());
-        if(!userid || userid == "")
-            userid = "(none)";
-        printf("%sTrace written to %s\n", what, logfile);
-        errors[userid] = mp;
-    } else {
-        userid = "(none)";
-    }
-    errors["last"] = mp;
-
-    // Strip trailing \n, and indent nicely
-    what = replace_string(what[0.. < 2], "\n", "\n         *");
-
-    // TODO: This isn't working for some reason, so we'll return to this
-    // temporarily notifying all admins of errors in real time, regardless
-    // of the kind.
-#if 0
-    CHAN_D->chat(
-        "error",
-        query_privs(),
-        sprintf("(%s) Error logged %s\n%s\n",
-            logfile,
-            what,
-            trace_line(mp["object"], mp["program"], mp["file"], mp["line"])
-        )
-    );
-#endif
-    // TODO: Temporary notifications, undo when above fixed
-    // message("error", sprintf("(%s) Error logged %s\n%s\n",
-    //     logfile,
-    //     ret,
-    //     trace_line(mp["object"], mp["program"], mp["file"], mp["line"])
-    // ), filter(users(), (: devp :)));
-
-}
-#endif
 private void crash(string crash_message, object command_giver, object current_object) {
   string mess;
 
-  emit(SIG_SYS_CRASH);
+  catch(emit(SIG_SYS_CRASH));
 
   shout(
     "Master object shouts: Damn!\n"
@@ -319,37 +115,16 @@ private void crash(string crash_message, object command_giver, object current_ob
   shutdown_d()->start(0, SYS_SHUTDOWN);
 }
 
-// This doesn't actually seem to work and generates *Too long evaluation.
-// Execution aborted. errors even though it isn't that complicated.
-#if 0
-public string get_save_file_name(string file, object who) {
-    string temp, e;
-
-    debug_message("Called from previous_object(): " + previous_object());
-
-    e = catch {
-        temp = sprintf("/tmp/%s.%d",
-            who ? query_privs(who) : "unknown",
-            time()
-        );
-    };
-
-    if(e) {
-        debug_message(sprintf("get_save_file_name error: %O", e));
-        return null;
-    }
-
-    debug_message(sprintf("get_save_file_name new file: %s", temp));
-
-    return temp;
-}
-#endif
-
+// -- driver apply
+// The privs_file() function is called in the master object when a new
+// file is created. The 'filename' of the object is passed as the argu‐
+// ment, and the string that privs_file() returns is used as the new
+// object's privs string.
 string privs_file(string filename) {
   string temp;
 
   if(sscanf(filename, "/adm/daemons/%s", temp)) return "[daemon]";
-  if(sscanf(filename, "/adm/obj/%s", temp)) return "[adm_obj]";
+  if(sscanf(filename, "/adm/obj/%s", temp)) return "[adm_object]";
   if(sscanf(filename, "/adm/%s", temp)) return "[admin]";
   if(sscanf(filename, "/cmds/adm/%s", temp)) return "[cmd_admin]";
   if(sscanf(filename, "/cmds/file/%s", temp)) return "[cmd_file]";
@@ -359,103 +134,32 @@ string privs_file(string filename) {
   if(sscanf(filename, "/home/%*s/%s/%*s", temp)) return "[home_" + temp + "]";
   if(sscanf(filename, "/open/%s", temp)) return "[open]";
   if(sscanf(filename, "/std/%s", temp)) return "[std_object]";
-  if(sscanf(filename, "/obj/mudlib/%s", temp)) return "[mudlib_object]";
-  if(sscanf(filename, "/obj/%s", temp)) return "[gen_obj]";
+  if(sscanf(filename, "/obj/%s", temp)) return "[gen_object]";
   else return "object";
 }
 
-/**
- *
- * @param {STD_OBJECT} ob - The object of which the real name is needed.
- */
-string object_name(object ob) {
+// -- driver apply
+// This master apply is called by the sprintf() efun, when printing the
+// "value" of an object. This function should return a string correspond‐
+// ing to the name of the object (eg a user's name).
+string object_name(/** @type {STD_OBJECT} */ object ob) {
   if(ob->query_real_name())
     return ob->query_real_name();
 
   return 0;
 }
 
+// -- driver apply
 mixed compile_object(string file) {
   return VIRTUAL_D->compile_object(file);
 }
 
-string make_path_absolute(string file) {
-  file = resolve_path(this_body()->query_env("cwd"), file);
-
-  return file;
-}
-
-varargs void log_file(string file, string msg, mixed arg...) {
-  int size;
-  /** @lpc-ignore - idk what's up with this */
-  int max_size = percent_of(80, get_config(__MAX_READ_FILE_SIZE__));
-  string *matches;
-  string source;
-
-  if(query_privs(previous_object()) == "[open]")
-    return;
-
-  source = log_dir() + file;
-  size = file_size(source);
-
-  if(size == -2)
-    return;
-
-  // Grab the full path and file name from the file
-  matches = dir_file(source);
-  if(sizeof(matches) == 2)
-    assure_dir(matches[0]);
-
-  if(size > max_size) {
-    string reg;
-
-    reg = "^("+log_dir()+")(.*)?/(.*)(\\.log)?$";
-    matches = pcre_extract(source, reg);
-
-    if(sizeof(matches) >= 2) {
-      string archive;
-      archive = matches[0] + "archive/" + matches[1] + "/";
-      assure_dir(archive);
-      if(sizeof(matches) == 3)
-        archive += matches[2] + "-" + strftime(ARCHIVE_STAMP, time()) + ".log";
-      else
-        archive += matches[2] + "-" + strftime(ARCHIVE_STAMP, time());
-
-      rename(source, archive);
-    }
-  }
-
-  arg = pointerp(arg) ? arg : ({ arg });
-  msg = sanitize_regex(msg);
-  msg = sprintf(msg, arg...);
-  msg = append(msg, "\n");
-
-  write_file(source, msg);
-}
-
-/**
- *
- * @param {STD_PLAYER} user
- * @param {int} config
- */
-int save_ed_setup(object user, int config) {
-  user->set_ed_setup(config);
-
-  return 1;
-}
-
-/**
- *
- * @param {STD_PLAYER} user
- */
-int retrieve_ed_setup(object user) {
-  return user->query_ed_setup();
-}
-
+// -- driver apply
 mapping get_mud_stats() {
   return MSSP_D->get_mud_stats();
 }
 
+// -- driver apply
 string *get_include_path(string object_path) {
   string *DEFAULT_PATH = ({ ":DEFAULT:" });
   string *parts = explode(object_path, "/");
