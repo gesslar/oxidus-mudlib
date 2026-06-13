@@ -1,5 +1,5 @@
 // /cmds/wiz/alarm.c
-// Command to inspect, add, remove, and reload alarms registered with
+// Command to inspect, add, remove, and rehash alarms registered with
 // the central alarm daemon.
 //
 // Created:     2024-02-25: Gesslar
@@ -19,7 +19,7 @@ inherit CLASS_ALARM;
 
 private mixed list_alarms(object tp, string filter_type, int as_time);
 private int next_poll(object tp);
-private int reload(object tp);
+private int rehash(object tp);
 private int add_alarm_entry(object tp, string type, int root);
 private int rem_alarm_entry(object tp);
 private mixed show_info(object tp, int num);
@@ -29,13 +29,13 @@ private string generate_obj_func_line(string obj, string func);
 private string time_as_string(int number);
 
 private nosave mapping interval_colors = ([
-  "once":    "{{aea}}",
-  "hourly":  "{{efa}}",
-  "daily":   "{{dae}}",
-  "weekly":  "{{fca}}",
-  "monthly": "{{fcc}}",
-  "yearly":  "{{cef}}",
-  "boot":    "{{ace}}",
+  "once":    "{{8DD68D}}",
+  "hourly":  "{{D3E68A}}",
+  "daily":   "{{C48DD6}}",
+  "weekly":  "{{E6AE8A}}",
+  "monthly": "{{E6AEAE}}",
+  "yearly":  "{{AED3E6}}",
+  "boot":    "{{8DB1D6}}",
 ]);
 
 private nosave mapping type_to_char = ([
@@ -78,8 +78,8 @@ mixed main(object tp, string arg) {
     return list_alarms(tp, 0, 1);
   if(arg == "next")
     return next_poll(tp);
-  if(arg == "reload")
-    return reload(tp);
+  if(arg == "rehash")
+    return rehash(tp);
   if(arg == "list")
     return list_alarms(tp, 0, 0);
 
@@ -115,7 +115,7 @@ mixed main(object tp, string arg) {
   }
 
   return _error(
-    "Syntax: alarm [list [type] | time | info <#> | next | reload | "
+    "Syntax: alarm [list [type] | time | info <#> | next | rehash | "
     "add [root] <type> | remove]");
 }
 
@@ -140,16 +140,17 @@ private int next_poll(object tp) {
     return _info(tp, "No poll is currently scheduled.");
 
   return _info(tp, "Next poll in %s (at %s).",
-    time_as_string(seconds), ctime(time() + seconds));
+    time_as_string(seconds),
+    strftime("%b %d %Y %H:%M:%S", time() + seconds));
 }
 
-private int reload(object tp) {
+private int rehash(object tp) {
   if(!adminp(tp))
-    return _error("Only admin may reload alarms.");
+    return _error("Only admin may rehash alarms.");
 
-  ALARM_D->reload_alarms();
+  ALARM_D->rehash_alarms();
   return _ok(tp,
-    "Alarms reloaded. Any runtime-added alarms have been discarded.");
+    "Alarms rehashed. Any runtime-added alarms have been discarded.");
 }
 
 private int sort_by_next(class Alarm a, class Alarm b) {
@@ -200,7 +201,7 @@ private mixed list_alarms(object tp, string filter_type, int as_time) {
     else if(next_t < 0)
       fmt = "    --";
     else if(as_time)
-      fmt = ctime(next_t)[4..18];
+      fmt = strftime("%b %d %H:%M:%S", next_t);
     else
       fmt = time_as_string(next_t - time());
 
@@ -289,7 +290,7 @@ private void receive_pattern(string str, object tp, string type, int root,
     _ok(tp, "Alarm added to the \"%s\" type.", type);
 }
 
-private mixed show_info(object tp, int num) {
+private mixed show_info(object _tp, int num) {
   class Alarm *alarms = ALARM_D->query_alarms();
   class Alarm alarm;
   int next_t;
@@ -310,7 +311,8 @@ private mixed show_info(object tp, int num) {
 
   if(alarm.last_run)
     last_str = sprintf("%s (%s ago)",
-      ctime(alarm.last_run), time_as_string(time() - alarm.last_run));
+      strftime("%b %d %Y %H:%M:%S", alarm.last_run),
+      time_as_string(time() - alarm.last_run));
   else
     last_str = "never";
 
@@ -320,7 +322,8 @@ private mixed show_info(object tp, int num) {
     next_str = "--";
   else
     next_str = sprintf("%s (at %s)",
-      time_as_string(next_t - time()), ctime(next_t));
+      time_as_string(next_t - time()),
+      strftime("%b %d %Y %H:%M:%S", next_t));
 
   out += ({
     sprintf("Alarm #%d  %s (%s)", num, alarm.type,
@@ -409,14 +412,14 @@ private string time_as_string(int number) {
   return result;
 }
 
-string query_help(object tp) {
+string query_help(object _tp) {
   return
 "Syntax: alarm                       - list all alarms\n"
 "        alarm time                  - list all alarms (timestamps)\n"
 "        alarm list [type]           - list alarms (filtered)\n"
 "        alarm info <#>              - show metadata for an alarm\n"
 "        alarm next                  - seconds until next poll\n"
-"        alarm reload                - reload from config (admin)\n"
+"        alarm rehash                - rehash from config (admin)\n"
 "        alarm add [type]            - add a new alarm interactively\n"
 "        alarm add root [type]       - add as root permissions (admin)\n"
 "        alarm remove                - remove an alarm by number\n"
@@ -425,18 +428,18 @@ string query_help(object tp) {
 "              [m]onthly / [y]early\n"
 "              (any unambiguous prefix; boot is config-file only)\n"
 "\n"
-"This command inspects, adds, removes, and reloads alarms registered\n"
+"This command inspects, adds, removes, and rehashs alarms registered\n"
 "with the central alarm daemon (ALARM_D).\n"
 "\n"
 "Recurring alarms (hourly/daily/weekly/monthly/yearly) and boot alarms\n"
-"typically live in the configured ALARMS_PATH and are reloaded\n"
+"typically live in the configured ALARMS_PATH and are rehashed\n"
 "automatically at boot. One-shot (\"once\") alarms added at runtime via\n"
 "\"alarm add once\" persist across reboots.\n"
 "\n"
-"\"alarm reload\" rereads all config files and discards any runtime-added\n"
+"\"alarm rehash\" rereads all config files and discards any runtime-added\n"
 "alarms.\n"
 "\n"
-"Only an admin may add an alarm with root permissions or reload the\n"
+"Only an admin may add an alarm with root permissions or rehash the\n"
 "alarm daemon.\n"
 "\n"
 "PATTERNS BY TYPE:\n"
