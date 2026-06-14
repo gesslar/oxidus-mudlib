@@ -10,6 +10,7 @@
   DISPLAY_NEWS: true,
   LOGIN_MSG: "/adm/etc/login/splash",
   LOGIN_NEWS: "/adm/etc/login/motd",
+  LOGO: "adm/etc/logo",
   ALLOW_SHUTDOWN: [
     "/adm/daemons/shutdown_d",
   ],

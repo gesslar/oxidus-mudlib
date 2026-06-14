@@ -45,6 +45,7 @@ private nosave mapping __login_gmcp_data = ([ "client" : null, "supports" : null
 private nosave mapping __environ_data = ([]);
 private nosave mapping __account = null;
 private nosave string __name, __character;
+private nosave string __logo = parse_tokens(read_file(mud_config("LOGO")));
 private nosave string __login_message = parse_tokens(read_file(mud_config("LOGIN_MSG")));
 private nosave int __call_out_id;
 private nosave int __gmcp_login_status = 0;
@@ -73,6 +74,8 @@ public void setup() {
  * message and schedules the greeting prompt.
  */
 private void logon() {
+
+  tell(this_object(), __logo);
   tell(this_object(), __login_message);
 
   __greet_call = call_out_walltime((:greet:), 0.2);
