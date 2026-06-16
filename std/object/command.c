@@ -387,6 +387,13 @@ public int command_hook(string arg) {
     // }
   };
 
+  /** @type {STD_ROOM} */ object room = environment();
+
+  if(room && room->valid_exit(verb)) {
+    arg = verb;
+    verb = "go";
+  }
+
   cmds = map(__cmdPaths, (: $1 + $(verb) + ".c" :));
   cmds = filter(cmds, (: file_exists :));
 
@@ -395,13 +402,6 @@ public int command_hook(string arg) {
     if(sz > 1) {
       tell("Ambiguous command.\n");
       return 1;
-    }
-
-    /** @type {STD_ROOM} */ object room = environment();
-
-    if(room && room->valid_exit(verb)) {
-      arg = verb;
-      verb = "go";
     }
 
     err = catch(cmd = load_object(cmds[0]));
