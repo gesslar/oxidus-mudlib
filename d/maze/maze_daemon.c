@@ -65,14 +65,17 @@ private nosave string *long_descriptions;
 private nosave string default_long_description;
 
 /**
- * Dimension configuration for the maze. The first element of each
- * inner array is the minimum size and is added to the result of the
- * prandom function applied to the second element to get the actual
- * size. It is in the order of z, y, x.
+ * Dimension configuration for the maze. One ({ min, spread }) pair per
+ * axis, in the order z, y, x (depth, height, width). The first element
+ * is the minimum (base) size for that axis. The second element is the
+ * random spread: it is fed to prandom() to yield a value in the range
+ * 0..spread-1, which is then added to the minimum. So the final size of
+ * an axis is min + prandom(spread), giving a result in the inclusive
+ * range min..min+spread-1.
  *
  * @type {({ int, int })*}
  */
-private nosave mixed *dimension_config = ({ ({ 25, 5 }), ({ 25, 5 }), ({ 25, 5 }),  });
+private nosave mixed *dimension_config = ({ ({ 5, 1 }), ({ 10, 1 }), ({ 10, 1 }), });
 private nosave int *dimensions;
 
 // Some constants
