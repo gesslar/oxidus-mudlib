@@ -50,7 +50,7 @@ public mapping query_resources() {
 }
 
 private void redistribute_resources() {
-  shout("Redistributing resources.\n");
+  // shout("Redistributing resources.\n");
 
   debug("Loaded = %O", __loaded);
 
