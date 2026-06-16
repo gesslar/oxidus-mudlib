@@ -27,7 +27,7 @@ void setup() {
     "west" : "village_path2",
     "east" : "village_path3",
     "south": "village_path4",
-    "down" : "../tunnels/0,0,-1",
+    "down" : "../tunnels/8,-9,-1",
   ]));
 
   set_room_size(({2,2,1}));

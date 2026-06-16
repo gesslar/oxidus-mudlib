@@ -22,12 +22,15 @@ void setup() {
   "and activity around it. The path, free of dwellings, emphasizes this lone "
   "building's significance. The air carries scents of old wood, fresh ink, "
   "and excitement, hinting at the building's role as a gathering place for "
-  "newcomers to the village and beyond.");
+  "newcomers to the village and beyond. Westward the bricks straggle on "
+  "past the last of the houses, toward the ragged edge of the village where "
+  "the kept ground gives out to field and weed.");
 
   set_exits(([
     "north": "centre",
     "east" : "village_path2",
     "south": "../forest/2,0,0",
+    "west" : "village_path6",
   ]));
 
   set_items(([
@@ -51,6 +54,11 @@ void setup() {
       "Small weeds occasionally sprout between the bricks, their "
       "presence a testament to the less rigorous maintenance of this "
       "quieter part of the village.",
+    ({ "ragged edge", "edge", "west" }) :
+      "To the west the houses thin and stop, and the brickwork with "
+      "them, until the path is little more than a track running out to "
+      "where the village frays into open field. Folk do not go that way "
+      "much; there is nothing out there now but old country.",
     "air" :
       "The air here carries a mix of domestic scents - freshly baked "
       "bread, laundry drying in the breeze, and the earthy smell of "

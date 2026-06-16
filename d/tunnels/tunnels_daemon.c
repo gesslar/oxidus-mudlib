@@ -135,9 +135,11 @@ public void setup_long(object room) {
 
 /**
  * Virtual-map apply that assigns exits to a generated room. Uses
- * the map's computed exits for the room's coordinates, with a
- * special-case "up" exit at coordinate (0,0,-1) leading out to the
- * village square.
+ * the map's computed exits for the room's coordinates, with special-
+ * case "up" exits at the two surface shafts: (8,-9,-1) climbs out to
+ * the well in the village square of Olum, and (0,0,-1) climbs out to
+ * the dry well on Thornwick green. The tunnel network between them
+ * forms the subsurface link between the two hamlets.
  *
  * @param {STD_ROOM} room - The virtual room being populated.
  * @param {string} file - The virtual file identifier for the room
@@ -154,8 +156,10 @@ public void setup_exits(object room, string file) {
   room_type = get_room_type(coords[0], coords[1], coords[2]);
   exits = get_exits(coords[0], coords[1], coords[2]);
 
-  if(file == "0,0,-1")
+  if(file == "8,-9,-1")
     exits["up"] = "../village/square";
+  else if(file == "0,0,-1")
+    exits["up"] = "../thornwick/thornwick_green";
 
   room->set_exits(exits);
 }
