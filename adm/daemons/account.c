@@ -200,7 +200,7 @@ int valid_manip(string name) {
   if(adminp(caller))
     return true;
 
-  if(!is_member(query_privs(prev), "admin")
+  if(!has_role(query_privs(prev), "admin")
       && query_privs(prev) != name
       && base_name(previous_object()) != H_GMCP_CHAR
       && (caller && query_privs(caller)) != name

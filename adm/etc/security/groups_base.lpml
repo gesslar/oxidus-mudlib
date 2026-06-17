@@ -1,0 +1,33 @@
+{
+  developer: {
+    inherits: [],
+    roles: [
+      "developer",
+    ],
+    members: [],
+  },
+  admin: {
+    inherits: [
+      "developer",
+    ],
+    roles: [
+      "admin",
+    ],
+    members: [
+      "[master]",
+      "[adm_obj]",
+      "[admin]",
+      "[daemon]",
+      "[cmd_admin]",
+    ],
+  },
+  owner: {
+    inherits: [
+      "admin",
+    ],
+    roles: [
+      "owner",
+    ],
+    members: [],
+  },
+}

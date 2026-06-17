@@ -14,7 +14,6 @@ inherit STD_CMD;
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   object body;
-  object security_editor;
   string path;
 
   if(!adminp(previous_object()))
@@ -51,9 +50,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   body->add_path("/cmds/wiz/");
   body->add_path("/cmds/object/");
   body->add_path("/cmds/file/");
-  security_editor = new(OBJ_SECURITY_EDITOR);
-  security_editor->enable_membership(query_privs(body), "developer");
-  security_editor->write_state(0);
+  master()->add_role(query_privs(body), "developer");
   _ok(body, "Success.");
   _ok(body, "Developer Access Granted.");
 

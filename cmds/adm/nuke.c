@@ -42,16 +42,7 @@ void confirm_nuke(string str, object caller, string user) {
 
   _info(caller, "Stripping user of system group memberships.");
 
-  /** @type {OBJ_SECURITY_EDITOR} */ object security_editor = new(OBJ_SECURITY_EDITOR);
-
-  foreach(mixed group in security_editor->list_groups()) {
-    if(is_member(user, group))
-      _info(caller, "Removing from group: %s.", group);
-    security_editor->disable_membership(user, group);
-  }
-
-  security_editor->write_state(0);
-  security_editor->remove();
+  master()->purge_roles(user);
 
   if(body = find_player(user)) {
     _info(caller, "Disconnecting user '" + user + "'.");

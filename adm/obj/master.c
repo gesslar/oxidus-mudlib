@@ -16,7 +16,7 @@
 
 /* inherits */
 
-inherit __DIR__ "master/valid";
+inherit __DIR__ "master/security";
 
 /* Functions */
 
@@ -64,9 +64,8 @@ int query_test_mode() {
 }
 
 void create() {
-  // In master/valid.c
-  parse_group();
-  parse_access();
+  // In master/security.c
+  setup_security();
 
   call_out_walltime(function() {
     set_privs(this_object(), "[master]");
