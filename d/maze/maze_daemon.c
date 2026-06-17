@@ -75,7 +75,7 @@ private nosave string default_long_description;
  *
  * @type {({ int, int })*}
  */
-private nosave mixed *dimension_config = ({ ({ 5, 1 }), ({ 10, 1 }), ({ 10, 1 }), });
+private nosave mixed *dimension_config = ({ ({ 5, 10 }), ({ 10, 10 }), ({ 10, 10 }), });
 private nosave int *dimensions;
 
 // Some constants

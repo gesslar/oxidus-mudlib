@@ -45,7 +45,7 @@ private nosave int *dimensions;
 // private nosave mixed *dimension_config = ({ ({ 25, 1 }), ({ 25, 1 }),  });
 // private nosave mixed *dimension_config = ({ ({ 30, 1 }), ({ 50, 1 }),  });
 // private nosave mixed *dimension_config = ({ ({ 30, 1 }), ({ 30, 1 }) });
-private nosave mixed *dimension_config = ({ ({ 10, 5 }), ({ 10, 5 }) });
+private nosave mixed *dimension_config = ({ ({ 10, 20 }), ({ 10, 20 }) });
 private nosave int WIDTH = 0, HEIGHT = 1;
 
 // The seed is used to ensure that every time the daemon runs, it uses the same
