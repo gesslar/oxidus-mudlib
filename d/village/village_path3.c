@@ -31,6 +31,8 @@ void setup() {
     "west" : "square",
   ]));
 
+  set_distance("west", 2);
+
   set_items(([
     ({ "village square", "square" }) :
       "The bustling heart from which the path departs, leaving behind "

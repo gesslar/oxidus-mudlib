@@ -31,7 +31,8 @@ void setup() {
     "west": "chapel_yard",
   ]));
 
-  set_room_size(({2,3,1}));
+  set_distance("west", 2);
+
   set_terrain("indoor");
   set_room_type("temple");
 

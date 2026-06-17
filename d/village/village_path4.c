@@ -31,6 +31,8 @@ void setup() {
     "north": "square",
   ]));
 
+  set_distance("north", 2);
+
   set_items(([
     ({ "village square", "square" }) :
       "The starting point of many journeys within the village, the "

@@ -29,7 +29,9 @@ void setup() {
     "north": "hollow_road3",
   ]));
 
-  set_room_size(({2,3,1}));
+  set_distance("north", 3);
+  set_distance("south", 3);
+
   set_terrain("road");
 
   set_items(([

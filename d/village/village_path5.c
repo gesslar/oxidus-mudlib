@@ -33,6 +33,8 @@ void setup() {
     "west" : "village_path6",
   ]));
 
+  set_distance("west", 2);
+
   set_items(([
     ({ "village square", "square" }) :
       "The bustling centre of the village, now fading into the distance "

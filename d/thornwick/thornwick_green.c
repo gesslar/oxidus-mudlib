@@ -28,14 +28,18 @@ void setup() {
   "toward the living world.");
 
   set_exits(([
-    "south": "hollow_road3",
-    "west" : "ruined_cottage",
-    "east" : "chapel_yard",
     "north": "bramble_thicket",
+    "south": "hollow_road3",
+    "east" : "chapel_yard",
+    "west" : "ruined_cottage",
     "down" : "../tunnels/0,0,-1",
   ]));
 
-  set_room_size(({3,3,1}));
+  set_distance("north", 3);
+  set_distance("south", 3);
+  set_distance("east", 3);
+  set_distance("west", 3);
+
   set_terrain("grass");
 
   set_items(([

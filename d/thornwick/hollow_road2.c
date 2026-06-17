@@ -25,11 +25,13 @@ void setup() {
   "falls away south to easier ground.");
 
   set_exits(([
-    "south": "hollow_road1",
     "north": "old_bridge",
+    "south": "hollow_road1",
   ]));
 
-  set_room_size(({1,2,1}));
+  set_distance("north", 3);
+  set_distance("south", 2);
+
   set_terrain("grass");
 
   add_reset((: area_spawn, "mob/carrion_crow", 40.0, 1, 2 :));

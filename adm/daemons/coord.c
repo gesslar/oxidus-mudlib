@@ -23,6 +23,13 @@ void setup() {
   set_persistent(1);
 }
 
+void clear() {
+  rooms = ([]);
+  rooms_array = ({});
+
+  save_data();
+}
+
 void set_coordinate_data(mapping m) {
   rooms = m;
   rooms_array = map(values(rooms), (: $1.coords :));
@@ -37,13 +44,6 @@ mapping get_coordinate_data() {
 int *get_coordinates(string room) {
   if(classp(rooms[room]))
     return rooms[room].coords;
-
-  return null;
-}
-
-int *get_size(string room) {
-  if(classp(rooms[room]))
-    return rooms[room].size;
 
   return null;
 }
