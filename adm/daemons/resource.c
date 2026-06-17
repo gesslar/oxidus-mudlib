@@ -52,7 +52,7 @@ public mapping query_resources() {
 private void redistribute_resources() {
   // shout("Redistributing resources.\n");
 
-  debug("Loaded = %O", __loaded);
+  // debug("Loaded = %O", __loaded);
 
   each(__loaded, (: reset_room_resources :));
 }
