@@ -20,5 +20,8 @@
 # Boot type alarms will schedule an alarm to be called in # seconds after the
 # MUD has booted via call_out_walltime().
 
-# Every hour, invalidate cache entries older than 1h
-# H 00 true /adm/daemons/cache invalidate ">=3600"
+# Every hour, invalidate cache entries older than 1h.
+H 00 true /adm/daemons/cache invalidate ">=3600"
+
+# One second after boot, run the crawler.
+B  1 true /adm/daemons/crawler crawl
