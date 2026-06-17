@@ -57,7 +57,6 @@ private void determine_exit_and_entrance();
 int *find_a_path(int z);
 int *find_a_wall(int z);
 
-
 // Constants
 private nosave int DEPTH = 0, HEIGHT = 1, WIDTH = 2;
 private nosave int MIN_Z, MAX_Z, MIN_Y, MAX_Y, MIN_X, MAX_X;
@@ -88,14 +87,14 @@ private nosave mapping long_descriptions;
 
 private nosave int *dimensions;
 // Dimension configuration {min, range} for z, y, x
-private nosave mixed *dimension_config = ({ ({ 3, 1 }), ({ 50, 1 }), ({ 50, 1 }) });
+private nosave mixed *dimension_config = ({ ({ 3, 3 }), ({ 50, 10 }), ({ 50, 10 }) });
 private nosave float coverage_percentage = 0.10 ; // 5%
 private nosave int min_room_size = 1;
 private nosave int max_room_size = 3;
 private mixed *neighbour_excludes = ({});
 private mixed *all_paths, *all_walls;
 private nosave mixed *all_connections;
-private nosave mixed seed = 42;
+private nosave mixed seed = BOOT_D->query_boot_number();
 
 // The cavern map
 private nosave mixed *cavern_map;
