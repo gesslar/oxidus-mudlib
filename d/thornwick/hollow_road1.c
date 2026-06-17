@@ -25,11 +25,13 @@ void setup() {
   "inward-looking, as though the land itself would rather not be walked.");
 
   set_exits(([
-    "south": "../village/village_path7",
     "north": "hollow_road2",
+    "south": "../village/village_path7",
   ]));
 
-  set_room_size(({2,2,1}));
+  set_distance("north", 2);
+  set_distance("south", 2);
+
   set_terrain("grass");
 
   set_items(([

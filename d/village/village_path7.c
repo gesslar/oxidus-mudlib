@@ -26,11 +26,13 @@ void setup() {
   "The way back east leads home into the village.");
 
   set_exits(([
-    "east" : "village_path6",
     "north": "../thornwick/hollow_road1",
+    "east" : "village_path6",
   ]));
 
-  set_room_size(({2,2,1}));
+  set_distance("east", 2);
+  set_distance("north", 2);
+
   set_terrain("grass");
 
   set_items(([

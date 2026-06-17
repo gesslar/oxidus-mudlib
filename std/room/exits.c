@@ -15,6 +15,7 @@
 private nosave mapping __exits = ([]);
 private nosave mapping __pre_exit_funcs = ([]);
 private nosave mapping __post_exit_funcs = ([]);
+private nosave mapping __distances = ([]);
 
 /**
  * Sets the exits for a room, replacing any existing exits.
@@ -160,6 +161,65 @@ mapping add_exit(string id, string path) {
   __exits[id] = path;
 
   return query_exits();
+}
+
+/**
+ * Sets the grid distance for an exit, in whole grid squares from this
+ * room's centre to the destination room's centre along that direction.
+ *
+ * This drives coordinate spacing in the crawler/COORD_D map and the
+ * movement cost for the exit. The builder is responsible for keeping
+ * both halves of an edge in agreement
+ * (e.g. this room's "north" and the destination's "south" should match);
+ * the crawler logs any edge that does not close.
+ *
+ * @param {string} dir - The exit direction
+ * @param {int} n - Distance in grid squares (>= 0)
+ */
+void set_distance(string dir, int n) {
+  __distances[dir] = n;
+}
+
+/**
+ * Returns the grid distance for an exit, defaulting to 1 when unset.
+ *
+ * @param {string} dir - The exit direction
+ * @returns {int} Distance in grid squares
+ */
+int query_distance(string dir) {
+  if(nullp(__distances[dir]))
+    return 1;
+
+  return __distances[dir];
+}
+
+/**
+ * Returns a copy of all explicitly set exit distances.
+ *
+ * @returns {mapping} A copy of the distances mapping
+ */
+mapping query_distances() {
+  return copy(__distances);
+}
+
+/**
+ * Checks whether a distance has been explicitly set for an exit, as
+ * opposed to falling back to the default.
+ *
+ * @param {string} dir - The exit direction
+ * @returns {int} 1 if a distance was explicitly set, 0 otherwise
+ */
+int has_distance(string dir) {
+  return !nullp(__distances[dir]);
+}
+
+/**
+ * Removes an explicitly set distance, reverting the exit to the default.
+ *
+ * @param {string} dir - The exit direction
+ */
+void remove_distance(string dir) {
+  map_delete(__distances, dir);
 }
 
 /**

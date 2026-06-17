@@ -22,8 +22,6 @@ inherit __DIR__ "terrain";
 inherit __DIR__ "zone";
 inherit __DIR__ "door";
 
-private nosave int *__size = ({1, 1, 1});
-
 /**
  * Sets up the room with default values.
  *
@@ -98,7 +96,6 @@ mapping gmcp_room_info() {
     "doors"      : doors,
     "environment": query_room_environment() || query_terrain(),
     "coords"     : COORD_D->get_coordinates(base_name()),
-    "size"       : __size,
     "type"       : room_type,
     "subtype"    : room_subtype,
     "icon"       : room_icon,
@@ -150,76 +147,37 @@ void set_room_colour(int colour) {
  */
 int query_room_colour() { return room_colour; }
 
-/**
- * Sets the room's size in three dimensions.
- *
- * Size affects movement costs and other spatial calculations.
- *
- * @param {int*} size - Array of 3 integers representing width, length, height
- */
-void set_room_size(int *size) {
-  __size = size;
-}
-
-/**
- * Returns the room's size.
- *
- * @returns {int*} Array of 3 integers representing width, length, height
- */
-int *query_room_size() { return __size; }
-
 private nosave float _base_move_cost = 2.0;
+
+private nosave mapping _diagonal_axes = ([
+  "northeast": ({ "north", "east" }),
+  "northwest": ({ "north", "west" }),
+  "southeast": ({ "south", "east" }),
+  "southwest": ({ "south", "west" }),
+]);
 
 /**
  * Calculates the movement cost for a given direction.
  *
- * Movement costs vary based on room size and direction of travel.
- * Diagonal movement combines costs of the relevant dimensions.
+ * The cost scales with the exit's grid distance, so longer exits cost
+ * proportionally more to traverse. A diagonal with no explicit distance
+ * averages its two cardinal components, preserving the old compromise;
+ * an explicit distance on the diagonal overrides that. Exits with no
+ * distance default to 1.
  *
  * @param {string} dir - The direction of movement
  * @returns {float} The calculated movement cost
  */
 float move_cost(string dir) {
-  int *size = query_room_size();
-  float cost;
+  string *axes = _diagonal_axes[dir];
+  float dist;
 
-  switch(dir) {
-    case "north":
-      cost = to_float(size[0]);
-      break;
-    case "south":
-      cost = to_float(size[0]);
-      break;
-    case "east":
-      cost = to_float(size[1]);
-      break;
-    case "west":
-      cost = to_float(size[1]);
-      break;
-    case "northeast":
-      cost = (to_float(size[0]) + to_float(size[1])) / 2.0;
-      break;
-    case "northwest":
-      cost = (to_float(size[0]) + to_float(size[1])) / 2.0;
-      break;
-    case "southeast":
-      cost = (to_float(size[0]) + to_float(size[1])) / 2.0;
-      break;
-    case "southwest":
-      cost = (to_float(size[0]) + to_float(size[1])) / 2.0;
-      break;
-    case "up":
-      cost = to_float(size[2]);
-      break;
-    case "down":
-      cost = to_float(size[2]);
-      break;
-    default:
-      cost = 1.0;
-      break;
-  }
+  if(axes && !has_distance(dir))
+    dist = (to_float(query_distance(axes[0])) + to_float(query_distance(axes[1]))) / 2.0;
+  else
+    dist = to_float(query_distance(dir));
 
-  return cost * _base_move_cost;
+  return dist * _base_move_cost;
 }
 
 /**

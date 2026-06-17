@@ -26,11 +26,13 @@ void setup() {
   "into the green to the north.");
 
   set_exits(([
-    "south": "old_bridge",
     "north": "thornwick_green",
+    "south": "old_bridge",
   ]));
 
-  set_room_size(({2,2,1}));
+  set_distance("north", 3);
+  set_distance("south", 3);
+
   set_terrain("grass");
 
   set_items(([

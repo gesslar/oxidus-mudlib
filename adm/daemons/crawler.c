@@ -23,7 +23,7 @@ inherit CLASS_ROOMINFO;
 void crawl_next_room(object tp, mixed arg...);
 void process_room(object room, object tp);
 object stash_objects(string room_file, object tp);
-int *update_coordinates(int *coords, string exit, int *current_size, int *next_size);
+int *update_coordinates(int *coords, string exit, int distance);
 string log_file = "/log/crawl.log";
 
 private nosave float crawl_speed = 0.001;
@@ -42,6 +42,16 @@ private nosave mapping done = ([]);
  */
 private nosave mapping todo = ([]);
 private nosave int x, y, z;
+
+/**
+ * The directional exits that map onto the coordinate grid. Only these
+ * are checked for cross-edge consistency; other exits (portals, named
+ * passages) carry no spatial relationship.
+ */
+private nosave string *grid_dirs = ({
+  "north", "south", "east", "west", "up", "down",
+  "northeast", "northwest", "southeast", "southwest"
+});
 
 private nosave string crawl_start_room;
 
@@ -74,14 +84,15 @@ void crawl(mixed arg...) {
   if(!room)
     return;
 
+  COORD_D->clear();
+
   call_out_walltime("crawl_next_room", crawl_speed, tp, arg);
 
   todo[file_name(room)] = new(class RoomInfo,
     short: room->query_short(),
     todo: room->query_exit_ids(),
     done: ({}),
-    coords: ({0, 0, 0}),
-    size: ({1, 1, 1})
+    coords: ({0, 0, 0})
   );
 }
 
@@ -151,29 +162,43 @@ void process_room(object room, object tp) {
     exit = room_data.todo[0];
     dest = room->query_exit(exit);
 
-    if(dest && !done[dest] && !todo[dest]) {
-      object next_room;
-      string e;
+    if(dest) {
+      int distance = room->query_distance(exit);
 
-      e = catch( next_room = stash_objects(dest, tp) );
-      if(e) {
-        write_file(log_file, sprintf("Failed to load %s => %s via %s\n", file, dest, exit));
-        continue;
-      }
+      if(!done[dest] && !todo[dest]) {
+        object next_room;
+        string e;
 
-      if(next_room) {
-        int *next_size;
-        int *new_coords;
+        e = catch( next_room = stash_objects(dest, tp) );
+        if(e)
+          write_file(log_file, sprintf("Failed to load %s => %s via %s\n", file, dest, exit));
+        else if(next_room) {
+          int *new_coords = update_coordinates(room_data.coords, exit, distance);
 
-        next_size = next_room->query_room_size() || ({1, 1, 1});
-        new_coords = update_coordinates(room_data.coords, exit, room_data.size, next_size);
-        todo[dest] = new(class RoomInfo,
-          short: next_room->query_short(),
-          todo: next_room->query_exit_ids(),
-          done: ({}),
-          coords: new_coords,
-          size: next_size
-        );
+          todo[dest] = new(class RoomInfo,
+            short: next_room->query_short(),
+            todo: next_room->query_exit_ids(),
+            done: ({}),
+            coords: new_coords
+          );
+        }
+      } else if(member_array(exit, grid_dirs) != -1) {
+        // Cross-edge: the destination is already placed. Verify this
+        // exit agrees with where it sits, and log the edge if not.
+        class RoomInfo placed = done[dest];
+        int *expected = update_coordinates(room_data.coords, exit, distance);
+
+        if(!placed)
+          placed = todo[dest];
+
+        if(placed && (placed.coords[0] != expected[0] ||
+                      placed.coords[1] != expected[1] ||
+                      placed.coords[2] != expected[2]))
+          write_file(log_file, sprintf(
+            "Cross-edge conflict: %s %s -> %s expected (%d,%d,%d) but placed at (%d,%d,%d)\n",
+            file, exit, dest,
+            expected[0], expected[1], expected[2],
+            placed.coords[0], placed.coords[1], placed.coords[2]));
       }
     }
 
@@ -188,52 +213,52 @@ void process_room(object room, object tp) {
 
 /**
  * Computes the grid coordinates of an adjacent room based on the
- * direction of travel and the sizes of both rooms.
+ * direction of travel and the per-exit distance declared on the
+ * current room.
  *
- * The offset along each axis is half the sum of the two rooms' sizes
- * on that axis, so the rooms abut without overlapping. Diagonal exits
- * shift along two axes at once. The result is rounded to the nearest
- * integer grid coordinate.
+ * The destination is shifted by the whole-square distance along the
+ * relevant axis (both axes for diagonals). Distances are integers, so
+ * no rounding is involved and the grid stays exact. Non-directional
+ * exits leave the coordinates unchanged.
  *
  * @param {int*} coords - The {x, y, z} coordinates of the current
  *                        room.
  * @param {string} exit - The direction of travel (e.g. "north",
  *                        "southeast", "up").
- * @param {int*} current_size - The {width, height, depth} of the
- *                              current room.
- * @param {int*} next_size - The {width, height, depth} of the
- *                           destination room.
+ * @param {int} distance - The centre-to-centre distance in grid
+ *                         squares for this exit.
  * @returns {int*} The {x, y, z} grid coordinates of the destination
  *                 room.
  */
-int *update_coordinates(int *coords, string exit, int *current_size, int *next_size) {
-  float *new_coords = ({ to_float(coords[0]), to_float(coords[1]), to_float(coords[2]) });
+int *update_coordinates(int *coords, string exit, int distance) {
+  int *new_coords = ({ coords[0], coords[1], coords[2] });
 
   switch(exit) {
-    case "north": new_coords[1] += (current_size[1] + next_size[1]) / 2.0 ; break;
-    case "south": new_coords[1] -= (current_size[1] + next_size[1]) / 2.0 ; break;
-    case "east":  new_coords[0] += (current_size[0] + next_size[0]) / 2.0 ; break;
-    case "west":  new_coords[0] -= (current_size[0] + next_size[0]) / 2.0 ; break;
-    case "up":    new_coords[2] += (current_size[2] + next_size[2]) / 2.0 ; break;
-    case "down":  new_coords[2] -= (current_size[2] + next_size[2]) / 2.0 ; break;
+    case "north": new_coords[1] += distance; break;
+    case "south": new_coords[1] -= distance; break;
+    case "east":  new_coords[0] += distance; break;
+    case "west":  new_coords[0] -= distance; break;
+    case "up":    new_coords[2] += distance; break;
+    case "down":  new_coords[2] -= distance; break;
     case "northeast":
-      new_coords[0] += (current_size[0] + next_size[0]) / 2.0;
-      new_coords[1] += (current_size[1] + next_size[1]) / 2.0;
+      new_coords[0] += distance;
+      new_coords[1] += distance;
       break;
     case "northwest":
-      new_coords[0] -= (current_size[0] + next_size[0]) / 2.0;
-      new_coords[1] += (current_size[1] + next_size[1]) / 2.0;
+      new_coords[0] -= distance;
+      new_coords[1] += distance;
       break;
     case "southeast":
-      new_coords[0] += (current_size[0] + next_size[0]) / 2.0;
-      new_coords[1] -= (current_size[1] + next_size[1]) / 2.0;
+      new_coords[0] += distance;
+      new_coords[1] -= distance;
       break;
     case "southwest":
-      new_coords[0] -= (current_size[0] + next_size[0]) / 2.0;
-      new_coords[1] -= (current_size[1] + next_size[1]) / 2.0;
+      new_coords[0] -= distance;
+      new_coords[1] -= distance;
       break;
   }
-  return ({ to_int(round(new_coords[0])), to_int(round(new_coords[1])), to_int(round(new_coords[2])) });
+
+  return new_coords;
 }
 
 /**

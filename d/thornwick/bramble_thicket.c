@@ -29,7 +29,8 @@ void setup() {
     "south": "thornwick_green",
   ]));
 
-  set_room_size(({1,1,1}));
+  set_distance("south", 3);
+
   set_terrain("forest");
 
   add_reset((: area_spawn, "mob/bramble_cur", 65.0, 3, 5 :));

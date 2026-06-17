@@ -31,6 +31,8 @@ set_exits(([
   "west" : "village_path5",
 ]));
 
+  set_distance("east", 2);
+
   set_items(([
     ({ "village square", "square" }) :
       "The bustling epicentre from which this path begins, fading into "

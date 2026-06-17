@@ -31,6 +31,8 @@ void setup() {
     "north": "field/0,9,0",
   ]));
 
+  set_distance("south", 2);
+
   set_items(([
     ({ "village square", "square" }) :
       "The village square lies to the south, a bustling hub of activity "

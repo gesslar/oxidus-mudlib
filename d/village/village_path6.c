@@ -30,7 +30,8 @@ void setup() {
     "west": "village_path7",
   ]));
 
-  set_room_size(({2,2,1}));
+  set_distance("east", 2);
+  set_distance("west", 2);
 
   set_items(([
     ({ "houses", "cottages", "dwellings" }) :

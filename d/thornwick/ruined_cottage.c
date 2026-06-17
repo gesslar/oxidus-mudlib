@@ -30,7 +30,8 @@ void setup() {
     "east": "thornwick_green",
   ]));
 
-  set_room_size(({2,2,1}));
+  set_distance("east", 3);
+
   set_terrain("indoor");
 
   add_reset((: area_spawn, "mob/rat", 55.0, 1, 2 :));

@@ -629,7 +629,7 @@ public void setup_exits(object room) {
     }
   }
 
-  if(z == exit[0] && y == exit[1] && x == exit[2])
+  if(entrance && z == exit[0] && y == exit[1] && x == exit[2])
     room->add_exit("up", sprintf("/d/wastes/%d,%d,%d", entrance[2], entrance[1], entrance[0]));
 }
 
@@ -961,8 +961,9 @@ void determine_exit_and_entrance() {
   height = /** @type {WastesDaemon} */ (wastes_daemon)->get_map_height();
   width = /** @type {WastesDaemon} */ (wastes_daemon)->get_map_width();
 
+  int max = 100;
   // Pick a random room in the wastes and set a down exit to the cavern
-  while(true) {
+  while(true && --max > 0) {
     int y, x;
     string room_type;
 

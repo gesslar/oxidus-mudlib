@@ -2,8 +2,6 @@
 #define __ROOM_H__
 
 mapping gmcp_room_info(object who) ;
-void set_room_size(int *size) ;
-int *query_room_size() ;
 string set_room_type(string type) ;
 string set_room_subtype(string subtype) ;
 string set_room_icon(string icon) ;

@@ -29,7 +29,9 @@ void setup() {
     "east": "chapel",
   ]));
 
-  set_room_size(({2,2,1}));
+  set_distance("west", 3);
+  set_distance("east", 2);
+
   set_terrain("grass");
 
   add_reset((: area_spawn, "mob/carrion_crow", 50.0, 2, 3 :));
