@@ -50,10 +50,8 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
     body->rem_path("/cmds/file/");
   }
 
-  /** @type {OBJ_SECURITY_EDITOR} */ object security_editor = new(OBJ_SECURITY_EDITOR);
-  security_editor->disable_membership(query_privs(body), "admin");
-  security_editor->write_state(0);
-  security_editor->remove();
+  master()->remove_role(query_privs(body), "admin");
+
   body->save_body();
 
   _ok("User '%s' is no longer an admin.", capitalize(body->query_real_name()));

@@ -40,44 +40,33 @@ void confirm_awipe(string str, object caller, string account) {
 
   _info(caller, "Wiping account '%s' with %d character(s).", account, sizeof(characters));
 
-  // First pass: strip every character of its group memberships and persist the
-  // result before doing any destructive filesystem work, so a later failure
-  // can't leave the changes unwritten or leak the editor clone.
-  /** @type {OBJ_SECURITY_EDITOR} */ object security_editor = new(OBJ_SECURITY_EDITOR);
-
-  foreach(string user in characters) {
-    _info(caller, "Stripping character '%s' of system group memberships.", capitalize(user));
-
-    foreach(mixed group in security_editor->list_groups()) {
-      if(is_member(user, group))
-        _info(caller, "Removing from group: %s.", group);
-      security_editor->disable_membership(user, group);
-    }
-  }
-
-  security_editor->write_state(0);
-  security_editor->remove();
-
   // Second pass: disconnect any logged-in bodies and delete user directories.
-  foreach(string user in characters) {
+  foreach(string character in characters) {
     object body;
 
-    if(body = find_player(user)) {
-      _info(caller, "Disconnecting user '" + user + "'.");
+    master()->purge_roles(character);
+
+    if(body = find_player(character)) {
+      _info(caller, "Disconnecting user '" + character + "'.");
       _ok(body, "You watch as your body dematerializes.");
 
       if(environment(body)) {
-        tell_down(environment(body), "You watch as " + capitalize(user) + " dematerializes before your eyes.\n",
-          0, ({ body }));
+        tell_down(
+          environment(body),
+          "You watch as " + capitalize(character) + " dematerializes before your eyes.\n",
+          0,
+          ({ body })
+        );
+
         body->remove();
       }
     }
 
-    string user_dir = user_data_directory(user);
+    string user_dir = user_data_directory(character);
     if(directory_exists(user_dir)) {
       mixed err;
 
-      _info(caller, "Deleting user directory for user '%s'.", capitalize(user));
+      _info(caller, "Deleting user directory for user '%s'.", capitalize(character));
       err = catch(recursive_delete(as_directory(user_dir), true));
 
       if(err) {

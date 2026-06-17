@@ -464,7 +464,6 @@ private void new_character(string str) {
  */
 private void first_admin_login() {
   if(!file_exists(mud_config("FIRST_USER"))) {
-    object security_editor;
     string home_path = home_path(body->query_real_name());
     string privs = query_privs(body);
 
@@ -473,10 +472,8 @@ private void first_admin_login() {
     assure_dir(home_path + "private");
     catch(cp("/d/std/workroom.c", home_path(privs)));
     body->add_wizard_path();
-    security_editor = new(OBJ_SECURITY_EDITOR);
-    security_editor->enable_membership(privs, "developer");
-    security_editor->enable_membership(privs, "admin");
-    security_editor->write_state(0);
+    // TODO: double-check i don't also need admin and developer now
+    master()->add_role(privs, "owner");
     write_file(mud_config("FIRST_USER"), privs, 1);
     _ok(this_object(), "You are now an admin.");
   }

@@ -6,66 +6,99 @@
 //Grouped on October 22nd, 2005
 
 /**
- * Checks if a user is a member of a specified group.
+ * Checks if a user is a member of a specified group. This is strict
+ * membership - it does not consider roles. It is the forgiving access
+ * gate; for a precise "this operation requires this role" check, use
+ * has_role().
  *
- * @param {string} user - The username to check.
+ * @param {string} user - The username (or code-object priv) to check.
  * @param {string} group - The group to check membership in.
  * @returns {int} 1 if the user is a member of the group, otherwise 0.
  */
 int is_member(string user, string group) {
-     if(master()->is_member(user, group)) return 1;
-     else return 0;
+  return master()->is_member(user, group) ? 1 : 0;
 }
 
 /**
- * Checks if a user has admin privileges.
+ * Checks whether a user holds a specific role among their effective
+ * roles - direct grants plus those conferred by group membership and
+ * inheritance. Use this when an operation requires a particular role
+ * regardless of which group confers it.
  *
- * @param {mixed} user - The user to check, either as a username string or an
- *                       object. Defaults to the previous object.
- * @returns {int} 1 if the user has admin privileges, otherwise 0.
+ * @param {string} user - The user name or code-object priv to check.
+ * @param {string} role - The role to test for.
+ * @returns {int} 1 if the user holds the role, otherwise 0.
+ */
+int has_role(string user, string role) {
+  return master()->has_role(user, role) ? 1 : 0;
+}
+
+/**
+ * Returns a user's effective roles - those granted directly plus those
+ * conferred by the groups they belong to and the groups those inherit.
+ *
+ * @param {string} user - The user name or code-object priv to check.
+ * @returns {string*} The user's effective role names.
+ */
+string *get_roles(string user) {
+  return master()->get_roles(user);
+}
+
+/**
+ * Checks if a user has admin privileges - that is, whether they hold
+ * the "admin" role, directly or by inheritance (owner inherits admin).
+ *
+ * @param {mixed} user - The user to check, either as a username string
+ *                       or an object. Defaults to the previous object.
+ * @returns {int} 1 if the user has the admin role, otherwise 0.
  */
 int adminp(mixed user) {
-     if(!user) user = previous_object();
-     if(stringp(user)) {
-          if(is_member(user, "admin")) return 1;
-     }
-     else if(is_member(query_privs(user), "admin")) return 1;
-     else return 0;
+  if(!user)
+    user = previous_object();
+
+  if(objectp(user))
+    user = query_privs(user);
+
+  return has_role(user, "admin");
 }
 
 /**
- * Checks if a user has owner privileges. Owner is nested inside admin,
- * so every owner is also an admin, but not every admin is an owner.
- * Use this to guard actions an admin must not perform against an owner
+ * Checks if a user has owner privileges. Owner inherits admin, so
+ * every owner is also an admin, but not every admin is an owner. Use
+ * this to guard actions an admin must not perform against an owner
  * (e.g. stripping their access).
  *
- * @param {mixed} user - The user to check, either as a username string or an
- *                       object. Defaults to the previous object.
- * @returns {int} 1 if the user has owner privileges, otherwise 0.
+ * @param {mixed} user - The user to check, either as a username string
+ *                       or an object. Defaults to the previous object.
+ * @returns {int} 1 if the user has the owner role, otherwise 0.
  */
 varargs int ownerp(mixed user) {
-     if(!user) user = previous_object();
-     if(stringp(user)) {
-          if(is_member(user, "owner")) return 1;
-     }
-     else if(is_member(query_privs(user), "owner")) return 1;
-     return 0;
+  if(!user)
+    user = previous_object();
+
+  if(objectp(user))
+    user = query_privs(user);
+
+  return has_role(user, "owner");
 }
 
 /**
- * Checks if a user has developer privileges.
+ * Checks if a user has developer privileges - that is, whether they
+ * hold the "developer" role, directly or by inheritance (admin and
+ * owner both inherit developer).
  *
- * @param {mixed} user - The user to check, either as a username string or an
- *                       object. Defaults to the previous object.
- * @returns {int} 1 if the user has developer privileges, otherwise 0.
+ * @param {mixed} user - The user to check, either as a username string
+ *                       or an object. Defaults to the previous object.
+ * @returns {int} 1 if the user has the developer role, otherwise 0.
  */
 varargs int devp(mixed user) {
-     if(!user) user = previous_object();
-     if(stringp(user)) {
-          if(is_member(user, "developer")) return 1;
-     }
-     else if(is_member(query_privs(user), "developer")) return 1;
-     else return 0;
+  if(!user)
+    user = previous_object();
+
+  if(objectp(user))
+    user = query_privs(user);
+
+  return has_role(user, "developer");
 }
 
 /**

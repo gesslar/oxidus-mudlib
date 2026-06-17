@@ -17,7 +17,6 @@ inherit STD_CMD;
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   object body;
-  object security_editor;
 
   if(!adminp(previous_object()))
     return _error("Access denied.");
@@ -51,10 +50,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   body->add_path("/cmds/file/");
   body->add_path("/cmds/adm/");
 
-  security_editor = new(OBJ_SECURITY_EDITOR);
-  security_editor->enable_membership(query_privs(body), "admin");
-  security_editor->write_state(0);
-  security_editor->remove();
+  master()->add_role(query_privs(body), "admin");
   body->save_body();
 
   _ok(body, "Success.");

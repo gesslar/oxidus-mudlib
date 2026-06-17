@@ -187,7 +187,7 @@ string set_real_name(string str) {
   assert_arg(stringp(str) && truthy(str), 1, "Invalid argument");
 
   if(interactive(this_object()) &&
-     !is_member(query_privs(previous_object()), "admin") &&
+     !has_role(query_privs(previous_object()), "admin") &&
      previous_object() != this_object())
     return 0;
 

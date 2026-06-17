@@ -105,7 +105,7 @@ public mixed main(
   }
 
   if(dest) {
-    if(!is_member(query_privs(caller), "admin") &&
+    if(!has_role(query_privs(caller), "admin") &&
       member_array(
         base_name(target), PROTECT
       ) != -1)

@@ -230,6 +230,8 @@ string assure_object_data_dir(object ob);
 
 // File: security.c
 int is_member(string user, string group);
+int has_role(string user, string role);
+string *get_roles(string user);
 int adminp(mixed user);
 varargs int ownerp(mixed user);
 int devp(mixed user);

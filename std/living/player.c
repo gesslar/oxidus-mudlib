@@ -67,7 +67,7 @@ void setup_body() {
 void enter_world(int reconnecting) {
   // string *ch;
 
-  if(!is_member(query_privs(previous_object()), "admin"))
+  if(!has_role(query_privs(previous_object()), "admin"))
     return;
 
   catch {
@@ -397,7 +397,7 @@ void set_environ(mapping data) {
 void save_inventory() {
   string save;
 
-  if(!is_member(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
+  if(!has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
 
   save = save_to_string(1);
   write_file(user_inventory_data(query_privs(this_object())), save, 1);
@@ -410,8 +410,8 @@ void save_inventory() {
  * @public
  */
 void restore_body() {
-  if(!is_member(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
-  if(is_member(query_privs(previous_object()), "admin") || query_privs(previous_object()) == this_body()->query_real_name()) restore_object(user_body_data(query_real_name()));
+  if(!has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
+  if(has_role(query_privs(previous_object()), "admin") || query_privs(previous_object()) == this_body()->query_real_name()) restore_object(user_body_data(query_real_name()));
 }
 
 /**
@@ -425,7 +425,7 @@ void restore_inventory() {
   string e;
   string file, data;
 
-  if(!is_member(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
+  if(!has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
 
   file = user_inventory_data(query_privs(this_object()));
 
@@ -452,7 +452,7 @@ void restore_inventory() {
 void wipe_inventory() {
   string file;
 
-  if(!is_member(query_privs(previous_object() ? previous_object() : this_body()), "admin")
+  if(!has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin")
     && this_body() != this_object()
   )
     return 0;
@@ -472,11 +472,12 @@ void wipe_inventory() {
 int save_body() {
   int result;
 
-  if(!is_member(query_privs(previous_object() ? previous_object() : this_body()), "admin")
+  if(!has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin")
     && this_body() != this_object()
     && base_name(previous_object()) != CMD_QUIT
-  )
+  ) {
     return 0;
+  }
 
   catch(result = save_object(user_body_data(query_real_name())));
 

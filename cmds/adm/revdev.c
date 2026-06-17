@@ -40,10 +40,8 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   body->rem_path("/cmds/file/");
   body->rem_path("/cmds/adm/");
 
-  /** @type {OBJ_SECURITY_EDITOR} */ object security_editor = new(OBJ_SECURITY_EDITOR);
-  security_editor->disable_membership(query_privs(body), "developer");
-  security_editor->write_state(0);
-  security_editor->remove();
+  master()->remove_role(query_privs(body), "developer");
+
   body->save_body();
 
   _ok("User '%s' is no longer a developer.", capitalize(body->query_real_name()));
