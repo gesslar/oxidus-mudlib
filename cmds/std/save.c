@@ -13,11 +13,14 @@
 
 inherit STD_CMD;
 
-mixed main(/** @type {STD_BODY} */ object caller,
-    string _args) {
-  caller->save_body();
-  tell_me("Successful [save]: User saved.\n");
-  return 1;
+mixed main(
+  /** @type {STD_BODY} */ object caller,
+  string _args
+) {
+  if(caller->save_body())
+    return _ok("Saved.");
+
+  return _warn("Unable to save.");
 }
 
 string query_help(object _caller) {
