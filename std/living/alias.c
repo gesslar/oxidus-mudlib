@@ -22,7 +22,7 @@
  *
  * @type {([ string: string ])}
  */
-private nosave mapping __aliases = ([]);
+private mapping __aliases = ([]);
 
 /**
  * Ensures the alias mapping exists, initialising it to an empty mapping
