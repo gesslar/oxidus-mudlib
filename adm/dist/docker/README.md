@@ -3,8 +3,8 @@
 A self-contained image of the [Oxidus](https://oxidus.online/) mudlib plus the
 FluffOS driver. The image clones a **pristine** copy of the mudlib and compiles
 the driver from the bundled `fluffos` submodule using the canonical
-`adm/dist/rebuild` script — so a fresh container is a brand-new mudlib, ready to
-play. The first character to log in becomes Oxidus's owner with the highest
+`adm/dist/rebuild` script — so a fresh container is a brand-new mudlib, ready
+to play. The first character to log in becomes Oxidus's owner with the highest
 privileges.
 
 ## Quick start (build locally)
@@ -122,6 +122,14 @@ Runtime env (entrypoint):
 - Per the canonical `adm/dist/rebuild`, the **driver tracks fluffos `master`**:
   rebuilding the image picks up the latest FluffOS. The mudlib itself is pinned
   to whatever `OXIDUS_REF` you build (CI builds the exact pushed commit).
+- The fluffos submodule is **effectively unpinned**: `rebuild` does
+  `git reset --hard origin/master` before compiling, so the committed submodule
+  SHA never decides what's built — every rebuild rides master HEAD. The
+  submodule's *position* (its `.gitmodules` entry + gitlink path) is required so
+  the directory gets populated to compile from; its recorded *version* is
+  cosmetic. Advancing the pointer is optional housekeeping, never a build step.
+  (fluffos updates are sporadic — a year quiet, then a flurry — so if you're ever
+  unsure whether you "need to update" anything: you don't. Just rerun `rebuild`.)
 - The container runs as a non-root `oxidus` user.
 - `--init` (compose: `init: true`) is recommended so signals/zombies are handled
   cleanly and `docker stop` lets the driver shut down gracefully.

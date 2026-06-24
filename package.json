@@ -9,6 +9,6 @@
   },
   "devDependencies": {
     "@gesslar/bedoc": "*",
-    "@gesslar/lpc-mcp": "^1.6.0"
+    "@gesslar/lpc-mcp": "^1.6.1"
   }
 }

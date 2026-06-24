@@ -5,7 +5,10 @@
 ---
 ### NAME
 
-    is_member() - Checks if a user is a member of a specified group.
+    is_member() - Checks if a user is a member of a specified group. This is
+    strict membership - it does not consider roles. It is the forgiving
+    access gate; for a precise "this operation requires this role" check,
+    use has_role().
 
 ### SYNOPSIS
 
@@ -13,12 +16,15 @@
 
 ### DESCRIPTION
 
-    Checks if a user is a member of a specified group.
+    Checks if a user is a member of a specified group. This is strict
+    membership - it does not consider roles. It is the forgiving access
+    gate; for a precise "this operation requires this role" check, use
+    has_role().
 
 ### PARAMETERS
 
     user   (string)
-           The username to check.
+           The username (or code-object priv) to check.
 
     group  (string)
            The group to check membership in.

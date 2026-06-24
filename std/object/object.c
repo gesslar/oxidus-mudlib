@@ -450,6 +450,6 @@ void set_prevent_get(mixed val) {
  */
 int query_prevent_get() {
   return valid_function(_prevent_get)
-    ? _prevent_get(this_object())
+    ? evaluate(_prevent_get, this_object())
     : _prevent_get;
 }

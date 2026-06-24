@@ -5,10 +5,10 @@
 ---
 ### NAME
 
-    ownerp() - Checks if a user has owner privileges. Owner is nested inside
-    admin, so every owner is also an admin, but not every admin is an owner.
-    Use this to guard actions an admin must not perform against an owner
-    (e.g. stripping their access).
+    ownerp() - Checks if a user has owner privileges. Owner inherits admin,
+    so every owner is also an admin, but not every admin is an owner. Use
+    this to guard actions an admin must not perform against an owner (e.g.
+    stripping their access).
 
 ### SYNOPSIS
 
@@ -16,10 +16,10 @@
 
 ### DESCRIPTION
 
-    Checks if a user has owner privileges. Owner is nested inside admin, so
-    every owner is also an admin, but not every admin is an owner. Use this
-    to guard actions an admin must not perform against an owner (e.g.
-    stripping their access).
+    Checks if a user has owner privileges. Owner inherits admin, so every
+    owner is also an admin, but not every admin is an owner. Use this to
+    guard actions an admin must not perform against an owner (e.g. stripping
+    their access).
 
 ### PARAMETERS
 
@@ -29,4 +29,4 @@
 
 ### RETURN VALUES
 
-    (int) 1 if the user has owner privileges, otherwise 0.
+    (int) 1 if the user has the owner role, otherwise 0.
