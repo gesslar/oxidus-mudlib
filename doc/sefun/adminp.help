@@ -5,7 +5,9 @@
 ---
 ### NAME
 
-    adminp() - Checks if a user has admin privileges.
+    adminp() - Checks if a user has admin privileges - that is, whether they
+    hold the "admin" role, directly or by inheritance (owner inherits
+    admin).
 
 ### SYNOPSIS
 
@@ -13,7 +15,8 @@
 
 ### DESCRIPTION
 
-    Checks if a user has admin privileges.
+    Checks if a user has admin privileges - that is, whether they hold the
+    "admin" role, directly or by inheritance (owner inherits admin).
 
 ### PARAMETERS
 
@@ -23,4 +26,4 @@
 
 ### RETURN VALUES
 
-    (int) 1 if the user has admin privileges, otherwise 0.
+    (int) 1 if the user has the admin role, otherwise 0.
