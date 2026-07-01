@@ -14,6 +14,7 @@
   ALLOW_SHUTDOWN: [
     "/adm/daemons/shutdown_d",
   ],
+  FIRST_USER: "adm/etc/first_user",
   LOOK_HIGHLIGHT: "on",
   LOOK_HIGHLIGHT_COLOUR: "669",
   COLOUR_TOO_DARK: "on",
