@@ -1,7 +1,9 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # Change to the directory containing the script
-cd "$(dirname "$0")"
+cd "$SCRIPT_DIR"
 
 # Get the full OS path to the driver executable
 driver="$(pwd)/bin/driver"
@@ -49,11 +51,11 @@ case "$1" in
         done
         ;;
     bg)
-        echo "Starting driver in the background..."
-        nohup bash -c "$0" > run.log 2>&1 &
-        echo "Driver started in the background with PID $!"
-        exit 0
-        ;;
+      echo "Starting driver in the background..."
+      nohup bash -c "$SCRIPT_DIR/$(basename "$0")" > "$SCRIPT_DIR/run.log" 2>&1 &
+      echo "Driver started in the background with PID $!"
+      exit 0
+      ;;
     stop)
         stop_driver
         exit 0
