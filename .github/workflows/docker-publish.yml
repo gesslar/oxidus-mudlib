@@ -53,7 +53,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Build the exact commit that triggered this run for a reproducible lib.
-          # (fluffos still tracks master, per adm/dist/rebuild.)
+          # Build the exact commit that triggered this run for a reproducible
+          # lib.
           build-args: |
             OXIDUS_REF=${{ github.sha }}

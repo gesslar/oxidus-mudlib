@@ -6,7 +6,6 @@ log
 /log/*
 !/log/.keep
 !/log/*/.keep
-#/doc/autodoc/
 .rgignore
 /adm/etc/certs/*
 !/adm/etc/certs/*/.keep
@@ -14,6 +13,9 @@ trace_lpcc.json
 /home/*
 !/home/*/.keep
 .local
+
+# Don't keep the FluffOS
+adm/dist/fluffos
 
 # Keep all .keep files
 !.keep

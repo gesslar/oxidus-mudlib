@@ -25,13 +25,13 @@ repo_root=$(cd ../.. && pwd)
 # Absolute path to the driver executable
 driver="${repo_root}/adm/dist/bin/driver"
 
+# Pull FluffOS
+
+
 # Ensure the FluffOS driver submodule is up to date
 if [ ! -d "fluffos" ] || [ -z "$(ls -A fluffos)" ]; then
     # Submodule doesn't exist or is empty
-    git submodule update --init --recursive
-else
-    # Submodule exists and is populated
-    git submodule update --recursive
+    git clone https://github.com/fluffos/fluffos.git fluffos 1>/dev/null
 fi
 
 cd fluffos
