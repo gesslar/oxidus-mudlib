@@ -12,10 +12,13 @@
 name : Testsuite
 
 # Restrict IP binding, if omitted, bind to all addresses.
-mud ip : 0.0.0.0
+# mud ip : 0.0.0.0
 
 # the external ports we accept users on
-#port number : 4000
+port number : 4000
+
+# Configure directory for static files (web client) - useful when you add websockets
+websocket_http_dir: {{GAME_DIR}}/adm/dist/fluffos/src/www
 
 # absolute pathname of mudlib
 mudlib directory : {{GAME_DIR}}
