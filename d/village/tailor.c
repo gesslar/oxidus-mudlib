@@ -56,8 +56,7 @@ void setup() {
       "anyone who lingers too long by the mirror.",
   ]));
 
-  set_shop_org("olum_tailor");
-
+  set_shop_org("olum/village tailor");
   init_shop();
 
   add_shop_inventory(

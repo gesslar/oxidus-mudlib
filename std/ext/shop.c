@@ -41,12 +41,9 @@ protected nosave string __shop_keep_file;
  * general store; call set_shop_org() before init_shop() to give a
  * shop its own private storage and avoid commingling inventory.
  *
- * Defaulting to "olum_general_store" so at least there's some place for
- * objects to land by default.
- *
  * @type {string}
  */
-protected nosave string __shop_org = "olum_general_store";
+protected nosave string __shop_org = undefined;
 /**
  * The persistent storage object holding the shop's inventory for
  * sale. Created lazily by create_storage().
@@ -70,12 +67,22 @@ private nosave mixed *__shop_inventory = ({});
  * init_shop() so create_storage() loads the correct storage object.
  * Shops that omit this share the default village general store.
  *
+ * @protected
  * @param {string} org - The storage namespace for this shop.
+ * @returns {string} The new storage namespace.
  */
-void set_shop_org(string org) {
+protected string set_shop_org(string org) {
   assert_arg(stringp(org) && strlen(org), 1, "Invalid or missing shop org.");
 
-  __shop_org = org;
+  assert(!objectp(__store), "set_shop_org() must be called before init_shop()");
+
+  org = replace_string(org, " ", "");
+  org = replace_string(org, "/", "");
+  org = safe_string(org, "");
+
+  assert(truthy(org), "Sanitised shop org is empty.");
+
+  return __shop_org = org;
 }
 
 /**
@@ -427,6 +434,8 @@ private nomask object create_storage() {
 
   if(objectp(__store))
     return __store;
+
+  assert(stringp(__shop_org) && truthy(__shop_org), "Shop org has not been set.");
 
   storage_options = new(class StorageOptions,
     storage_type: "public",
