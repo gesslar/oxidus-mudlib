@@ -52,9 +52,7 @@ mudlib path into that volume, so it survives restarts **and** image upgrades:
 | `open/`, `tmp/`       | scratch / open data                       |
 | `adm/etc/certs/`      | TLS certs                                  |
 | `adm/etc/secret/`     | secrets                                    |
-| `adm/etc/alarms/`     | alarm files                               |
-| `adm/etc/first_user`  | owner-assigned marker                      |
-| `adm/etc/config.lpml` | customised config                          |
+| `adm/custom/`         | per-MUD overrides: config, security (groups/roles/access), alarms, first_user |
 | `adm/etc/mssp.lpml`   | MSSP config                                |
 
 To start completely fresh, remove the volume: `docker volume rm oxidus-state`.

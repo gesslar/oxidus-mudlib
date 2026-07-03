@@ -8,7 +8,7 @@
  *
  * The two-file system enables:
  * - Default values stored in git (/adm/etc/default.lpml)
- * - Local overrides in /adm/etc/config.lpml (not in git)
+ * - Local overrides in /adm/custom/config.lpml (not in git)
  * - Easy upgrades without losing custom settings
  * - Environment-specific configurations
  *
@@ -26,7 +26,7 @@ public void rehash_config();
 public mixed get_mud_config(string key);
 
 private nosave string DEFAULT_CONFIG = "/adm/etc/default.lpml";
-private nosave string CONFIG_FILE = "/adm/etc/config.lpml";
+private nosave string CONFIG_FILE = "/adm/custom/config.lpml";
 private nosave mapping config = ([ ]);
 private nosave int loaded = false;
 /**
@@ -82,7 +82,7 @@ public mixed get_mud_config(string key) {
  *
  * Loads and merges configurations in this order:
  * 1. /adm/etc/default.lpml - Base configuration
- * 2. /adm/etc/config.lpml - Local overrides
+ * 2. /adm/custom/config.lpml - Local overrides
  *
  * Later values override earlier ones for the same keys.
  */

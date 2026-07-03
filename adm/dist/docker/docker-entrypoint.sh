@@ -23,7 +23,10 @@ CONFIG="${DIST}/config.mud"
 
 cd "${OXIDUS_HOME}"
 
-# Directories whose *contents* are runtime state.
+# Directories whose *contents* are runtime state. adm/custom is the
+# consolidated per-MUD override tree (config, security groups/roles/access,
+# alarms, first_user, ...); persisting it as a unit means any override slot
+# added under it survives upgrades without touching this list again.
 PERSIST_DIRS=(
   data
   open
@@ -32,13 +35,13 @@ PERSIST_DIRS=(
   tmp
   adm/etc/certs
   adm/etc/secret
-  adm/etc/alarms
+  adm/custom
 )
 
 # Individual files written at runtime (may not exist in a pristine clone).
+# Most per-MUD state now lives under adm/custom (above); mssp.lpml is the
+# last hold-out still read from adm/etc.
 PERSIST_FILES=(
-  adm/etc/first_user
-  adm/etc/config.lpml
   adm/etc/mssp.lpml
 )
 
@@ -83,6 +86,21 @@ link_file() {
 echo "[entrypoint] wiring persistent state into ${STATE}"
 for d in "${PERSIST_DIRS[@]}"; do link_dir "${d}"; done
 for f in "${PERSIST_FILES[@]}"; do link_file "${f}"; done
+
+# Refresh image-managed scaffolding into the (now symlinked) adm/custom volume.
+# README, the .keep skeleton, and *.example templates are baked reference files,
+# not editable state - so they flow one-directionally, image -> volume, on every
+# boot, and an upgrade always lands the current versions. Live per-MUD data
+# (config.lpml, security/*, alarms/*.txt, first_user, ...) is not part of the
+# baked stash, so it is left untouched.
+#
+# Add and overwrite only, never delete. Removing a file from the image does not
+# remove it from the volume: pruning downstream would be a bidirectional sync,
+# and that is deliberately out of scope.
+if [ -d "${DIST}/custom.dist" ]; then
+  cp -a "${DIST}/custom.dist/." "${OXIDUS_HOME}/adm/custom/"
+  echo "[entrypoint] refreshed adm/custom scaffolding from the image"
+fi
 
 # Optional TLS telnet. Default off (plain telnet on 1336 only).
 if [ "${OXIDUS_TLS:-0}" = "1" ]; then
