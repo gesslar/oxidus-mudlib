@@ -3,7 +3,7 @@
 # Oxidus mudlib + FluffOS driver, containerised.
 #
 # Reuses the canonical Oxidus build/run methodology in adm/dist:
-#   * adm/dist/rebuild  -> compiles the driver from the fluffos submodule and
+#   * adm/dist/rebuild  -> clones FluffOS fresh, compiles the driver, and
 #                          rewrites config.mud with absolute paths.
 #   * adm/dist/run      -> reboot loop (mirrored by docker-entrypoint.sh so it
 #                          behaves correctly as PID 1).
@@ -50,8 +50,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN git clone "${OXIDUS_REPO}" "${OXIDUS_HOME}" \
  && git -C "${OXIDUS_HOME}" checkout "${OXIDUS_REF}"
 
-# Build the driver via the canonical script. It initialises the fluffos
-# submodule, compiles, installs binaries into adm/dist/bin, copies the driver
+# Build the driver via the canonical script. It clones FluffOS fresh (tracking
+# master), compiles, installs binaries into adm/dist/bin, copies the driver
 # headers into include/driver, and rewrites config.mud's mudlib/log paths.
 #
 # MARCH_NATIVE=OFF is critical: FluffOS defaults -march=native ON, which would
