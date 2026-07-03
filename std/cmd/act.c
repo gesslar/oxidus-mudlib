@@ -107,7 +107,7 @@ varargs object local_target(object tp, string arg, function f) {
   if(!objectp(tp))
     error("Bad argument 1 to local_target().\n");
 
-  if(nullp(arg)) {
+  if(falsy(arg)) {
     if(target_current) {
       if(t = tp->highest_threat())
         return t;

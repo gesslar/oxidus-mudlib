@@ -33,7 +33,10 @@ void setup() {
   );
 }
 
-mixed use(/** @type {STD_BODY} */ object tp, string arg) {
+mixed use(
+  /** @type {STD_BODY} */ object tp,
+  string arg
+) {
   /** @type {STD_BODY} */ object victim;
 
   if(!victim = local_target(tp, arg, (: living($1) && $1 != $(tp) :)))

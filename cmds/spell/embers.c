@@ -39,7 +39,8 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
     return 1;
 
   if(!result = delay_act("embers", 2.0, assemble_call_back(
-    function(int status,
+    function(
+      int status,
       /** @type {STD_BODY} */ object tp,
       /** @type {STD_BODY} */ object victim
     ) {
