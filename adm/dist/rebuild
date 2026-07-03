@@ -28,9 +28,9 @@ driver="${repo_root}/adm/dist/bin/driver"
 # Pull FluffOS
 
 
-# Ensure the FluffOS driver submodule is up to date
+# Ensure the FluffOS driver source is present and tracking master
 if [ ! -d "fluffos" ] || [ -z "$(ls -A fluffos)" ]; then
-    # Submodule doesn't exist or is empty
+    # fluffos/ doesn't exist or is empty - clone it fresh
     git clone https://github.com/fluffos/fluffos.git fluffos 1>/dev/null
 fi
 
