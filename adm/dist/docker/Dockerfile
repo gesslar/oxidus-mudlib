@@ -104,6 +104,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       neovim \
       nano \
       ripgrep \
+      gosu \
  && rm -rf /var/lib/apt/lists/* \
  && useradd -r -m -d /home/oxidus -s /bin/bash oxidus
 
@@ -111,13 +112,15 @@ COPY --from=builder ${OXIDUS_HOME} ${OXIDUS_HOME}
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # state/ is the single persistence root; the entrypoint symlinks all mutable
-# mudlib paths into it. chown before declaring the VOLUME so a fresh named
-# volume initialises with the right ownership.
+# mudlib paths into it. The image starts as root (no USER line) so the
+# entrypoint can chown a host bind mount to the operator's uid and rewire the
+# baked tree, then it drops to OXIDUS_UID:OXIDUS_GID via gosu to run the driver
+# unprivileged. The build-time chown seeds sane ownership for the baked tree and
+# any anonymous-volume fallback.
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
  && mkdir -p ${OXIDUS_HOME}/state \
  && chown -R oxidus:oxidus ${OXIDUS_HOME}
 
-USER oxidus
 WORKDIR ${OXIDUS_HOME}
 
 # Plain telnet on 1336; TLS telnet on 1338 is opt-in via OXIDUS_TLS=1 (see
