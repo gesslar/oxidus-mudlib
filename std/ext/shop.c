@@ -36,6 +36,18 @@ protected nosave float __sell_factor = 0.5; // when a player sells, use this
                                             // factor to determine the price
 protected nosave string __shop_keep_file;
 /**
+ * The storage namespace for this shop. Determines which persistent
+ * storage object holds the shop's inventory. Defaults to the village
+ * general store; call set_shop_org() before init_shop() to give a
+ * shop its own private storage and avoid commingling inventory.
+ *
+ * Defaulting to "olum_general_store" so at least there's some place for
+ * objects to land by default.
+ *
+ * @type {string}
+ */
+protected nosave string __shop_org = "olum_general_store";
+/**
  * The persistent storage object holding the shop's inventory for
  * sale. Created lazily by create_storage().
  *
@@ -52,6 +64,28 @@ protected nosave object __store;
  * @type {mixed*}
  */
 private nosave mixed *__shop_inventory = ({});
+
+/**
+ * Sets the storage namespace for this shop. Must be called before
+ * init_shop() so create_storage() loads the correct storage object.
+ * Shops that omit this share the default village general store.
+ *
+ * @param {string} org - The storage namespace for this shop.
+ */
+void set_shop_org(string org) {
+  assert_arg(stringp(org) && strlen(org), 1, "Invalid or missing shop org.");
+
+  __shop_org = org;
+}
+
+/**
+ * Returns the storage namespace for this shop.
+ *
+ * @returns {string} The shop's storage namespace.
+ */
+string query_shop_org() {
+  return __shop_org;
+}
 
 /**
  * Initialises the shop module. Adds the buy, sell, and list
@@ -396,7 +430,7 @@ private nomask object create_storage() {
 
   storage_options = new(class StorageOptions,
     storage_type: "public",
-    storage_org: "olum_general_store"
+    storage_org: __shop_org
   );
 
   __store = load_object(sprintf("storage/%s", storage_options.storage_org));
