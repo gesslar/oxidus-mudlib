@@ -14,6 +14,8 @@
     "/adm/daemons/shutdown_d",
   ],
   FIRST_USER: "adm/custom/first_user",
+  TLS_CERT: "adm/custom/certs/cert.pem",
+  TLS_KEY: "adm/custom/certs/key.pem",
   SECURITY_ENFORCE_PATHS: false,
   LOOK_HIGHLIGHT: "on",
   LOOK_HIGHLIGHT_COLOUR: "669",

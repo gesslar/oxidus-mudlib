@@ -7,8 +7,6 @@ log
 !/log/.keep
 !/log/*/.keep
 .rgignore
-/adm/etc/certs/*
-!/adm/etc/certs/*/.keep
 trace_lpcc.json
 /home/*
 !/home/*/.keep
@@ -53,6 +51,10 @@ journal.*
 /adm/dist/bin/
 /adm/dist/run.log
 /include/driver/
+
+# Docker per-host compose overrides (OXIDUS_STATE_PARENT/UID/GID/TLS); the
+# tracked .env.example documents the knobs.
+/adm/dist/docker/.env
 
 lpc-language-server
 node_modules

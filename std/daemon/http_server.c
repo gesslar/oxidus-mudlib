@@ -78,8 +78,8 @@ protected nomask void start_server() {
   }
 
   if(get_option("tls")) {
-    socket_set_option(fd, SO_TLS_CERT, "adm/certs/cert.pem");
-    socket_set_option(fd, SO_TLS_KEY, "adm/certs/key.pem");
+    socket_set_option(fd, SO_TLS_CERT, mud_config("TLS_CERT"));
+    socket_set_option(fd, SO_TLS_KEY, mud_config("TLS_KEY"));
   }
 
   int bind_status = socket_bind(fd, LISTEN_PORT);

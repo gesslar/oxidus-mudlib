@@ -19,6 +19,7 @@ up in the repository and `git pull` never clobbers them.
 | `security/groups.lpml` | `/adm/etc/security/groups_base.lpml` | master security | per-group list merge (`-name` removes) |
 | `security/roles.map` | — (runtime state) | master security | direct role grants, written by `add_role`/`remove_role` |
 | `security/access.local.lpml` | `/adm/etc/security/access.lpml` | master security | prepended to the base table (checked first) |
+| `certs/{cert,key}.pem` | — (drop-in) | `STD_HTTP_SERVER` via `TLS_CERT`/`TLS_KEY` config; telnet TLS | your TLS cert + key |
 
 ## Adding a customisation
 
@@ -52,6 +53,6 @@ overrides are safe even if a future image drops or renames a template.
 ## Not yet migrated
 
 Some customisation points still read from `/adm/etc` directly and haven't
-been moved into this tree yet (mssp, tls certs, secrets, and the various
-edit-in-place files like `logo`, `preload`, aliases and time config). They
-will migrate here over time.
+been moved into this tree yet (mssp, secrets, and the various edit-in-place
+files like `logo`, `preload`, aliases and time config). They will migrate
+here over time.

@@ -23,7 +23,7 @@ telnet localhost 1336
 
 Create a character — the first one to log in is made an admin.
 
-Stop it (game state is preserved in the `oxidus-state` volume):
+Stop it (game state is preserved in the state mount on your host):
 
 ```bash
 docker compose down
@@ -34,15 +34,23 @@ docker compose down
 ```bash
 docker run -d --name oxidus --init \
   -p 1336:1336 \
-  -v oxidus-state:/oxidus/state \
+  -e OXIDUS_UID=$(id -u) -e OXIDUS_GID=$(id -g) \
+  -v "${OXIDUS_STATE_PARENT:-$HOME}/oxidus-state:/oxidus/state" \
   ghcr.io/gesslar/oxidus:latest
 ```
+
+State lives on the host at `$HOME/oxidus-state` (override the parent dir with
+`OXIDUS_STATE_PARENT`; the `oxidus-state` leaf is always appended). The
+`OXIDUS_UID`/`OXIDUS_GID` flags make that directory owned by you, so you can
+edit config/certs directly and tools like certbot can write into it. On Docker
+Desktop (mac/Windows) the uid flags are unnecessary — it handles ownership.
 
 ## What persists
 
 Code is baked into the image (pristine); only runtime state lives in the
-`/oxidus/state` volume. On first boot the entrypoint symlinks every mutable
-mudlib path into that volume, so it survives restarts **and** image upgrades:
+`/oxidus/state` mount (a host directory — see above). On first boot the
+entrypoint symlinks every mutable mudlib path into that mount, so it survives
+restarts **and** image upgrades:
 
 | Path                  | Contents                                  |
 | --------------------- | ----------------------------------------- |
@@ -50,12 +58,12 @@ mudlib path into that volume, so it survives restarts **and** image upgrades:
 | `home/`               | player / wizard home directories          |
 | `log/`                | driver + mudlib logs                       |
 | `open/`, `tmp/`       | scratch / open data                       |
-| `adm/etc/certs/`      | TLS certs                                  |
 | `adm/etc/secret/`     | secrets                                    |
-| `adm/custom/`         | per-MUD overrides: config, security (groups/roles/access), alarms, first_user |
+| `adm/custom/`         | per-MUD overrides: config, security (groups/roles/access), alarms, certs, first_user |
 | `adm/etc/mssp.lpml`   | MSSP config                                |
 
-To start completely fresh, remove the volume: `docker volume rm oxidus-state`.
+To start completely fresh, delete the host state directory:
+`rm -rf "${OXIDUS_STATE_PARENT:-$HOME}/oxidus-state"`.
 
 ## Upgrading
 
@@ -95,8 +103,9 @@ ports:
   - "1338:1338"
 ```
 
-To use your own certificates instead, drop `cert.pem` / `key.pem` into the
-volume at `adm/etc/certs/` before first boot.
+To use your own certificates instead, drop `cert.pem` / `key.pem` into
+`adm/custom/certs/` in the state mount (e.g. certbot renews there). The HTTP
+server reads the same pair via the `TLS_CERT` / `TLS_KEY` config keys.
 
 ## Configuration knobs
 
@@ -110,10 +119,17 @@ Build args (Dockerfile):
 
 Runtime env (entrypoint):
 
-| Env              | Default | Purpose                          |
-| ---------------- | ------- | -------------------------------- |
-| `OXIDUS_TLS`     | `0`     | `1` enables TLS telnet           |
-| `OXIDUS_TLS_PORT`| `1338`  | TLS telnet port                  |
+| Env              | Default | Purpose                                            |
+| ---------------- | ------- | -------------------------------------------------- |
+| `OXIDUS_UID`     | `1000`  | host uid that owns the state mount (chowned at boot) |
+| `OXIDUS_GID`     | `1000`  | host gid that owns the state mount                 |
+| `OXIDUS_TLS`     | `0`     | `1` enables TLS telnet                             |
+| `OXIDUS_TLS_PORT`| `1338`  | TLS telnet port                                    |
+
+Host-side (compose interpolation / `docker run`, **not** passed into the
+container): `OXIDUS_STATE_PARENT` — parent dir of the `oxidus-state` state
+directory on the host (default: your home dir). Set it, and `OXIDUS_UID`/`GID`,
+in a `.env` file beside the compose file (see `.env.example`).
 
 ## Notes
 
@@ -128,6 +144,8 @@ Runtime env (entrypoint):
   cosmetic. Advancing the pointer is optional housekeeping, never a build step.
   (fluffos updates are sporadic — a year quiet, then a flurry — so if you're ever
   unsure whether you "need to update" anything: you don't. Just rerun `rebuild`.)
-- The container runs as a non-root `oxidus` user.
+- The container **starts as root** to set up the state mount (chown a host bind
+  mount, rewire the baked tree), then drops to `OXIDUS_UID:OXIDUS_GID` (default
+  `1000`) via `gosu` and runs the driver unprivileged.
 - `--init` (compose: `init: true`) is recommended so signals/zombies are handled
   cleanly and `docker stop` lets the driver shut down gracefully.
