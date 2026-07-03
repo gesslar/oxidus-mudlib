@@ -138,7 +138,7 @@ mixed mud_config(string str) {
  * @returns {string} The log directory.
  */
 string log_dir() {
-  return CONFIG_D->get_mud_config("LOG_DIR");
+  return DIR_LOG;
 }
 
 /**
