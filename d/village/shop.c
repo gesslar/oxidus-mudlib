@@ -60,6 +60,7 @@ void setup() {
       "gleam with newness, while others bear the patina of age and use.",
   ]));
 
+  set_shop_org("olum/village shop");
   init_shop();
 
   add_shop_inventory(
@@ -77,4 +78,5 @@ void setup() {
 
   set_terrain("indoor");
   set_room_type("shop");
+
 }
