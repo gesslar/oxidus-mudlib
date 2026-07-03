@@ -13,7 +13,7 @@
         " lined with a softer material for added comfort. The jerkin"
         " features adjustable straps along the sides and shoulders, allowing"
         " for a snug fit.",
-  mass: 200,
+  mass: 120,
   value: 25,
   slot: "torso",
   ac: 2.0,

@@ -24,11 +24,14 @@ void setup() {
   "transactions within. This path, often traversed by those seeking counsel "
   "or investment, leads directly to the financier's door, promising "
   "discretion and expertise for those navigating the complexities of wealth "
-  "and commerce.");
+  "and commerce. To the south, a tailor's shopfront completes the refined "
+  "air of the quarter, its window framing bolts of fine cloth and a gilded "
+  "mirror that catches the passing light.");
 
   set_exits(([
     "east" : "financier",
     "west" : "square",
+    "south" : "tailor",
   ]));
 
   set_distance("west", 2);
