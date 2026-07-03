@@ -54,7 +54,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
         /** @type {"obj/effect/wither"} */ object eff;
 
         tp->targetted_action(
-          "{{83a}}$N $vreach out with grasping shadow toward $t!{{res}}",
+          "{{83a}}$N $vreach out with a grasping shadow toward $t!{{res}}",
           victim
         );
         tp->use_skill("arcane.discipline.shadow", 0.15);
