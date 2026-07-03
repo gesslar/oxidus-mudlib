@@ -266,6 +266,7 @@ int is_numeric(string str);
 int starts_with(string str, string starting_string);
 int ends_with(string str, string ending_string);
 string sanitize_regex(string msg);
+varargs string safe_string(string str, string replacement);
 
 // File: system.c
 int port();

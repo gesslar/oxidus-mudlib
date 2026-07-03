@@ -627,3 +627,41 @@ string sanitize_regex(string msg) {
 
   return msg;
 }
+
+private nomask string illegal_filename_chars = "[<>:\"/\\\\|?*\x01-\x1F\x7F]";
+
+/**
+ * Sanitises a string so that it is safe to use as a filename.
+ *
+ * Every character that is illegal in a filename is replaced with
+ * replacement, and any leading or trailing dots are stripped so the
+ * result cannot be a hidden, or extension-only name.
+ *
+ * This is not intended to be fully robust, but used in places where a string
+ * may be used as an identifier and also double-duty as a file name. Do your
+ * own testing at the call-site if you need additional criteria met.
+ *
+ * @param {string} str - The string to sanitise.
+ * @param {string} [replacement=""] - The string to substitute for
+ *                                    each illegal character.
+ * @returns {string} The sanitised, filename-safe string.
+ * @errors If str is not a string.
+ * @errors If replacement itself contains illegal filename characters.
+ */
+varargs string safe_string(string str, string replacement) {
+  replacement ??= "";
+
+  assert_arg(stringp(str), 1, "Bad argument 1 to safe_string(). Expected string, got "+typeof(str));
+  assert_arg(!pcre_match(replacement, illegal_filename_chars), 2, "Bad argument 2 to safe_string, contains illegal characters.");
+
+  while(pcre_match(str, illegal_filename_chars))
+    str = pcre_replace(str, illegal_filename_chars, ({replacement}));
+
+  while(ends_with(str, "."))
+    str = str[0..<2];
+
+  while(starts_with(str, "."))
+    str = str[1..];
+
+  return str;
+}
