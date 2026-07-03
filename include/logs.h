@@ -15,6 +15,7 @@
 #define LOG_ED       "editing.log"
 #define LOG_FORCE    "adm/force"
 #define LOG_PROMOTE  "adm/promote"
+#define LOG_SECURITY "adm/security"
 #define LOG_NUKE     "adm/nuke"
 #define LOG_AWIPE    "adm/awipe"
 #define LOG_HELP     "help.log"
