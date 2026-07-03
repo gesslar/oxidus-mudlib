@@ -17,6 +17,7 @@
 #define DIR_ETC                 "/etc/"
 #define DIR_ETC_RESOURCE        DIR_ETC "resource/"
 #define DIR_LIB                 "/lib/"
+#define DIR_LOG                 "/log/"
 #define DIR_OBJ                 "/obj/"
 #define DIR_OBJ_MUDLIB          DIR_OBJ "mudlib/"
 #define DIR_OBJ_NODE            DIR_OBJ "node/"
