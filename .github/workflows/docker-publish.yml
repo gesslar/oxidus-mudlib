@@ -1,12 +1,6 @@
 name: Docker
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'adm/dist/docker/**'
-      - '.github/workflows/docker-publish.yml'
   workflow_dispatch:
   release:
     types: [published]
@@ -41,7 +35,7 @@ jobs:
         with:
           images: ${{ env.IMAGE }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=ref,event=tag
             type=sha,format=short
 
