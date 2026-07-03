@@ -13,5 +13,6 @@
         " thick and sturdy, suggesting durability and comfort for prolonged"
         " wear.",
   mass: 15,
+  value: 16,
   slot: "feet",
 }

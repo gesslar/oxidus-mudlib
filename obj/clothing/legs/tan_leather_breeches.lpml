@@ -12,5 +12,6 @@
         " a high waist secured by a simple leather belt, and they taper"
         " neatly to the ankle.",
   mass: 100,
+  value: 20,
   slot: "legs",
 }

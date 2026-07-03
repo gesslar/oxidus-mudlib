@@ -64,7 +64,14 @@ void setup() {
 
   add_shop_inventory(
     "/obj/weapon/piercing/rusty_sword",
+    "/obj/armour/head/leather_cap.armour",
+    "/obj/armour/neck/leather_gorget.armour",
     "/obj/armour/torso/leather_jerkin.armour",
+    "/obj/armour/back/wool_cloak.armour",
+    "/obj/armour/arms/leather_bracers.armour",
+    "/obj/armour/hands/leather_gloves.armour",
+    "/obj/armour/legs/leather_leggings.armour",
+    "/obj/armour/feet/leather_boots.armour",
     ({ "/obj/general/firekit", 3 }),
   );
 
