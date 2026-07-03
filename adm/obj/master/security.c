@@ -4,7 +4,9 @@
  * Security subsystem inherited by the master object. Implements the
  * role/group model and (eventually) the driver validation applies.
  *
- * The model has three data sources:
+ * The model has three data sources. The shipped base lives in
+ * /adm/etc/security/; the per-MUD overrides live in the git-ignored
+ * /adm/custom/security/ tree:
  *
  *   - groups_base.lpml  - shipped base group compositions. Each group
  *                         confers a set of roles to its members. This
@@ -89,8 +91,8 @@ private nomask nosave mapping security_groups = ([]);
 private nomask nosave mapping security_roles = ([]);
 
 private nomask nosave string GROUPS_FILE = "adm/etc/security/groups_base.lpml";
-private nomask nosave string GROUPS_FILE_CUSTOM = "adm/etc/security/groups.lpml";
-private nomask nosave string ROLES_FILE_CUSTOM = "adm/etc/security/roles.map";
+private nomask nosave string GROUPS_FILE_CUSTOM = "adm/custom/security/groups.lpml";
+private nomask nosave string ROLES_FILE_CUSTOM = "adm/custom/security/roles.map";
 
 /**
  * The path-access table, most-specific-first, consulted by valid_read/
@@ -121,7 +123,7 @@ private nomask nosave int access_enforce = 0;
 private nomask nosave int in_access_check = 0;
 
 private nomask nosave string ACCESS_FILE = "adm/etc/security/access.lpml";
-private nomask nosave string ACCESS_FILE_CUSTOM = "adm/etc/security/access.local.lpml";
+private nomask nosave string ACCESS_FILE_CUSTOM = "adm/custom/security/access.local.lpml";
 
 /* Functions */
 

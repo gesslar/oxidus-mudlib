@@ -62,10 +62,15 @@ RUN OXIDUS_CMAKE_EXTRA="-DMARCH_NATIVE=OFF" ./rebuild
 
 # Slim the tree for the runtime stage: keep the FluffOS test certs (used for the
 # optional TLS opt-in) but drop the fluffos source/build tree and git metadata.
+# Also stash the baked adm/custom scaffolding (README, .keep skeleton, *.example
+# templates) into custom.dist. The whole baked tree is scaffolding - live
+# per-MUD data is git-ignored and never in the image - so the entrypoint can
+# refresh it into the volume one-directionally on every boot.
 RUN set -eux; cd "${OXIDUS_HOME}"; \
     mkdir -p adm/dist/certs.dist; \
     cp adm/dist/fluffos/testsuite/etc/cert.pem adm/dist/certs.dist/; \
     cp adm/dist/fluffos/testsuite/etc/key.pem  adm/dist/certs.dist/; \
+    cp -a adm/custom adm/dist/custom.dist; \
     rm -rf adm/dist/fluffos .git
 
 ############################
