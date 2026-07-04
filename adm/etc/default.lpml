@@ -16,7 +16,9 @@
   FIRST_USER: "adm/custom/first_user",
   TLS_CERT: "adm/custom/certs/cert.pem",
   TLS_KEY: "adm/custom/certs/key.pem",
-  SECURITY_ENFORCE_PATHS: false,
+  // Path-access enforcement is ON by default. Set to false in
+  // adm/custom/config.lpml to run in shadow mode (log-only, permits all).
+  SECURITY_ENFORCE_PATHS: true,
   LOOK_HIGHLIGHT: "on",
   LOOK_HIGHLIGHT_COLOUR: "669",
   COLOUR_TOO_DARK: "on",
