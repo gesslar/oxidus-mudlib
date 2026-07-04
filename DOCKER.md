@@ -17,13 +17,16 @@ You need nothing but Docker. The image is pulled automatically on first run:
 ```bash
 docker run -d --name oxidus --init \
   -p 1336:1336 \
-  -v oxidus-state:/oxidus/state \
+  -e OXIDUS_UID=$(id -u) -e OXIDUS_GID=$(id -g) \
+  -v "${OXIDUS_STATE_PARENT:-$HOME}/oxidus-state:/oxidus/state" \
   ghcr.io/gesslar/oxidus:latest
 ```
 
+- `--name oxidus` — names the container `oxidus`; **every command below refers to it by that name**
 - `--init` — clean signal handling, so `docker stop` shuts the driver down promptly
 - `-p 1336:1336` — exposes the telnet port on the host
-- `-v oxidus-state:/oxidus/state` — named volume holding all game state
+- `-e OXIDUS_UID/GID` — makes the state directory owned by you, so you can edit it without sudo (omit on Docker Desktop, which handles ownership itself)
+- `-v …/oxidus-state:/oxidus/state` — a directory on your host holding all game state, at `$HOME/oxidus-state` (set `OXIDUS_STATE_PARENT` to put it elsewhere; the `oxidus-state` leaf is always appended)
 
 That `docker run -d` command **has already started the MUD** — it boots in the
 background the moment the command returns. You see no output because `-d`
@@ -55,7 +58,8 @@ telnet localhost 1336
 ```
 
 **Start / stop the MUD.** These control the container's lifecycle — whether the
-driver is actually running. Your world is preserved in the volume either way:
+driver is actually running. Your world is preserved in the state directory
+either way:
 
 ```bash
 docker stop oxidus       # halt the running container
@@ -81,13 +85,26 @@ login becomes Oxidus's owner again):
 
 ```bash
 docker rm -f oxidus
-docker volume rm oxidus-state
+rm -rf "${OXIDUS_STATE_PARENT:-$HOME}/oxidus-state"
 # then re-run the `docker run` command above
 ```
 
+**Remove it entirely** (uninstall — reclaim the disk; a later `docker run` just
+re-pulls the image, so nothing here is permanent):
+
+```bash
+docker rm -f oxidus                                    # the container
+rm -rf "${OXIDUS_STATE_PARENT:-$HOME}/oxidus-state"    # your world
+docker rmi ghcr.io/gesslar/oxidus:latest               # the image itself
+```
+
+The container must go before the image — `docker rmi` refuses to remove an image
+something is still using. (On the build-it-yourself path, `docker compose down
+--rmi all` clears the locally-built image the same way.)
+
 ## Editing the lib (heads-up: changes are temporary)
 
-The mudlib code is **baked into the image**, not the volume — so every
+The mudlib code is **baked into the image**, not the state directory — so every
 `docker pull` gives you a clean, current Oxidus. The trade-off: **any edit to
 the shipped lib is wiped when you recreate the container on a newer image.**
 That's intended — you always land on fresh, stock Oxidus. Only *state* survives
@@ -144,10 +161,12 @@ docker compose up -d              # start
 docker compose build --no-cache   # rebuild against latest source, then `up -d`
 ```
 
-**Reset to a brand-new MUD:**
+**Reset to a brand-new MUD** (state lives in a host directory, so remove it
+directly — `down -v` only drops named volumes, not bind mounts):
 
 ```bash
-docker compose down -v            # -v also drops the oxidus-state volume
+docker compose down
+rm -rf "${OXIDUS_STATE_PARENT:-$HOME}/oxidus-state"
 docker compose up -d
 ```
 
@@ -158,14 +177,15 @@ docker compose up -d
   [`adm/dist/rebuild`](adm/dist/rebuild) script (which also pins the mudlib paths
   in `config.mud`). The second, slim runtime stage ships only the built tree.
   (With Option 1 this has already been done for you on the published image.)
-- **Code is baked into the image; game state lives in a volume.** On first boot
-  the container's entrypoint moves every runtime-mutable path
-  (`data/`, `home/`, `log/`, `open/`, `tmp/`, `adm/etc/certs/`,
-  `adm/etc/secret/`, `adm/etc/alarms/`, and the `first_user` / `config.lpml` /
-  `mssp.lpml` files) into the `oxidus-state` volume and symlinks them back in.
-  This keeps the mudlib code pristine while your players, data and logs survive
-  restarts **and** image upgrades. Resetting the MUD is simply removing that
-  volume.
+- **Code is baked into the image; game state lives in a host directory.** On
+  first boot the container's entrypoint moves every runtime-mutable path
+  (`data/`, `home/`, `log/`, `open/`, `tmp/`, `adm/etc/secret/`, the
+  `adm/custom/` override tree — config, security, alarms, certs, `first_user`,
+  `mssp` — plus the seeded-but-editable `adm/dist/config.mud`) into the
+  `/oxidus/state` mount and symlinks them back
+  in. This keeps the mudlib code pristine while your players, data and logs
+  survive restarts **and** image upgrades. Resetting the MUD is simply deleting
+  that state directory.
 - **The driver runs in a reboot loop**, mirroring `adm/dist/run`: an in-game
   reboot restarts it automatically, while a real shutdown stops the container.
 
@@ -176,7 +196,7 @@ There are two clocks here, and they behave differently on purpose:
 - **Running is deterministic.** A built image is a frozen snapshot — a fixed
   driver binary with the mudlib baked in. `docker run` / `docker start` /
   `docker compose up` on the same image always behaves identically; all your
-  changing state lives in the `oxidus-state` volume, not the image.
+  changing state lives in the `oxidus-state` directory on the host, not the image.
 - **Rebuilding is when you pull the latest.** A rebuild re-clones the mudlib and,
   via `adm/dist/rebuild`, checks out and compiles the **current** FluffOS
   `master`. So the way to pick up a newer driver (or newer base packages) is to

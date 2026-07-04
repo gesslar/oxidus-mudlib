@@ -51,11 +51,9 @@ if [ "$(id -u)" = "0" ]; then
     adm/custom
   )
 
-  # Individual files written at runtime (may not exist in a pristine clone).
-  # Most per-MUD state now lives under adm/custom (above); mssp.lpml is the
-  # last hold-out still read from adm/etc.
+  # Config is seeded, but then is editable.
   PERSIST_FILES=(
-    adm/etc/mssp.lpml
+    adm/dist/config.mud
   )
 
   # Move a directory's pristine contents into the state mount on first boot,
