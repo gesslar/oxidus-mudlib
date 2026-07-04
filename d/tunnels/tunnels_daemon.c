@@ -151,7 +151,6 @@ public void setup_exits(object room, string file) {
   if(!coords)
     return;
 
-  debug("coords: %O", coords);
   // string room_type = get_room_type(coords[0], coords[1], coords[2]);
   mapping exits = get_exits(coords[0], coords[1], coords[2]);
 
