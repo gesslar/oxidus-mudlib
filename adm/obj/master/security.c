@@ -720,9 +720,10 @@ private nomask string glob_to_regex(string pattern) {
 }
 
 /**
- * Returns 1 if the identity owns the home path of the file: either the
- * player named in the third segment of /home/<x>/<name>/..., or the
- * matching [home_<name>] code identity.
+ * Returns 1 if the identity owns the path: either the name in the owner
+ * segment of /home/<x>/<name>/... or /data/users/<x>/<name>/... (a player
+ * writing their own home or save data), or the matching [home_<name>]
+ * code identity.
  *
  * @param {string} privs - The caller's privs string.
  * @param {string} file - The target file path.
@@ -734,7 +735,8 @@ private nomask int owns_path(string privs, string file) {
   if(!stringp(privs) || !truthy(privs))
     return 0;
 
-  if(sscanf(file, "/home/%*s/%s/%*s", owner) != 1)
+  if(sscanf(file, "/home/%*s/%s/%*s", owner) != 3 &&
+     sscanf(file, "/data/users/%*s/%s/%*s", owner) != 3)
     return 0;
 
   if(privs == owner)

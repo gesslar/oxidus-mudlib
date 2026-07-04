@@ -19,7 +19,10 @@
 [
   { path: "/tmp/**",      read: "all",             write: "all", },
   { path: "/log/**",      read: "role:admin",      write: "role:admin", },
+  { path: "/data/users/*/*/**", read: "self",       write: "self", },
   { path: "/data/**",     read: "role:admin",      write: "role:admin", },
+  { path: "/adm/etc/secret/**", read: "role:admin", write: "role:admin", },
+  { path: "/adm/etc/**",  read: "all",             write: "role:admin", },
   { path: "/adm/**",      read: "role:admin",      write: "role:admin", },
   { path: "/home/*/*/**", read: "all",             write: "self", },
   { path: "/doc/**",      read: "all",             write: "role:developer", },
