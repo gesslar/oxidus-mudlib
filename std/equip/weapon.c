@@ -215,7 +215,7 @@ varargs int unequip(object tp, int silent) {
     return 0;
 
   if(!silent)
-    tp->simple_action("$N $vunwield $o.", get_short());
+    tp->simple_action("$N $vunwield $p $o.", get_short());
 
   GMCP_D->send_gmcp(tp, GMCP_PKG_CHAR_ITEMS_UPDATE, ({ this_object(), tp }));
 

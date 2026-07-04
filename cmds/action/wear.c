@@ -22,10 +22,15 @@ void setup() {
    usage_text = "wear <item>";
 }
 
+private mixed wear_all(object tp);
+
 mixed main(/** @type {STD_BODY} */ object tp, string str) {
   /** @type {STD_CLOTHING | STD_ARMOUR} */ object ob;
   string slot;
   mixed result;
+
+  if(str == "all")
+    return wear_all(tp);
 
   if(!ob = find_target(tp, str, tp))
     return "You do not have that item.";
@@ -59,5 +64,45 @@ mixed main(/** @type {STD_BODY} */ object tp, string str) {
   if(result == 0)
     return "You cannot wear that item.";
 
-  return "You wear the "+get_short(ob)+".";
+  tp->simple_action("$N $vput on a $o.", ob);
+
+  return 1;
+}
+
+private mixed wear_all(/** @type {STD_BODY} */ object tp) {
+  int num = 0;
+
+  foreach(/** @type {STD_CLOTHING | STD_ARMOUR} */ object ob in all_inventory(tp)) {
+    string slot;
+    mixed result;
+
+    if(!ob->is_armour() && !ob->is_clothing())
+      continue;
+
+    slot = ob->query_slot();
+
+    if(nullp(slot))
+      continue;
+
+    if(!tp->module("race", "query_equipment_slots", slot))
+      continue;
+
+    if(tp->equipped_on(slot))
+      continue;
+
+    result = ob->can_equip(slot, tp);
+    if(stringp(result) || result == 0)
+      continue;
+
+    result = ob->equip(tp, slot);
+    if(stringp(result) || result == 0)
+      continue;
+
+    tp->simple_action("$N $vput on a $o.", ob);
+    num++;
+  }
+
+  return num
+    ? 1
+    : "You found nothing to put on.";
 }
