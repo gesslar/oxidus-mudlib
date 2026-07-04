@@ -22,11 +22,15 @@ docker run -d --name oxidus --init \
   ghcr.io/gesslar/oxidus:latest
 ```
 
-- `--name oxidus` — names the container `oxidus`; **every command below refers to it by that name**
+- `--name oxidus` — names the container `oxidus`; **every command below refers
+  to it by that name**
 - `--init` — clean signal handling, so `docker stop` shuts the driver down promptly
 - `-p 1336:1336` — exposes the telnet port on the host
-- `-e OXIDUS_UID/GID` — makes the state directory owned by you, so you can edit it without sudo (omit on Docker Desktop, which handles ownership itself)
-- `-v …/oxidus-state:/oxidus/state` — a directory on your host holding all game state, at `$HOME/oxidus-state` (set `OXIDUS_STATE_PARENT` to put it elsewhere; the `oxidus-state` leaf is always appended)
+- `-e OXIDUS_UID/GID` — makes the state directory owned by you, so you can edit
+  it without sudo (omit on Docker Desktop, which handles ownership itself)
+- `-v …/oxidus-state:/oxidus/state` — a directory on your host holding all game
+  state, at `$HOME/oxidus-state` (set `OXIDUS_STATE_PARENT` to put it elsewhere;
+  the `oxidus-state` leaf is always appended)
 
 That `docker run -d` command **has already started the MUD** — it boots in the
 background the moment the command returns. You see no output because `-d`

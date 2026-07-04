@@ -21,8 +21,12 @@ inherit STD_DAEMON;
 private nosave mapping mud_stats = ([]);
 
 void setup() {
-  if(file_exists("adm/custom/mssp.lpml"))
-    mud_stats = load_lpml("adm/custom/mssp.lpml");
+  if(file_exists("/adm/custom/mssp.lpml")) {
+    mixed stats = load_lpml("/adm/custom/mssp.lpml");
+
+    if(mapp(stats))
+      mud_stats = stats;
+  }
 }
 
 /**
