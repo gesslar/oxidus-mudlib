@@ -27,16 +27,14 @@ private int __last_login = 0;
 private int __ed_setup = 0;
 
 /**
- * Initialises the player body with default values and
- * preferences. Called during the login process to prepare the
- * body for play.
+ * Initialises the player body with default values and preferences. Called
+ * during the login process to prepare the body for play.
  *
  * @public
  */
 void setup_body() {
   set_living_name(query_real_name());
   set_id(({query_real_name()}));
-  set_heart_beat(mud_config("DEFAULT_HEART_RATE"));
   !query_race() && set_race(mud_config("DEFAULT_RACE"));
   !query_level() && set_level(1.0);
   !query_env("cwd") && set_env("cwd", "/doc");
@@ -52,8 +50,11 @@ void setup_body() {
   update_regen_interval();
   set_log_prefix(sprintf("(%O)", this_object()));
 
+  add_hb(save_body);
   slot(SIG_SYS_CRASH, "on_crash");
   slot(SIG_PLAYER_ADVANCED, "on_advance");
+
+  set_heart_beat(mud_config("DEFAULT_HEART_RATE"));
 }
 
 /**
@@ -174,10 +175,12 @@ void net_dead() {
  * @public
  */
 void reconnect() {
-  restore_body();
   set_last_login(time());
   tell("You have reconnected to your body.\n");
-  if(environment()) tell_them(query_name() + " has reconnected.\n");
+
+  if(environment())
+    tell_them(query_name() + " has reconnected.\n");
+
   remove_extra_short("link_dead");
   /* reconnection logged in login object */
 }
@@ -389,29 +392,48 @@ void set_environ(mapping data) {
 }
 
 /**
- * Serialises the player's inventory to a file for later
- * restoration. Requires admin privileges or self-call.
+ * Serialises the player's inventory to a file for later restoration. Requires
+ * admin privileges or self-call.
  *
  * @public
+ * @returns Returns 0 or 1 for failure or success.
  */
-void save_inventory() {
+int save_inventory() {
   string save;
 
-  if(!has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
+  if(
+    !has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin")
+    && this_body() != this_object()
+    && origin() != ORIGIN_LOCAL
+  )
+    return 0;
 
   save = save_to_string(1);
-  write_file(user_inventory_data(query_privs(this_object())), save, 1);
+
+  int result = write_file(
+    user_inventory_data(query_privs()),
+    save,
+    1
+  );
+
+  return result;
 }
 
 /**
- * Restores the player body's saved variables from the save
- * file. Requires admin privileges or self-call.
+ * Restores the player body's saved variables from the save file. Requires
+ * admin privileges or self-call.
  *
  * @public
  */
 void restore_body() {
-  if(!has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
-  if(has_role(query_privs(previous_object()), "admin") || query_privs(previous_object()) == this_body()->query_real_name()) restore_object(user_body_data(query_real_name()));
+  if(
+    !has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin")
+    && this_body() != this_object()
+    && origin() != ORIGIN_LOCAL
+  )
+    return;
+
+  restore_object(user_body_data(query_real_name()));
 }
 
 /**
@@ -425,7 +447,12 @@ void restore_inventory() {
   string e;
   string file, data;
 
-  if(!has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin") && this_body() != this_object()) return 0;
+  if(
+    !has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin")
+    && this_body() != this_object()
+  ) {
+    return 0;
+  }
 
   file = user_inventory_data(query_privs(this_object()));
 
@@ -472,9 +499,11 @@ void wipe_inventory() {
 int save_body() {
   int result;
 
-  if(!has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin")
+  if(
+    !has_role(query_privs(previous_object() ? previous_object() : this_body()), "admin")
     && this_body() != this_object()
-    && base_name(previous_object()) != CMD_QUIT
+    && (previous_object() && base_name(previous_object()) != CMD_QUIT)
+    && origin() != ORIGIN_LOCAL
   ) {
     return 0;
   }

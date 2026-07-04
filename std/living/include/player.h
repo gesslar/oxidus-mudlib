@@ -17,7 +17,7 @@ void set_environ_option(string key, mixed value) ;
 void receive_environ(string var, mixed value) ;
 void set_environ(mapping data) ;
 void restore_body() ;
-void save_inventory() ;
+int save_inventory() ;
 void restore_inventory() ;
 void wipe_inventory() ;
 int save_body() ;
