@@ -62,7 +62,7 @@ mixed main(/** @type {STD_BODY} */ object tp, string str) {
     if(!ob->is_weapon())
       return "You can only unwield weapons.";
 
-    if(!tp->has_wielded(ob))
+    if(!tp->equipped(ob))
       return "You are not wielding that weapon.";
   }
 
