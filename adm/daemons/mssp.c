@@ -1,10 +1,9 @@
 /**
  * @file /adm/daemons/mssp.c
  *
- * MSSP (Mud Server Status Protocol) daemon. Called by the master
- * object to respond to the get_mud_stats() apply. Dynamic and
- * driver hard-coded values are computed here; static values are
- * read from /adm/etc/mssp.json.
+ * MSSP (Mud Server Status Protocol) daemon. Called by the master object to
+ * respond to the get_mud_stats() apply. Dynamic and driver hard-coded values
+ * are computed here; static values are read from /adm/custom/mssp.lpml.
  *
  * @see https://tintin.mudhalla.net/protocols/mssp/
  *
@@ -22,15 +21,14 @@ inherit STD_DAEMON;
 private nosave mapping mud_stats = ([]);
 
 void setup() {
-  if(file_exists("/adm/etc/mssp.json"))
-    mud_stats = json_decode(read_file("/adm/etc/mssp.json"));
+  if(file_exists("adm/custom/mssp.lpml"))
+    mud_stats = load_lpml("adm/custom/mssp.lpml");
 }
 
 /**
- * Returns the current MUD server status as an MSSP mapping.
- * Merges dynamic values (name, port, uptime, player count,
- * protocol support) with static values loaded from the JSON
- * configuration file.
+ * Returns the current MUD server status as an MSSP mapping. Merges dynamic
+ * values (name, port, uptime, player count, protocol support) with static
+ * values loaded from the LPML configuration file.
  *
  * @apply
  * @returns {([ string: string ])} MSSP key-value pairs
