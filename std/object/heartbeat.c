@@ -60,9 +60,6 @@ void remove_hb(mixed f) {
 protected evaluate_heart_beat() {
   int i, sz;
 
-  if(userp())
-    return;
-
   for(i = 0, sz = sizeof(hb_events); i < sz; i++) {
     hb_events[i][0]++;
     if(hb_events[i][0] >= hb_events[i][1]) {
@@ -76,7 +73,7 @@ protected evaluate_heart_beat() {
 
         catch {
           f = bind(hb_events[i][2], this_object());
-          f();
+          evaluate(f);
         };
       }
 

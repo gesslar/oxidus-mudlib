@@ -82,8 +82,6 @@ float set_level(float l) {
     ]));
   }
 
-  save_body();
-
   return __level;
 }
 
@@ -118,9 +116,8 @@ float query_level_mod() {
 }
 
 /**
- * Replace the temporary level modifier. Routes through
- * adjust_level_mod() so any future side-effect logic lives in one
- * place.
+ * Replace the temporary level modifier. Routes through adjust_level_mod() so
+ * any future side-effect logic lives in one place.
  *
  * @param {float} l - The desired modifier value.
  * @returns {float} The new modifier value.
@@ -137,8 +134,6 @@ float set_level_mod(float l) {
  */
 float adjust_level_mod(float l) {
   __level_mod += to_float(l);
-
-  save_body();
 
   return __level_mod;
 }
@@ -160,8 +155,6 @@ int adjust_xp(int amount) {
       GMCP_LBL_CHAR_STATUS_LEVEL: __level,
     ]));
   }
-
-  save_body();
 
   return __xp;
 }

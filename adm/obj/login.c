@@ -549,8 +549,6 @@ private void enter_world(string name, int reconnecting) {
   if(reconnecting)
     body->reconnect();
 
-
-
   body->setup_body();
   body->clear_gmcp_data();
   body->set_gmcp_client(__login_gmcp_data["client"]);

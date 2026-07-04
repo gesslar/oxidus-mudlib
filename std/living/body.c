@@ -4,10 +4,11 @@
  * Body object that is shared by players and NPCs.
  *
  * @created 2024-07-29 - Gesslar
- * @last_modified 2024-07-29 - Gesslar
+ * @last_modified 2026-07-04 - Gesslar
  *
  * @history
  * 2024-07-29 - Gesslar - Created
+ * 2026-07-04 - Gesslar - Applied coding style and documentation
  */
 
 #include <body.h>
@@ -40,8 +41,6 @@ inherit __DIR__ "wealth";
 
 inherit EXT_ACTION;
 inherit EXT_LOG;
-
-/* Prototypes */
 
 void mudlib_setup() {
   if(!clonep() &&
@@ -76,15 +75,33 @@ private nosave string *weapon_slots = ({
   "right hand", "left hand"
 });
 
-string *query_body_slots() {
+/**
+ * Returns the armour slots this body provides.
+ *
+ * @returns {string*} A copy of the body slot names.
+ */
+protected string *query_body_slots() {
   return copy(body_slots);
 }
 
-string *query_weapon_slots() {
+/**
+ * Returns the weapon slots this body provides.
+ *
+ * @returns {string*} A copy of the weapon slot names.
+ */
+protected string *query_weapon_slots() {
   return copy(weapon_slots);
 }
 
-void die() {
+/**
+ * Handles this body's death. Stops all attacks, ejects any switched-user
+ * occupant, spawns a corpse and transfers inventory and wealth into it,
+ * then either raises a ghost (for players) or awards kill experience (for
+ * NPCs) before removing the body.
+ *
+ * @returns {void}
+ */
+protected void die() {
   object
   /** @type {STD_BODY} */   body,
   /** @type {LIB_CORPSE} */ corpse,
@@ -156,7 +173,14 @@ void die() {
   remove();
 }
 
-varargs int move(mixed ob) {
+/**
+ * Moves this body to a destination, recording the previous environment as
+ * the last location when the move succeeds.
+ *
+ * @param {mixed} ob - The destination object or path to move into.
+ * @returns {int} 0 on success, or a non-zero move failure code.
+ */
+public varargs int move(mixed ob) {
   int result;
   object env;
 
@@ -169,12 +193,17 @@ varargs int move(mixed ob) {
   if(env)
     set_last_location(env);
 
-  save_body();
-
   return result;
 }
 
-void event_remove(object _prev) {
+/**
+ * Disperses this body's inventory when it is removed, dropping items into
+ * the environment where possible and removing those that prevent dropping.
+ *
+ * @param {object} _prev - The previous environment before removal.
+ * @returns {void}
+ */
+protected void event_remove(object _prev) {
   object
   /** @type {STD_ITEM} */ ob,
   /** @type {STD_ITEM} */ next;
@@ -195,7 +224,21 @@ void event_remove(object _prev) {
   }
 }
 
-varargs int move_living(mixed dest, string dir, string depart_message, string arrive_message) {
+/**
+ * Moves a living body between environments, cancelling any in-progress
+ * actions and broadcasting departure and arrival messages to the rooms
+ * involved. A message of "SILENT" suppresses that half of the narration.
+ *
+ * @param {mixed} dest - The destination object or path.
+ * @param {string} [dir="somewhere"] - The direction of travel, used in the
+ *                                     departure message.
+ * @param {string} [depart_message] - Departure message override, or
+ *                                    "SILENT" to suppress it.
+ * @param {string} [arrive_message] - Arrival message override, or
+ *                                    "SILENT" to suppress it.
+ * @returns {int} 0 on success, or a non-zero move failure code.
+ */
+public varargs int move_living(mixed dest, string dir, string depart_message, string arrive_message) {
   int result;
   object curr = environment();
   string tmp;
@@ -251,21 +294,34 @@ varargs int move_living(mixed dest, string dir, string depart_message, string ar
  * TODO: For now, just returns 1 until more is implemented that will affect
  * this.
  *
- * @returns {1|string} Returns 1 if passes ability check, otherwise a string error message.
+ * @returns {int | string} 1 if the body passes the ability check,
+ *                         otherwise a string error message.
  */
-int is_able() {
+public int is_able() {
   return 1;
 }
 
-//Misc functions
-void write_prompt() {
+// Misc functions
+
+/**
+ * Writes this body's configured prompt to its connection.
+ *
+ * @returns {void}
+ */
+protected void write_prompt() {
   string prompt = query_pref("prompt");
 
   receive(prompt + " ");
 }
 
-int query_log_level() {
-  if(!query_pref("log_level")) return 0;
+/**
+ * Returns this body's logging verbosity level, read from preferences.
+ *
+ * @returns {int} The configured log level, or 0 when unset.
+ */
+public int query_log_level() {
+  if(!query_pref("log_level"))
+    return 0;
 
   return to_int(query_pref("log_level"));
 }
@@ -277,14 +333,14 @@ int query_log_level() {
  *
  * @type {STD_BODY}
  */
-object su_body;
+private object su_body;
 
 /**
  * Register the body we have moved into.
  *
  * @param {STD_BODY} source - The body we are now inhabiting.
  */
-void set_su_body(object source) {
+public void set_su_body(object source) {
   su_body = source;
 }
 
@@ -294,13 +350,13 @@ void set_su_body(object source) {
  *
  * @returns {STD_BODY|0} The body we are currently inhabiting, or null.
  */
-object query_su_body() {
+public object query_su_body() {
   return su_body;
 }
 
 /**
  * Resets our current switch user body to null.
  */
-void clear_su_body() {
+public void clear_su_body() {
   su_body = null;
 }
