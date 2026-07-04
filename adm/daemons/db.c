@@ -190,8 +190,10 @@ public mixed query(string db, string q, mixed *callback) {
   mixed rows, *result = ({});
 
   if(!db || !q) {
-    log_file("system/db",
-      "Invalid call: missing db or query.\n");
+    log_file(
+      "system/db",
+      "Invalid call: missing db or query.\n"
+    );
     return 0;
   }
 

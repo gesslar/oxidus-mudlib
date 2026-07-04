@@ -61,6 +61,9 @@ void confirm_nuke(string str, object caller, string user) {
     ACCOUNT_D->remove_character(account_name, user);
   }
 
+  _info(caller, "Removing bank account for user '%s'.", capitalize(user));
+  BANK_D->remove_account(user, caller);
+
   string user_dir = user_data_directory(user);
   if(directory_exists(user_dir)) {
     mixed err;

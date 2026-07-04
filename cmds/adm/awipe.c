@@ -62,6 +62,9 @@ void confirm_awipe(string str, object caller, string account) {
       }
     }
 
+    _info(caller, "Removing bank account for user '%s'.", capitalize(character));
+    BANK_D->remove_account(character, caller);
+
     string user_dir = user_data_directory(character);
     if(directory_exists(user_dir)) {
       mixed err;
