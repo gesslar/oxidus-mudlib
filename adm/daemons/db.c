@@ -237,7 +237,8 @@ public mixed query(string db, string q, mixed *callback) {
       if(stringp(info))
         log_file(
           "system/db",
-          "Error fetching row " + i + " in " + db + ": '" + q + "' " + info + "\n");
+          "Error fetching row " + i + " in " + db + ": '" + q + "' " + info + "\n"
+        );
       else
         result[i] = info;
     }
