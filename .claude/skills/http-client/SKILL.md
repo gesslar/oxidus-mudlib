@@ -11,13 +11,13 @@ You are helping create or modify HTTP client daemons for Oxidus. These are LPC d
 
 ```
 STD_DAEMON + EXT_HTTP
-  └── STD_HTTP_CLIENT (std/daemon/http_client.c) — base HTTP client
-        └── Your daemon (e.g., adm/daemons/my_api.c)
+  └── STD_HTTP_CLIENT (std/daemon/http_client.lpc) — base HTTP client
+        └── Your daemon (e.g., adm/daemons/my_api.lpc)
 ```
 
 - **`STD_HTTP_CLIENT`** (`#define STD_HTTP_CLIENT DIR_STD "daemon/http_client"`) — base class providing socket management, request sending, response parsing, redirect following, and caching.
-- **`EXT_HTTP`** (`std/ext/http.c`) — shared module for URL parsing, header parsing, body parsing, URL encoding/decoding, and caching utilities. Inherited by `STD_HTTP_CLIENT` automatically.
-- **`HTTPC_D`** (`adm/daemons/httpc.c`) — a ready-made wrapper daemon that adds a callback mechanism on top of `STD_HTTP_CLIENT`. Use this for simple fetch-and-callback patterns instead of writing your own daemon.
+- **`EXT_HTTP`** (`std/ext/http.lpc`) — shared module for URL parsing, header parsing, body parsing, URL encoding/decoding, and caching utilities. Inherited by `STD_HTTP_CLIENT` automatically.
+- **`HTTPC_D`** (`adm/daemons/httpc.lpc`) — a ready-made wrapper daemon that adds a callback mechanism on top of `STD_HTTP_CLIENT`. Use this for simple fetch-and-callback patterns instead of writing your own daemon.
 
 ## Required Include
 
@@ -280,14 +280,14 @@ These are available in any object inheriting `STD_HTTP_CLIENT`:
 
 ## Real-World Examples
 
-### GitHub Issues Daemon (`adm/daemons/github_issues.c`)
+### GitHub Issues Daemon (`adm/daemons/github_issues.lpc`)
 
 Inherits `STD_HTTP_CLIENT`, POSTs to GitHub API to create issues with OAuth token authentication. Saves failed requests for retry.
 
-### Zoho Daemon (`adm/daemons/zoho.c`)
+### Zoho Daemon (`adm/daemons/zoho.lpc`)
 
 Inherits `STD_HTTP_CLIENT`, implements OAuth2 token refresh flow and sends emails via Zoho Mail API.
 
-### HTTPC Daemon (`adm/daemons/httpc.c`)
+### HTTPC Daemon (`adm/daemons/httpc.lpc`)
 
 General-purpose fetch wrapper with callback tracking by serial number.

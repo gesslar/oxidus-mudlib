@@ -11,16 +11,16 @@ This skill documents all driver efun overrides in Oxidus. These are simul_efun f
 
 | Function | File | Override Type | Key Change |
 |---|---|---|---|
-| `exec()` | `override.c` | Security | Restricted to admin/ghost/user/su/link objects |
-| `shutdown()` | `override.c` | Enhancement | Emits signal + persists before shutdown |
-| `set_privs()` | `override.c` | Security | Admin-only, or self-claim from home path |
-| `userp()` | `override.c` | Convenience | Optional argument (defaults to `previous_object()`) |
-| `query_num()` | `override.c` | Enhancement | Supports negative numbers |
-| `ctime()` | `override.c` | Standardization | Always returns `"YYYY-MM-DD HH:MM:SS"` |
-| `element_of()` | `override.c` | Security | Optional `secure_random()` mode |
-| `debug_message()` | `override.c` | Enhancement | Adds timestamp + file logging |
-| `this_body()` | `object.c` | Wrapper | Semantic alias for `this_player()` |
-| `this_caller()` | `object.c` | Wrapper | Alias for `this_player(1)` |
+| `exec()` | `override.lpc` | Security | Restricted to admin/ghost/user/su/link objects |
+| `shutdown()` | `override.lpc` | Enhancement | Emits signal + persists before shutdown |
+| `set_privs()` | `override.lpc` | Security | Admin-only, or self-claim from home path |
+| `userp()` | `override.lpc` | Convenience | Optional argument (defaults to `previous_object()`) |
+| `query_num()` | `override.lpc` | Enhancement | Supports negative numbers |
+| `ctime()` | `override.lpc` | Standardization | Always returns `"YYYY-MM-DD HH:MM:SS"` |
+| `element_of()` | `override.lpc` | Security | Optional `secure_random()` mode |
+| `debug_message()` | `override.lpc` | Enhancement | Adds timestamp + file logging |
+| `this_body()` | `object.lpc` | Wrapper | Semantic alias for `this_player()` |
+| `this_caller()` | `object.lpc` | Wrapper | Alias for `this_player(1)` |
 
 ## Detailed Overrides
 
@@ -159,14 +159,14 @@ Returns the original initiator of the call chain (through force commands, shadow
 
 ## Commented-Out Overrides
 
-The following driver efuns have commented-out overrides in `override.c` that would throw `error("Use tell.")`:
+The following driver efuns have commented-out overrides in `override.lpc` that would throw `error("Use tell.")`:
 - `write()`
 - `say()`
 - `shout()`
 - `tell_object()`
 - `tell_room()`
 
-These are NOT currently active, but their presence indicates the intent: use the `tell()` family from `messaging.c` instead of driver messaging efuns. See the `messaging` skill.
+These are NOT currently active, but their presence indicates the intent: use the `tell()` family from `messaging.lpc` instead of driver messaging efuns. See the `messaging` skill.
 
 ## Key Takeaways
 

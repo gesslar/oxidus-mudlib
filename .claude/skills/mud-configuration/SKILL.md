@@ -18,7 +18,7 @@ Both files use LPML format (see the `lpml` skill). Local overrides merge on top 
 
 ## Key Components
 
-### CONFIG_D — `/adm/daemons/config.c`
+### CONFIG_D — `/adm/daemons/config.lpc`
 
 The central daemon. Inherits `STD_DAEMON`.
 
@@ -28,7 +28,7 @@ The central daemon. Inherits `STD_DAEMON`.
 | `get_all_config` | `mapping get_all_config()` | Returns a copy of the entire config mapping. |
 | `rehash_config` | `void rehash_config()` | Reloads both files and re-merges. Called automatically on startup. |
 
-### mud_config() simul_efun — `/adm/simul_efun/system.c`
+### mud_config() simul_efun — `/adm/simul_efun/system.lpc`
 
 ```lpc
 mixed mud_config(string key)
@@ -46,7 +46,7 @@ int chance = mud_config("RESOURCE.GLOBAL_SPAWN_CHANCE");
 int chance = mud_config("RESOURCE")["GLOBAL_SPAWN_CHANCE"];
 ```
 
-### mudconfig command — `/cmds/wiz/mudconfig.c`
+### mudconfig command — `/cmds/wiz/mudconfig.lpc`
 
 Wizard command that dumps all current configuration via `pretty_map()`. No arguments.
 
@@ -198,7 +198,7 @@ string *melee_skills = skills["combat"]["melee"];
 The dotted form errors with `"Invalid key: SKILLS.combat.melee."` if any hop fails, matching the flat-key error shape. Reach for the explicit form only when you actually need the whole sub-mapping (e.g. iterating its keys).
 
 ### Config in simul_efuns
-Several simul_efuns in `/adm/simul_efun/system.c` wrap specific config keys for convenience:
+Several simul_efuns in `/adm/simul_efun/system.lpc` wrap specific config keys for convenience:
 - `log_dir()` — returns driver `__LOG_DIR__` (not configurable via CONFIG_D)
 - `tmp_dir()` — returns `mud_config("TMP_DIR")`
 - `lib_name()` — returns `mud_config("LIB_NAME")`

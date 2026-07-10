@@ -11,12 +11,12 @@ You are helping work with how objects are named, identified, and described in Ox
 
 Two subsystems handle object identity and display:
 
-1. **ID System** (`std/object/id.c`) — identifiers, adjectives, plurals, parse_command integration
-2. **Description System** (`std/object/description.c`) — short/long text, extra descriptions
+1. **ID System** (`std/object/id.lpc`) — identifiers, adjectives, plurals, parse_command integration
+2. **Description System** (`std/object/description.lpc`) — short/long text, extra descriptions
 
-Both interact with the **Name System** in `std/object/object.c`.
+Both interact with the **Name System** in `std/object/object.lpc`.
 
-## ID System — `std/object/id.c`
+## ID System — `std/object/id.lpc`
 
 ### Internal State
 
@@ -86,7 +86,7 @@ int id(string arg)
 
 Driver apply called to check if an object matches a string. Checks if `arg` is in `_ids`. If `_ids` is empty, initializes from `query_name()` as fallback.
 
-## Name System — `std/object/object.c`
+## Name System — `std/object/object.lpc`
 
 ### Properties
 
@@ -111,7 +111,7 @@ Driver apply called to check if an object matches a string. Checks if `arg` is i
 - `rehash_ids()` always includes `query_name()` in the ID list
 - For players: `set_name("gesslar")` → `_name` = `"Gesslar"` (capitalized)
 
-## Description System — `std/object/description.c`
+## Description System — `std/object/description.lpc`
 
 ### Short and Long Descriptions
 
@@ -146,7 +146,7 @@ Keyed supplementary descriptions displayed alongside the main short/long.
 
 ### How Extras Display
 
-The simul_efun `get_short()` and `get_long()` (in `adm/simul_efun/description.c`) handle display:
+The simul_efun `get_short()` and `get_long()` (in `adm/simul_efun/description.lpc`) handle display:
 
 **Short** (with extras):
 ```

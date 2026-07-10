@@ -12,22 +12,22 @@ You are helping create virtual items and mobs for Oxidus. Virtual objects are da
 1. Code requests an object like `/obj/food/cheese.food`
 2. No `.c` file exists at that path — the driver calls `master->compile_object()`
 3. The master delegates to `VIRTUAL_D->compile_object(file)`
-4. VIRTUAL_D extracts the extension (`.food`) and routes to `adm/daemons/modules/virtual/food.c`
+4. VIRTUAL_D extracts the extension (`.food`) and routes to `adm/daemons/modules/virtual/food.lpc`
 5. The module reads the corresponding LPML file (`/obj/food/cheese.lpml`)
-6. It decodes the LPML and creates: `new("/obj/food/food.c", data)`
+6. It decodes the LPML and creates: `new("/obj/food/food.lpc", data)`
 7. The base class receives the data mapping in `virtual_setup()` and configures itself
 
 ## Architecture
 
 ```
-VIRTUAL_D (adm/daemons/virtual.c)
+VIRTUAL_D (adm/daemons/virtual.lpc)
     │
-    ├── Extension routing: .food → modules/virtual/food.c
-    ├── Extension routing: .loot → modules/virtual/loot.c
-    ├── Extension routing: .mob  → modules/virtual/mob.c
+    ├── Extension routing: .food → modules/virtual/food.lpc
+    ├── Extension routing: .loot → modules/virtual/loot.lpc
+    ├── Extension routing: .mob  → modules/virtual/mob.lpc
     │
-    └── Directory routing: /d/ → modules/virtual/d.c (zones)
-                           /player/ → modules/virtual/player.c
+    └── Directory routing: /d/ → modules/virtual/d.lpc (zones)
+                           /player/ → modules/virtual/player.lpc
                            etc.
 ```
 
@@ -35,14 +35,14 @@ VIRTUAL_D (adm/daemons/virtual.c)
 
 | File | Purpose |
 |---|---|
-| `adm/daemons/virtual.c` | Central router — extracts extension, loads module |
-| `adm/daemons/modules/virtual/ob.c` | Base compile module for items (food, loot inherit from this) |
-| `adm/daemons/modules/virtual/food.c` | Compile module for `.food` files (inherits `ob.c`) |
-| `adm/daemons/modules/virtual/loot.c` | Compile module for `.loot` files (inherits `ob.c`) |
-| `adm/daemons/modules/virtual/mob.c` | Compile module for `.mob` files |
-| `obj/food/food.c` | Base class for food items (inherits `STD_FOOD`) |
-| `obj/loot/loot.c` | Base class for loot items (inherits `STD_ITEM`) |
-| `std/mobs/monster.c` | Base class for mobs (inherits `STD_NPC`) |
+| `adm/daemons/virtual.lpc` | Central router — extracts extension, loads module |
+| `adm/daemons/modules/virtual/ob.lpc` | Base compile module for items (food, loot inherit from this) |
+| `adm/daemons/modules/virtual/food.lpc` | Compile module for `.food` files (inherits `ob.lpc`) |
+| `adm/daemons/modules/virtual/loot.lpc` | Compile module for `.loot` files (inherits `ob.lpc`) |
+| `adm/daemons/modules/virtual/mob.lpc` | Compile module for `.mob` files |
+| `obj/food/food.lpc` | Base class for food items (inherits `STD_FOOD`) |
+| `obj/loot/loot.lpc` | Base class for loot items (inherits `STD_ITEM`) |
+| `std/mobs/monster.lpc` | Base class for mobs (inherits `STD_NPC`) |
 
 ## Data File Format (LPML)
 
@@ -79,8 +79,8 @@ Virtual objects use LPML files (see the **lpml** skill for full syntax). Key poi
 ### Food (`.food`)
 
 **Data file location:** `obj/food/{name}.lpml`
-**Base class:** `obj/food/food.c` (inherits `STD_FOOD`)
-**Compile module:** `adm/daemons/modules/virtual/food.c` (inherits `ob.c`)
+**Base class:** `obj/food/food.lpc` (inherits `STD_FOOD`)
+**Compile module:** `adm/daemons/modules/virtual/food.lpc` (inherits `ob.lpc`)
 
 | Property | Type | Purpose |
 |---|---|---|
@@ -98,8 +98,8 @@ Virtual objects use LPML files (see the **lpml** skill for full syntax). Key poi
 ### Loot (`.loot`)
 
 **Data file location:** `obj/loot/{name}.lpml`
-**Base class:** `obj/loot/loot.c` (inherits `STD_ITEM`)
-**Compile module:** `adm/daemons/modules/virtual/loot.c` (inherits `ob.c`)
+**Base class:** `obj/loot/loot.lpc` (inherits `STD_ITEM`)
+**Compile module:** `adm/daemons/modules/virtual/loot.lpc` (inherits `ob.lpc`)
 
 | Property | Type | Purpose |
 |---|---|---|
@@ -135,8 +135,8 @@ Example (`obj/loot/rabbit_fur.lpml`):
 ### Mobs (`.mob`)
 
 **Data file location:** `d/mobs/{name}.lpml`
-**Base class:** `std/mobs/{type}.c` (e.g., `std/mobs/mammal.c` inherits `std/mobs/monster.c`)
-**Compile module:** `adm/daemons/modules/virtual/mob.c`
+**Base class:** `std/mobs/{type}.c` (e.g., `std/mobs/mammal.lpc` inherits `std/mobs/monster.lpc`)
+**Compile module:** `adm/daemons/modules/virtual/mob.lpc`
 
 The `type` field in the LPML determines which mob base class is used.
 
@@ -183,7 +183,7 @@ Example (`d/mobs/waste_rat.lpml`):
 
 ## How the Compile Module Works
 
-The base compile module (`ob.c`) follows this pattern:
+The base compile module (`ob.lpc`) follows this pattern:
 
 1. Extracts the object name from the file path
 2. Constructs the LPML file path: `/obj/{module}/{name}.lpml`
@@ -230,7 +230,7 @@ To add an entirely new type (e.g., `.potion`):
 
 ### 1. Create the base class
 
-`obj/potion/potion.c`:
+`obj/potion/potion.lpc`:
 
 ```lpc
 inherit STD_ITEM;
@@ -252,13 +252,13 @@ varargs void virtual_setup(mixed args...) {
 
 ### 2. Create the compile module
 
-`adm/daemons/modules/virtual/potion.c`:
+`adm/daemons/modules/virtual/potion.lpc`:
 
 ```lpc
 inherit __DIR__ "ob";
 ```
 
-That's it — inheriting from `ob.c` gives you the standard compile flow that reads `/obj/potion/{name}.lpml` and creates `/obj/potion/potion.c` with the data.
+That's it — inheriting from `ob.lpc` gives you the standard compile flow that reads `/obj/potion/{name}.lpml` and creates `/obj/potion/potion.lpc` with the data.
 
 ### 3. Create LPML data files
 
@@ -289,15 +289,15 @@ object potion = new("/obj/potion/healing.potion");
 
 If no extension module matches, VIRTUAL_D tries:
 
-1. **Directory name concatenation**: `/player/gesslar` → `modules/virtual/player.c`
-2. **Top-level directory**: `/d/forest/5,10,0` → `modules/virtual/d.c`
+1. **Directory name concatenation**: `/player/gesslar` → `modules/virtual/player.lpc`
+2. **Top-level directory**: `/d/forest/5,10,0` → `modules/virtual/d.lpc`
 
 This is how non-extension-based virtual objects (players, ghosts, zones) are routed.
 
 ## Common Pitfalls
 
-- **File extension mismatch**: the `.food` extension routes to `food.c` module, which reads `.lpml` files. The extension in the path (`cheese.food`) is different from the data file (`cheese.lpml`).
+- **File extension mismatch**: the `.food` extension routes to `food.lpc` module, which reads `.lpml` files. The extension in the path (`cheese.food`) is different from the data file (`cheese.lpml`).
 - **LPML not LPC**: data files use LPML syntax (`{}`, `[]`, unquoted keys, spacey keys) not raw LPC mapping syntax (`([`, `({`).
-- **Mob type field**: the `type` property must match a file in `std/mobs/` (e.g., `"mammal"` → `std/mobs/mammal.c`).
+- **Mob type field**: the `type` property must match a file in `std/mobs/` (e.g., `"mammal"` → `std/mobs/mammal.lpc`).
 - **virtual_setup not setup**: data processing happens in `virtual_setup()`, which runs after the normal setup chain.
-- **New module inherits ob.c**: for standard item types, just `inherit __DIR__ "ob"` — the base module handles LPML reading, path construction, and object creation.
+- **New module inherits ob.lpc**: for standard item types, just `inherit __DIR__ "ob"` — the base module handles LPML reading, path construction, and object creation.

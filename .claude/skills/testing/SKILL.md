@@ -22,10 +22,10 @@ Follow `/lpc-coding-style` for all formatting.
 
 | File | Purpose |
 |---|---|
-| `/std/test/test.c` | `STD_TEST` — base for individual test files |
-| `/std/test/runner.c` | `STD_TEST_RUNNER` — base for area runners |
+| `/std/test/test.lpc` | `STD_TEST` — base for individual test files |
+| `/std/test/runner.lpc` | `STD_TEST_RUNNER` — base for area runners |
 | `/include/test.h` | Assertion macros (system include: `#include <test.h>`) |
-| `/cmds/wiz/runtests.c` | The `runtests` wizard command |
+| `/cmds/wiz/runtests.lpc` | The `runtests` wizard command |
 
 `STD_TEST` is defined in `mudlib.h` (auto-included via `global.h`); same for `STD_TEST_RUNNER`.
 
@@ -33,10 +33,10 @@ Follow `/lpc-coding-style` for all formatting.
 
 Tests mirror the source path under `/tests/`. Granularity depends on what's being tested:
 
-- **One file per source file** — e.g. testing a daemon: `/tests/adm/daemons/colour.test.c` for `/adm/daemons/colour.c`.
-- **One file per function** — for many-small-functions modules like simul_efuns: `/tests/adm/simul_efun/uniform_array.test.c`, `/tests/adm/simul_efun/simple_list.test.c`, etc.
+- **One file per source file** — e.g. testing a daemon: `/tests/adm/daemons/colour.test.lpc` for `/adm/daemons/colour.lpc`.
+- **One file per function** — for many-small-functions modules like simul_efuns: `/tests/adm/simul_efun/uniform_array.test.lpc`, `/tests/adm/simul_efun/simple_list.test.lpc`, etc.
 
-Filenames always end in `.test.c`.
+Filenames always end in `.test.lpc`.
 
 ## Required First Line
 
@@ -57,7 +57,7 @@ The LPC LSP can't trace through the assertion macros' inheritance chain and prod
 ```c
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/uniform_array.test.c
+ * @file /tests/adm/simul_efun/uniform_array.test.lpc
  * @description Tests for the uniform_array() simul_efun.
  */
 
@@ -119,19 +119,19 @@ Suites are registered in `setup()` via `describe(description, tests)` where `tes
 
 ## Area Runners
 
-Each test directory needs a `runner.c`. Minimum content:
+Each test directory needs a `runner.lpc`. Minimum content:
 
 ```c
 inherit STD_TEST_RUNNER;
 ```
 
-Located at `/tests/<area>/runner.c`. The runner globs `__DIR__/*.test.c`, clones each file, calls `run()`, and aggregates pass/fail counts. Override `test_dir()` only if you want the runner to scan a different directory than its own.
+Located at `/tests/<area>/runner.lpc`. The runner globs `__DIR__/*.test.lpc`, clones each file, calls `run()`, and aggregates pass/fail counts. Override `test_dir()` only if you want the runner to scan a different directory than its own.
 
 ## Running Tests
 
 | Command | Behaviour |
 |---|---|
-| `runtests` | Walks `/tests/` recursively and invokes every `runner.c` found. |
+| `runtests` | Walks `/tests/` recursively and invokes every `runner.lpc` found. |
 | `runtests <area>` | Invokes `/tests/<area>/runner` directly. Example: `runtests adm/simul_efun`. |
 
 Output uses raw ANSI (green ✔ for passing files, red ✘ for failures) so it works in non-interactive contexts (boot, cron) where `tell()` has no target.
@@ -154,7 +154,7 @@ test("invalid type errors", function() {
 ### How the suppression works
 
 1. `STD_TEST_RUNNER::run_tests()` calls `master()->set_test_mode(300)` before the sweep.
-2. `master::error_handler(mp, caught)` early-returns when `caught && testing_in_progress > time()` (see [adm/obj/master.c](adm/obj/master.c)).
+2. `master::error_handler(mp, caught)` early-returns when `caught && testing_in_progress > time()` (see [adm/obj/master.lpc](adm/obj/master.lpc)).
 3. After the sweep (in a `catch{}`-protected block), runner calls `master()->clear_test_mode()`.
 4. **Safety net:** `testing_in_progress` is a deadline timestamp, not a boolean. Even if both layers above fail, suppression auto-expires after 5 minutes.
 
@@ -171,18 +171,18 @@ describe("insert", ({
   test("inserts at head", function() { ... }),
   test("inserts at tail", function() { ... }),
   pending("inserts at middle of single-element array",
-    "delegates to push() — see array.c#L920"),
+    "delegates to push() — see array.lpc#L920"),
 }));
 ```
 
-The runner counts pending tests separately, prints a `Pending:` block listing each one with its reason, and the per-file summary shows e.g. `✔ array.mutation.test.c — 12 passed, 1 pending`. Pending tests don't run, so they can't fail and don't gate the suite.
+The runner counts pending tests separately, prints a `Pending:` block listing each one with its reason, and the per-file summary shows e.g. `✔ array.mutation.test.lpc — 12 passed, 1 pending`. Pending tests don't run, so they can't fail and don't gate the suite.
 
 This is the right tool when you want a **known-broken** behaviour visible in the suite without it failing the run. For behaviour you expect *should* work, prefer a regular `test()` — the failing test surfaces the bug loudly.
 
 ## Adding a New Test File
 
-1. **Create the area runner** if it doesn't exist: `/tests/<area>/runner.c` containing `inherit STD_TEST_RUNNER;`.
-2. **Create the test file**: `/tests/<area>/<name>.test.c`.
+1. **Create the area runner** if it doesn't exist: `/tests/<area>/runner.lpc` containing `inherit STD_TEST_RUNNER;`.
+2. **Create the test file**: `/tests/<area>/<name>.test.lpc`.
 3. **Start with `// @lpc-nocheck`** on the very first line.
 4. **Inherit `STD_TEST`**, register suites in `setup()` via `describe()`/`test()`.
 5. **Run with `runtests <area>`** in-game to verify.
@@ -192,7 +192,7 @@ This is the right tool when you want a **known-broken** behaviour visible in the
 ```c
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/base64.test.c
+ * @file /tests/adm/simul_efun/base64.test.lpc
  * @description Tests for base64_encode() and base64_decode().
  */
 
@@ -291,7 +291,7 @@ Repeated here because it bites repeatedly: `ASSERT_EQ(({1,2,3}), ({3,2,1}))` **p
 ## Common Pitfalls
 
 - **Forgetting `// @lpc-nocheck`** — the file works but the LSP nags.
-- **Inheriting `STD_TEST_RUNNER` from a `*.test.c` file** — wrong direction. Test files inherit `STD_TEST`; runners inherit `STD_TEST_RUNNER`.
+- **Inheriting `STD_TEST_RUNNER` from a `*.test.lpc` file** — wrong direction. Test files inherit `STD_TEST`; runners inherit `STD_TEST_RUNNER`.
 - **Calling `run()` directly without going through a runner** — works (returns `({passed, failed, failures, pendings})`) but no formatted output, no test-mode suppression for sad-path tests.
 - **Long-running test sweeps** — `reset_eval_cost()` is called per file, but if a single test file's tests collectively exceed eval cost, that file fails. Split into multiple test files.
 - **Mutating shared state in tests** — each test file is cloned fresh, but tests within one file share an instance. Use separate `test()` entries for state isolation, or build setup/teardown into the test function itself.

@@ -13,10 +13,10 @@ You are helping write or modify code that sends messages to players, NPCs, or ob
 Game code calls tell(), tell_all(), simple_action(), _ok(), etc.
        |
        v
-Simul_efun layer                       <- adm/simul_efun/messaging.c, system.c
-       |                                  adm/daemons/action.c
+Simul_efun layer                       <- adm/simul_efun/messaging.lpc, system.lpc
+       |                                  adm/daemons/action.lpc
        v
-EXT_MESSAGING receive functions          <- std/ext/messaging.c
+EXT_MESSAGING receive functions          <- std/ext/messaging.lpc
   receive_direct / receive_up / receive_down / receive_all
        |
        v
@@ -34,10 +34,10 @@ do_receive()                           <- core message processor
 
 | File | Purpose |
 |---|---|
-| `adm/simul_efun/messaging.c` | `tell`, `tell_direct`, `tell_up`, `tell_down`, `tell_all`, `tell_me`, `tell_them` |
-| `adm/simul_efun/system.c` | `_ok`, `_error`, `_warn`, `_info`, `_question`, `_debug`, `debug` |
-| `adm/daemons/action.c` | `simple_action`, `my_action`, `other_action`, `target_action`, `my_target_action`, `targetted_action`, `compose_message` |
-| `std/ext/messaging.c` | `EXT_MESSAGING` — `receive_up`, `receive_down`, `receive_all`, `receive_direct`, `do_receive` |
+| `adm/simul_efun/messaging.lpc` | `tell`, `tell_direct`, `tell_up`, `tell_down`, `tell_all`, `tell_me`, `tell_them` |
+| `adm/simul_efun/system.lpc` | `_ok`, `_error`, `_warn`, `_info`, `_question`, `_debug`, `debug` |
+| `adm/daemons/action.lpc` | `simple_action`, `my_action`, `other_action`, `target_action`, `my_target_action`, `targetted_action`, `compose_message` |
+| `std/ext/messaging.lpc` | `EXT_MESSAGING` — `receive_up`, `receive_down`, `receive_all`, `receive_direct`, `do_receive` |
 | `include/messaging.h` | Message type flag defines |
 
 ## Quick Reference: Which Function to Use
@@ -153,7 +153,7 @@ tell(tp, "Raw text\n", NO_COLOUR);
 
 ## Message Reception (EXT_MESSAGING)
 
-All objects inherit `EXT_MESSAGING` (via `std/object/object.c`). It provides:
+All objects inherit `EXT_MESSAGING` (via `std/object/object.lpc`). It provides:
 
 ### Control Functions
 
@@ -178,7 +178,7 @@ Every message ultimately reaches `do_receive(message, message_type)` which:
 
 ## Action Messages (ACTION_D)
 
-Action messages handle perspective-correct grammar. They're called on the acting object (the player/NPC doing the action). Defined in `adm/daemons/action.c`.
+Action messages handle perspective-correct grammar. They're called on the acting object (the player/NPC doing the action). Defined in `adm/daemons/action.lpc`.
 
 ### Message Tokens
 
@@ -263,7 +263,7 @@ tp->simple_action("$N $vput $o in $o1.", sword, chest);
 
 ## System Feedback Functions
 
-Defined in `adm/simul_efun/system.c`. Provide colored, accessible, formatted messages.
+Defined in `adm/simul_efun/system.lpc`. Provide colored, accessible, formatted messages.
 
 ### Calling Styles
 

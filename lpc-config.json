@@ -3,10 +3,10 @@
     "type": "fluffos"
   },
   "libFiles": {
-    "master": "adm/obj/master.c",
-    "simul_efun": "adm/obj/simul_efun.c",
+    "master": "adm/obj/master.lpc",
+    "simul_efun": "adm/obj/simul_efun.lpc",
     "global_include": "include/global.h",
-    "player": "std/living/player.c",
+    "player": "std/living/player.lpc",
   },
   "libInclude": [
     "include",

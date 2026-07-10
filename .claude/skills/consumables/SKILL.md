@@ -10,17 +10,17 @@ You are helping work with the Oxidus consumable system. Follow the `lpc-coding-s
 ## Architecture Overview
 
 ```
-EXT_USES (std/ext/uses.c)         — base use-count tracking
-  ├── EXT_EDIBLE (std/ext/edible.c)  — eat/nibble mechanics (protected)
-  └── EXT_POTABLE (std/ext/potable.c) — drink/sip mechanics (protected)
+EXT_USES (std/ext/uses.lpc)         — base use-count tracking
+  ├── EXT_EDIBLE (std/ext/edible.lpc)  — eat/nibble mechanics (protected)
+  └── EXT_POTABLE (std/ext/potable.lpc) — drink/sip mechanics (protected)
 
-STD_ITEM + EXT_EDIBLE  → STD_FOOD (std/consume/food.c)   — adds public *_obj wrappers
-STD_ITEM + EXT_POTABLE → STD_DRINK (std/consume/drink.c) — adds public *_obj wrappers
+STD_ITEM + EXT_EDIBLE  → STD_FOOD (std/consume/food.lpc)   — adds public *_obj wrappers
+STD_ITEM + EXT_POTABLE → STD_DRINK (std/consume/drink.lpc) — adds public *_obj wrappers
 ```
 
 The consumption verbs themselves (`eat`, `nibble`, `drink`, `sip`) are `protected` on the EXT_* modules — outside callers must go through the public `*_obj` wrappers on STD_FOOD/STD_DRINK.
 
-## EXT_USES — `std/ext/uses.c`
+## EXT_USES — `std/ext/uses.lpc`
 
 Base module tracking consumable quantities.
 
@@ -42,7 +42,7 @@ Base module tracking consumable quantities.
 | `set_use_status_message` | `void set_use_status_message(string msg)` | Set custom status message |
 | `query_use_status_message` | `string query_use_status_message()` | Get status message |
 
-## EXT_EDIBLE — `std/ext/edible.c`
+## EXT_EDIBLE — `std/ext/edible.lpc`
 
 Inherits `EXT_USES`. Adds eat/nibble mechanics with customizable action messages.
 
@@ -87,7 +87,7 @@ Each action type (`"eat"`, `"nibble"`) supports three message slots:
 - If both self and room are null → `user->simple_action(default)`
 - Otherwise → `user->simple_action(self_msg)` for the eater, `user->simple_action(room_msg)` for room
 
-## EXT_POTABLE — `std/ext/potable.c`
+## EXT_POTABLE — `std/ext/potable.lpc`
 
 Inherits `EXT_USES`. Adds drink/sip mechanics. Mirrors EXT_EDIBLE's structure.
 
@@ -120,7 +120,7 @@ Inherits `EXT_USES`. Adds drink/sip mechanics. Mirrors EXT_EDIBLE's structure.
 - Drink: `"$N $vdrink a $o."`
 - Sip: `"$N $vsip from a $o."`
 
-## STD_FOOD — `std/consume/food.c`
+## STD_FOOD — `std/consume/food.lpc`
 
 Inherits `STD_ITEM` + `EXT_EDIBLE`. Ready-to-use food inheritable.
 
@@ -146,7 +146,7 @@ Inherits `STD_ITEM` + `EXT_EDIBLE`. Ready-to-use food inheritable.
 - 25–49%: `"Most of this [name] has been eaten."`
 - 0–24%: `"There is very little left of this [name]."`
 
-## STD_DRINK — `std/consume/drink.c`
+## STD_DRINK — `std/consume/drink.lpc`
 
 Inherits `STD_ITEM` + `EXT_POTABLE`. Ready-to-use drink inheritable.
 
@@ -178,10 +178,10 @@ All four player commands live under `cmds/action/` and follow the same shape: re
 
 | Command | Type check | Wrapper called |
 |---|---|---|
-| `cmds/action/eat.c` | `is_edible()` | `eat_obj(tp)` |
-| `cmds/action/nibble.c` | `is_food()` | `nibble_obj(tp)` |
-| `cmds/action/drink.c` | `is_drink()` | `drink_obj(tp)` |
-| `cmds/action/sip.c` | `is_drink()` | `sip_obj(tp)` |
+| `cmds/action/eat.lpc` | `is_edible()` | `eat_obj(tp)` |
+| `cmds/action/nibble.lpc` | `is_food()` | `nibble_obj(tp)` |
+| `cmds/action/drink.lpc` | `is_drink()` | `drink_obj(tp)` |
+| `cmds/action/sip.lpc` | `is_drink()` | `sip_obj(tp)` |
 
 Never call the protected `eat`/`nibble`/`drink`/`sip` directly via `->` — it will fail at runtime.
 

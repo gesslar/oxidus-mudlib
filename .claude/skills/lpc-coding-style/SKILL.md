@@ -160,8 +160,8 @@ caller fact, not a style preference. Map it directly:
 - Reached via `call_other` / `ob->fn()` / `master()->fn()` → must be
   **`public`**; only `public` survives a `call_other`. (Verify by
   grepping for `->fn` / `master()->fn`.)
-- Called by an inheriting object as an inherited lfun (e.g. `master.c`
-  inherits `valid.c` and calls `parse_group();` at boot) → **`protected`**;
+- Called by an inheriting object as an inherited lfun (e.g. `master.lpc`
+  inherits `valid.lpc` and calls `parse_group();` at boot) → **`protected`**;
   `private` is file-scope only and would hide it from the inheritor.
 - Called only within the defining file → **`private`**.
 - **Driver applies** (`valid_*`, `create`, `heart_beat`, `setup`, etc.) →

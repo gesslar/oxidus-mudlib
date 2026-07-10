@@ -13,14 +13,14 @@ This skill covers the **outgoing** side of GMCP — sending data FROM the MUD TO
 Game code (vitals, combat, inventory, chat, etc.)
        │
        ▼
-GMCP_D->send_gmcp(user, package, payload)    ← adm/daemons/gmcp.c
+GMCP_D->send_gmcp(user, package, payload)    ← adm/daemons/gmcp.lpc
        │
        ├─ validates user, checks GMCP enabled
        ├─ routes to module: adm/daemons/modules/gmcp/<Package>.c
        │
        ▼
 Module gathers data, calls user->do_gmcp(package, data)
-       │                                     ← std/ext/gmcp.c (EXT_GMCP)
+       │                                     ← std/ext/gmcp.lpc (EXT_GMCP)
        ├─ stringifies all values
        ├─ JSON-encodes payload
        └─ sends via send_gmcp() driver efun to client
@@ -30,13 +30,13 @@ Module gathers data, calls user->do_gmcp(package, data)
 
 | File | Purpose |
 |---|---|
-| `adm/daemons/gmcp.c` | GMCP daemon (`GMCP_D`). Routes `send_gmcp()` calls to package modules |
-| `adm/daemons/modules/gmcp/Char.c` | Character data: vitals, status, login, items |
-| `adm/daemons/modules/gmcp/Core.c` | Protocol: Ping |
-| `adm/daemons/modules/gmcp/Comm.c` | Communication: channel text |
-| `adm/daemons/modules/gmcp/Client.c` | Client features: GUI install |
-| `adm/daemons/modules/gmcp/Room.c` | Room info and travel paths |
-| `std/ext/gmcp.c` | `EXT_GMCP` module on player/login objects. Provides `do_gmcp()` for final transmission |
+| `adm/daemons/gmcp.lpc` | GMCP daemon (`GMCP_D`). Routes `send_gmcp()` calls to package modules |
+| `adm/daemons/modules/gmcp/Char.lpc` | Character data: vitals, status, login, items |
+| `adm/daemons/modules/gmcp/Core.lpc` | Protocol: Ping |
+| `adm/daemons/modules/gmcp/Comm.lpc` | Communication: channel text |
+| `adm/daemons/modules/gmcp/Client.lpc` | Client features: GUI install |
+| `adm/daemons/modules/gmcp/Room.lpc` | Room info and travel paths |
+| `std/ext/gmcp.lpc` | `EXT_GMCP` module on player/login objects. Provides `do_gmcp()` for final transmission |
 | `include/gmcp_defines.h` | All `GMCP_PKG_*`, `GMCP_KEY_*`, `GMCP_VAL_*` defines |
 
 ## The send_gmcp() Function
@@ -69,13 +69,13 @@ Module gathers data, calls user->do_gmcp(package, data)
 
 ### Char.StatusVars
 
-**Module:** `Char.c::StatusVars(object who, mapping payload)`
+**Module:** `Char.lpc::StatusVars(object who, mapping payload)`
 
 Sends label definitions mapping status keys to human-readable names. Sent once on login so the client knows what each Status field means.
 
 ### Char.Status
 
-**Module:** `Char.c::Status(object who, mapping payload)`
+**Module:** `Char.lpc::Status(object who, mapping payload)`
 
 Character state data: name, fill, capacity, xp, tnl, wealth, current enemy info, etc.
 
@@ -83,22 +83,22 @@ Character state data: name, fill, capacity, xp, tnl, wealth, current enemy info,
 
 ### Char.Vitals
 
-**Module:** `Char.c::Vitals(object who, mapping payload)`
+**Module:** `Char.lpc::Vitals(object who, mapping payload)`
 
 Current and max HP/SP/MP values (all stringified).
 
-**Triggered by:** `set_hp()`, `add_hp()`, `set_sp()`, `add_sp()`, `set_mp()`, `add_mp()` and their max counterparts in `std/living/vitals.c`.
+**Triggered by:** `set_hp()`, `add_hp()`, `set_sp()`, `add_sp()`, `set_mp()`, `add_mp()` and their max counterparts in `std/living/vitals.lpc`.
 
 ### Char.Login
 
-**Module:** `Char.c::Login(object who, string submodule, mapping payload)`
+**Module:** `Char.lpc::Login(object who, string submodule, mapping payload)`
 
 - `"Default"` — sends login default data
 - `"Result"` — sends authentication result (from incoming Char handler)
 
 ### Char.Items
 
-**Module:** `Char.c::Items(object who, string submodule, mixed arg)`
+**Module:** `Char.lpc::Items(object who, string submodule, mixed arg)`
 
 Complex inventory management:
 
@@ -111,17 +111,17 @@ Complex inventory management:
 
 **Attrib flags:** `w` (worn), `W` (wearable), `l` (wielded), `g` (groupable), `c` (container), `t` (takeable), `m` (monster), `d` (dead corpse)
 
-**Triggered by:** `event_gmcp_item_add()`, `event_gmcp_item_remove()`, `event_gmcp_item_update()` in player.c. Equipment changes in `std/equip/`.
+**Triggered by:** `event_gmcp_item_add()`, `event_gmcp_item_remove()`, `event_gmcp_item_update()` in player.lpc. Equipment changes in `std/equip/`.
 
 ### Core.Ping
 
-**Module:** `Core.c::Ping(object who)`
+**Module:** `Core.lpc::Ping(object who)`
 
 Echoes back ping for RTT measurement.
 
 ### Comm.Channel.Text
 
-**Module:** `Comm.c::Channel(object who, string sub, mapping data)`
+**Module:** `Comm.lpc::Channel(object who, string sub, mapping data)`
 
 Chat/communication messages:
 
@@ -137,21 +137,21 @@ Chat/communication messages:
 
 ### Client.GUI
 
-**Module:** `Client.c::GUI(object who, string submodule, mapping payload)`
+**Module:** `Client.lpc::GUI(object who, string submodule, mapping payload)`
 
 - `"Install"` — sends UI package URL and version for client auto-install
 
 ### Room.Info
 
-**Module:** `Room.c::Info(object who, object room)`
+**Module:** `Room.lpc::Info(object who, object room)`
 
 Room information. Calls `room->gmcp_room_info(who)` for custom data.
 
-**Triggered by:** `move()` in `std/living/body.c` when entering a new room.
+**Triggered by:** `move()` in `std/living/body.lpc` when entering a new room.
 
 ### Room.Travel
 
-**Module:** `Room.c::Travel(object who, string *stops)`
+**Module:** `Room.lpc::Travel(object who, string *stops)`
 
 Travel path data. Converts stop paths to MD4 hashes.
 
@@ -165,15 +165,15 @@ Full initialization burst: StatusVars, Status, Vitals, Room.Info, inventory list
 
 | Event | Package | Source |
 |---|---|---|
-| HP/SP/MP change | `Char.Vitals` | `std/living/vitals.c` |
-| Wealth change | `Char.Status` | `std/living/wealth.c` |
-| Level/XP change | `Char.Status` | `std/living/advancement.c` |
-| Combat start/stop | `Char.Status` | `std/living/combat.c` |
-| Item added/removed | `Char.Items.Add/Remove` | `std/living/player.c` |
+| HP/SP/MP change | `Char.Vitals` | `std/living/vitals.lpc` |
+| Wealth change | `Char.Status` | `std/living/wealth.lpc` |
+| Level/XP change | `Char.Status` | `std/living/advancement.lpc` |
+| Combat start/stop | `Char.Status` | `std/living/combat.lpc` |
+| Item added/removed | `Char.Items.Add/Remove` | `std/living/player.lpc` |
 | Item equipped/unequipped | `Char.Items.Update` | `std/equip/` |
-| Capacity change | `Char.Status` | `std/object/contents.c` |
-| Room change | `Room.Info` | `std/living/body.c` |
-| Chat message | `Comm.Channel.Text` | `adm/daemons/channels.c` |
+| Capacity change | `Char.Status` | `std/object/contents.lpc` |
+| Room change | `Room.Info` | `std/living/body.lpc` |
+| Chat message | `Comm.Channel.Text` | `adm/daemons/channels.lpc` |
 
 ## Final Transmission: do_gmcp()
 
@@ -202,7 +202,7 @@ who->do_gmcp(GMCP_PKG_CHAR_ITEMS_LIST, data, 1);  // third arg is pass-through
 
 ### 2. Add the handler in the module
 
-In `adm/daemons/modules/gmcp/Char.c` (or a new module file):
+In `adm/daemons/modules/gmcp/Char.lpc` (or a new module file):
 
 ```lpc
 void Skills(object who, string submodule, mixed payload) {

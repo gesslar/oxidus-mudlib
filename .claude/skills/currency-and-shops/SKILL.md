@@ -10,22 +10,22 @@ You are helping work with the Oxidus currency, wealth, and shop systems. Follow 
 ## Architecture Overview
 
 ```
-CURRENCY_D (adm/daemons/currency.c)     — currency registry, conversion
+CURRENCY_D (adm/daemons/currency.lpc)     — currency registry, conversion
   |
   v
-wealth.c (std/living/wealth.c)           — per-living coin storage
+wealth.lpc (std/living/wealth.lpc)           — per-living coin storage
   |
   v
-EXT_CURRENCY (std/ext/currency.c)        — transaction handling
-  ├── EXT_SHOP (std/ext/shop.c)          — inventory-based shop (has storage object)
-  └── EXT_SHOP_MENU (std/ext/shop_menu.c) — menu-based shop (clones on demand)
+EXT_CURRENCY (std/ext/currency.lpc)        — transaction handling
+  ├── EXT_SHOP (std/ext/shop.lpc)          — inventory-based shop (has storage object)
+  └── EXT_SHOP_MENU (std/ext/shop_menu.lpc) — menu-based shop (clones on demand)
 
-BANK_D (adm/daemons/bank.c)             — SQLite-backed bank accounts
-  └── EXT_BANK (std/ext/bank.c)         — room commands for banking
+BANK_D (adm/daemons/bank.lpc)             — SQLite-backed bank accounts
+  └── EXT_BANK (std/ext/bank.lpc)         — room commands for banking
 
-LIB_COIN (lib/coin.c)                   — physical coin objects
-STD_VALUE (std/object/value.c)           — item monetary value
-LOOT_D (adm/daemons/loot.c)             — loot/coin drops on death
+LIB_COIN (lib/coin.lpc)                   — physical coin objects
+STD_VALUE (std/object/value.lpc)           — item monetary value
+LOOT_D (adm/daemons/loot.lpc)             — loot/coin drops on death
 ```
 
 ## Currency Configuration
@@ -52,7 +52,7 @@ Related config:
 | `COIN_VARIANCE` | `0.25` | 25% variance on loot values |
 | `STORAGE_DATA_DIR` | `"/data/storage/"` | Persistent storage file path |
 
-## Currency Daemon — `adm/daemons/currency.c`
+## Currency Daemon — `adm/daemons/currency.lpc`
 
 Singleton daemon. Macro: `CURRENCY_D`.
 
@@ -67,7 +67,7 @@ Singleton daemon. Macro: `CURRENCY_D`.
 | `currency_value` | `int (string currency)` | Returns base-unit value of a denomination |
 | `get_currency_map` | `mapping ()` | Returns `([ name: value, ... ])` copy |
 
-## Wealth — `std/living/wealth.c`
+## Wealth — `std/living/wealth.lpc`
 
 Inherited by `STD_BODY`. Tracks coins as a mapping of `{ currency_name: count }`.
 
@@ -92,7 +92,7 @@ private nomask mapping _wealth = ([]);   // e.g., ([ "copper": 50, "gold": 3 ])
 
 **Important:** `adjust_wealth` returns `mixed` — it can return an error string if the currency is invalid, funds are insufficient, or the player can't carry the weight. Always check the return type.
 
-## Transaction Module — `std/ext/currency.c`
+## Transaction Module — `std/ext/currency.lpc`
 
 Macro: `EXT_CURRENCY`. Inherited by both shop modules.
 
@@ -149,7 +149,7 @@ Used by `EXT_SHOP`'s sell command to compute payout.
 | `can_afford(object ob, int cost, string currency)` | Single-denomination check |
 | `format_currency(int amount, string currency)` | Returns `"<amount> <currency>"` |
 
-## Inventory-Based Shop — `std/ext/shop.c`
+## Inventory-Based Shop — `std/ext/shop.lpc`
 
 Macro: `EXT_SHOP`. Inherits `EXT_CURRENCY` and `CLASS_STORAGE`.
 
@@ -216,7 +216,7 @@ The storage object has `ignore_capacity(1)` and `ignore_mass(1)` — no limits o
 
 **Known issue:** `create_storage()` currently has a hardcoded `storage_org`. Each shop must override this or they share storage.
 
-## Menu-Based Shop — `std/ext/shop_menu.c`
+## Menu-Based Shop — `std/ext/shop_menu.lpc`
 
 Macro: `EXT_SHOP_MENU`. Inherits `CLASS_MENU` and `EXT_CURRENCY`.
 
@@ -278,7 +278,7 @@ class Menu {
 
 ## Bank System
 
-### Bank Daemon — `adm/daemons/bank.c`
+### Bank Daemon — `adm/daemons/bank.lpc`
 
 SQLite-backed via `DB_D`. Stores a single balance in **base (copper) units**.
 
@@ -289,7 +289,7 @@ SQLite-backed via `DB_D`. Stores a single balance in **base (copper) units**.
 | `add_balance` | `mixed (string name, int amount)` | Adjusts balance (negative for withdrawals). Fails if result < 0 |
 | `query_activity` | `mixed (string name, int limit)` | Returns activity log array. Default limit 10 |
 
-### Bank Module — `std/ext/bank.c`
+### Bank Module — `std/ext/bank.lpc`
 
 Macro: `EXT_BANK`. Provides room commands.
 
@@ -307,7 +307,7 @@ Commands: `register`, `deposit <num> <type>`, `withdraw <num> <type>`, `balance`
 
 **Key design:** Deposits convert denomination to copper for storage. Withdrawals convert copper back to the requested denomination. You can deposit 1 gold and withdraw 100 copper.
 
-## Coin Objects — `lib/coin.c`
+## Coin Objects — `lib/coin.lpc`
 
 Physical coin items that exist in rooms and containers.
 
@@ -336,7 +336,7 @@ new(LIB_COIN, "gold", 5)   // creates a stack of 5 gold coins
 
 **Critical:** `query_value()` on a coin returns `({ num, type })` — an array, not an integer. This intentionally differs from `STD_VALUE::query_value()` which returns `int`. Code handling mixed item types must account for this.
 
-## Item Value — `std/object/value.c`
+## Item Value — `std/object/value.lpc`
 
 All items inherit this via `STD_ITEM`.
 
@@ -379,7 +379,7 @@ No GMCP is sent directly by shop modules. Item movement triggers `GMCP_PKG_CHAR_
 
 ## Death and Wealth
 
-On `die()` in `body.c`:
+On `die()` in `body.lpc`:
 
 1. `query_all_wealth()` is iterated.
 2. Each denomination becomes `new(LIB_COIN, type, amount)`.

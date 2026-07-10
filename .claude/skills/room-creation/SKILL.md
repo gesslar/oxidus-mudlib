@@ -37,15 +37,15 @@ post_setup_0..4()    -> Post-setup hooks
 
 ## Room Base Class
 
-`STD_ROOM` (`std/room/room.c`) inherits from:
+`STD_ROOM` (`std/room/room.lpc`) inherits from:
 - `STD_OBJECT` — descriptions, IDs, setup chain
 - `STD_CONTAINER` — inventory (ignores capacity/mass by default)
-- `exits.c` — exit management
-- `items.c` — examinable room details
-- `light.c` — light levels
-- `terrain.c` — terrain type
-- `zone.c` — zone membership
-- `door.c` — door state management
+- `exits.lpc` — exit management
+- `items.lpc` — examinable room details
+- `light.lpc` — light levels
+- `terrain.lpc` — terrain type
+- `zone.lpc` — zone membership
+- `door.lpc` — door state management
 
 ## API Reference
 
@@ -228,7 +228,7 @@ add_inventory("/obj/torch");     // Clone and add object to room
 ## Complete Room Example
 
 ```lpc
-// /d/village/square.c
+// /d/village/square.lpc
 
 inherit __DIR__ "village_base";
 
@@ -265,7 +265,7 @@ void setup() {
 ## Complete Door Example
 
 ```lpc
-// /d/village/manor/foyer.c
+// /d/village/manor/foyer.lpc
 
 #include <classes.h>
 
@@ -310,7 +310,7 @@ void setup() {
 ## Area Base Template
 
 ```lpc
-// /d/{area}/{area}_base.c
+// /d/{area}/{area}_base.lpc
 
 inherit STD_ROOM;
 
@@ -324,15 +324,15 @@ void pre_setup_1() {
 
 | File | Purpose |
 |---|---|
-| `std/room/room.c` | Base room class |
-| `std/room/exits.c` | Exit management (`set_exits`, `add_exit`, pre/post functions) |
-| `std/room/items.c` | Examinable details (`set_items`, `add_item`) |
-| `std/room/door.c` | Door state management |
-| `std/room/terrain.c` | Terrain types |
-| `std/room/zone.c` | Zone assignment |
-| `std/room/light.c` | Light levels |
-| `std/classes/door.c` | `class Door` definition |
-| `std/zones/zone.c` | Zone daemon |
+| `std/room/room.lpc` | Base room class |
+| `std/room/exits.lpc` | Exit management (`set_exits`, `add_exit`, pre/post functions) |
+| `std/room/items.lpc` | Examinable details (`set_items`, `add_item`) |
+| `std/room/door.lpc` | Door state management |
+| `std/room/terrain.lpc` | Terrain types |
+| `std/room/zone.lpc` | Zone assignment |
+| `std/room/light.lpc` | Light levels |
+| `std/classes/door.lpc` | `class Door` definition |
+| `std/zones/zone.lpc` | Zone daemon |
 
 ## Common Pitfalls
 

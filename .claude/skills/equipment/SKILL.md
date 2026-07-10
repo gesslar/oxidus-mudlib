@@ -11,15 +11,15 @@ You are helping work with the Oxidus equipment system. Follow the `lpc-coding-st
 
 ```
 STD_ITEM
-  ├── STD_WEAPON  (std/equip/weapon.c)     — weapons with damage
-  └── STD_EQUIP   (std/equip/equip.c)      — base wearable
-        └── STD_CLOTHING (std/equip/clothing.c) — cosmetic wear
-              └── STD_ARMOUR (std/equip/armour.c) — defensive gear
+  ├── STD_WEAPON  (std/equip/weapon.lpc)     — weapons with damage
+  └── STD_EQUIP   (std/equip/equip.lpc)      — base wearable
+        └── STD_CLOTHING (std/equip/clothing.lpc) — cosmetic wear
+              └── STD_ARMOUR (std/equip/armour.lpc) — defensive gear
 ```
 
-Equipment slots live on the body (`std/living/body.c`), and equip/unequip dispatch happens in `std/living/equipment.c`.
+Equipment slots live on the body (`std/living/body.lpc`), and equip/unequip dispatch happens in `std/living/equipment.lpc`.
 
-## Body Slots — `std/living/body.c`
+## Body Slots — `std/living/body.lpc`
 
 **Wearable slots:**
 ```lpc
@@ -35,7 +35,7 @@ Query with `query_body_slots()` and `query_weapon_slots()`.
 
 Living bodies call `set_ignore_mass(1)` in `mudlib_setup()`.
 
-## Weapons — `std/equip/weapon.c`
+## Weapons — `std/equip/weapon.lpc`
 
 Inherits `STD_ITEM`.
 
@@ -79,7 +79,7 @@ Inherits `STD_ITEM`.
 
 **Multi-handed weapons** automatically occupy consecutive weapon slots. A 2-handed weapon fills both "right hand" and "left hand".
 
-## Wearables — `std/equip/equip.c`
+## Wearables — `std/equip/equip.lpc`
 
 Base class for all worn items. Inherits `STD_ITEM`.
 
@@ -102,14 +102,14 @@ Base class for all worn items. Inherits `STD_ITEM`.
 | `unequip` | `varargs int unequip(object tp, int silent)` | Remove from wearer |
 | `equipped` | `int equipped()` | Check if currently equipped |
 
-## Clothing — `std/equip/clothing.c`
+## Clothing — `std/equip/clothing.lpc`
 
 Inherits `STD_EQUIP`. Minimal addition:
 
 - `set_id()` auto-adds `"clothing"` identifier
 - `int is_clothing()` — returns 1
 
-## Armour — `std/equip/armour.c`
+## Armour — `std/equip/armour.lpc`
 
 Inherits `STD_CLOTHING`. Adds defensive properties.
 
@@ -135,7 +135,7 @@ Inherits `STD_CLOTHING`. Adds defensive properties.
 
 When armour is equipped or unequipped, it calls `tp->adjust_protection()` to recalculate the living's total defenses.
 
-## Equipment Manager — `std/living/equipment.c`
+## Equipment Manager — `std/living/equipment.lpc`
 
 On the living side, manages slot-to-object mappings.
 
@@ -152,7 +152,7 @@ On the living side, manages slot-to-object mappings.
 
 **Dispatch logic**: `equip()` checks `has("is_weapon")`, `has("is_armour")`, `has("is_clothing")` to route to `equip_weapon()` or `equip_wearable()`.
 
-## Combat Integration — `std/living/combat.c`
+## Combat Integration — `std/living/combat.lpc`
 
 ### adjust_protection()
 

@@ -45,7 +45,7 @@ Colour codes using the `{{hex}}` syntax can be used in help files (see the colou
 
 ### How Help Search Works
 
-The help command (`cmds/std/help.c`) searches in this order:
+The help command (`cmds/std/help.lpc`) searches in this order:
 
 1. **Command path** — checks if `<verb>.c` exists in the player's PATH and has `query_help()`
 2. **Help directories** — searches `HELP_PATH` (`doc/general/`, `doc/game/`) for a matching file
@@ -102,7 +102,7 @@ Command-based help takes priority over file-based help (the command path is sear
 
 ## Autodoc System
 
-The autodoc daemon (`adm/daemons/autodoc.c`) parses JSDoc-style comments from LPC source files and generates documentation automatically.
+The autodoc daemon (`adm/daemons/autodoc.lpc`) parses JSDoc-style comments from LPC source files and generates documentation automatically.
 
 Supported tags: `@description`, `@def`, `@param`, `@returns`, `@example`
 
@@ -144,8 +144,8 @@ The virtual object system uses compile servers that intercept file loads
 and generate objects from data files (e.g., .lpml files).
 
 Key files:
-  std/virtual/server.c     - Base virtual compile server
-  adm/daemons/virtual.c    - Virtual object daemon
+  std/virtual/server.lpc     - Base virtual compile server
+  adm/daemons/virtual.lpc    - Virtual object daemon
 
 See also: getting_started
 ```
