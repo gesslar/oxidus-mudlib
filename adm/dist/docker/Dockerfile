@@ -45,7 +45,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libicu-dev \
       default-libmysqlclient-dev \
       pkg-config \
-      libffi-dev
+      libffi-dev \
  && rm -rf /var/lib/apt/lists/*
 
 # Pristine clone of the mudlib.
