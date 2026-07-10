@@ -10,25 +10,25 @@ You are helping work with the Oxidus combat system. Follow the `lpc-coding-style
 ## Architecture Overview
 
 ```
-body.c
-  └── combat.c          — attack loop, threat, hit chance, AC, defense
-        └── damage.c     — deliver/receive damage formulas
+body.lpc
+  └── combat.lpc          — attack loop, threat, hit chance, AC, defense
+        └── damage.lpc     — deliver/receive damage formulas
 
-vitals.c                 — HP/SP/MP, regen, condition strings
-advancement.c            — per-living XP/level state
-npc.c                    — NPC heartbeat, death detection, setLevel override
-proc.c (module)          — weapon proc system
-combat_memory.c (module) — NPC "remember and attack on sight"
+vitals.lpc                 — HP/SP/MP, regen, condition strings
+advancement.lpc            — per-living XP/level state
+npc.lpc                    — NPC heartbeat, death detection, setLevel override
+proc.lpc (module)          — weapon proc system
+combat_memory.lpc (module) — NPC "remember and attack on sight"
 
-advance.c (daemon)       — TNL formula, killXp, earnXp, advance
-death.c (daemon)         — signal listener for SIG_PLAYER_DIED/REVIVED
+advance.lpc (daemon)       — TNL formula, killXp, earnXp, advance
+death.lpc (daemon)         — signal listener for SIG_PLAYER_DIED/REVIVED
 ```
 
 ### Inheritance Chain
 
 ```
-body.c → combat.c → damage.c
-npc.c  → body.c (STD_BODY)
+body.lpc → combat.lpc → damage.lpc
+npc.lpc  → body.lpc (STD_BODY)
 ```
 
 ## Combat Round Loop
@@ -199,7 +199,7 @@ Used when the NPC has no wielded weapon object:
 
 `query_weapon_info(weapon)` transparently handles both real weapon objects and NPC defaults, returning `([ "name", "type", "skill", "base" ])`.
 
-## Weapon Proc System — `std/modules/proc.c`
+## Weapon Proc System — `std/modules/proc.lpc`
 
 Weapons inherit this module to add special effects on hit.
 
@@ -233,7 +233,7 @@ if(weapon && weapon->is_weapon())
         weapon->proc(proc, this_object(), enemy);
 ```
 
-## Vitals — `std/living/vitals.c`
+## Vitals — `std/living/vitals.lpc`
 
 ### Variables
 
@@ -274,7 +274,7 @@ return max_hp + query_effective_boon("vital", "max_hp");
 
 **MP:** "exhausted" (5) → "sluggish" (15.5) → ... → "full of stamina" (100)
 
-## Death Sequence — `body.c::die()`
+## Death Sequence — `body.lpc::die()`
 
 Death is detected in the NPC heartbeat:
 
@@ -302,7 +302,7 @@ if(!is_dead() && query_hp() <= 0.0) {
 13. **NPC path:** `ADVANCE_D->killXp(killed_by(), self)` — award XP to killer
 14. `remove()` — destroy this object
 
-## XP and Advancement — `adm/daemons/advance.c`
+## XP and Advancement — `adm/daemons/advance.lpc`
 
 ### TNL Formula
 
@@ -355,7 +355,7 @@ If `PLAYER_AUTOLEVEL` is true (default), `advance()` is called immediately after
 | `HEARTBEATS_TO_REGEN` | `5` | regen interval |
 | `DEFAULT_HEART_RATE` | `10` | NPC heartbeat |
 
-## NPC Combat Behavior — `std/living/npc.c`
+## NPC Combat Behavior — `std/living/npc.lpc`
 
 ### Heartbeat
 
@@ -391,7 +391,7 @@ void attack_on_sight(object target) {
 }
 ```
 
-Memory is populated from `combat.c::start_attack()`:
+Memory is populated from `combat.lpc::start_attack()`:
 
 ```lpc
 if(!userp())
@@ -438,10 +438,10 @@ Actual interval per round = `_attack_speed + random_float(1.5)` seconds.
 
 ## Gotchas
 
-1. **Death is detected in heartbeat, not in `receive_damage`**. The `dead` flag is set in `npc.c::heart_beat()` when `query_hp() <= 0.0`. There can be a brief window between HP hitting zero and `die()` firing.
+1. **Death is detected in heartbeat, not in `receive_damage`**. The `dead` flag is set in `npc.lpc::heart_beat()` when `query_hp() <= 0.0`. There can be a brief window between HP hitting zero and `die()` firing.
 2. **No regen during combat.** `heal_tick()` returns immediately if `in_combat()`.
 3. **NPCs stop ticking in empty rooms.** No heartbeat = no regen, no boon processing, no AI. Developers expecting continuous background behavior need to understand this.
 4. **`query_skill()` vs `query_skill_level()`**: For NPCs, `query_skill()` returns `queryLevel() * 3.0` (shortcut), but `query_skill_level()` reads stored values. Combat formulas use `query_skill_level()`.
-5. **`setLevel()` on NPCs wipes skills**: `npc.c::setLevel()` calls `adjust_skills_by_npc_level()` which resets all stored skill levels to near-zero.
+5. **`setLevel()` on NPCs wipes skills**: `npc.lpc::setLevel()` calls `adjust_skills_by_npc_level()` which resets all stored skill levels to near-zero.
 6. **Proc `_proc_chance` field is maintained but not rolled against** in `can_proc()` — the actual selection uses per-proc cooldowns and `element_of_weighted`.
 7. **Threat is accumulated damage**, not an abstract aggro value. `highest_threat()` targets whoever has dealt the most damage to this living.

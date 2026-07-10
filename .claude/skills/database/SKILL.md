@@ -11,7 +11,7 @@ You are helping work with the Oxidus SQLite3 database system. Follow the `lpc-co
 
 ```
 FluffOS db package (db_connect/db_exec/db_fetch/db_close efuns)
-  └── DB_D — /adm/daemons/db.c
+  └── DB_D — /adm/daemons/db.lpc
         ├── REST API: rest(method, url, data, callback)
         ├── Sync API: query(db, q, callback)
         └── Async API: lazyQuery(db, q, callback)
@@ -20,7 +20,7 @@ FluffOS db package (db_connect/db_exec/db_fetch/db_close efuns)
 - One `DB_D` daemon manages **all** databases
 - Each database is a single SQLite3 file under `DB_PATH`
 - Tables are declared via `.tbl` companion files and auto-created at boot
-- `valid_database()` in `/adm/obj/master/valid.c` always returns 1 — DB security is by mudlib convention, not driver enforcement
+- `valid_database()` in `/adm/obj/master/valid.lpc` always returns 1 — DB security is by mudlib convention, not driver enforcement
 - DB_D inherits `STD_DAEMON` and `EXT_HTTP` (the latter for `parse_query()`, used to decode REST URL query strings)
 
 ## Configuration Keys
@@ -88,7 +88,7 @@ URLs follow `db://<database>/<table>?col=val&col=val&_special=val`.
 | `_limit` | Integer LIMIT clause |
 | `_offset` | Integer OFFSET clause |
 
-### Examples (from `adm/daemons/bank.c`)
+### Examples (from `adm/daemons/bank.lpc`)
 
 ```lpc
 // Insert
@@ -145,7 +145,7 @@ Runs an arbitrary SQL statement. `q` is auto-suffixed with `;` if missing. Retur
 
 The contract is intentionally narrow: **callers only ask "did I get rows?"** — `pointerp(result)` says yes, anything else says no. There is no string-error return; failures are DB_D's responsibility to log, not the caller's to surface.
 
-The callback form uses `assemble_call_back()` from `simul_efun/function.c`:
+The callback form uses `assemble_call_back()` from `simul_efun/function.lpc`:
 
 ```lpc
 DB_D->query("bank", "SELECT * FROM balance", assemble_call_back(
@@ -245,7 +245,7 @@ void setup() {
 }
 ```
 
-Put this in the consuming daemon's `setup()` (e.g. `bank.c`). `IF NOT EXISTS` makes it idempotent.
+Put this in the consuming daemon's `setup()` (e.g. `bank.lpc`). `IF NOT EXISTS` makes it idempotent.
 
 ## Calling Patterns
 
@@ -273,7 +273,7 @@ void process_activity(mapping *rows, object who) {
 
 ### Building a daemon that owns a database
 
-Example skeleton — see `adm/daemons/bank.c` for the canonical reference:
+Example skeleton — see `adm/daemons/bank.lpc` for the canonical reference:
 
 ```lpc
 inherit STD_DAEMON;

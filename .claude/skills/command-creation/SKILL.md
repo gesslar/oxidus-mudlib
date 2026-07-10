@@ -10,7 +10,7 @@ You are helping create or modify commands for Oxidus. Commands are LPC files tha
 ## How Commands Work
 
 1. Player types a verb (e.g., `eat cheese`)
-2. `command_hook()` in `std/object/command.c` processes the input
+2. `command_hook()` in `std/object/command.lpc` processes the input
 3. First checks `evaluate_command()` on inventory, environment, and room contents (for `add_command()`-based commands)
 4. Then checks soul emotes and channels
 5. Then searches the player's PATH directories for `<verb>.c`
@@ -37,13 +37,13 @@ You are helping create or modify commands for Oxidus. Commands are LPC files tha
 
 ```
 STD_OBJECT
-  └── STD_CMD (std/cmd/cmd.c) — base command class
-        └── STD_ACT (std/cmd/act.c) — action commands, includes EXT_CHECKS
-              └── STD_ABILITY (std/cmd/ability.c) — abilities with cost/cooldown
-                    └── STD_SPELL (std/cmd/spell.c) — spell commands
+  └── STD_CMD (std/cmd/cmd.lpc) — base command class
+        └── STD_ACT (std/cmd/act.lpc) — action commands, includes EXT_CHECKS
+              └── STD_ABILITY (std/cmd/ability.lpc) — abilities with cost/cooldown
+                    └── STD_SPELL (std/cmd/spell.lpc) — spell commands
 ```
 
-Also: `STD_REPORTER` (`std/cmd/reporter.c`) — for bug/idea/typo reports, inherits `STD_CMD`.
+Also: `STD_REPORTER` (`std/cmd/reporter.lpc`) — for bug/idea/typo reports, inherits `STD_CMD`.
 
 ### When to use which
 
@@ -236,7 +236,7 @@ These are checked before PATH-based commands.
 ## Complete Example: Simple Action Command
 
 ```lpc
-// /cmds/action/eat.c
+// /cmds/action/eat.lpc
 
 inherit STD_ACT;
 
@@ -264,7 +264,7 @@ mixed main(object tp, string str) {
 ## Complete Example: Multi-Option Command with Help
 
 ```lpc
-// /cmds/action/drop.c
+// /cmds/action/drop.lpc
 
 inherit STD_ACT;
 
@@ -320,7 +320,7 @@ mixed main(object tp, string arg) {
 ## Complete Example: Wizard Command with _error/_ok
 
 ```lpc
-// /cmds/wiz/force.c
+// /cmds/wiz/force.lpc
 
 inherit STD_CMD;
 

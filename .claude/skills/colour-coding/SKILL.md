@@ -8,11 +8,11 @@ description: Oxidus true colour system reference. Consult when writing or modify
 Oxidus uses a true colour system based on hexadecimal RGB values enclosed in double braces. It supports full 24-bit colour as well as the 256-colour ANSI palette.
 
 **Core files:**
-- `adm/daemons/colour.c` — colour daemon (COLOUR_D)
-- `adm/simul_efun/colour.c` — simul_efun utilities (e.g., `gradient_hex()`)
+- `adm/daemons/colour.lpc` — colour daemon (COLOUR_D)
+- `adm/simul_efun/colour.lpc` — simul_efun utilities (e.g., `gradient_hex()`)
 - `include/colour.h` — regex patterns and system colour constants
-- `cmds/std/colour.c` — player colour command
-- `adm/simul_efun/string.c` — `colourp()`, `no_ansi()`
+- `cmds/std/colour.lpc` — player colour command
+- `adm/simul_efun/string.lpc` — `colourp()`, `no_ansi()`
 
 ## Basic Syntax
 
@@ -91,9 +91,9 @@ Key public functions on `COLOUR_D`:
 
 | Function | Location | Purpose |
 |---|---|---|
-| `gradient_hex(hex, step)` | `adm/simul_efun/colour.c` | Create colour gradients |
-| `colourp(str)` | `adm/simul_efun/string.c` | Check if string contains colour codes |
-| `no_ansi(str)` | `adm/simul_efun/string.c` | Strip all colour codes (uses `substituteColour(str, "plain")`) |
+| `gradient_hex(hex, step)` | `adm/simul_efun/colour.lpc` | Create colour gradients |
+| `colourp(str)` | `adm/simul_efun/string.lpc` | Check if string contains colour codes |
+| `no_ansi(str)` | `adm/simul_efun/string.lpc` | Strip all colour codes (uses `substituteColour(str, "plain")`) |
 
 ## Accessibility
 

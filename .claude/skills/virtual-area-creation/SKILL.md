@@ -14,7 +14,7 @@ Virtual areas are used for large open environments: forests, tunnels, wastes, ca
 1. Player moves to `/d/forest/5,10,0`
 2. No file exists — the driver calls `master->compile_object()`
 3. The master delegates to `VIRTUAL_D->compile_object(file)`
-4. VIRTUAL_D routes to the zone's `zone.c` (inherits `STD_VIRTUAL_SERVER`)
+4. VIRTUAL_D routes to the zone's `zone.lpc` (inherits `STD_VIRTUAL_SERVER`)
 5. The zone's `generate_object()` validates coordinates against a map, then creates a room: `new(template, "5,10,0")`
 6. The room's normal `setup()` runs, then `virtual_setup(args)` runs with the coordinate string
 7. A description daemon configures exits, short/long descriptions based on coordinates
@@ -22,24 +22,24 @@ Virtual areas are used for large open environments: forests, tunnels, wastes, ca
 ## Architecture
 
 ```
-VIRTUAL_D (adm/daemons/virtual.c)
+VIRTUAL_D (adm/daemons/virtual.lpc)
     │
     ▼
-zone.c (STD_VIRTUAL_SERVER)     <- validates coords, creates rooms
+zone.lpc (STD_VIRTUAL_SERVER)     <- validates coords, creates rooms
     │
-    ├── room_base.c (STD_ROOM)  <- room template, calls daemon in virtual_setup
+    ├── room_base.lpc (STD_ROOM)  <- room template, calls daemon in virtual_setup
     │
-    └── area_daemon.c (STD_VIRTUAL_MAP)  <- map data, exits, descriptions
+    └── area_daemon.lpc (STD_VIRTUAL_MAP)  <- map data, exits, descriptions
 ```
 
 ## Core Files
 
 | File | Purpose |
 |---|---|
-| `adm/daemons/virtual.c` | Central router for all virtual object compilation |
-| `std/daemon/virtual_server.c` | Base zone class (`STD_VIRTUAL_SERVER`). Handles subzone delegation |
-| `std/daemon/virtual_map.c` | Map management daemon (`STD_VIRTUAL_MAP`). File-based or procedural maps |
-| `std/object/setup.c` | Defines `virtual_setup_chain()` |
+| `adm/daemons/virtual.lpc` | Central router for all virtual object compilation |
+| `std/daemon/virtual_server.lpc` | Base zone class (`STD_VIRTUAL_SERVER`). Handles subzone delegation |
+| `std/daemon/virtual_map.lpc` | Map management daemon (`STD_VIRTUAL_MAP`). File-based or procedural maps |
+| `std/object/setup.lpc` | Defines `virtual_setup_chain()` |
 
 ## Coordinate System
 
@@ -87,7 +87,7 @@ O-O-O-O
 
 ### Step 2: Create the Zone Daemon
 
-`d/{area}/zone.c`:
+`d/{area}/zone.lpc`:
 
 ```lpc
 inherit STD_VIRTUAL_SERVER;
@@ -133,7 +133,7 @@ object generate_object(string file) {
 
 ### Step 3: Create the Room Template
 
-`d/{area}/area_base.c`:
+`d/{area}/area_base.lpc`:
 
 ```lpc
 inherit STD_ROOM;
@@ -183,7 +183,7 @@ void repopulate() {
 
 ### Step 4: Create the Description Daemon
 
-`d/{area}/area_daemon.c`:
+`d/{area}/area_daemon.lpc`:
 
 ```lpc
 inherit STD_VIRTUAL_MAP;
@@ -273,7 +273,7 @@ Supports 8 cardinal directions. Exit symbols: `|` (N/S), `-` (E/W), `/` (NE/SW),
 | `generate_object(path)` | **Yes** | Validate coords, return `new(template, coords)` |
 | `compile_object(path)` | No | Handles subzone delegation, then calls `generate_object()` |
 
-Subzone delegation is automatic — if `d/{area}/{subzone}/zone.c` exists, requests for `subzone/x,y,z` are forwarded to it.
+Subzone delegation is automatic — if `d/{area}/{subzone}/zone.lpc` exists, requests for `subzone/x,y,z` are forwarded to it.
 
 ## Procedural Map Generation
 
@@ -322,5 +322,5 @@ These are called from the room template's `virtual_setup()`.
 - **Coordinate order**: `get_virtual_coordinates()` returns `({ z, y, x })`, not `({ x, y, z })`. Always reorder when passing to daemon methods.
 - **Map parsing**: ASCII maps use double-spacing — rooms at even positions (0,2,4...), connection symbols at odd positions (1,3,5...). Skip every other line and character.
 - **virtual_setup guard**: The coordinate string comes as `args[0]` in `virtual_setup()`.
-- **Subzone delegation**: Zone daemons automatically delegate to `{subzone}/zone.c` if it exists. No registration needed.
+- **Subzone delegation**: Zone daemons automatically delegate to `{subzone}/zone.lpc` if it exists. No registration needed.
 - **Mob spawning**: Use `add_reset()` with a repopulate function. Clean up old mobs before spawning new ones.

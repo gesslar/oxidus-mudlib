@@ -10,29 +10,29 @@ You are helping create and modify NPCs/monsters for Oxidus. Follow the `lpc-codi
 ## Architecture Overview
 
 ```
-STD_NPC (std/living/npc.c)               — NPC base: heartbeat, setLevel, death detect
+STD_NPC (std/living/npc.lpc)               — NPC base: heartbeat, setLevel, death detect
   └── STD_BODY                            — inherits skills, combat, vitals, wealth, etc.
 
-STD_MONSTER (std/mobs/monster.c)          — data-driven virtual_setup for LPML mobs
+STD_MONSTER (std/mobs/monster.lpc)          — data-driven virtual_setup for LPML mobs
   └── STD_NPC
 
-race.c (std/living/race.c)               — race module loader
-race/race.c (std/modules/race/race.c)   — body parts, equipment slots, regen rates
-race/human.c, race/ghost.c, etc.         — specific race implementations
+race.lpc (std/living/race.lpc)               — race module loader
+race/race.lpc (std/modules/race/race.lpc)   — body parts, equipment slots, regen rates
+race/human.lpc, race/ghost.lpc, etc.         — specific race implementations
 
-decision.c (std/living/decision.c)       — utility-AI for NPC behavior
-combat_memory.c (mob module)             — remember and attack on sight
+decision.lpc (std/living/decision.lpc)       — utility-AI for NPC behavior
+combat_memory.lpc (mob module)             — remember and attack on sight
 
-EXT_LOOT (std/ext/loot.c)                — loot/coin table definitions
-LOOT_D (adm/daemons/loot.c)              — loot drop resolution on death
+EXT_LOOT (std/ext/loot.lpc)                — loot/coin table definitions
+LOOT_D (adm/daemons/loot.lpc)              — loot drop resolution on death
 ```
 
 ### Inheritance Chain
 
 ```
-STD_MONSTER (std/mobs/monster.c)
-  └── STD_NPC (std/living/npc.c)
-        └── STD_BODY (std/living/body.c)
+STD_MONSTER (std/mobs/monster.lpc)
+  └── STD_NPC (std/living/npc.lpc)
+        └── STD_BODY (std/living/body.lpc)
               ├── STD_CONTAINER, STD_ITEM
               ├── advancement, attributes, boon, combat, damage
               ├── equipment, module, race, skills, vitals, wealth
@@ -95,7 +95,7 @@ Then reference as `/d/somewhere/town_guard.mob` — the virtual system handles t
 ```
 Request: /d/forest/wild_boar.mob
   → VIRTUAL_D detects .mob extension
-  → mob.c virtual module reads /d/mobs/wild_boar.lpml
+  → mob.lpc virtual module reads /d/mobs/wild_boar.lpml
   → lpml_decode() → mapping
   → new("/std/mobs/<type>.c", data)
   → virtual_setup(data) called on new object
@@ -103,7 +103,7 @@ Request: /d/forest/wild_boar.mob
 
 The `type` field maps to `/std/mobs/<type>.c` (spaces become underscores).
 
-## NPC Base — `std/living/npc.c`
+## NPC Base — `std/living/npc.lpc`
 
 ### Setup
 
@@ -175,7 +175,7 @@ Full sequence each tick: `clean_up_enemies()` → `cooldown()` → net-dead chec
 | `is_npc()` | Returns 1 |
 | `player_check()` | Returns 1 if players are in environment |
 
-## Data-Driven Monsters — `std/mobs/monster.c`
+## Data-Driven Monsters — `std/mobs/monster.lpc`
 
 ### `virtual_setup(mixed args...)`
 
@@ -214,7 +214,7 @@ The `[min, max]` array calculates: `random(max - min) + min`. So `[1, 3]` gives 
 Subclass `STD_MONSTER` for specialized mob types:
 
 ```lpc
-// std/mobs/undead.c
+// std/mobs/undead.lpc
 inherit STD_MONSTER;
 
 void monster_setup(mapping data) {
@@ -251,7 +251,7 @@ coins: {
 }
 ```
 
-## Race System — `std/living/race.c`
+## Race System — `std/living/race.lpc`
 
 ### `set_race(string race)`
 
@@ -259,7 +259,7 @@ coins: {
 2. If file exists: loads via `add_module("race/" + race)`. The module's `start_module()` sets up body parts.
 3. **If file doesn't exist: silently stores just the string.** No body parts, no equipment slots, no regen rates. No error is raised.
 
-### Race Module Base — `std/modules/race/race.c`
+### Race Module Base — `std/modules/race/race.lpc`
 
 All race modules inherit this.
 
@@ -304,14 +304,14 @@ All race modules inherit this.
 
 ### Existing Race Implementations
 
-**Human** (`race/human.c`): Calls `use_default_body_parts()`. Regen: `([ "hp":2.0, "sp":2.0, "mp":4.0 ])`.
+**Human** (`race/human.lpc`): Calls `use_default_body_parts()`. Regen: `([ "hp":2.0, "sp":2.0, "mp":4.0 ])`.
 
-**Ghost** (`race/ghost.c`): Calls `wipe_body_parts()`. No body parts at all. No regen (all 0.0).
+**Ghost** (`race/ghost.lpc`): Calls `wipe_body_parts()`. No body parts at all. No regen (all 0.0).
 
 ### Creating a New Race
 
 ```lpc
-// std/modules/race/orc.c
+// std/modules/race/orc.lpc
 inherit M_MOBILE "race/race";
 
 protected void set_up_body_parts(object ob, mixed args...) {
@@ -322,9 +322,9 @@ protected void set_up_body_parts(object ob, mixed args...) {
 }
 ```
 
-## Loot System — `std/ext/loot.c`
+## Loot System — `std/ext/loot.lpc`
 
-Mixed into `STD_NPC` via `inherit EXT_LOOT` in `npc.c`.
+Mixed into `STD_NPC` via `inherit EXT_LOOT` in `npc.lpc`.
 
 ### Loot Table
 
@@ -368,7 +368,7 @@ item->set_value(value)
 
 Level 10 NPC: base 150, range ~131-169 copper.
 
-## Utility-AI Decision System — `std/living/decision.c`
+## Utility-AI Decision System — `std/living/decision.lpc`
 
 Adapted from the npm `utility-ai` package. Used for NPC behavioral AI.
 
@@ -419,9 +419,9 @@ if(valid_function(result["func"]))
 
 **Note:** `add_func` is keyed by description string and looked up separately from the Decision — the description must match exactly.
 
-## Combat Memory Module — `std/modules/mob/combat_memory.c`
+## Combat Memory Module — `std/modules/mob/combat_memory.lpc`
 
-Automatically added to all NPCs in `npc.c::mudlib_setup()`.
+Automatically added to all NPCs in `npc.lpc::mudlib_setup()`.
 
 ### Behavior
 
@@ -440,7 +440,7 @@ void attack_on_sight(object target) {
 }
 ```
 
-Memory is populated from `combat.c::start_attack()` for NPC combatants. Resets when the NPC is reloaded/recloned.
+Memory is populated from `combat.lpc::start_attack()` for NPC combatants. Resets when the NPC is reloaded/recloned.
 
 ## NPC Skill Behavior
 

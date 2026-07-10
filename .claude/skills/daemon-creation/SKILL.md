@@ -10,9 +10,9 @@ You are helping create or modify daemons for Oxidus. Daemons are singleton LPC o
 ## Architecture Overview
 
 ```
-STD_OBJECT (std/object/object.c)
-  └── STD_DAEMON (std/daemon/daemon.c)
-        └── Your daemon (e.g., adm/daemons/my_daemon.c)
+STD_OBJECT (std/object/object.lpc)
+  └── STD_DAEMON (std/daemon/daemon.lpc)
+        └── Your daemon (e.g., adm/daemons/my_daemon.lpc)
 ```
 
 - **`STD_DAEMON`** (`#define STD_DAEMON DIR_STD "daemon/daemon"`) — inherits `STD_OBJECT` + `EXT_PERSIST_DATA`
@@ -304,7 +304,7 @@ See the `signal-system` skill for the full signal reference.
 
 ```c
 /**
- * @file /adm/daemons/tracker.c
+ * @file /adm/daemons/tracker.lpc
  * @description Tracks player achievements
  */
 

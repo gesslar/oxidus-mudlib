@@ -278,7 +278,7 @@ int pointerp(mixed arg);
 
 /**
  * @param {mixed} o
- * @returns {o is "/std/living.c"}
+ * @returns {o is "/std/living.lpc"}
  */
 int is_living(mixed o);
 ```
@@ -296,7 +296,7 @@ return value for human readers:
  * Returns the original object if it is a user, otherwise 0.
  *
  * @param {object} ob - Some object.
- * @returns {ob is "/std/user.c"} The original object if it is a
+ * @returns {ob is "/std/user.lpc"} The original object if it is a
  *                                user, or 0.
  */
 object get_user(object ob) {
@@ -308,7 +308,7 @@ Preprocessor defines are resolved in type predicates, so you can use
 macros as the target type:
 
 ```c
-#define STD_USER "/std/user.c"
+#define STD_USER "/std/user.lpc"
 
 /**
  * @param {object} ob - Some object.
@@ -381,7 +381,7 @@ mapping resistances = ([ "fire": 10, "cold": 5, "physical": 3 ]);
 You can annotate an expression inline to assert its type.
 
 ```c
-object p = /** @type {"/std/player.c"} */(get_player());
+object p = /** @type {"/std/player.lpc"} */(get_player());
 ```
 
 #### Inline Parameter Type Narrowing
@@ -445,7 +445,7 @@ structure is expected to have, along with their types.
  * @typedef PlayerData
  * @property {string} name - The player's display name.
  * @property {int} level - Current experience level.
- * @property {"/std/guild.c"} guild - The player's guild object.
+ * @property {"/std/guild.lpc"} guild - The player's guild object.
  * @property {int} hp - Current hit points.
  * @property {int} max_hp - Maximum hit points.
  */
@@ -471,7 +471,7 @@ server, giving you full IntelliSense when referencing those types:
 ```c
 /**
  * @typedef PartyMember
- * @property {"/std/player.c"} player - The player object.
+ * @property {"/std/player.lpc"} player - The player object.
  * @property {string} role - Role in the party (tank, healer, etc.).
  * @property {int} joined - Timestamp when they joined.
  */
@@ -591,11 +591,11 @@ int get_exp(string player_name) {
 Provides file-level documentation. Placed at the top of a file to
 describe its purpose.
 
-**Syntax:** `@file path/to/file.c`
+**Syntax:** `@file path/to/file.lpc`
 
 ```c
 /**
- * @file /d/area/monsters/dragon.c
+ * @file /d/area/monsters/dragon.lpc
  *
  * Implements the elder dragon NPC with fire-breath attacks
  * and treasure hoarding behaviour.
@@ -611,7 +611,7 @@ Creates a reference to another function, file, or resource.
 ```c
 /**
  * @see check_crafting_skills
- * @see /std/container.c
+ * @see /std/container.lpc
  */
 ```
 
@@ -740,7 +740,7 @@ than a raw file path:
 If no macro exists, fall back to a full path:
 
 ```c
-{"/path/to/object.c"}
+{"/path/to/object.lpc"}
 ```
 
 **Choosing the right macro:** Pick the most specific macro whose interface
@@ -788,7 +788,7 @@ Typed arrays work with any type — primitives, named objects, classes,
 and other composites:
 
 ```c
-{("/std/player.c")*}      // array of named objects
+{("/std/player.lpc")*}      // array of named objects
 {([ string: int ])*}      // array of mappings
 {class ShopItem*}          // array of class instances
 ```
@@ -891,8 +891,8 @@ Complex data structures can use nested type annotations:
  *
  * This function handles weight limits and ownership restrictions.
  *
- * @param {"/std/container.c"} source - The source container
- * @param {"/std/container.c"} target - The target container
+ * @param {"/std/container.lpc"} source - The source container
+ * @param {"/std/container.lpc"} target - The target container
  * @param {string} itemId - The identifier of the item to transfer
  * @param {int} [count=1] - The number of items to transfer
  * @returns {int} The number of items successfully transferred
@@ -986,7 +986,7 @@ File headers should use this format:
 
 ```c
 /**
- * @file /std/living/boon.c
+ * @file /std/living/boon.lpc
  *
  * Buffs/debuffs and other boons for living objects.
  *

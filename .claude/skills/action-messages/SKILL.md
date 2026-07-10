@@ -8,10 +8,10 @@ description: Understand and write action messages with automatic verb conjugatio
 The action message system (derived from Lima MUD) composes messages that automatically adjust grammar based on who is reading them. A single template like `"$N $vswing $p sword."` produces "You swing your sword." for the actor and "Bob swings his sword." for everyone else.
 
 **Core files:**
-- `adm/daemons/action.c` — message composition engine (`ACTION_D`)
-- `std/ext/action.c` — module wrapper inherited by living objects
-- `adm/simul_efun/english.c` — pronoun functions (`subjective`, `objective`, `possessive`, `reflexive`)
-- `adm/simul_efun/grammar.c` — pluralisation helpers
+- `adm/daemons/action.lpc` — message composition engine (`ACTION_D`)
+- `std/ext/action.lpc` — module wrapper inherited by living objects
+- `adm/simul_efun/english.lpc` — pronoun functions (`subjective`, `objective`, `possessive`, `reflexive`)
+- `adm/simul_efun/grammar.lpc` — pluralisation helpers
 
 ## Action Functions
 

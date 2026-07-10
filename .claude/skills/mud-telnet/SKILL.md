@@ -14,7 +14,7 @@ character login flow, and common recipes.
 Use telnet access for:
 
 - Testing in-game functionality (commands, output, messages, etc.)
-- Reloading objects after code changes (`update /path/to/file.c`)
+- Reloading objects after code changes (`update /path/to/file.lpc`)
 - Running wizard/admin commands
 - Verifying colour code rendering
 
@@ -33,7 +33,7 @@ Do NOT use for:
 - **Login form**: `character@account` then password (see below)
 
 Oxidus login is **account-based with character selection**. Each account
-can own multiple characters. The login object (`/adm/obj/login.c`) accepts
+can own multiple characters. The login object (`/adm/obj/login.lpc`) accepts
 a combined `character@account` form at the account prompt, which selects
 that character directly and skips the character-select menu — this is the
 form to script, because it logs straight into the world with no menu step.
@@ -159,7 +159,7 @@ them if output is truncated.
 
 ```bash
 bash -lc '(sleep 0.5; printf "%s\n" "$OX_TELNET_USERNAME"; sleep 0.6; printf "%s\n" "$OX_TELNET_PASSWORD"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; \
-printf "claude updating /path/to/file.c\n"; sleep 0.4; printf "update %s\n" "/path/to/file.c"; sleep 1.5; \
+printf "claude updating /path/to/file.lpc\n"; sleep 0.4; printf "update %s\n" "/path/to/file.lpc"; sleep 1.5; \
 printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$OX_TELNET_HOST" "$OX_TELNET_PORT"'
 ```
 
@@ -175,7 +175,7 @@ printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$OX
 
 ```bash
 bash -lc '(sleep 0.5; printf "%s\n" "$OX_TELNET_USERNAME"; sleep 0.6; printf "%s\n" "$OX_TELNET_PASSWORD"; sleep 1.5; printf "colour off\n"; sleep 0.4; printf "set feedback off\n"; sleep 0.4; \
-printf "claude updating /path/to/file.c\n"; sleep 0.4; printf "update %s\n" "/path/to/file.c"; sleep 1.5; \
+printf "claude updating /path/to/file.lpc\n"; sleep 0.4; printf "update %s\n" "/path/to/file.lpc"; sleep 1.5; \
 printf "claude testing the change\n"; sleep 0.4; printf "%s\n" "COMMAND_THAT_USES_IT"; sleep 1.5; \
 printf "claude quitting\n"; sleep 0.3; printf "quit\n"; sleep 0.3) | telnet "$OX_TELNET_HOST" "$OX_TELNET_PORT"'
 ```

@@ -8,7 +8,7 @@ description: Understand and work with the boon/curse (buff/debuff) system in Oxi
 The boon/curse system provides buffs and debuffs for living objects in Oxidus. Boons increase values; curses decrease them. The net effect is calculated as `boon - curse` for any given class/type combination.
 
 **Core files:**
-- `std/living/boon.c` — boon/curse implementation
+- `std/living/boon.lpc` — boon/curse implementation
 - `std/living/include/boon.h` — header with function declarations
 
 ## Data Structure
@@ -95,9 +95,9 @@ int count = tp->remove_curse_by_name(
 
 | Class | Type Examples | Integrated In |
 |---|---|---|
-| `attribute` | `strength`, `dexterity`, `constitution`, `intelligence`, `wisdom`, `charisma` | `std/living/attributes.c` — `query_attribute()` adds `query_effective_boon("attribute", key)` |
-| `vital` | `max_hp`, `max_sp`, `max_mp` | `std/living/vitals.c` — `query_max_hp/sp/mp()` adds `query_effective_boon("vital", ...)` |
-| `skill` | Any skill name | `std/living/skills.c` — skill level queries add `query_effective_boon("skill", skill)` |
+| `attribute` | `strength`, `dexterity`, `constitution`, `intelligence`, `wisdom`, `charisma` | `std/living/attributes.lpc` — `query_attribute()` adds `query_effective_boon("attribute", key)` |
+| `vital` | `max_hp`, `max_sp`, `max_mp` | `std/living/vitals.lpc` — `query_max_hp/sp/mp()` adds `query_effective_boon("vital", ...)` |
+| `skill` | Any skill name | `std/living/skills.lpc` — skill level queries add `query_effective_boon("skill", skill)` |
 
 The class/type system is open-ended — any string can be used as a class or type. New classes take effect as soon as consuming code calls `query_effective_boon()` with that class.
 
@@ -114,6 +114,6 @@ The `boon` and `curse` mappings are `private nomask` but **not** `nosave`, so th
 
 ## Notes
 
-- Both players (`std/living/player.c`) and NPCs (`std/living/npc.c`) process boons on heartbeat
+- Both players (`std/living/player.lpc`) and NPCs (`std/living/npc.lpc`) process boons on heartbeat
 - Boons/curses can be removed early by tag (`remove_boon`/`remove_curse`) or by name (`remove_boon_by_name`/`remove_curse_by_name`)
 - There are no gear-based buffs, room buffs, or special category buffs — all effects go through `boon()` / `curse()`

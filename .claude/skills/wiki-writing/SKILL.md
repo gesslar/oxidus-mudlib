@@ -104,7 +104,7 @@ Also use standard identifiers: `c`, `json`, `json5`, `yaml`, `bash`, `js`, etc.
 
 Title/filename:
 ````
-```lpc title="adm/daemons/loot.c"
+```lpc title="adm/daemons/loot.lpc"
 // code here
 ```
 ````

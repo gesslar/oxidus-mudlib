@@ -10,16 +10,16 @@ You are helping work with the Oxidus skill and advancement systems. Follow the `
 ## Architecture Overview
 
 ```
-skills.c (std/living/skills.c)           — nested skill tree, use-based improvement
-advancement.c (std/living/advancement.c) — per-living XP/level state
-advance.c (adm/daemons/advance.c)        — TNL formula, kill_xp, earn_xp
-attributes.c (std/living/attributes.c)   — STR/DEX/CON/INT/WIS/CHA
-boon.c (std/living/boon.c)               — buff/debuff modifiers on skills and vitals
+skills.lpc (std/living/skills.lpc)           — nested skill tree, use-based improvement
+advancement.lpc (std/living/advancement.lpc) — per-living XP/level state
+advance.lpc (adm/daemons/advance.lpc)        — TNL formula, kill_xp, earn_xp
+attributes.lpc (std/living/attributes.lpc)   — STR/DEX/CON/INT/WIS/CHA
+boon.lpc (std/living/boon.lpc)               — buff/debuff modifiers on skills and vitals
 ```
 
 All of these are inherited by `STD_BODY` and apply to both players and NPCs.
 
-## Skill System — `std/living/skills.c`
+## Skill System — `std/living/skills.lpc`
 
 ### Storage Structure
 
@@ -168,7 +168,7 @@ Where `query_effective_boon("skill", "combat.melee.slashing")` = sum of boons mi
 
 ## XP and Advancement
 
-### Per-Living State — `std/living/advancement.c`
+### Per-Living State — `std/living/advancement.lpc`
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -193,7 +193,7 @@ Where `query_effective_boon("skill", "combat.melee.slashing")` = sum of boons mi
 | `set_xp` | `int (int amount)` | Sets `__xp` to `amount` via `adjust_xp(amount - __xp)` |
 | `on_advance` | `void (object tp, float l)` | Slot for `SIG_PLAYER_ADVANCED`. Tells the player they have advanced |
 
-### Advancement Daemon — `adm/daemons/advance.c`
+### Advancement Daemon — `adm/daemons/advance.lpc`
 
 Config constants:
 
@@ -245,13 +245,13 @@ else if(level_diff < 0) // underlevel
 xp = to_int(xp * factor);
 ```
 
-Called from `body.c::die()` for NPC deaths only. If `PLAYER_AUTOLEVEL` is true, `advance()` is called immediately after XP award.
+Called from `body.lpc::die()` for NPC deaths only. If `PLAYER_AUTOLEVEL` is true, `advance()` is called immediately after XP award.
 
 ### `earn_xp(object tp, int amount)`
 
 Calls `tp->adjust_xp(amount)`. If `PLAYER_AUTOLEVEL`, calls `advance(tp)`. The general-purpose XP award function.
 
-## Attributes — `std/living/attributes.c`
+## Attributes — `std/living/attributes.lpc`
 
 Default attributes (from config): `"strength"`, `"dexterity"`, `"constitution"`, `"intelligence"`, `"wisdom"`, `"charisma"`. All initialized to `5`.
 
@@ -282,7 +282,7 @@ Like skills, attributes support boon/curse modifiers via `query_effective_boon("
 
 NPCs interact with the skill system through the same code paths as players — no shortcuts, no special-case branching in `query_*` functions:
 
-1. **`npc.c::set_level()` calls `adjust_skills_by_npc_level()`**, which seeds every skill in the tree to `level * 3.0`. After this, `query_skill_level()` returns meaningful values (e.g. a level-5 NPC has skill 15 for every known skill) without any branching.
+1. **`npc.lpc::set_level()` calls `adjust_skills_by_npc_level()`**, which seeds every skill in the tree to `level * 3.0`. After this, `query_skill_level()` returns meaningful values (e.g. a level-5 NPC has skill 15 for every known skill) without any branching.
 2. **Combat formulas use `query_skill_level()`** — NPCs and players read through the same path; the storage is the truth.
 3. **Use-based improvement still fires** for NPCs (defenders train defense skill on hit attempts), but `set_level()` reseeding overwrites any accumulated progress, so improvements are transient.
 

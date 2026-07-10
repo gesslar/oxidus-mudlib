@@ -13,10 +13,10 @@ You are helping create or modify code that uses the signal (event notification) 
 Producer calls emit(SIG_*, args...)
        |
        v
-simul_efun emit()                      <- adm/simul_efun/signal.c
+simul_efun emit()                      <- adm/simul_efun/signal.lpc
        |  validates string type
        v
-SIGNAL_D->dispatch_signal(sig, args)   <- adm/daemons/signal.c
+SIGNAL_D->dispatch_signal(sig, args)   <- adm/daemons/signal.lpc
        |
        +- iterates slots[sig] mapping
        +- for each (object, function) pair:
@@ -31,8 +31,8 @@ All registered handlers receive the signal
 
 | File | Macro | Purpose |
 |---|---|---|
-| `adm/daemons/signal.c` | `SIGNAL_D` | Signal daemon — registration, dispatch, cleanup, persistence |
-| `adm/simul_efun/signal.c` | — | Public API: `slot()`, `emit()`, `unslot()`, `signal_d()` |
+| `adm/daemons/signal.lpc` | `SIGNAL_D` | Signal daemon — registration, dispatch, cleanup, persistence |
+| `adm/simul_efun/signal.lpc` | — | Public API: `slot()`, `emit()`, `unslot()`, `signal_d()` |
 | `include/signal.h` | `SIG_*` | All signal constants and status codes |
 | `include/daemons.h` | `SIGNAL_D` | Daemon path define |
 
@@ -103,7 +103,7 @@ object signal_d()
 
 ## Signal Daemon Internals (SIGNAL_D)
 
-`adm/daemons/signal.c` — inherits `STD_DAEMON`.
+`adm/daemons/signal.lpc` — inherits `STD_DAEMON`.
 
 ### Internal State
 
@@ -177,34 +177,34 @@ All defined in `include/signal.h`. String-based identifiers with category prefix
 
 | Constant | String Value | Emitted By | Arguments | When |
 |---|---|---|---|---|
-| `SIG_SYS_BOOT` | `"sys:boot"` | `adm/daemons/boot.c` | none | MUD startup complete |
-| `SIG_SYS_CRASH` | `"sys:crash"` | `adm/obj/master.c` | none | Crash handler triggered |
-| `SIG_SYS_SHUTTING_DOWN` | `"sys:shutting-down"` | `adm/daemons/shutdown.c` | (int seconds) | Shutdown countdown begins |
-| `SIG_SYS_SHUTDOWN` | `"sys:shutdown"` | `adm/simul_efun/override.c` | none | Immediate shutdown |
-| `SIG_SYS_SHUTDOWN_CANCEL` | `"sys:shutdown-cancel"` | `adm/daemons/shutdown.c` | none | Shutdown cancelled |
-| `SIG_SYS_REBOOTING` | `"sys:rebooting"` | `adm/daemons/shutdown.c` | (int seconds) | Reboot countdown begins |
-| `SIG_SYS_REBOOT_CANCEL` | `"sys:reboot-cancel"` | `adm/daemons/shutdown.c` | none | Reboot cancelled |
+| `SIG_SYS_BOOT` | `"sys:boot"` | `adm/daemons/boot.lpc` | none | MUD startup complete |
+| `SIG_SYS_CRASH` | `"sys:crash"` | `adm/obj/master.lpc` | none | Crash handler triggered |
+| `SIG_SYS_SHUTTING_DOWN` | `"sys:shutting-down"` | `adm/daemons/shutdown.lpc` | (int seconds) | Shutdown countdown begins |
+| `SIG_SYS_SHUTDOWN` | `"sys:shutdown"` | `adm/simul_efun/override.lpc` | none | Immediate shutdown |
+| `SIG_SYS_SHUTDOWN_CANCEL` | `"sys:shutdown-cancel"` | `adm/daemons/shutdown.lpc` | none | Shutdown cancelled |
+| `SIG_SYS_REBOOTING` | `"sys:rebooting"` | `adm/daemons/shutdown.lpc` | (int seconds) | Reboot countdown begins |
+| `SIG_SYS_REBOOT_CANCEL` | `"sys:reboot-cancel"` | `adm/daemons/shutdown.lpc` | none | Reboot cancelled |
 | `SIG_SYS_PERSIST` | `"sys:persist"` | — | none | Manual persistence request |
-| `SIG_SYS_CRAWL_COMPLETE` | `"sys:crawl-complete"` | `adm/daemons/crawler.c` | none | Room crawler finished |
+| `SIG_SYS_CRAWL_COMPLETE` | `"sys:crawl-complete"` | `adm/daemons/crawler.lpc` | none | Room crawler finished |
 
 ### User Signals (`SIG_USER` = `"user:"`)
 
 | Constant | String Value | Emitted By | Arguments | When |
 |---|---|---|---|---|
-| `SIG_USER_LOGIN` | `"user:login"` | `adm/obj/login.c` | (object user) | Player login complete |
-| `SIG_USER_LOGOUT` | `"user:logout"` | `std/living/player.c` | (object user) | Player logs out |
-| `SIG_USER_LINKDEAD` | `"user:linkdead"` | `std/living/player.c` | (object user) | Connection lost |
-| `SIG_USER_LINK_RESTORE` | `"user:link-restore"` | `adm/obj/login.c` | (object user) | Reconnected after linkdead |
+| `SIG_USER_LOGIN` | `"user:login"` | `adm/obj/login.lpc` | (object user) | Player login complete |
+| `SIG_USER_LOGOUT` | `"user:logout"` | `std/living/player.lpc` | (object user) | Player logs out |
+| `SIG_USER_LINKDEAD` | `"user:linkdead"` | `std/living/player.lpc` | (object user) | Connection lost |
+| `SIG_USER_LINK_RESTORE` | `"user:link-restore"` | `adm/obj/login.lpc` | (object user) | Reconnected after linkdead |
 
 ### Player Signals (`SIG_PLAYER` = `"player:"`)
 
 | Constant | String Value | Emitted By | Arguments | When |
 |---|---|---|---|---|
-| `SIG_PLAYER_DIED` | `"player:died"` | `std/living/body.c` | (object player, object killer) | Player death |
-| `SIG_PLAYER_REVIVED` | `"player:revived"` | `std/living/ghost.c` | (object player) | Player revival |
-| `SIG_PLAYER_ADVANCED` | `"player:advanced"` | `adm/daemons/advance.c` | (object player, mixed level) | Level up |
-| `SIG_USER_ENV_CHANGED` | `"player:env-changed"` | `cmds/wiz/env.c` | (object user, string var, string val) | Env variable changed |
-| `SIG_USER_PREF_CHANGED` | `"player:pref-changed"` | `cmds/std/set.c` | (object user, string pref, string val) | Preference changed |
+| `SIG_PLAYER_DIED` | `"player:died"` | `std/living/body.lpc` | (object player, object killer) | Player death |
+| `SIG_PLAYER_REVIVED` | `"player:revived"` | `std/living/ghost.lpc` | (object player) | Player revival |
+| `SIG_PLAYER_ADVANCED` | `"player:advanced"` | `adm/daemons/advance.lpc` | (object player, mixed level) | Level up |
+| `SIG_USER_ENV_CHANGED` | `"player:env-changed"` | `cmds/wiz/env.lpc` | (object user, string var, string val) | Env variable changed |
+| `SIG_USER_PREF_CHANGED` | `"player:pref-changed"` | `cmds/std/set.lpc` | (object user, string pref, string val) | Preference changed |
 
 Note: `SIG_USER_ENV_CHANGED` and `SIG_USER_PREF_CHANGED` use the `SIG_PLAYER` prefix despite having `SIG_USER` names.
 
@@ -212,7 +212,7 @@ Note: `SIG_USER_ENV_CHANGED` and `SIG_USER_PREF_CHANGED` use the `SIG_PLAYER` pr
 
 | Constant | String Value | Emitted By | Arguments | When |
 |---|---|---|---|---|
-| `SIG_GAME_MIDNIGHT` | `"game:midnight"` | `adm/daemons/time.c` | none | In-game midnight |
+| `SIG_GAME_MIDNIGHT` | `"game:midnight"` | `adm/daemons/time.lpc` | none | In-game midnight |
 
 ### Channel Signals (`SIG_CHANNEL` = `"channel:"`)
 
@@ -224,24 +224,24 @@ Note: `SIG_USER_ENV_CHANGED` and `SIG_USER_PREF_CHANGED` use the `SIG_PLAYER` pr
 
 | File | Signal | Handler Function | Purpose |
 |---|---|---|---|
-| `adm/daemons/boot.c` | `SIG_SYS_BOOT` | `boot` | Increment boot counter, log |
-| `adm/daemons/alarm.c` | `SIG_SYS_BOOT` | `execute_boot_alarms` | Run scheduled boot-time alarms |
-| `adm/daemons/crawler.c` | `SIG_SYS_BOOT` | `crawl` | Start room crawler on boot |
-| `adm/daemons/persist.c` | `SIG_SYS_CRASH` | `persist_objects` | Save all persistent objects on crash |
-| `adm/daemons/persist.c` | `SIG_SYS_PERSIST` | `persist_objects` | Save on manual persist request |
-| `adm/daemons/death.c` | `SIG_PLAYER_DIED` | `player_died` | Log death to death log |
-| `adm/daemons/death.c` | `SIG_PLAYER_REVIVED` | `player_revived` | Log revival to death log |
-| `adm/daemons/grapevine.c` | `SIG_USER_LOGIN` | `grapevine_send_event_players_sign_in` | Notify Grapevine network |
-| `adm/daemons/grapevine.c` | `SIG_USER_LINK_RESTORE` | `grapevine_send_event_players_sign_in` | Notify Grapevine of reconnect |
-| `adm/daemons/grapevine.c` | `SIG_USER_LOGOUT` | `grapevine_send_event_players_sign_out` | Notify Grapevine network |
-| `adm/daemons/grapevine.c` | `SIG_USER_LINKDEAD` | `grapevine_send_event_players_sign_out` | Notify Grapevine of linkdead |
-| `adm/daemons/modules/channel/channel.c` | `SIG_CHANNEL_MESSAGE` | `incomingTransmission` | Route channel messages to modules |
-| `adm/daemons/modules/channel/herald.c` | `SIG_USER_LOGIN` | `heraldArrival` | Announce player login |
-| `adm/daemons/modules/channel/herald.c` | `SIG_USER_LOGOUT` | `heraldDeparture` | Announce player logout |
-| `adm/daemons/modules/channel/herald.c` | `SIG_SYS_CRAWL_COMPLETE` | `announce_crawl_complete` | Announce crawler done |
-| `std/living/player.c` | `SIG_SYS_CRASH` | `on_crash` | Save player data on crash |
-| `std/living/player.c` | `SIG_PLAYER_ADVANCED` | `on_advance` | Handle level advancement |
-| `std/living/ghost.c` | `SIG_SYS_CRASH` | `on_crash` | Save ghost data on crash |
+| `adm/daemons/boot.lpc` | `SIG_SYS_BOOT` | `boot` | Increment boot counter, log |
+| `adm/daemons/alarm.lpc` | `SIG_SYS_BOOT` | `execute_boot_alarms` | Run scheduled boot-time alarms |
+| `adm/daemons/crawler.lpc` | `SIG_SYS_BOOT` | `crawl` | Start room crawler on boot |
+| `adm/daemons/persist.lpc` | `SIG_SYS_CRASH` | `persist_objects` | Save all persistent objects on crash |
+| `adm/daemons/persist.lpc` | `SIG_SYS_PERSIST` | `persist_objects` | Save on manual persist request |
+| `adm/daemons/death.lpc` | `SIG_PLAYER_DIED` | `player_died` | Log death to death log |
+| `adm/daemons/death.lpc` | `SIG_PLAYER_REVIVED` | `player_revived` | Log revival to death log |
+| `adm/daemons/grapevine.lpc` | `SIG_USER_LOGIN` | `grapevine_send_event_players_sign_in` | Notify Grapevine network |
+| `adm/daemons/grapevine.lpc` | `SIG_USER_LINK_RESTORE` | `grapevine_send_event_players_sign_in` | Notify Grapevine of reconnect |
+| `adm/daemons/grapevine.lpc` | `SIG_USER_LOGOUT` | `grapevine_send_event_players_sign_out` | Notify Grapevine network |
+| `adm/daemons/grapevine.lpc` | `SIG_USER_LINKDEAD` | `grapevine_send_event_players_sign_out` | Notify Grapevine of linkdead |
+| `adm/daemons/modules/channel/channel.lpc` | `SIG_CHANNEL_MESSAGE` | `incomingTransmission` | Route channel messages to modules |
+| `adm/daemons/modules/channel/herald.lpc` | `SIG_USER_LOGIN` | `heraldArrival` | Announce player login |
+| `adm/daemons/modules/channel/herald.lpc` | `SIG_USER_LOGOUT` | `heraldDeparture` | Announce player logout |
+| `adm/daemons/modules/channel/herald.lpc` | `SIG_SYS_CRAWL_COMPLETE` | `announce_crawl_complete` | Announce crawler done |
+| `std/living/player.lpc` | `SIG_SYS_CRASH` | `on_crash` | Save player data on crash |
+| `std/living/player.lpc` | `SIG_PLAYER_ADVANCED` | `on_advance` | Handle level advancement |
+| `std/living/ghost.lpc` | `SIG_SYS_CRASH` | `on_crash` | Save ghost data on crash |
 
 ## Persistence
 

@@ -11,13 +11,13 @@ You are helping work with the physical containment systems in Oxidus. Follow the
 
 Three tightly coupled subsystems handle physical object constraints:
 
-1. **Weight** (`std/object/weight.c`) — mass tracking per object
-2. **Contents** (`std/object/contents.c`) — capacity/fill tracking per container
-3. **Container** (`std/object/container.c`) — open/close/lock states, access control
+1. **Weight** (`std/object/weight.lpc`) — mass tracking per object
+2. **Contents** (`std/object/contents.lpc`) — capacity/fill tracking per container
+3. **Container** (`std/object/container.lpc`) — open/close/lock states, access control
 
 All three are config-gated: they only enforce constraints when `mudConfig("USE_MASS")` is true.
 
-## Mass System — `std/object/weight.c`
+## Mass System — `std/object/weight.lpc`
 
 **Property:** `int _mass` — the object's mass in abstract units.
 
@@ -44,7 +44,7 @@ adjust_mass(delta) on object
 
 This is **transactional** — if the fill check fails, the mass change on the environment is rolled back.
 
-## Capacity System — `std/object/contents.c`
+## Capacity System — `std/object/contents.lpc`
 
 **Properties:**
 - `int _capacity` — total capacity limit
@@ -69,9 +69,9 @@ This is **transactional** — if the fill check fails, the mass change on the en
 - For living objects with no capacity set: defaults capacity to 1000
 - Broadcasts GMCP update if the object is a player
 
-## Container System — `std/object/container.c`
+## Container System — `std/object/container.lpc`
 
-Inherits both `inventory.c` and `contents.c`.
+Inherits both `inventory.lpc` and `contents.lpc`.
 
 ### State Properties
 
@@ -121,7 +121,7 @@ Returns state as string or number:
 
 - `int is_container()` — always returns 1
 
-## The Move System — `std/object/item.c`
+## The Move System — `std/object/item.lpc`
 
 ### Move Result Codes (`include/move.h`)
 
@@ -160,7 +160,7 @@ The rollback array tracks every mass/fill change so partial failures are fully r
 
 ## Living Bodies
 
-Living objects (`std/living/body.c`) call `set_ignore_mass(1)` in their `mudlib_setup()`. This means:
+Living objects (`std/living/body.lpc`) call `set_ignore_mass(1)` in their `mudlib_setup()`. This means:
 - Items in a living's inventory don't propagate mass upward (to the room)
 - Capacity still enforces — livings have a default capacity of 1000
 

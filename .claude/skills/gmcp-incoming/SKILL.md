@@ -13,36 +13,36 @@ This skill covers the **incoming** side of GMCP (Generic MUD Communication Proto
 Client sends GMCP telopt
        │
        ▼
-std/ext/gmcp.c::gmcp()     ← driver calls this on the user/login object
+std/ext/gmcp.lpc::gmcp()     ← driver calls this on the user/login object
        │
        ├─ GMCP_D->convert_message()  ← parses into ClassGMCP
        │
        ▼
 call_other() to handler         ← routes to handler file by package name
        │
-       ├─ std/handlers/gmcp/Core.c      ← Core.Hello, Core.Supports.*, Core.Ping
-       ├─ std/handlers/gmcp/Char.c      ← Char.Login.Credentials, Char.Items.*
-       └─ std/handlers/gmcp/External.c  ← External.Discord.*
+       ├─ std/handlers/gmcp/Core.lpc      ← Core.Hello, Core.Supports.*, Core.Ping
+       ├─ std/handlers/gmcp/Char.lpc      ← Char.Login.Credentials, Char.Items.*
+       └─ std/handlers/gmcp/External.lpc  ← External.Discord.*
 ```
 
 ## Core Files
 
 | File | Purpose |
 |---|---|
-| `std/ext/gmcp.c` | Main GMCP module (`EXT_GMCP`), inherited by player and login objects. Entry point for all incoming messages, also provides `do_gmcp()` for sending |
-| `std/handlers/gmcp/gmcp_module.c` | Base class for handler modules. Provides cooldown system. Inherits `STD_DAEMON` |
-| `std/handlers/gmcp/Core.c` | Handles Core protocol (Hello, Supports, Ping) |
-| `std/handlers/gmcp/Char.c` | Handles Char.Login.Credentials and Char.Items requests |
-| `std/handlers/gmcp/External.c` | Handles External.Discord messages |
-| `std/classes/gmcp.c` | Defines `ClassGMCP` structure |
+| `std/ext/gmcp.lpc` | Main GMCP module (`EXT_GMCP`), inherited by player and login objects. Entry point for all incoming messages, also provides `do_gmcp()` for sending |
+| `std/handlers/gmcp/gmcp_module.lpc` | Base class for handler modules. Provides cooldown system. Inherits `STD_DAEMON` |
+| `std/handlers/gmcp/Core.lpc` | Handles Core protocol (Hello, Supports, Ping) |
+| `std/handlers/gmcp/Char.lpc` | Handles Char.Login.Credentials and Char.Items requests |
+| `std/handlers/gmcp/External.lpc` | Handles External.Discord messages |
+| `std/classes/gmcp.lpc` | Defines `ClassGMCP` structure |
 | `include/gmcp_defines.h` | All GMCP package name, key, and value defines |
-| `adm/daemons/gmcp.c` | GMCP daemon — message parsing and outgoing routing |
+| `adm/daemons/gmcp.lpc` | GMCP daemon — message parsing and outgoing routing |
 
 ## Message Flow
 
 ### 1. Reception
 
-The FluffOS driver calls `void gmcp(string message)` on the user/login object when a GMCP telopt arrives. This function lives in `std/ext/gmcp.c` (`EXT_GMCP`), inherited by both `std/living/player.c` and `adm/obj/login.c`.
+The FluffOS driver calls `void gmcp(string message)` on the user/login object when a GMCP telopt arrives. This function lives in `std/ext/gmcp.lpc` (`EXT_GMCP`), inherited by both `std/living/player.lpc` and `adm/obj/login.lpc`.
 
 The module does **not** check if the player has GMCP enabled at this stage — this ensures `Core.Hello` and `Core.Supports` are still processed during login.
 
@@ -68,16 +68,16 @@ The handler file is loaded from `std/handlers/gmcp/<Package>.c` based on the pac
 - **With submodule:** `call_other(ob, module, submodule, payload)`
 
 Examples:
-- `Core.Hello {"client":"Mudlet"}` → `Core.c::Hello(payload)`
-- `Core.Supports.Set [...]` → `Core.c::Supports("Set", payload)`
-- `Char.Login.Credentials {...}` → `Char.c::Login("Credentials", payload)`
-- `Char.Items.Inv` → `Char.c::Items("Inv", null)`
+- `Core.Hello {"client":"Mudlet"}` → `Core.lpc::Hello(payload)`
+- `Core.Supports.Set [...]` → `Core.lpc::Supports("Set", payload)`
+- `Char.Login.Credentials {...}` → `Char.lpc::Login("Credentials", payload)`
+- `Char.Items.Inv` → `Char.lpc::Items("Inv", null)`
 
 If the handler file doesn't exist, the error is logged to `system/gmcp`.
 
 ## Handler Modules
 
-All handler modules inherit `gmcp_module.c` (which inherits `STD_DAEMON`):
+All handler modules inherit `gmcp_module.lpc` (which inherits `STD_DAEMON`):
 
 ```lpc
 inherit __DIR__ "gmcp_module";
@@ -87,7 +87,7 @@ This provides the cooldown system (see below).
 
 ## Supported Incoming Packages
 
-### Core Protocol (`std/handlers/gmcp/Core.c`)
+### Core Protocol (`std/handlers/gmcp/Core.lpc`)
 
 | Message | Function | Payload | Action |
 |---|---|---|---|
@@ -97,7 +97,7 @@ This provides the cooldown system (see below).
 | `Core.Supports.Remove` | `Supports("Remove", mixed)` | `({ "Room 1" })` or `"Room 1"` | Removes from supported packages |
 | `Core.Ping` | `Ping(int)` | Integer timestamp | Echoes back via `GMCP_D->send_gmcp()`. Cooldown: 60 seconds |
 
-### Character Package (`std/handlers/gmcp/Char.c`)
+### Character Package (`std/handlers/gmcp/Char.lpc`)
 
 | Message | Function | Payload | Action |
 |---|---|---|---|
@@ -106,7 +106,7 @@ This provides the cooldown system (see below).
 | `Char.Items.Inv` | `Items("Inv", null)` | None | Sends inventory list |
 | `Char.Items.Room` | `Items("Room", null)` | None | Sends room items list |
 
-### External Package (`std/handlers/gmcp/External.c`)
+### External Package (`std/handlers/gmcp/External.lpc`)
 
 | Message | Function | Action |
 |---|---|---|
@@ -176,7 +176,7 @@ Players can disable GMCP by setting the `"gmcp"` preference to `"off"`. The `gmc
 Add a new function to the handler file. For example, to handle `Char.Skills.List`:
 
 ```lpc
-// In std/handlers/gmcp/Char.c
+// In std/handlers/gmcp/Char.lpc
 
 void Skills(string submodule, mixed data) {
     object prev = previous_object();
@@ -203,7 +203,7 @@ Add the package define in `include/gmcp_defines.h`:
 4. The routing in `gmcp()` will automatically find it by file name
 
 ```lpc
-// std/handlers/gmcp/Custom.c
+// std/handlers/gmcp/Custom.lpc
 #include <daemons.h>
 #include <gmcp_defines.h>
 

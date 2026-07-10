@@ -11,12 +11,12 @@ You are helping work with the Oxidus persistence system. Follow the `lpc-coding-
 
 Persistence operates at two levels:
 
-1. **Object-level** (`std/object/persist.c`) — explicit variable marking and string serialization with recursive inventory support
-2. **Daemon-level** (`std/modules/persist_data.c`) — file-based save/restore via `save_object()`/`restore_object()`, registered with PERSIST_D for periodic saves
+1. **Object-level** (`std/object/persist.lpc`) — explicit variable marking and string serialization with recursive inventory support
+2. **Daemon-level** (`std/modules/persist_data.lpc`) — file-based save/restore via `save_object()`/`restore_object()`, registered with PERSIST_D for periodic saves
 
 Most daemons use the daemon-level approach. Items that need to preserve inventory (storage containers, players) use the object-level approach.
 
-## Object-Level Persistence — `std/object/persist.c`
+## Object-Level Persistence — `std/object/persist.lpc`
 
 ### Marking Variables for Save
 
@@ -75,7 +75,7 @@ protected void set_save_recurse(int flag)
 
 Controls whether `save_to_string()` includes inventory by default.
 
-## Daemon-Level Persistence — `std/modules/persist_data.c`
+## Daemon-Level Persistence — `std/modules/persist_data.lpc`
 
 This is a module (mixin) inherited by daemons and objects that need file-based persistence.
 
@@ -120,9 +120,9 @@ int restore_data()
 
 - Calls `restore_object(data_file)` — driver function that restores variables from file
 - Only operates if `persistent == 1`
-- Called automatically during the setup chain (in `std/object/setup.c`)
+- Called automatically during the setup chain (in `std/object/setup.lpc`)
 
-## PERSIST_D Daemon — `adm/daemons/persist.c`
+## PERSIST_D Daemon — `adm/daemons/persist.lpc`
 
 Coordinates periodic saves for all persistent objects.
 
@@ -200,7 +200,7 @@ void restore_contents() {
 ### Player Inventory Persistence
 
 ```lpc
-// In player.c
+// In player.lpc
 void save_inventory() {
   string save = save_to_string(1);
   write_file(user_inventory_data(...), save, 1);
