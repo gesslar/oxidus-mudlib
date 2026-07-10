@@ -44,6 +44,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libjemalloc-dev \
       libicu-dev \
       default-libmysqlclient-dev \
+      pkg-config \
+      libffi-dev
  && rm -rf /var/lib/apt/lists/*
 
 # Pristine clone of the mudlib.

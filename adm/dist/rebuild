@@ -55,7 +55,6 @@ cd build
      -DPACKAGE_DB=1 \
      -DPACKAGE_DB_SQLITE=3 \
      -DPACKAGE_UIDS=OFF \
-     -DPACKAGE_FFI=OFF \
      ${OXIDUS_CMAKE_EXTRA:-}
 
 make -j "$(nproc)" install
