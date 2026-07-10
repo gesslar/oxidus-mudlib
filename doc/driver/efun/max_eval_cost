@@ -5,7 +5,7 @@
 
 ### SYNOPSIS
 
-    void max_eval_cost()
+    int max_eval_cost()
 
 ### DESCRIPTION
 
