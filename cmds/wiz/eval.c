@@ -17,23 +17,36 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   mixed result;
   int limit = max_eval_cost(), cost;
 
-  if(!directory_exists(home_path(caller->query_real_name())))
-    return _error("You must have a home directory to use eval.");
-
   _info(caller, "Evaluating: %s", arg);
-  file = home_path(caller->query_real_name()) + "tmp_eval_file.c";
+
+  // Compile the snippet from a scratch file under /tmp, which the path-access
+  // table makes world-writable. The command's identity ([cmd_wiz]) can't
+  // write into a wizard's home, but it can write here. One file per caller so
+  // concurrent evals don't collide.
+  file = "/tmp/eval_" + caller->query_real_name() + ".c";
+
   if(file_size(file) != -1)
     rm(file);
 
   if(ob = find_object(file))
     destruct(ob);
 
-  write_file(file,"mixed eval() { "+arg+"; }\n");
+  if(!write_file(file, "mixed eval() { "+arg+"; }\n"))
+    return _error("Could not write eval scratch file %s.", file);
 
-  if(err = catch(ob = load_object(file))) {
-    rm(file);
+  err = catch(ob = load_object(file));
+  rm(file);
+
+  if(err)
     return _error("Error loading file %s\n%s", file, err);
-  }
+
+  if(!objectp(ob))
+    return _error("Failed to load eval scratch file %s.", file);
+
+  // Run the evaluated code with the caller's own privileges, so eval is a
+  // faithful "as me" tool. The set_privs override allowlists CMD_EVAL for
+  // exactly this.
+  set_privs(ob, query_privs(caller));
 
   err = catch {
     reset_eval_cost();
@@ -42,7 +55,6 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   };
 
   catch(destruct(ob));
-  rm(file);
 
   if(err)
     return _error("Runtime error:\n%s\nSee logs for more details.", err);
@@ -57,5 +69,5 @@ string help(object caller) {
   return("SYNTAX: eval <lpc-statements>\n\n" +
     "This command allows you to execute stand-alone lpc statements.\n"
     "This is considered a more advanced tool and abuse of it is not\n"
-    "recommended. Also note that you must have a home directory.\n");
+    "recommended.\n");
 }

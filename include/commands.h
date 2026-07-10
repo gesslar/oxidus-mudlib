@@ -7,6 +7,9 @@
 #define CMD_REBOOT           DIR_CMDS_ADM "reboot"
 #define CMD_SHUTDOWN         DIR_CMDS_ADM "shutdown"
 
+// Wiz commands
+#define CMD_EVAL             DIR_CMDS_WIZ "eval"
+
 // Std commands
 #define CMD_LOOK             DIR_CMDS_ACTION "look"
 #define CMD_QUIT             DIR_CMDS_STD "quit"

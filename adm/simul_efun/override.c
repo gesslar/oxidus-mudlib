@@ -57,9 +57,10 @@ void shutdown(int how) {
  * @efun_override set_privs
  *
  * Security-wrapped override of the set_privs() efun. Permits setting
- * privileges when the caller is an admin or the master object, or when
- * the object resides in a player's home directory and the privilege
- * string matches the player name.
+ * privileges when the caller is an admin or the master object, when the
+ * object resides in a player's home directory and the privilege string
+ * matches the player name, or when the caller is the eval command (which
+ * runs evaluated code under the invoking wizard's identity).
  *
  * @param {object} ob - The object to set privileges on
  * @param {string} privs - The privilege string to assign
@@ -73,6 +74,9 @@ void set_privs(object ob, string privs) {
   sscanf(file_name(ob), "/home/%*s/%s/%*s", name);
 
   if(name == privs)
+    efun::set_privs(ob, privs);
+
+  if(file_name(previous_object()) == CMD_EVAL)
     efun::set_privs(ob, privs);
 }
 
