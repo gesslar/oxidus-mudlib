@@ -834,10 +834,13 @@ private nomask int access_ok(string file, object user, string op) {
 private nomask int access_gate(string file, object user, string op, string func) {
   int ok;
 
+
   // A nested check (the logging below reads/writes files) must not
   // recurse; permit it and let the outermost call decide.
   if(in_access_check)
     return 1;
+
+  defer((: in_access_check = 0 :));
 
   in_access_check = 1;
 
@@ -866,12 +869,13 @@ private nomask int access_gate(string file, object user, string op, string func)
 private nomask void log_access_denial(string file, object user, string op, string func, int enforced) {
   log_file(
     LOG_SECURITY,
-    sprintf("%s %s of %s by %s (%O) via %s - %s\n",
+    sprintf("%s %s of %s by %s (%O via %s) via %s - %s\n",
       enforced ? "DENIED" : "SHADOW",
       op,
       file,
       query_privs(user) || "(no privs)",
       user,
+      implode(map(reverse_array(previous_object(-1)), (: sprintf("%s (%s)", file_name($1), query_privs($1)) :)), " => "),
       func || "?",
       ldatetime()
     )

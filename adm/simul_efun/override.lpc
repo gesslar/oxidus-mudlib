@@ -68,7 +68,7 @@ void shutdown(int how) {
 void set_privs(object ob, string privs) {
   string name;
 
-  if(has_role(query_privs(previous_object()), "admin") || previous_object() == master())
+  if(has_role(query_privs(previous_object()), "admin") || previous_object() == master() || previous_object() == simul_efun())
     efun::set_privs(ob, privs);
 
   sscanf(file_name(ob), "/home/%*s/%s/%*s", name);
