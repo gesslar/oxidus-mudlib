@@ -116,9 +116,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
               always_show_path = 1;
               break;
             default:
-              tell(caller, "\nBad option: "
-                + tokens[0][i] + "\n");
-              return 1;
+              return _error("Bad option %O", tokens[0][i]);
           }
         break;
       case T_LONGOPT:
@@ -133,9 +131,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
             classify = 1;
             break;
           default:
-            tell(caller, "\nBad option: "
-              + tokens[0][i] + "\n");
-            return 1;
+            return _error("\nBad option: %O", tokens[0][i]);
         }
         break;
       case T_STRING_VALUE:
@@ -148,8 +144,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
     paths = ({ "." });
 
   foreach(current_path in paths) {
-    current_path = resolve_path(
-      caller->query_env("cwd"), current_path);
+    current_path = resolve_path(caller->query_env("cwd"), current_path);
 
     if(always_show_path || sizeof(paths) > 1)
       output_str += current_path + ":\n";
@@ -161,11 +156,13 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
       case -2:
         if(current_path[<1] != '/')
           current_path += "/";
+
         output_files = get_dir(current_path, -1);
         break;
+
       case -1:
-        tell(caller, "\nRead error\n");
-        return 1;
+        return _error("No such file or directory %O", current_path);
+
       default:
         output_files = get_dir(current_path, -1);
         current_path = current_path[0..
@@ -173,27 +170,20 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
         break;
     }
 
-    if(!output_files) {
-      tell(caller,
-        "Invalid path: " + current_path + "\n");
-      return 1;
-    }
+    if(!output_files)
+      return _error("Invalid path %O", current_path);
 
     if(!show_all)
-      output_files = filter(output_files,
-        (: ($1[0][0] != '.') :));
+      output_files = filter(output_files, (: ($1[0][0] != '.') :));
 
     num_files = sizeof(output_files);
 
     if(size_sort)
-      output_files = sort_array(output_files,
-        (: numeric_sort, 1, sort_order :));
+      output_files = sort_array(output_files, (: numeric_sort, 1, sort_order :));
     else if(time_sort)
-      output_files = sort_array(output_files,
-        (: numeric_sort, 2, sort_order :));
+      output_files = sort_array(output_files, (: numeric_sort, 2, sort_order :));
     else if(sort_order == -1)
-      output_files = sort_array(
-        output_files, sort_order);
+      output_files = sort_array(output_files, sort_order);
 
     if(long_list) {
       string file_detail_str = "";
@@ -209,44 +199,44 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
           temp = sprintf("%d", output_file[1]);
           file_detail_str = arrange_string(
             file_detail_str,
-            SIZE_STOP - strlen(temp));
+            SIZE_STOP - strlen(temp)
+          );
           file_detail_str += temp;
         }
 
-        file_detail_str = arrange_string(
-          file_detail_str, DATE_STOP);
+        file_detail_str = arrange_string(file_detail_str, DATE_STOP);
         file_detail_str += ctime(output_file[2]);
 
         this_dir += sprintf(
           "%s%s%s{{res}}%s",
-          arrange_string(
-            file_detail_str, NAME_STOP),
+          arrange_string(file_detail_str, NAME_STOP),
           filename_prefix(output_file),
           output_file[0],
-          filename_suffix(
-            output_file, classify));
+          filename_suffix(output_file, classify)
+        );
       }
 
       output_str += sprintf(
         "%dK (%d bytes) in %d file(s)%s\n",
         file_sizes / 1024, file_sizes,
-        num_files, this_dir);
+        num_files, this_dir
+      );
     } else {
       int largest_file_name = 0, screen_width, files_per_line;
 
       foreach(output_file in output_files)
-        if(largest_file_name
-            < i = strlen(output_file[0]))
+        if(largest_file_name < i = strlen(output_file[0]))
           largest_file_name = i;
 
       screen_width = SCREEN_WIDTH;
       if(largest_file_name >= screen_width)
         files_per_line = 1;
       else
-        files_per_line = (screen_width - 2)
-          / (largest_file_name
+        files_per_line = (screen_width - 2) / (
+              largest_file_name
             + SPACES_BETWEEN_FILES
-            + SPACE_ADDED_BY_FORMAT);
+            + SPACE_ADDED_BY_FORMAT
+          );
 
       i = 0;
       largest_file_name += SPACES_BETWEEN_FILES;
@@ -258,17 +248,21 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
             "%s%s{{res}}%s\n",
             filename_prefix(output_file),
             output_file[0],
-            filename_suffix(
-              output_file, classify));
+            filename_suffix(output_file, classify)
+          );
         } else {
-          output_str += sprintf("%s%s",
+          output_str += sprintf(
+            "%s%s",
             filename_prefix(output_file),
             arrange_string(
-              sprintf("%s{{res}}%s",
+              sprintf(
+                "%s{{res}}%s",
                 output_file[0],
-                filename_suffix(
-                  output_file, classify)),
-              largest_file_name));
+                filename_suffix(output_file, classify)
+              ),
+              largest_file_name
+            )
+          );
         }
       }
     }
@@ -276,9 +270,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
     output_str += "\n";
   }
 
-  tell(caller, output_str);
-
-  return 1;
+  return output_str;
 }
 
 private string arrange_string(string str, int width) {
@@ -293,6 +285,7 @@ private string arrange_string(string str, int width) {
 
   if(len < width)
     return str + repeat_string(" ", width - len);
+
   if(len == width)
     return str;
 
@@ -313,34 +306,46 @@ private string arrange_string(string str, int width) {
 private int numeric_sort(int field, int sort_order, mixed a, mixed b) {
   if(a[field] == b[field])
     return 0;
+
   if(a[field] > b[field])
     return sort_order;
 
   return -sort_order;
 }
 
+private nosave mapping __defaults = ([
+  "directory":  "069",
+  "source":     "360",
+  "loaded":     "9c6",
+  "header":     "660",
+  "save":       "f90",
+  "data":       "99f",
+  "other":      "555",
+]);
+
+private string get_object_colour(string kind) {
+  string colour = this_body()->query_pref(`ls_${kind ?? "other"}`);
+
+  colour ??= __defaults[kind ?? "other"];
+
+  return `{{${colour}}}`;
+}
+
 private string filename_prefix(mixed *file_details) {
-  switch(file_details[1]) {
-    case -2:
-      return "{{0033CC}} ";
-    default:
-      if(ends_with(file_details[0], ".lpc")) {
-        if(stat(current_path + file_details[0])[2], 0)
-          return "{{00FF00}}*";
-        return "{{008000}} ";
-      }
-      switch(file_details[0][<2..<1]) {
-        case ".c":
-          if(stat(current_path + file_details[0])[2], 0)
-            return "{{00FF00}}*";
-          return "{{008000}} ";
-        case ".h":
-          return "{{990000}} ";
-        case __SAVE_EXTENSION__:
-          return "{{006666}} ";
-        default:
-          return "{{767676}} ";
-      }
+  if(file_details[1] == -2) {
+    return `${get_object_colour("directory")} `;
+  } else {
+    if(ends_with(file_details[0], ".lpc")) {
+      if(stat(current_path + file_details[0], 0)[2])
+        return `${get_object_colour("loaded")}*`;
+      return `${get_object_colour("source")} `;
+    } else if(ends_with(file_details[0], ".h")) {
+      return `${get_object_colour("header")} `;
+    } else if(ends_with(file_details[0], __SAVE_EXTENSION__)) {
+      return `${get_object_colour("save")} `;
+    } else {
+      return `${get_object_colour("other")} `;
+    }
   }
 }
 
