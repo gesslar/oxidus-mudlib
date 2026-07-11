@@ -74,7 +74,7 @@ private nomask void log_access_denial(string file, object user, string op, strin
  * identities that are its members. A group's effective roles are its
  * own roles plus, transitively, the roles of every group it inherits
  * (so owner inherits admin inherits developer). Members may be real
- * user names or bracketed code-object privs (e.g. "[cmd_admin]").
+ * user names or bracketed code-object privs (e.g. "[cmd_adm]").
  *
  * @type {([ string: ([ "inherits": string*, "roles": string*, "members": string* ]) ])}
  */
@@ -395,9 +395,16 @@ private nomask int may_mutate_role(string caller_privs, string role) {
  * @param {string} role - The role involved (0 for purge_roles).
  */
 private nomask void log_role_denial(string op, string caller_privs, string name, string role) {
-  log_file(LOG_PROMOTE, sprintf("DENIED %s by %s on %s%s - %s\n",
-    op, caller_privs || "(no privs)", name || "(none)",
-    role ? " role=" + role : "", ctime(time())));
+  log_file(
+    LOG_PROMOTE,
+    sprintf("DENIED %s by %s on %s%s - %s\n",
+      op,
+      caller_privs || "(no privs)",
+      name || "(none)",
+      role ? " role=" + role : "",
+      ldatetime()
+    )
+  );
 }
 
 /**
@@ -857,9 +864,18 @@ private nomask int access_gate(string file, object user, string op, string func)
  * @returns {void}
  */
 private nomask void log_access_denial(string file, object user, string op, string func, int enforced) {
-  log_file(LOG_SECURITY, sprintf("%s %s of %s by %s via %s - %s\n",
-    enforced ? "DENIED" : "SHADOW", op, file,
-    query_privs(user) || "(no privs)", func || "?", ctime(time())));
+  log_file(
+    LOG_SECURITY,
+    sprintf("%s %s of %s by %s (%O) via %s - %s\n",
+      enforced ? "DENIED" : "SHADOW",
+      op,
+      file,
+      query_privs(user) || "(no privs)",
+      user,
+      func || "?",
+      ldatetime()
+    )
+  );
 }
 
 /**

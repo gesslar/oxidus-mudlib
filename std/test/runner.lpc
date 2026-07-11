@@ -20,7 +20,11 @@ private nosave string cross = sprintf("\e[31m%c\e[0m", 0x2718);
 protected string test_dir() {
   string fname = file_name(this_object());
   string *parts = explode(fname, "/");
-  return implode(parts[0..<2], "/") + "/";
+  // Keep the leading slash: file efuns don't care, but the path-access
+  // security model matches its rules against absolute paths, so a
+  // slash-less dir is denied by every rule (including the /** catch-all)
+  // once SECURITY_ENFORCE_PATHS is on.
+  return prepend(implode(parts[0..<2], "/"), "/") + "/";
 }
 
 private string indent_lines(string text) {
