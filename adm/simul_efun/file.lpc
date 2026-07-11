@@ -266,8 +266,11 @@ varargs mixed load_lpml(string file, string root) {
 
   old_privs = query_privs();
   set_privs(this_object(), query_privs(previous_object()));
-  contents = read_file(file);
+  string err = catch(contents = read_file(file));
   set_privs(this_object(), old_privs);
+
+  if(err)
+    return undefined;
 
   if(stringp(root) && truthy(root))
     return lpml_decode(contents, root);
