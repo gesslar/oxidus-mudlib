@@ -350,17 +350,16 @@ string privs_file(string filename) {
   if(sscanf(filename, "/adm/daemons/%s", temp)) return "[daemon]";
   if(sscanf(filename, "/adm/obj/%s", temp)) return "[adm_obj]";
   if(sscanf(filename, "/adm/%s", temp)) return "[admin]";
-  if(sscanf(filename, "/cmds/adm/%s", temp)) return "[cmd_admin]";
+  if(sscanf(filename, "/cmds/adm/%s", temp)) return "[cmd_adm]";
   if(sscanf(filename, "/cmds/file/%s", temp)) return "[cmd_file]";
   if(sscanf(filename, "/cmds/object/%s", temp)) return "[cmd_object]";
   if(sscanf(filename, "/cmds/wiz/%s", temp))return "[cmd_wiz]";
-  if(sscanf(filename, "/cmds/%s", temp)) return "[cmd]";
   if(sscanf(filename, "/home/%*s/%s/%*s", temp)) return "[home_" + temp + "]";
   if(sscanf(filename, "/open/%s", temp)) return "[open]";
   if(sscanf(filename, "/std/%s", temp)) return "[std_object]";
-  if(sscanf(filename, "/obj/mudlib/%s", temp)) return "[mudlib_object]";
-  if(sscanf(filename, "/obj/%s", temp)) return "[gen_obj]";
-  else return "object";
+  if(sscanf(filename, "/obj/%s/", temp)) return "["+temp+"_object]";
+  if(sscanf(filename, "/tests/%*s")) return "[test]";
+  else return "unknown";
 }
 
 /**

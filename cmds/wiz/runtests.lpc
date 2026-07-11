@@ -2,7 +2,7 @@
  * @file /cmds/wiz/runtests.c
  *
  * Run unit tests under /tests/. With no argument, walks /tests/
- * recursively and invokes every runner.c found. With an argument,
+ * recursively and invokes every runner.lpc found. With an argument,
  * invokes /tests/<arg>/runner directly.
  *
  * SYNTAX:
@@ -23,8 +23,7 @@ mixed main(object tp, string arg) {
     string path = "/tests/" + trimmed + "/runner";
 
     if(file_size(path + ".lpc") < 0)
-      return notify_fail(sprintf(
-        "No runner found at %s.lpc\n", path));
+      return _error("No runner found at %s.lpc\n", path);
 
     invoke_runner(tp, path);
     return 1;

@@ -3,8 +3,13 @@
     inherits: [],
     roles: [
       "developer",
+      "runtests"
     ],
-    members: [],
+    members: [
+      "[cmd_wiz]",
+      "[cmd_file]",
+      "[cmd_object]",
+    ],
   },
   admin: {
     inherits: [
@@ -18,7 +23,7 @@
       "[adm_obj]",
       "[admin]",
       "[daemon]",
-      "[cmd_admin]",
+      "[cmd_adm]",
     ],
   },
   owner: {
@@ -30,4 +35,14 @@
     ],
     members: [],
   },
+  test: {
+    inherits: [
+    ],
+    roles: [
+      "runtests"
+    ],
+    members: [
+      "[test]"
+    ]
+  }
 }
