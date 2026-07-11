@@ -80,7 +80,7 @@ prompt.
 
 ```bash
 docker pull ghcr.io/gesslar/oxidus:latest   # fetch the newest image
-docker rm -f oxidus                          # remove the old container
+docker rm -f oxidus                         # remove the old container
 # then re-run the `docker run` command above to recreate it on the new image
 ```
 
