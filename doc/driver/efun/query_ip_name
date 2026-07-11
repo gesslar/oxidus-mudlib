@@ -1,4 +1,3 @@
-
 ### NAME
 
     query_ip_name() - return the ip name of a given player object.

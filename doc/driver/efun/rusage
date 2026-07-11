@@ -1,4 +1,3 @@
-
 ### NAME
 
     rusage() - reports information gathered by the getrusage() system call

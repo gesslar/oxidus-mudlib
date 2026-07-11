@@ -1,4 +1,3 @@
-
 ### NAME
 
     compressedp() - returns if interactive connection uses telopt compress

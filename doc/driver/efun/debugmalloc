@@ -1,4 +1,3 @@
-
 ### NAME
 
     debugmalloc() - dumps information on malloc'd memory to a file.

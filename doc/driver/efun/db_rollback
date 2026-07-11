@@ -1,4 +1,3 @@
-
 ### NAME
 
     db_rollback() - rollback the last transaction

@@ -1,4 +1,3 @@
-
 ### NAME
 
     ffi_callback_free() - release a callback closure

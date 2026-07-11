@@ -1,4 +1,3 @@
-
 ### SYNOPSIS
 
     void tell_room( mixed ob, string str, object *exclude );

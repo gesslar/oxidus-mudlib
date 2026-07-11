@@ -1,4 +1,3 @@
-
 ### NAME
 
     getuid() - return the user id (uid) of an object

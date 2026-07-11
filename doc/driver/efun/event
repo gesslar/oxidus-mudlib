@@ -1,4 +1,3 @@
-
 ### NAME
 
     event() - call event_* in other objects with specified parameters. similar

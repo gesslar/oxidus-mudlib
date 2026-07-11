@@ -1,4 +1,3 @@
-
 ### NAME
 
     read_bytes()  -  reads  a contiguous series of bytes from a file into a

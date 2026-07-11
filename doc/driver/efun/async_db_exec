@@ -1,4 +1,3 @@
-
 ### NAME
 
     async_db_exec() - executes an sql statement then executes a callback

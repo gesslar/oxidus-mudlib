@@ -1,4 +1,3 @@
-
 ### NAME
 
     async_write() - appends a string to a file then executes a callback

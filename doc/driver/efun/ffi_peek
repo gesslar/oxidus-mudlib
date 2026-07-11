@@ -1,4 +1,3 @@
-
 ### NAME
 
     ffi_peek() - copy bytes from a raw foreign address into a buffer

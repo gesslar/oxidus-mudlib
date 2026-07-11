@@ -1,4 +1,3 @@
-
 ### SYNOPSIS
 
     buffer string_encode(string str, string encoding);

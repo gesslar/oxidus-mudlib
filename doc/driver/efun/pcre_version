@@ -1,4 +1,3 @@
-
 ### NAME
 
     pcre_version() - returns the version of the compiled PCRE library used

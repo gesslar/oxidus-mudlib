@@ -1,4 +1,3 @@
-
 ### NAME
 
     int notify_fail( string | function str );

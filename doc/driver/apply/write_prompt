@@ -1,4 +1,3 @@
-
 ### NAME
 
     write_prompt - called when the parser wants a prompt to be written.

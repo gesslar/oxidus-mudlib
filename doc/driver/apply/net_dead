@@ -1,4 +1,3 @@
-
 ### NAME
 
     net_dead  - called by the MudOS driver when an interactive object drops

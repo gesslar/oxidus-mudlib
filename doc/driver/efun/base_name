@@ -1,4 +1,3 @@
-
 ### NAME
 
     base_name - return the base name without object id (OID)

@@ -1,4 +1,3 @@
-
 ### NAME
 
     external_start() - execute a shell command external to the driver

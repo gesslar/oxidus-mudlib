@@ -1,4 +1,3 @@
-
 ### NAME
 
     query_notify_destruct() - determine if an object will be notified when it

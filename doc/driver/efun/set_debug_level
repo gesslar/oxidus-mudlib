@@ -1,4 +1,3 @@
-
 ### NAME
 
     set_debug_level()  -  sets the debug level used by the driver's debug()

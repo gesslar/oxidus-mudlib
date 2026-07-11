@@ -1,4 +1,3 @@
-
 ### NAME
 
     malloc_status() - report various statistics related to memory usage.

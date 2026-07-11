@@ -1,4 +1,3 @@
-
 ### NAME
 
     replace_objects() - recursively render objects in a value as strings

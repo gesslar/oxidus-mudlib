@@ -1,4 +1,3 @@
-
 ### SYNOPSIS
 
     string set_encoding( string encoding | void );

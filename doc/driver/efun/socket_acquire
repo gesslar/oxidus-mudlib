@@ -1,4 +1,3 @@
-
 ### NAME
 
     socket_acquire() - assume ownership of a socket

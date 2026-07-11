@@ -1,4 +1,3 @@
-
 ### NAME
 
     ffi_read() - read a typed scalar from a buffer

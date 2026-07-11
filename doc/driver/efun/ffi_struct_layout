@@ -1,4 +1,3 @@
-
 ### NAME
 
     ffi_struct_layout() - compute a C struct's field layout

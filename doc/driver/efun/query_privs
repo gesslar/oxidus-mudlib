@@ -1,4 +1,3 @@
-
 ### NAME
 
     query_privs() - return the privs string for an object

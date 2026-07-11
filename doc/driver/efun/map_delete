@@ -1,4 +1,3 @@
-
 ### NAME
 
     map_delete()  -  remove a (key, value) pair from a mapping based on the
