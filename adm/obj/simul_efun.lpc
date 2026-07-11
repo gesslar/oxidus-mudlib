@@ -44,3 +44,7 @@
 #include "/adm/simul_efun/time.lpc"
 #include "/adm/simul_efun/user.lpc"
 #include "/adm/simul_efun/util.lpc"
+
+private nomask void create() {
+  efun::set_privs(this_object(), "[adm_obj]");
+}
