@@ -38,15 +38,20 @@ mixed assure_dir(string path) {
   old_privs = query_privs();
   set_privs(this_object(), query_privs(previous_object()));
 
-  parts = explode(path, "/");
-  dir = "";
-  for(j = 0; j < sizeof(parts); j++) {
-    dir += parts[j];
-    mkdir(dir);
-    dir += "/";
-  }
+  string err = catch {
+    parts = explode(path, "/");
+    dir = "";
+    for(j = 0; j < sizeof(parts); j++) {
+      dir += parts[j];
+      mkdir(dir);
+      dir += "/";
+    }
+  };
 
   set_privs(this_object(), old_privs);
+
+  if(err)
+    return 0;
 
   return file_size(path) == -2;
 }
