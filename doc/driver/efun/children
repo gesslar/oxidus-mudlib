@@ -1,4 +1,3 @@
-
 ### NAME
 
     children() - returns an array of objects cloned from a given object.

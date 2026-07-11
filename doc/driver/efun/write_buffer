@@ -1,4 +1,3 @@
-
 ### NAME
 
     write_buffer() - write a buffer to a file, or read into a buffer from a

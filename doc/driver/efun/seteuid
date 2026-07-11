@@ -1,4 +1,3 @@
-
 ### NAME
 
     seteuid() - set the effective user id (euid) of an object

@@ -1,4 +1,3 @@
-
 ### NAME
 
     replace_dollars() - expand $-markers in a string

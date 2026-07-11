@@ -1,4 +1,3 @@
-
 ### NAME
 
     dump_file_descriptors() - dump the MudOS process file descriptor table

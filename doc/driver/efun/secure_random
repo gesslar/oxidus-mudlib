@@ -1,4 +1,3 @@
-
 ### NAME
 
     secure_random() - return a pseudo-random number, this should be

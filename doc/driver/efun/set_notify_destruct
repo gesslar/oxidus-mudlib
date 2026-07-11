@@ -1,4 +1,3 @@
-
 ### NAME
 
     set_notify_destruct() - set the object to be notified when it is destructed

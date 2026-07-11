@@ -1,4 +1,3 @@
-
 ### NAME
 
     socket_error() - return a text description of a socket error

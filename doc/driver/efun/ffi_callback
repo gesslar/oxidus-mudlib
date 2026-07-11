@@ -1,4 +1,3 @@
-
 ### NAME
 
     ffi_callback() - expose an LPC function to C as a callback

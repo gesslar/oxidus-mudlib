@@ -1,4 +1,3 @@
-
 void set_prompt(string, void | object);
 
 not yet implemented

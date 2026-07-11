@@ -1,4 +1,3 @@
-
 ### NAME
 
     terminal_colour() - return a wrapped and indented string where the driver

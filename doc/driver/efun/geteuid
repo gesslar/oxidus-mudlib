@@ -1,4 +1,3 @@
-
 ### NAME
 
     geteuid() - return the effective user id of an object or function

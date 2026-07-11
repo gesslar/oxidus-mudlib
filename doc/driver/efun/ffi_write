@@ -1,4 +1,3 @@
-
 ### NAME
 
     ffi_write() - write a typed scalar into a buffer

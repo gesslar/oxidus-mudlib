@@ -1,4 +1,3 @@
-
 ### NAME
 
     restore_from_string() - like restore_object(), but restores variables from

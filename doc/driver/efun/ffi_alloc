@@ -1,4 +1,3 @@
-
 ### NAME
 
     ffi_alloc() - allocate a native memory block as a buffer

@@ -1,4 +1,3 @@
-
 ### NAME
 
     pcre_replace_callback() - replace captured groups using a callback

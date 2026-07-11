@@ -1,4 +1,3 @@
-
 ### NAME
 
     set_malloc_mask()  -  sets the mask controlling display of malloc debug

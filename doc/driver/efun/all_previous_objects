@@ -1,4 +1,3 @@
-
 ### NAME
 
     all_previous_objects()  -  returns  an array of objects that called the

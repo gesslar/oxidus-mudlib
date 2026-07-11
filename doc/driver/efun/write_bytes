@@ -1,4 +1,3 @@
-
 ### NAME
 
     write_bytes() - writes a contiguous series of bytes to a file

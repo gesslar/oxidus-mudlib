@@ -1,4 +1,3 @@
-
 ### NAME
 
     get_garbage() - get all clones without environments or inventories which are

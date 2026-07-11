@@ -1,4 +1,3 @@
-
 ### NAME
 
     mixed copy(mixed arg) - return a deep copy of an array, buffer, class, or

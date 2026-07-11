@@ -1,4 +1,3 @@
-
 ### NAME
 
     ffi_unload() - release a library handle

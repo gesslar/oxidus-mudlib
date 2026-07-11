@@ -1,4 +1,3 @@
-
 ### NAME
 
     read_buffer() - read from a file and return a buffer, or return part of

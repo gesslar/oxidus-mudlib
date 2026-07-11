@@ -1,4 +1,3 @@
-
 ### NAME
 
     perf_counter_ns() - gives epoch time measurement in nanoseconds

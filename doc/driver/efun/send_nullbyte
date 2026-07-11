@@ -1,4 +1,3 @@
-
 ### NAME
 
     send_nullbyte - sends '\0' to interactive

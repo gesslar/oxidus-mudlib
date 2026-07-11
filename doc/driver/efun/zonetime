@@ -1,4 +1,3 @@
-
 ### NAME
 
     zonetime - returns ctime(int) for timezone string

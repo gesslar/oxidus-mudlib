@@ -1,4 +1,3 @@
-
 ### NAME
 
     async_read() - read a file into a string then executes a callback

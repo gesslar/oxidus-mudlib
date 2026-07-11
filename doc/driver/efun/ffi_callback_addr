@@ -1,4 +1,3 @@
-
 ### NAME
 
     ffi_callback_addr() - raw address of a callback closure
