@@ -1,0 +1,60 @@
+{
+  "strictness": 2,
+  "commentTypes": ["logic", "syntax"],
+  "triggerOnUpdates": true,
+  "statusCheck": false,
+  "fixWithAI": false,
+  "ignorePatterns": "adm/dist/fluffos/**\nadm/dist/bin/**\ninclude/driver/**\narchive/**\ndoc/_wiki/**\nnode_modules/**\ndata/**\nopen/**\ntmp/**\nlog/**\n*.tbl\n*.sqlite3\npackage-lock.json",
+  "summarySection": {
+    "included": true,
+    "collapsible": true,
+    "defaultOpen": false
+  },
+  "issuesTableSection": {
+    "included": true,
+    "collapsible": false,
+    "defaultOpen": true
+  },
+  "confidenceScoreSection": {
+    "included": false
+  },
+  "sequenceDiagramSection": {
+    "included": false
+  },
+  "context": {
+    "repos": ["fluffos/fluffos"]
+  },
+  "instructions": "This repository is Oxidus, a MUD library written in LPC (Lars Pensjo C) targeting the FluffOS 2019+ driver. It is NOT C, C++, TypeScript, or any general-purpose language, and it is NOT an enterprise codebase. Review it as a living, actively-developed, single-author game library. Read .greptile/rules.md before reviewing: it documents LPC/FluffOS semantics that routinely produce false positives, and this project's review philosophy. Prioritise genuine correctness bugs over stylistic or architectural preferences. Coding style, naming, spacing, and documentation format are governed by project skills the reviewer cannot see, so do not raise style, formatting, or naming comments. Trace before you claim: you have the entire repository, so resolve the actual callers, callees, and data flow and state findings as facts, not conditionals. If a finding can only be phrased as 'if X then Y' or 'this could...', finish the trace until you can assert what actually happens, or omit it — a hedged finding that pushes verification back onto the author is noise, and uncertainty you did not resolve should LOWER confidence, never be posted as a caveat. Front-load the trace: the FIRST comment must already carry the validated premise. A finding is a conclusion you verified before posting, not an opening hypothesis you refine across a reply thread — do not use the author's replies as your verification loop, and never let a valid premise emerge only after the author pushes back. 'Fails silently' is not a defect on its own, and its premise is usually false here: every caught error is logged (the driver routes caught/runtime errors through master's error_handler, which always writes a full trace to the catch/runtime log); the on-screen dev notification is separately gated by whether an interactive dev is present, so 'no message on screen' means logged-not-lost, which is intended. Returning 0/null or swallowing a signal is also a deliberate idiom throughout this lib, so only raise 'fails silently' when you have traced a specific caller that is actually harmed and you name that caller. The context repo fluffos/fluffos is the C++ source of the FluffOS driver this lib runs on; use it as the authoritative reference for efun semantics (e.g. sscanf match counting, numeric coercion, path resolution, the privs model) and ground any driver-behavior claim in that source rather than assuming C-language defaults. It is a semantics reference only — never review it, and note it tracks upstream HEAD while this lib targets FluffOS 2019+, so prefer stable, long-standing efun behavior over anything that looks version-specific.",
+  "rules": [
+    {
+      "id": "lpc-source-extension",
+      "rule": "New LPC source files must use the .lpc extension, not .c. The .c extension is legacy; the lib has fully migrated. Header files remain .h.",
+      "scope": ["**/*.c"],
+      "severity": "low"
+    },
+    {
+      "id": "prefer-pointerp",
+      "rule": "Prefer pointerp() over arrayp() for array type checks, to match repository convention.",
+      "scope": ["**/*.lpc"],
+      "severity": "low"
+    },
+    {
+      "id": "valid-function-guard",
+      "rule": "When guarding invocation of a closure/function pointer, prefer valid_function(f) over a bare functionp(f). functionp() alone is truthy even for closures whose owner has been destructed, which can crash at call time.",
+      "scope": ["**/*.lpc"],
+      "severity": "medium"
+    },
+    {
+      "id": "no-mudlib-h-include",
+      "rule": "Do not add '#include <mudlib.h>'. mudlib.h is auto-included via global.h; an explicit include is redundant.",
+      "scope": ["**/*.lpc", "**/*.h"],
+      "severity": "low"
+    },
+    {
+      "id": "lib-relative-paths-in-docs",
+      "rule": "In comments and documentation, refer to files by lib-relative paths (e.g. /std/object.lpc), never absolute host paths like /mud/ox/lib/... — the repository is meant to be forkable.",
+      "scope": ["**/*.lpc", "**/*.h", "**/*.md"],
+      "severity": "low"
+    }
+  ]
+}
