@@ -281,14 +281,18 @@ object stash_objects(string room_file, object _tp) {
   object v = load_object(ROOM_VOID);
 
   if(room = find_object(room_file)) {
-    /** @type {STD_ITEM | STD_BODY} */ object *all = all_inventory(room);
+    /** @type {STD_ITEM* | STD_BODY*} */ object *all = all_inventory(room);
 
-    if(sizeof(all))
-      all->move(v);
+    if(sizeof(all)) {
+      each(all, (: $1->move($(v)) :));
+    }
 
     room->remove();
     room = load_object(room_file);
-    all->move(room);
+
+    if(sizeof(all)) {
+      each(all, (: $1->move($(room)) :));
+    }
   } else {
     catch(room = load_object(room_file));
   }
