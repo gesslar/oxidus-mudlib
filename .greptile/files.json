@@ -1,0 +1,15 @@
+[
+  {
+    "path": "../CLAUDE.md",
+    "description": "Project overview, LPC language notes, directory layout, and conventions for the Oxidus mudlib."
+  },
+  {
+    "path": "../LLM.md",
+    "description": "Shared LLM guidance for this repository (symlinked as AIDER.md, CODEX.md, COPILOT.md, CURSOR.md)."
+  },
+  {
+    "path": "../lpc-config.json",
+    "description": "LPC language-server / driver configuration: include paths, simul_efun location, and driver settings.",
+    "scope": ["**/*.lpc", "**/*.h"]
+  }
+]

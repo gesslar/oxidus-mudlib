@@ -1,6 +1,6 @@
-# LLM Guide for gLPU
+# LLM Guide for Oxidus
 
-This document provides guidance for LLMs (Language Learning Models) when working with the gLPU (Gesslar's LPUniversity) mudlib codebase.
+This document provides guidance for LLMs (Language Learning Models) when working with the Oxidus mudlib codebase.
 
 ## IMPORTANT: Required Skills
 
@@ -14,7 +14,7 @@ These skills contain critical information about code formatting, documentation s
 
 ## Project Overview
 
-**gLPU** is a MUD (Multi-User Dungeon) library written in LPC (Lars Pensjö C), designed to run on FluffOS 2019+. It is a fork of LPUniversity, actively maintained and extended by Gesslar.
+**Oxidus** is a MUD (Multi-User Dungeon) library written in LPC (Lars Pensjö C), designed to run on FluffOS 2019+. It is authored and maintained by Gesslar.
 
 - **Language**: LPC (a C-like scripting language for MUDs)
 - **Driver**: FluffOS 2019+
@@ -206,7 +206,7 @@ string append(string source, string to_append) {
 - `@history` - Change log
 - `@simul_efun` - Marks simulated efuns (built-in function replacements)
 
-## Common Patterns in gLPU
+## Common Patterns in Oxidus
 
 ### Object Lifecycle
 
@@ -292,7 +292,13 @@ Current state (from git status):
 
 - Documentation site: <https://oxidus.online/>
 - Contributing guide: <https://oxidus.online/contributing>
-- Original LPUniversity: <http://dead-souls.net/>
+
+### Attribution
+
+Oxidus began life as a fork of LPUniversity and has since diverged into its own
+codebase. This lineage is retained here purely as attribution — LPUniversity is
+no longer a reference for how Oxidus is built. LPUniversity is available from
+<http://dead-souls.net/>.
 
 ## Tips for Claude Code
 
