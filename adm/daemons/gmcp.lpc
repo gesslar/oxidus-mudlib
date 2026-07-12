@@ -80,8 +80,10 @@ class ClassGMCP convert_message(string message) {
     err = catch {
       gmcp.payload = json_decode(message_info);
     };
-    if(err)
+
+    if(err) {
       debug("Error decoding JSON: %O", chop(err, "\n", -1));
+    }
   }
 
   return gmcp;
