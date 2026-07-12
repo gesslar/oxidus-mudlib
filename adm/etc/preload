@@ -32,9 +32,6 @@
 # Soul Daemon
 /adm/daemons/soul_d
 
-# Mail Daemon
-/adm/daemons/mail_d
-
 # Alarm Daemon
 /adm/daemons/alarm
 
