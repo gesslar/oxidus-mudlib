@@ -2,7 +2,7 @@
   "strictness": 2,
   "commentTypes": ["logic", "syntax"],
   "triggerOnUpdates": true,
-  "statusCheck": false,
+  "statusCheck": true,
   "fixWithAI": false,
   "ignorePatterns": "adm/dist/fluffos/**\nadm/dist/bin/**\ninclude/driver/**\narchive/**\ndoc/_wiki/**\nnode_modules/**\ndata/**\nopen/**\ntmp/**\nlog/**\n*.tbl\n*.sqlite3\npackage-lock.json",
   "summarySection": {
