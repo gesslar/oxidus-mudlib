@@ -1,17 +1,18 @@
 /**
  * @file /adm/daemons/crawler.c
  *
- * Crawls the game world room by room, deriving a coordinate grid for
- * every reachable room and handing the result to COORD_D. The crawl
- * is kicked off automatically at boot and walks each room's exits,
- * placing neighbours so that adjacent rooms abut without overlapping.
+ * Crawls the game world room by room, deriving a coordinate grid for every
+ * reachable room and handing the result to COORD_D. The crawl is kicked off
+ * automatically at boot and walks each room's exits, placing neighbours so
+ * that adjacent rooms abut without overlapping.
  *
  * @created 2024-08-21 - Gesslar
- * @last_modified 2026-06-02 - Gesslar
+ * @last_modified 2026-07-12 - Gesslar
  *
  * @history
  * 2024-08-21 - Gesslar - Created
  * 2026-06-02 - Gesslar - Documented
+ * 2026-07-12 - Gesslar - Hardened moving objects out/in
  */
 
 #include <classes.h>
@@ -61,18 +62,16 @@ void setup() {
 }
 
 /**
- * Begins a fresh crawl of the game world, starting from
- * crawl_start_room and mapping every reachable room into a coordinate
- * grid.
+ * Begins a fresh crawl of the game world, starting from crawl_start_room and
+ * mapping every reachable room into a coordinate grid.
  *
- * Slotted on SIG_SYS_BOOT, so the crawl runs automatically at boot.
- * The stale crawl log is removed, the starting room is stashed and
- * seeded into the todo queue at the origin ({0, 0, 0}), and
- * crawl_next_room is scheduled to process the queue one room at a time
- * on a walltime call_out.
+ * Slotted on SIG_SYS_BOOT, so the crawl runs automatically at boot. The stale
+ * crawl log is removed, the starting room is stashed and seeded into the todo
+ * queue at the origin ({0, 0, 0}), and crawl_next_room is scheduled to process
+ * the queue one room at a time on a walltime call_out.
  *
  * @param {mixed...} arg - Optional arguments forwarded through to
- *                         crawl_next_room.
+ *   crawl_next_room.
  */
 void crawl(mixed arg...) {
   object room;
@@ -97,17 +96,15 @@ void crawl(mixed arg...) {
 }
 
 /**
- * Processes the next room in the todo queue, or finalises the crawl
- * when the queue is empty.
+ * Processes the next room in the todo queue, or finalises the crawl when the
+ * queue is empty.
  *
- * When the queue empties, the accumulated room data is handed to
- * COORD_D, the todo and done state is cleared, and
- * SIG_SYS_CRAWL_COMPLETE is emitted. Otherwise the next queued room is
- * stashed and passed to process_room; rooms that fail to load are
- * dropped and the next step is scheduled.
+ * When the queue empties, the accumulated room data is handed to COORD_D, the
+ * todo and done state is cleared, and SIG_SYS_CRAWL_COMPLETE is emitted.
+ * Otherwise the next queued room is stashed and passed to process_room; rooms
+ * that fail to load are dropped and the next step is scheduled.
  *
- * @param {STD_BODY} tp - The crawling player to notify on completion,
- *                        if any.
+ * @param {STD_BODY} tp - The crawling player to notify on completion, if any.
  * @param {mixed...} arg - Optional arguments carried over from crawl.
  */
 void crawl_next_room(object tp, mixed arg...) {
@@ -116,7 +113,11 @@ void crawl_next_room(object tp, mixed arg...) {
 
   if(!sizeof(todo)) {
     if(tp)
-      tell(tp, sprintf("Crawling complete. Total rooms discovered: %d\n", sizeof(done)));
+      tell(tp, sprintf(
+          "Crawling complete. Total rooms discovered: %d\n",
+          sizeof(done)
+        )
+      );
 
     COORD_D->set_coordinate_data(done);
     done = ([ ]);
@@ -141,16 +142,14 @@ void crawl_next_room(object tp, mixed arg...) {
  * Walks every exit of a room, discovering and queuing each unvisited
  * destination with its computed grid coordinates.
  *
- * For each exit, the destination is loaded (stashing any inventory),
- * its grid coordinates are derived from this room's coordinates and
- * the two rooms' sizes, and it is added to the todo queue. Rooms that
- * fail to load are logged and skipped. Once all exits are walked, the
- * room is moved from todo to done and the next crawl step is
- * scheduled.
+ * For each exit, the destination is loaded (stashing any inventory), its grid
+ * coordinates are derived from this room's coordinates and the two rooms'
+ * sizes, and it is added to the todo queue. Rooms that fail to load are logged
+ * and skipped. Once all exits are walked, the room is moved from todo to done
+ * and the next crawl step is scheduled.
  *
  * @param {STD_ROOM} room - The room whose exits are being processed.
- * @param {STD_BODY} tp - The crawling player to notify on completion,
- *                        if any.
+ * @param {STD_BODY} tp - The crawling player to notify on completion, if any.
  */
 void process_room(object room, object tp) {
   string file = file_name(room);
@@ -171,7 +170,15 @@ void process_room(object room, object tp) {
 
         e = catch( next_room = stash_objects(dest, tp) );
         if(e)
-          write_file(log_file, sprintf("Failed to load %s => %s via %s\n", file, dest, exit));
+          write_file(
+            log_file,
+            sprintf(
+              "Failed to load %s => %s via %s\n",
+              file,
+              dest,
+              exit
+            )
+          );
         else if(next_room) {
           int *new_coords = update_coordinates(room_data.coords, exit, distance);
 
@@ -183,8 +190,8 @@ void process_room(object room, object tp) {
           );
         }
       } else if(member_array(exit, grid_dirs) != -1) {
-        // Cross-edge: the destination is already placed. Verify this
-        // exit agrees with where it sits, and log the edge if not.
+        // Cross-edge: the destination is already placed. Verify this exit
+        // agrees with where it sits, and log the edge if not.
         class RoomInfo placed = done[dest];
         int *expected = update_coordinates(room_data.coords, exit, distance);
 
@@ -194,11 +201,15 @@ void process_room(object room, object tp) {
         if(placed && (placed.coords[0] != expected[0] ||
                       placed.coords[1] != expected[1] ||
                       placed.coords[2] != expected[2]))
-          write_file(log_file, sprintf(
-            "Cross-edge conflict: %s %s -> %s expected (%d,%d,%d) but placed at (%d,%d,%d)\n",
-            file, exit, dest,
-            expected[0], expected[1], expected[2],
-            placed.coords[0], placed.coords[1], placed.coords[2]));
+          write_file(
+            log_file,
+            sprintf(
+              "Cross-edge conflict: %s %s -> %s expected (%d,%d,%d) but placed at (%d,%d,%d)\n",
+              file, exit, dest,
+              expected[0], expected[1], expected[2],
+              placed.coords[0], placed.coords[1], placed.coords[2]
+            )
+          );
       }
     }
 
@@ -221,14 +232,12 @@ void process_room(object room, object tp) {
  * no rounding is involved and the grid stays exact. Non-directional
  * exits leave the coordinates unchanged.
  *
- * @param {int*} coords - The {x, y, z} coordinates of the current
- *                        room.
- * @param {string} exit - The direction of travel (e.g. "north",
- *                        "southeast", "up").
- * @param {int} distance - The centre-to-centre distance in grid
- *                         squares for this exit.
- * @returns {int*} The {x, y, z} grid coordinates of the destination
- *                 room.
+ * @param {int*} coords - The {x, y, z} coordinates of the current room.
+ * @param {string} exit - The direction of travel (e.g. "north", "southeast",
+ *  "up").
+ * @param {int} distance - The centre-to-centre distance in grid squares for
+ *  this exit.
+ * @returns {int*} The {x, y, z} grid coordinates of the destination room.
  */
 int *update_coordinates(int *coords, string exit, int distance) {
   int *new_coords = ({ coords[0], coords[1], coords[2] });
@@ -264,17 +273,15 @@ int *update_coordinates(int *coords, string exit, int distance) {
 /**
  * Loads a room fresh while preserving any objects already inside it.
  *
- * If the room is already loaded, its entire inventory is moved into
- * the void, the room is removed and reloaded, and the inventory is
- * moved back. If the room is not loaded, it is simply loaded. This
- * lets the crawler query a clean copy of the room without destroying
- * its live contents.
+ * If the room is already loaded, its entire inventory is moved into the void,
+ * the room is removed and reloaded, and the inventory is moved back. If the
+ * room is not loaded, it is simply loaded. This lets the crawler query a clean
+ * copy of the room without destroying its live contents.
  *
  * @param {string} room_file - The path of the room to (re)load.
- * @param {STD_BODY} _tp - The crawling player; carried through the
- *                        crawl pipeline but unused here.
- * @returns {STD_ROOM} The freshly loaded room, or 0 if it failed to
- *                      load.
+ * @param {STD_BODY} _tp - The crawling player; carried through the crawl
+ *  pipeline but unused here.
+ * @returns {STD_ROOM} The freshly loaded room, or 0 if it failed to load.
  */
 object stash_objects(string room_file, object _tp) {
   /** @type {STD_ROOM} */ object room;
@@ -284,15 +291,24 @@ object stash_objects(string room_file, object _tp) {
     /** @type {STD_ITEM* | STD_BODY*} */ object *all = all_inventory(room);
 
     if(sizeof(all)) {
-      each(all, (: $1->move($(v)) :));
+      each(all, (:
+           $1
+        && catch($1->move($(v)))
+      :));
     }
 
-    room->remove();
-    room = load_object(room_file);
+    catch {
+      room->remove();
+      room = load_object(room_file);
+    };
 
-    if(sizeof(all)) {
-      each(all, (: $1->move($(room)) :));
-    }
+    if(objectp(room) && sizeof(all)) {
+      each(all, (:
+           $1
+        && catch($1->move($(room)))
+      :));
+    } // else, you're in the void. soz. but you can just walk out of the void
+      // so stop crying about it.
   } else {
     catch(room = load_object(room_file));
   }
