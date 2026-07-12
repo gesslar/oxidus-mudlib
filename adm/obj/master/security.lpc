@@ -32,6 +32,9 @@
  * group-conferred plus direct - and is the precise "this operation
  * requires this role" gate.
  *
+ * adm/obj/master.lpc->privs_file(string filename) decides what objects
+ * identify as when loaded.
+ *
  * @created 2005-04-23 - Tacitus
  * @last_modified 2026-06-16 - Gesslar
  *
