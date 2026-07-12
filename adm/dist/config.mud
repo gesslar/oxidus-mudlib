@@ -68,7 +68,7 @@ maximum evaluation cost : 500000
 maximum array size : 15000
 
 # This is the maximum allowed size of a variable of type 'buffer'.
-maximum buffer size : 400000
+maximum buffer size : 1000000
 
 # Max size for a mapping
 maximum mapping size : 1500000
@@ -77,14 +77,14 @@ maximum mapping size : 1500000
 inherit chain size : 30
 
 # maximum length of a string variable
-maximum string length : 200000
+maximum string length : 1000000
 
 # Max size of a file allowed to be read by 'read_file()'.
-maximum read file size : 200000
+maximum read file size : 1000000
 
 # max number of bytes you allow to be read and written with read_bytes
 # and write_bytes
-maximum byte transfer : 10000
+maximum byte transfer : 1000000
 
 # Define the size of the shared string hash table.  This number should
 # a prime, probably between 1000 and 30000; if you set it to about 1/5
