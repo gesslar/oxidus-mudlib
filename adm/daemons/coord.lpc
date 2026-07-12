@@ -16,44 +16,44 @@ inherit STD_DAEMON;
 
 inherit CLASS_ROOMINFO;
 
-private nomask mapping rooms = ([ ]);
-private nomask mixed *rooms_array = ({ });
+private nomask mapping __rooms = ([ ]);
+private nomask mixed *__rooms_array = ({ });
 
 void setup() {
   set_persistent(1);
 }
 
 void clear() {
-  rooms = ([]);
-  rooms_array = ({});
+  __rooms = ([]);
+  __rooms_array = ({});
 
   save_data();
 }
 
 void set_coordinate_data(mapping m) {
-  rooms = m;
-  rooms_array = map(values(rooms), (: $1.coords :));
+  __rooms = m;
+  __rooms_array = map(values(__rooms), (: $1.coords :));
 
   save_data();
 }
 
 mapping get_coordinate_data() {
-  return copy(rooms);
+  return copy(__rooms);
 }
 
 int *get_coordinates(string room) {
-  if(classp(rooms[room]))
-    return rooms[room].coords;
+  if(classp(__rooms[room]))
+    return __rooms[room].coords;
 
   return null;
 }
 
 int valid_coordinate(int *coords) {
-  int sz = sizeof(rooms_array);
+  int sz = sizeof(__rooms_array);
   for(int i = 0; i < sz; i++)
-    if(rooms_array[i][0] == coords[0] &&
-       rooms_array[i][1] == coords[1] &&
-       rooms_array[i][2] == coords[2])
+    if(__rooms_array[i][0] == coords[0] &&
+       __rooms_array[i][1] == coords[1] &&
+       __rooms_array[i][2] == coords[2])
       return 1;
 
   return 0;
