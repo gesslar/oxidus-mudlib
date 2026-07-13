@@ -135,7 +135,7 @@ string possessive_pronoun(mixed ob) {
   else
     __gender = ob->query_gender() || "neuter";
 
-  if(stringp(ob))
+  if(!stringp(__gender))
     return "its";
 
   switch(__gender) {
@@ -255,10 +255,10 @@ string subjective(mixed ob) {
   else if(objectp(ob))
     __gender = ob->query_gender() || "neuter";
 
-  if(!stringp(ob))
+  if(!stringp(__gender))
     return "it";
 
-  switch(ob) {
+  switch(__gender) {
     case "male" : return "he";
     case "female" : return "she";
     case "other" : return "they";
@@ -268,27 +268,72 @@ string subjective(mixed ob) {
 }
 
 /**
+ * Tests whether a character code is an ASCII vowel, in either case.
+ *
+ * @param {int} c - The character code to test.
+ * @returns {int} 1 if `c` is a/e/i/o/u (upper or lower case), 0 otherwise.
+ * @example
+ * vowel('a');  // 1
+ * vowel('A');  // 1
+ * vowel('z');  // 0
+ */
+int vowel(int c) {
+  return pcre_match(sprintf("%c", c), "[aeiouAEIOU]");
+}
+
+/**
  * Determines the appropriate article for a word.
+ *
+ * Chooses "a"/"an" by the following word's sound rather than just its
+ * first letter: silent-h words take "an" ("an hour", "an honest"), and
+ * "yoo"-sounding "us..." words take "a" ("a use", "a user") while
+ * "an usher" is preserved by judging the letter after the "us".
  *
  * @param {string} str - Word to check
  * @param {int} [definite=0] - Use "the" instead of "a/an"
- * @returns {string} Appropriate article (the/a/an)
+ * @returns {string} Appropriate article (the/a/an), or "" if str isn't a string
  * @example
- * article("elephant");     // Returns "an"
- * article("bear", 1);      // Returns "the"
+ * article("elephant");  // Returns "an"
+ * article("hour");      // Returns "an"
+ * article("user");      // Returns "a"
+ * article("bear", 1);   // Returns "the"
  */
 varargs string article(string str, int definite) {
+  string word;
+  int first, an;
+
   if(!stringp(str))
     return "";
 
   if(definite)
     return "the";
 
-  else
-    if(of(str[0], ({ 'a', 'e', 'i', 'o', 'u' })))
-      return "an";
-    else
-      return "a";
+  word = lower_case(str);
+
+  while(strlen(word) && word[0] == ' ')
+    word = word[1..];
+
+  if(!strlen(word))
+    return "a";
+
+  first = word[0];
+  an = 0;
+
+  // "us..." sounds like "yoos" (a consonant onset) when a vowel follows,
+  // so judge by the letter after the "us": "a use"/"a user", "an usher".
+  if(strlen(word) >= 2 && word[0..1] == "us") {
+    first = strlen(word) > 2 ? word[2] : 0;
+    an = 1;
+  }
+
+  // Silent-h words sound vowel-initial.
+  if(pcre_match(word, "^(hour|honest|honou?r|heir)"))
+    first = 'o';
+
+  if(vowel(first))
+    an = !an;
+
+  return an ? "an" : "a";
 }
 
 /**
