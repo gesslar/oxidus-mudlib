@@ -27,10 +27,12 @@ void setup() {
     test("parses a quoted string", function() {
       ASSERT_EQ("hello", from_string("\"hello\""));
     }),
-    // The hex scan loop only accepts digits 0-9, never a-f, so any hex literal
-    // containing a letter digit stops early: from_string("0xFF") yields 0.
-    pending("parses a hexadecimal integer with letter digits",
-      "hex loop excludes a-f, see string.c#L316"),
+    test("parses a hexadecimal integer with letter digits", function() {
+      ASSERT_EQ(255, from_string("0xFF"));
+    }),
+    test("parses a hexadecimal integer with lowercase letter digits", function() {
+      ASSERT_EQ(255, from_string("0xff"));
+    }),
     test("an empty string parses to 0", function() {
       ASSERT_EQ(0, from_string(""));
     }),
