@@ -320,8 +320,6 @@ private void crash(string crash_message, object command_giver, object current_ob
 
   if(current_object)
     log_file("crashes", "this_object: " + file_name(current_object) + "\n");
-
-  shutdown_d()->start(0, SYS_SHUTDOWN);
 }
 
 // This doesn't actually seem to work and generates *Too long evaluation.

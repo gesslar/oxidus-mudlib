@@ -20,9 +20,6 @@
 # COLOUR_D color daemon
 /adm/daemons/colour
 
-# Shutdown Daemon
-/adm/daemons/shutdown
-
 # Global Alias Daemon
 /adm/daemons/alias
 
