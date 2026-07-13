@@ -21,7 +21,8 @@ void setup() {
   help_text =
     "This command will set up a user with admin access to the mud by adding "
     "the user to the 'admin' group and adding '/cmds/wiz/', '/cmds/object/', "
-    "'/cmds/file/', and '/cmds/adm/' to the user's command path.\n\n"
+    "'/cmds/file/', and '/cmds/adm/' to the user's command path.\n"
+    "\n"
     "See also: revadmin, makedev";
 }
 

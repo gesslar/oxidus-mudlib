@@ -16,10 +16,9 @@ inherit STD_CMD;
 void setup() {
   usage_text = "rmdir <directory name>";
   help_text =
-"This command permanently removes a specified directory. "
-"It will not currently delete a directory that has content "
-"(i.e. the directory you wish to remove must be empty "
-"before it can be deleted).";
+    "This command permanently removes a specified directory. It will not "
+    "currently delete a directory that has content (i.e. the directory you "
+    "wish to remove must be empty before it can be deleted).";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller,

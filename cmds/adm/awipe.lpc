@@ -20,11 +20,12 @@ void confirm_awipe(string str, object caller, string account);
 void setup() {
   usage_text = "awipe <account>";
   help_text =
-"This command deletes the target account along with every character "
-"associated with it, removing each character's pfile and group "
-"memberships from " + mud_name() + ". This is NON-REVERSIBLE, so use "
-"with discretion.\n\n"
-"See also: nuke";
+    "This command deletes the target account along with every character "
+    "associated with it, removing each character's pfile and group "
+    "memberships from " + mud_name() + ". This is NON-REVERSIBLE, so use "
+    "with discretion.\n"
+    "\n"
+    "See also: nuke";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string account) {
@@ -39,8 +40,12 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string account) {
   if(!valid_account(account))
     return _error("Account '%s' does not exist.", account);
 
-  _question(caller, "Are you sure you want to delete account " + account +
-    " and all of its characters? [y/n] ", MSG_PROMPT);
+  _question(
+    caller,
+    "Are you sure you want to delete account " + account + " and all of its "
+    "characters? [y/n] ", MSG_PROMPT
+  );
+
   input_to("confirm_awipe", 0, caller, account);
 
   return 1;

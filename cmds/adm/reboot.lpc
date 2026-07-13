@@ -25,9 +25,11 @@ void setup() {
     "until the reboot should occur, or 'now' to reboot as soon as the command "
     "is given. Supply 'stop' to cancel a shutdown or reboot already in "
     "progress. With no argument, the current shutdown/reboot status is "
-    "reported.\n\n"
+    "reported.\n"
+    "\n"
     "Note that this reboots the mud and brings it back up. If you want the mud "
-    "to stay down afterwards, use the shutdown command instead.\n\n"
+    "to stay down afterwards, use the shutdown command instead.\n"
+    "\n"
     "See also: shutdown";
 }
 

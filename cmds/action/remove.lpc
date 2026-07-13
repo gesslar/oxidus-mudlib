@@ -14,11 +14,11 @@
 inherit STD_ACT;
 
 void setup() {
-    help_text =
-"Use this command to remove an item of clothing or armour that you are wearing. "
-"For example, to remove a pair of boots, you would type 'remove boots'. You "
-"may only remove items that you are wearing.";
-    usage_text = "remove <item>";
+  usage_text = "remove <item>";
+  help_text =
+    "Use this command to remove an item of clothing or armour that you are "
+    "wearing. For example, to remove a pair of boots, you would type 'remove "
+    "boots'. You may only remove items that you are wearing.";
 }
 
 private mixed remove_all(object tp);

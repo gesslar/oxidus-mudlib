@@ -19,10 +19,10 @@ inherit STD_CMD;
 void setup() {
   usage_text = "ed <file>";
   help_text =
-"This command lets you edit a specified file in the mud "
-"editor. To access editor specific help, type 'h' while "
-"in the editor.\n\n"
-"See also: rm, more, mv, cp";
+    "This command lets you edit a specified file in the mud editor. To access "
+    "editor specific help, type 'h' while in the editor.\n"
+    "\n"
+    "See also: rm, more, mv, cp";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller,

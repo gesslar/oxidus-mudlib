@@ -12,34 +12,37 @@
 
 inherit STD_ACT;
 
-mixed main(object tp, string str) {
-  object ob;
+void setup() {
+  usage_text = "dispose <corpse>";
+  help_text =
+    "This command will allow you to dispose of a corpse in your environment. "
+    "Only corpses may be disposed of in this manner.";
+}
+
+mixed main(
+  /** @type {STD_BODY} */ object tp,
+  string str
+) {
+  /** @type {LIB_CORPSE} */ object corpse;
   string short;
 
   if(!str)
     return "Dispose of what?";
 
-  if(!ob = find_target(tp, str))
+  if(!corpse = find_target(tp, str))
     return "You do not see that here.";
 
-  if(!ob->is_corpse())
+  if(!corpse->is_corpse())
     return "You cannot dispose of that.";
 
-  short = ob->query_short();
+  short = corpse->query_short();
   if(!short)
     return "You cannot dispose of that.";
 
-  if(!ob->remove())
+  if(!corpse->remove())
     return "You could not dispose of that.";
 
   tp->simple_action("Quickly and quietly, $n $vwork to dispose of the $o.", short);
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-    "SYNTAX: dispose <corpse>\n\n"
-    "This command will allow you to dispose of a corpse in your environment. "
-    "Only corpses may be disposed of in this manner.";
 }

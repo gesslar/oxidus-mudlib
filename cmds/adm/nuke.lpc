@@ -21,11 +21,12 @@ void confirm_nuke(string str, object caller, string user);
 void setup() {
   usage_text = "nuke <username>";
   help_text =
-"This command deletes the target user's pfile, thus removing their "
-"character from " + mud_name() + ". It also removes their bank account, "
-"detaches them from their account, and strips all of their group "
-"memberships. This is NON-REVERSIBLE, so use with discretion.\n\n"
-"See also: awipe";
+    "This command deletes the target user's pfile, thus removing their "
+    "character from " + mud_name() + ". It also removes their bank account, "
+    "detaches them from their account, and strips all of their group "
+    "memberships. This is NON-REVERSIBLE, so use with discretion.\n"
+    "\n"
+    "See also: awipe";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string user) {

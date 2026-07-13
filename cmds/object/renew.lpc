@@ -1,7 +1,8 @@
 /**
  * @file /cmds/object/renew.lpc
- * Command for renewing objects. Destructs the original
- * and reclones from a freshly loaded master.
+ *
+ * Command for renewing objects. Destructs the original and reclones from a
+ * freshly loaded master.
  *
  * @created 2024-07-23 - Gesslar
  * @last_modified 2026-07-13 - Gesslar
@@ -16,17 +17,18 @@ inherit STD_CMD;
 void setup() {
   usage_text = "renew <object>";
   help_text =
-"This command destructs a cloned object, reloads its "
-"master, and creates a fresh clone in the same "
-"location. Useful for picking up code changes without "
-"manually destructing and recloning.\n\n"
-"See also: update, clone, dest";
+    "This command destructs a cloned object, reloads its master, and creates "
+    "a fresh clone in the same location. Useful for picking up code changes "
+    "without manually destructing and recloning.\n"
+    "\n"
+    "See also: update, clone, dest";
 }
 
 public mixed main(
   /** @type {STD_PLAYER} */ object caller, string str
 ) {
-  object ob, env;
+  /** @type {STD_OBJECT} */ object ob;
+  object env;
   string e, file;
 
   if(!str)
@@ -35,12 +37,12 @@ public mixed main(
   if(!ob = get_object(str))
     return _error("No object found with that name.");
 
-  if(ob->is_room())
+  if(/** @type {STD_ROOM} */ (ob)->is_room())
     return _error(
       "You cannot renew rooms. Use update."
     );
 
-  if(ob->no_renew())
+  if(call_if(ob, "no_renew"))
     return _error("That object cannot be renewed.");
 
   if(!clonep(ob))
@@ -50,22 +52,20 @@ public mixed main(
 
   env = environment(ob);
 
-  if(ob->move(ROOM_VOID))
+  if(/** @type {STD_OBJECT} */ (ob)->move(ROOM_VOID))
     return _error(
       "Failed to move the object to the void."
     );
 
   file = base_name(ob);
   if(virtualp(ob))
-    caller->set_env(
-      "cwf", ob->query_virtual_master()
-    );
+    caller->set_env("cwf", ob->query_virtual_master());
   else
     caller->set_env("cwf", file);
 
   ob->remove();
 
-  e = catch(file->remove());
+  e = catch(/** @type {STD_OBJECT} */ (file)->remove());
   if(e)
     return _error(
       "Failed to destruct the original object: " + e

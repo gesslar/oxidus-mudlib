@@ -1,7 +1,7 @@
 /**
  * @file /cmds/std/bug.lpc
  *
- * Bug command for reporting bugs.
+ * Command for reporting bugs.
  *
  * @created 2024-07-07 - Gesslar
  * @last_modified 2026-07-13 - Gesslar

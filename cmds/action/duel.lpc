@@ -12,6 +12,15 @@
 
 inherit STD_ACT;
 
+void setup() {
+  usage_text = "duel <living>";
+  help_text =
+    "This command will allow you to engage another living being in your "
+    "environment in combat. You cannot duel while dead or a ghost, nor may "
+    "you duel someone who is dead or a ghost.";
+}
+
+
 mixed main(/** @type {STD_BODY} */ object tp, string arg) {
   /** @type {STD_BODY} */ object victim;
   string name, vname;
@@ -42,12 +51,4 @@ mixed main(/** @type {STD_BODY} */ object tp, string arg) {
   tp->start_attack(victim);
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-    "SYNTAX: duel <living>\n\n"
-    "This command will allow you to engage another living being in your "
-    "environment in combat. You cannot duel while dead or a ghost, nor may "
-    "you duel someone who is dead or a ghost.";
 }

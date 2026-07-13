@@ -16,9 +16,9 @@ inherit STD_CMD;
 void setup() {
   usage_text = "what";
   help_text =
-"This command lets you view the last command executed by every user "
-"currently logged in. It is recommended that you review any privacy "
-"policy that your mud might have before using this tool.";
+    "This command lets you view the last command executed by every user "
+    "currently logged in. It is recommended that you review any privacy "
+    "policy that your mud might have before using this tool.";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string _arg) {

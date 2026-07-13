@@ -14,13 +14,14 @@ inherit STD_ACT;
 
 void setup() {
   usage_text =
-"wield - List the weapons you are currently wielding.\n"
-"wield <weapon> - Wield a weapon in your primary hand.\n";
+    "wield - List the weapons you are currently wielding.\n"
+    "wield <weapon> - Wield a weapon in your primary hand.\n";
   help_text =
-"Wield a weapon. With no argument, lists the weapons you are "
-"currently wielding. Otherwise, wields the named weapon in your "
-"primary hand.\n\n"
-"See also: unwield, eq\n";
+    "Wield a weapon. With no argument, lists the weapons you are "
+    "currently wielding. Otherwise, wields the named weapon in your "
+    "primary hand.\n"
+    "\n"
+    "See also: unwield, wear, remove, eq\n";
 }
 
 mixed main(/** @type {STD_BODY} */ object tp, string str) {

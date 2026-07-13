@@ -12,6 +12,15 @@
 
 inherit STD_ACT;
 
+void setup() {
+  usage_text = "sip <drink>";
+  help_text =
+    "This command will allow you to sip from a beverage you are holding. "
+    "Sipping consumes the beverage more slowly than drinking it.\n"
+    "\n"
+    "See also: drink, eat, nibble";
+}
+
 mixed main(object tp, string str) {
   /** @type {STD_DRINK} */ object ob;
   int uses;
@@ -31,12 +40,4 @@ mixed main(object tp, string str) {
     return "You couldn't sip from that.";
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-    "SYNTAX: sip <object>\n\n"
-    "This command will allow you to sip from a beverage you are holding. "
-    "Sipping consumes the beverage more slowly than drinking it.\n\n"
-    "See also: drink, eat";
 }

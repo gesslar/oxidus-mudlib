@@ -19,7 +19,7 @@ private nosave mapping destinations;
 private nosave string *dests;
 
 void setup() {
-  destinations = mud_config("TRAVEL_DESTINATIONS");
+  destinations = (mapping)mud_config("TRAVEL_DESTINATIONS");
   destinations = map(destinations, (: chop(chop($2, ".lpc", -1), ".c", -1) :));
   destinations = map(destinations, (: prepend($2, "/") :));
 
@@ -27,16 +27,19 @@ void setup() {
   dests = sort_array(dests, 1);
 
   usage_text =
-"travel list - List all valid travel destinations.\n"
-"travel <destination> - Travel to a common destination.";
+    "travel list - List all valid travel destinations.\n"
+    "travel <destination> - Travel to a common destination.";
   help_text =
-"This command allows you to travel to common destinations from your current "
-"location.\n\n"
-"Valid destinations are: " + implode(dests, ", ") + ".\n\n"
-"Please note that you will always pass through the village square when "
-"traveling to any destination, regardless of the proximity of your current "
-"location to the destination.\n\n"
-"You must have GMCP enabled to use this command.";
+    "This command allows you to travel to common destinations from your "
+    "current location.\n"
+    "\n"
+    "Valid destinations are: " + implode(dests, ", ") + ".\n"
+    "\n"
+    "Please note that you will always pass through the village square when "
+    "traveling to any destination, regardless of the proximity of your "
+    "current location to the destination.\n"
+    "\n"
+    "You must have GMCP enabled to use this command.";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object tp, string str) {

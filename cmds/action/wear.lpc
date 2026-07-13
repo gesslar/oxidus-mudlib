@@ -13,21 +13,29 @@
 inherit STD_ACT;
 
 void setup() {
-    help_text =
-"This command enables you to wear an item of clothing or armour. You must "
-"possess the item in your inventory to wear it. The item will have specific "
-"slots that it can be worn in. For example, a pair of boots might have a slot "
-"of 'feet'. To wear the boots, you would type 'wear boots'. You may not wear "
-"more than one item in the same slot.";
-   usage_text = "wear <item>";
+  usage_text = "wear <item>";
+  help_text =
+    "This command enables you to wear an item of clothing or armour. You "
+    "must possess the item in your inventory to wear it. The item will have "
+    "specific slots that it can be worn in. For example, a pair of boots "
+    "might have a slot of 'feet'. To wear the boots, you would type 'wear "
+    "boots'. You may not wear more than one item in the same slot.\n"
+    "\n"
+    "See also: unwield, wear, remove, eq\n";
 }
 
 private mixed wear_all(object tp);
 
-mixed main(/** @type {STD_BODY} */ object tp, string str) {
+mixed main(
+  /** @type {STD_BODY} */ object tp,
+  string str
+) {
   /** @type {STD_CLOTHING | STD_ARMOUR} */ object ob;
   string slot;
   mixed result;
+
+  if(!str)
+    return _usage(tp);
 
   if(str == "all")
     return wear_all(tp);

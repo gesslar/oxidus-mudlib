@@ -16,10 +16,9 @@ inherit STD_CMD;
 void setup() {
   usage_text = "mkdir <directory name>";
   help_text =
-"This command creates a new directory. If you specify a "
-"path, the directory will be created in the specified "
-"location; otherwise, it will be created in the current "
-"working directory.";
+    "This command creates a new directory. If you specify a path, the "
+    "directory will be created in the specified location; otherwise, it will "
+    "be created in the current working directory.";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller,
