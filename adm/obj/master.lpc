@@ -161,6 +161,12 @@ protected void log_error(string _file, string message) {
 
 // Blatanly stolen from Lima
 int different(string fn, string pr) {
+  // A programless frame (destructed/failed-to-load object) yields a 0
+  // program name; there's nothing to compare, and feeding 0 to chop() now
+  // throws on its stringp guard — which would fault the error handler itself.
+  if(!stringp(fn) || !stringp(pr))
+    return 0;
+
   sscanf(fn, "%s#%*d", fn);
   pr = chop(chop(pr, ".lpc", -1), ".c", -1);
 
