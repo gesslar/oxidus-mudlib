@@ -144,45 +144,92 @@ private int evaluate_simple_condition(int number, string condition) {
 
     set = map(explode(set_str[1..<2], ","), (: to_int($1) :));
 
-    return exclude ? (of(set, number) == -1) : (of(set, number) != -1);
+    return exclude ? !of(number, set) : of(number, set);
   }
 
   error("Invalid condition format: " + condition);
 }
 
 /**
- * Evaluates a number against a compound condition.
+ * Splits a condition string on a delimiter word, but only where it
+ * appears at the top level — occurrences nested inside parentheses `()`
+ * or set brackets `[]` are left intact so grouping is honoured.
  *
- * Handles compound conditions using logical operators AND and OR.
- * AND has higher precedence than OR.
- *
- * @param {int} number - The number to evaluate.
- * @param {string} condition - The compound condition to evaluate against.
- * @returns {int} 1 if the compound condition evaluates to true, 0 otherwise.
+ * @param {string} str - The condition string to split.
+ * @param {string} delim - The delimiter word ("and" or "or").
+ * @returns {string*} The top-level segments, with the delimiter removed.
  */
-private int evaluate_compound_condition(int number, string condition) {
-  string *parts, part;
-  string *or_parts, or_part;
-  int or_result, i, j;
+private string *split_top_level(string str, string delim) {
+  string *parts = ({});
+  int depth = 0, start = 0, len = strlen(str), dlen = strlen(delim), i;
 
-  parts = explode(lower_case(condition), "and");
-  for(i = 0; i < sizeof(parts); i++) {
-    part = parts[i];
-    or_parts = explode(part, "or");
-    or_result = 0;
-    for(j = 0; j < sizeof(or_parts); j++) {
-      or_part = trim(or_parts[j]);
-      if(or_part[0] == '(') or_part = or_part[1..<2]; // Remove parentheses
-      if(evaluate_simple_condition(number, or_part)) {
-        or_result = 1;
-        break;
-      }
+  for(i = 0; i < len; i++) {
+    int c = str[i];
+
+    if(c == '(' || c == '[')
+      depth++;
+    else if(c == ')' || c == ']')
+      depth--;
+    else if(depth == 0 && i + dlen <= len && str[i..i+dlen-1] == delim) {
+      parts += ({ str[start..i-1] });
+      i += dlen - 1;
+      start = i + 1;
     }
-    if(!or_result)
-      return 0; // If any AND condition fails, return false
   }
 
-  return 1; // All AND conditions passed
+  parts += ({ str[start..] });
+  return parts;
+}
+
+// Forward declaration — evaluate_term() recurses into a parenthesised group.
+private int evaluate_or_expr(int number, string condition);
+
+/**
+ * Evaluates a single term: either a parenthesised sub-expression
+ * (evaluated recursively) or a leaf simple condition.
+ *
+ * @param {int} number - The number to evaluate.
+ * @param {string} condition - A single AND-operand.
+ * @returns {int} 1 if the term is satisfied, 0 otherwise.
+ */
+private int evaluate_term(int number, string condition) {
+  condition = trim(condition);
+
+  if(condition[0] == '(' && condition[<1] == ')')
+    return evaluate_or_expr(number, condition[1..<2]);
+
+  return evaluate_simple_condition(number, condition);
+}
+
+/**
+ * Evaluates an AND-expression: every top-level term must be true.
+ *
+ * @param {int} number - The number to evaluate.
+ * @param {string} condition - An OR-operand (an AND of terms).
+ * @returns {int} 1 if all terms are satisfied, 0 otherwise.
+ */
+private int evaluate_and_expr(int number, string condition) {
+  foreach(string term in split_top_level(condition, "and"))
+    if(!evaluate_term(number, term))
+      return 0;
+
+  return 1;
+}
+
+/**
+ * Evaluates an OR-expression: at least one top-level AND-expression must
+ * be true. OR binds loosest, so this is the compound-condition entry point.
+ *
+ * @param {int} number - The number to evaluate.
+ * @param {string} condition - A compound condition.
+ * @returns {int} 1 if any AND-expression is satisfied, 0 otherwise.
+ */
+private int evaluate_or_expr(int number, string condition) {
+  foreach(string term in split_top_level(condition, "or"))
+    if(evaluate_and_expr(number, term))
+      return 1;
+
+  return 0;
 }
 
 /**
@@ -251,9 +298,9 @@ private int evaluate_compound_condition(int number, string condition) {
  * @throws If the condition contains invalid syntax or operators.
  */
 int evaluate_number(int number, string condition) {
-  // Remove all spaces from the condition
-  condition = replace_string(condition, " ", "");
-  return evaluate_compound_condition(number, condition);
+  // Strip all spaces and normalise operator case before parsing.
+  condition = lower_case(replace_string(condition, " ", ""));
+  return evaluate_or_expr(number, condition);
 }
 
 float diminish(mixed val, mixed scale) {
@@ -355,13 +402,19 @@ float dim_exponential_decay(mixed val, mixed scale) {
 
 /**
  * Sigmoid (zero-anchored logistic) diminishing return on `val`,
- * scaled by `scale`. Computes `scale * (2/(1 + e^-(val/scale)) - 1)`,
- * producing an S-shaped curve that is 0 at `val == 0`, equals
- * roughly `0.462 * scale` when `val == scale`, and asymptotically
- * approaches `scale` as `val` grows.
+ * scaled by `scale`. Computes `scale * (2/(1 + e^-(val*k)) - 1)`,
+ * producing an S-shaped curve that is 0 at `val == 0`, odd-symmetric
+ * about the origin, and asymptotically approaches `scale` as `val`
+ * grows. The steepness coefficient `k` controls how fast the curve
+ * climbs: output reaches `scale / 2` at `val == ln(3) / k` (~1.0986/k).
+ *
+ * Note: `k` is applied as a multiplier on `val`, not derived from
+ * `scale`, and has no default — omitting it passes 0, which flattens
+ * the curve to 0 for every input. Always supply a `k`.
  *
  * @param {mixed} val - The input value.
  * @param {mixed} scale - The scale factor and asymptotic ceiling.
+ * @param {mixed} k - The steepness coefficient, multiplied into `val`.
  * @returns {float} The diminished value, bounded by `scale`.
  */
 varargs float dim_sigmoid(mixed val, mixed scale, mixed k) {
