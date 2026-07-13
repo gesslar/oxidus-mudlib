@@ -1,16 +1,18 @@
 /**
- * @file /std/cmd/cmd.c
+ * @file /std/cmd/cmd.lpc
  *
  * Basic command object. Provides the standard framework for
  * all commands, including help/usage text, file and directory
  * resolution, and the command entry point.
  *
  * @created 2022-08-24 - Gesslar
- * @last_modified 2024-08-16 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2022-08-24 - Gesslar - Created
  * 2024-08-16 - Gesslar - Added resolve_dir and resolve_file
+ * 2026-07-13 - Gesslar - Re-wired query_help()/_usage() to assemble
+ *                        usage_text and help_text; defined help() default
  */
 
 inherit STD_OBJECT;
@@ -31,47 +33,40 @@ private void create() {
 }
 
 /**
- * Returns the help text for this command.
+ * Returns the assembled help text for this command, combining its usage and
+ * help text. Both `usage_text` and `help_text` may be a plain string or a
+ * closure returning one; each is resolved with evaluate(). Commands may
+ * override this directly, or simply set the variables in setup().
  *
- * @param {STD_BODY} _caller - The player requesting help
- * @returns {string | undefined} The help text
+ * @param {STD_BODY} caller - The player requesting help
+ * @returns {string} The assembled help text, or "" if none is available
  */
-string query_help(object _caller) {
-  return "";
-}
-
-#if 0
 string query_help(object caller) {
-  string result;
-  string temp;
+  string usage = evaluate(usage_text, caller);
+  string help = evaluate(help_text, caller);
+  string result = "";
 
-  if(valid_function(help_text)) {
-    debug_message(sprintf("%O", help_text));
-    catch {
-    temp = help_text(caller);
-    };
+  if(stringp(usage)) {
+    usage = rtrim(usage, "\n");
+    if(strlen(usage)) {
+      if(strsrch(usage, "\n") == -1)
+        result = "Usage: " + usage;
+      else
+        result = "Usage:\n" + usage;
+    }
   }
-    else if(stringp(help_text))
-    temp = help_text;
-  else
-    return "There is no help available on this topic.";
 
-  result = append(temp, "\n");
-
-  if(valid_function(usage_text))
-    temp = temp(caller);
-  else if(stringp(usage_text))
-    temp = usage_text;
-
-  if(temp)
-    result = "Usage:\n"+append(temp, "\n") + "\n" + result;
-
-  while(result[<1] == '\n')
-    result = result[0..<2];
+  if(stringp(help)) {
+    help = rtrim(help, "\n");
+    if(strlen(help)) {
+      if(strlen(result))
+        result += "\n\n";
+      result += help;
+    }
+  }
 
   return result;
 }
-#endif
 
 /**
  * Resolves a file path from a player's argument. If the
@@ -140,38 +135,33 @@ string resolve_dir(object tp, string arg) {
   return dir;
 }
 
-int _usage(object _tp) {
-  return 1;
-}
-
-#if 0
+/**
+ * Prints the command's usage text to the caller, formatted as a "Usage:"
+ * block. Commands typically `return _usage(tp)` from main() when invoked
+ * with missing or invalid arguments.
+ *
+ * @param {STD_BODY} tp - The caller to show the usage to
+ * @returns {int} 1 if usage was shown, 0 if none is available
+ */
 int _usage(object tp) {
-  string result;
-  string *parts;
-  int len, pos;
+  string usage = evaluate(usage_text, tp);
 
-  if(stringp(usage_text))
-    result = usage_text;
-  else if(valid_function(usage_text))
-    result = usage_text(tp);
-  else
+  if(!stringp(usage))
     return 0;
 
-  while(result[<1] == '\n')
-    result = result[0..<2];
+  usage = rtrim(usage, "\n");
+  if(!strlen(usage))
+    return 0;
 
-  len = strlen(result);
-  pos = strsrch(result, "\n");
-  if(pos > 0 && pos < len - 1)
-    result = "Usage:\n" + result;
+  if(strsrch(usage, "\n") == -1)
+    usage = "Usage: " + usage;
   else
-    result = "Usage: " + result;
+    usage = "Usage:\n" + usage;
 
-  _info(tp, result);
+  _info(tp, "%s", usage);
 
   return 1;
 }
-#endif
 
 /**
  * Identifies this object as a command.
@@ -183,6 +173,19 @@ int is_command() {
 }
 
 /**
+ * Default usage-text provider, resolved by the `usage_text` closure when a
+ * command sets no usage string of its own.
+ *
  * @param {STD_BODY} _caller - The calling living.
+ * @returns {string} Always null; commands supply their own usage_text.
  */
 string usage(object _caller) { return null; }
+
+/**
+ * Default help-text provider, resolved by the `help_text` closure when a
+ * command sets no help string of its own.
+ *
+ * @param {STD_BODY} _caller - The calling living.
+ * @returns {string} Always null; commands supply their own help_text.
+ */
+string help(object _caller) { return null; }

@@ -1,17 +1,25 @@
 /**
- * @file /cmds/object/dest.c
+ * @file /cmds/object/dest.lpc
  * Command to destruct objects from memory.
  *
  * @created 2005-10-31 - Tacitus@LPUniversity
- * @last_modified 2024-02-04 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2005-10-31 - Tacitus@LPUniversity - Created
  * 2006-07-19 - Parthenon - Edited
  * 2024-02-04 - Gesslar - General formatting
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "dest <object/filename>";
+  help_text =
+"This command destructs an object from memory.\n\n"
+"See also: clone";
+}
 
 public mixed main(
   /** @type {STD_PLAYER} */ object caller, string str
@@ -91,11 +99,4 @@ public mixed main(
   }
 
   return _error("Object '%s' not found.", str);
-}
-
-string query_help(object _caller) {
-  return
-"SYNTAX: dest <object/filename>\n\n"
-"This command destructs an object from memory.\n\n"
-"See also: clone";
 }

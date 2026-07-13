@@ -1,15 +1,31 @@
-/* awipe.c
-
-Account wipe command. Mirrors nuke, but operates on an account, removing the
-account along with every character associated with it.
-
-*/
+/**
+ * @file /cmds/adm/awipe.lpc
+ *
+ * Account wipe command. Mirrors nuke, but operates on an account, removing the
+ * account along with every character associated with it.
+ *
+ * @created 2026-07-13 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2026-07-13 - Gesslar - Moved help into setup()
+ */
 
 #include <logs.h>
 
 inherit STD_CMD;
 
 void confirm_awipe(string str, object caller, string account);
+
+void setup() {
+  usage_text = "awipe <account>";
+  help_text =
+"This command deletes the target account along with every character "
+"associated with it, removing each character's pfile and group "
+"memberships from " + mud_name() + ". This is NON-REVERSIBLE, so use "
+"with discretion.\n\n"
+"See also: nuke";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string account) {
   if(!adminp(previous_object()))
@@ -91,13 +107,4 @@ void confirm_awipe(string str, object caller, string account) {
 
   _ok(caller, "Account '%s' has been wiped.", account);
   log_file(LOG_AWIPE, capitalize(query_privs(caller)) + " awipes account " + account + " on " + ctime(time()) + "\n");
-}
-
-string query_help(object _caller) {
-  return
-    " SYNTAX: awipe <account>\n\n"
-    "This command will delete the target account along with every character "
-    "associated with it, removing each character's pfile and group memberships "
-    "from " + mud_name() + ". This is NON REVERSABLE, so use with discretion.\n\n"
-    " See also: nuke";
 }

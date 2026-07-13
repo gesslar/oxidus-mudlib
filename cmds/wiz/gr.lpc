@@ -1,17 +1,30 @@
 /**
- * @file /cmds/wiz/gr
+ * @file /cmds/wiz/gr.lpc
  * Grapevine command
  *
  * @created 2024-07-18 - Gesslar
- * @last_modified 2024-07-18 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2024-07-18 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text
  */
 
 #include <daemons.h>
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text =
+    "gr pstatus <game>\n"
+    "gr gstatus <game>\n";
+  help_text =
+    "Queries the Grapevine network about another game. 'pstatus <game>' "
+    "requests the list of players currently online in the named game and "
+    "reports them back to you. 'gstatus <game>' requests the named game's "
+    "status record from Grapevine and echoes the raw response. Both forms "
+    "dispatch an asynchronous request and reply once Grapevine answers.";
+}
 
 void handle_pstatus(mapping request, mapping response, object tp);
 void handle_gstatus(mapping request, mapping response, object tp);

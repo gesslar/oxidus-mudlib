@@ -1,14 +1,25 @@
-//eval.c
-
-//Tacitus @ LPUniversity
-//06-APR-05
-//Wiz Tool
-
-//Needs to be redone
-
-//Last updated October 6th, 2006 by Tacitus
+/**
+ * @file /cmds/wiz/eval.lpc
+ *
+ * Evaluate a string by first writing it to a temp file and then compiling and
+ * executing it.
+ *
+ * @created 2026-07-13 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2026-07-13 - Gesslar - Created
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "eval <lpc-statements>";
+  help_text =
+"This command allows you to execute stand-alone lpc statements. Everything "
+"executed is done as {{bl1}}you{{bl0}}, so care should be taken that what you run "
+"is intended.";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   string file;
@@ -63,11 +74,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   _ok("Eval cost: %s", add_commas(cost));
 
   return 1;
-}
-
-string help(object caller) {
-  return("SYNTAX: eval <lpc-statements>\n\n" +
-    "This command allows you to execute stand-alone lpc statements.\n"
-    "This is considered a more advanced tool and abuse of it is not\n"
-    "recommended.\n");
 }

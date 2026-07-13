@@ -1,19 +1,29 @@
 /**
- * @file /cmds/adm/makeadmin.c
+ * @file /cmds/adm/makeadmin.lpc
  *
  * Promotes a user to admin by adding them to the 'admin' group and
  * wiring up the admin command path. Mirrors makedev/revdev.
  *
  * @created 2026-06-01 - Gesslar
- * @last_modified 2026-06-01 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2026-06-01 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 #include <logs.h>
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "makeadmin <user>";
+  help_text =
+    "This command will set up a user with admin access to the mud by adding "
+    "the user to the 'admin' group and adding '/cmds/wiz/', '/cmds/object/', "
+    "'/cmds/file/', and '/cmds/adm/' to the user's command path.\n\n"
+    "See also: revadmin, makedev";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   object body;
@@ -61,14 +71,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
     + body->query_real_name() + " to admin status on " + ctime(time())
     + "\n");
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-    " SYNTAX: makeadmin <user>\n\n"
-    "This command will set up a user with admin access to the mud\n"
-    "by adding the user to the 'admin' group and adding '/cmds/wiz/',\n"
-    "'/cmds/object/', '/cmds/file/', and '/cmds/adm/' to the user's\n"
-    "command path.\n\n"
-    "See also: revadmin, makedev\n";
 }

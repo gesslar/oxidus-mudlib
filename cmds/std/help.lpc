@@ -1,19 +1,28 @@
 /**
- * @file /cmds/std/help.c
+ * @file /cmds/std/help.lpc
  *
  * Help command for all things helpful.
  *
  * @created 2026-06-07 - Gesslar
- * @last_modified 2026-06-07 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2026-06-07 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text
  */
 
 inherit STD_CMD;
 
 private mixed get_command_help(object tp, string topic);
 private mixed get_file_help(object tp, string topic);
+
+void setup() {
+  usage_text = "help <topic>";
+  help_text =
+"Looks up help on a topic. If the topic names a command on your command path, "
+"that command's own help is shown; otherwise the help files are searched for a "
+"matching topic. With no topic, a brief reminder of the syntax is shown.";
+}
 
 mixed main(
   /** @type {STD_PLAYER} */ object tp,

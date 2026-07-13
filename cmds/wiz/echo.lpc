@@ -1,36 +1,44 @@
-/* echo.c
-
- Tacitus @ LPUniversity
- 12-AUG-06
- Simple echo command
-
-*/
-
-// Last Change: 2024/02/04: Gesslar
-// - General formatting and new code support.
+/**
+ * @file /cmds/wiz/echo.lpc
+ *
+ * A command to echo a message to a room.
+ *
+ * @created 2024-02-04 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2024-02-04 - Gesslar - New base
+ * 2026-07-13 - Gesslar - Moved help into setup() usage_text/help_text; modernized main()
+ */
 
 inherit STD_CMD;
 
-mixed main(object caller, string str) {
+void setup() {
+  usage_text = "echo <message>";
+  help_text =
+"This command provides a wizard with the ability to print a message to everyone "
+"in the room.\n"
+"\n"
+"* The message is printed as-is\n"
+"* Colour codes are substituted\n"
+"* The message is not wrapped\n"
+"* The message is not echoed to the self, but the echoed message is confirmed\n"
+"\n"
+"Note: This will not print to anybody if you are hidden.";
+}
+
+mixed main(
+  /** @type {STD_PLAYER} */ object caller,
+  string str
+) {
   object room = environment(caller);
 
-  if(!str) {
-    return "Syntax: echo <argument>";
-  }
+  if(!str)
+    return _info(caller, "Syntax: echo <argument>");
 
-  tell(caller, "You echoed to the room: " + str);
+  _info(caller, `You echoed to the room:\n${str}\n`);
+
   tell_down(room, str, 0, caller);
 
   return 1;
-}
-
-string help(object caller) {
-  return
-"SYNTAX: echo <string>\n\n"
-"This command allows you to echo a string of text to the room you are "
-"currently in. Other individuals in the room will see the argument that you "
-"pass to this  exactly as you typed it with a newline (aka line break) after "
-"it.\n\n"
-"For example, if you type 'echo The room shakes.' then everyone else in the "
-"room will see the following printed 'The room shakes.'.";
 }

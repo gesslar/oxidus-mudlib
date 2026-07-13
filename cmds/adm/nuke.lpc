@@ -1,18 +1,32 @@
-/* nuke.c
-
-Tacitus @ LPUniversity
-05-MAY-06
-Standard nuke command V2
-
-*/
-
-/* Last edited on October 6th, 2006 by Tacitus */
+/**
+ * @file /cmds/adm/nuke.lpc
+ *
+ * Admin command that deletes a user, removing their pfile, bank account,
+ * account association, and all group memberships.
+ *
+ * @created 2006-05-05 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2006-05-05 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
+ */
 
 #include <logs.h>
 
 inherit STD_CMD;
 
 void confirm_nuke(string str, object caller, string user);
+
+void setup() {
+  usage_text = "nuke <username>";
+  help_text =
+"This command deletes the target user's pfile, thus removing their "
+"character from " + mud_name() + ". It also removes their bank account, "
+"detaches them from their account, and strips all of their group "
+"memberships. This is NON-REVERSIBLE, so use with discretion.\n\n"
+"See also: awipe";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string user) {
   if(!adminp(previous_object()))
@@ -79,12 +93,4 @@ void confirm_nuke(string str, object caller, string user) {
 
   _ok(caller, "User '%s' has been removed.", capitalize(user));
   log_file(LOG_NUKE, capitalize(query_privs(caller)) + " nukes " + capitalize(user) + " on " + ctime(time()) + "\n");
-}
-
-string query_help(object _caller) {
-  return
-    " SYNTAX: nuke <username>\n\n"
-    "This command will delete the target user's pfile, thus removing their account "
-    "from " + mud_name() + ". Furthermore it will also remove their membership "
-    "from all groups. This is NON REVERSABLE, so use with discretion.";
 }

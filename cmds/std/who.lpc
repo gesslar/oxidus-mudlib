@@ -1,19 +1,28 @@
 /**
- * @file /cmds/std/who.c
+ * @file /cmds/std/who.lpc
  *
  * Display all currently logged-in users.
  *
  * @created 2005-04-08 - Tacitus @ LPUniversity
- * @last_modified 2006-10-04 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2005-04-08 - Tacitus - Created
  * 2006-10-04 - Tacitus - Last edited
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
 
 private int sort_name(object ob1, object ob2);
+
+void setup() {
+  usage_text = "who";
+  help_text =
+"This command will display all the users who are currently logged into " +
+mud_name() + ". It also lets you know if they are currently editing, in input, "
+"and/or idle.";
+}
 
 mixed main(object tp, string _arg) {
   string ret;
@@ -84,13 +93,4 @@ private int sort_name(/** @type {STD_BODY} */ object ob1,
     return -1;
   else
     return 0;
-}
-
-string query_help(object _caller) {
-  return
-" SYNTAX: who\n\n"
-"This command will display all the users who are "
-"currently logged\ninto " + mud_name() + ". It also "
-"lets you know if they are currently\nediting, in "
-"input, and/or idle.\n";
 }

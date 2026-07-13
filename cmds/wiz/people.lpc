@@ -1,14 +1,26 @@
-/* people.c
-
- Abbot @ LPUniversity
- 14-JULY-2006
- Developer People Command
-
-*/
-
-/*  Last editted by Tacitus on October 4 */
+/**
+ * @file /cmds/wiz/people.lpc
+ *
+ * Lists all connected interactive users grouped by rank.
+ *
+ * @created 2006-07-14 - Abbot
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2006-07-14 - Abbot - Created
+ * 2026-07-13 - Gesslar - Added help text and LPCDoc header
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "people";
+  help_text = "Lists every interactive user currently connected to the mud. "
+    "Entries are grouped by rank (Admin, then Dev, then User) and sorted "
+    "alphabetically by name within each group. For each user the display "
+    "shows their name, rank, IP address, idle time in minutes, and the file "
+    "name of their current location.";
+}
 
 mixed main(object tp, string _arg) {
   object *admin_arr, *dev_arr, *user_arr;
@@ -63,11 +75,4 @@ mixed main(object tp, string _arg) {
   }
 
   return 1;
-}
-
-string help(object caller) {
-  return " SYNTAX: people\n\n"
-    "This command allows you to see all users logged in. They are\n"
-    "displayed with their name, rank, ip, location, and minutes of idle\n"
-    "time.\n";
 }

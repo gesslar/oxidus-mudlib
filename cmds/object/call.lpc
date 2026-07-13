@@ -1,10 +1,10 @@
 /**
- * @file /cmds/object/call.c
+ * @file /cmds/object/call.lpc
  * Command to call functions on objects, supporting
  * references and multiple targets.
  *
  * @created 1992-06-00 - Pallando (Douglas Reay)
- * @last_modified 2024-02-04 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 1992-06-00 - Pallando - Created for Ephemeral Dale (LPC2)
@@ -15,6 +15,7 @@
  * 1993-08-20 - Grendel - Allowed admins to call with any euid
  * 1993-08-23 - Pallando - Changed to inherit REF_D
  * 1993-10-22 - Mobydick - Added NO_USER_CALLS define
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 #include <daemons.h>
@@ -32,6 +33,18 @@ inherit EXT_REF;
 #define TAB "\t"
 
 private mixed do_call(object ob, string func, mixed args);
+
+void setup() {
+  usage_text = "call [-<uid>] <object>;<function>;<arg>;<arg>";
+  help_text =
+"Calls the function <function> in object <object> "
+"passing as many arguments <arg> as you give.\n\n"
+"If no function is specified a dump of the object is "
+"given.\n\n"
+"<object> and <function> can be arrays "
+"(e.g. \"users\")\n\n"
+"Any of them can be references (SEE: help refs)";
+}
 
 public mixed main(
   /** @type {STD_PLAYER} */ object _caller, string a
@@ -201,16 +214,4 @@ private mixed do_call(
     ret,
     str + TAB + "\nResult: " + identify(ret)
   });
-}
-
-string query_help(object _caller) {
-  return
-SYNTAX + "\n"
-"Calls the function <function> in object <object> "
-"passing as many arguments <arg> as you give.\n\n"
-"If no function is specified a dump of the object is "
-"given.\n\n"
-"<object> and <function> can be arrays "
-"(e.g. \"users\")\n\n"
-"Any of them can be references (SEE: help refs)\n";
 }

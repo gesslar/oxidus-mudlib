@@ -1,15 +1,16 @@
 /**
- * @file /cmds/object/update.c
+ * @file /cmds/object/update.lpc
  * Command for updating (reloading) objects, with optional
  * recursive inheritance updating.
  *
  * @created 2005-04-05 - Byre@LPUniversity
- * @last_modified 2024-02-04 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2005-04-05 - Byre@LPUniversity - Created
  * 2006-07-11 - Tacitus - Edited
  * 2024-02-04 - Gesslar - Added recursion to the update command
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
@@ -19,6 +20,33 @@ private string *collect_inherits(object obj, int depth);
 private string *deep_collect_inherits(
   object obj, mapping seen, int depth
 );
+
+void setup() {
+  usage_text = "update [-rR] [<file|here>]";
+  help_text =
+"If file is not specified, the current working file will "
+"be updated. If the file is specified, it will be updated. "
+"If the -r or -R flag is specified, the file will be "
+"updated along with all of its inherited files. The -r "
+"flag will only update the first level of inheritance, "
+"while the -R flag will update all levels of "
+"inheritance.\n\n"
+"Examples:\n"
+"update - Update the cwf.\n"
+"update here - Update the current room.\n"
+"update -r here - Update the current room and its "
+"inherit_list().\n"
+"update -R here - Update the current room and its "
+"deep_inherit_list().\n"
+"update /cmds/std/who - Update the who command.\n"
+"update -r /cmds/std/who - Update the who command and "
+"its inherit_list().\n"
+"update -R /cmds/std/who - Update the who command and "
+"its deep_inherit_list().\n"
+"update -r - Update the cwf and its inherit_list().\n"
+"update -R - Update the cwf and its "
+"deep_inherit_list().";
+}
 
 public mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   /** @type {STD_ROOM|STD_OBJECT} */ object obj;
@@ -197,31 +225,4 @@ private string *deep_collect_inherits(
   }
 
   return files;
-}
-
-string query_help(object _caller) {
-  return
-"SYNTAX: update [-rR] [<file|here>]\n\n"
-"If file is not specified, the current working file will "
-"be updated. If the file is specified, it will be updated. "
-"If the -r or -R flag is specified, the file will be "
-"updated along with all of its inherited files. The -r "
-"flag will only update the first level of inheritance, "
-"while the -R flag will update all levels of "
-"inheritance.\n\n"
-"Examples:\n"
-"update - Update the cwf.\n"
-"update here - Update the current room.\n"
-"update -r here - Update the current room and its "
-"inherit_list().\n"
-"update -R here - Update the current room and its "
-"deep_inherit_list().\n"
-"update /cmds/std/who - Update the who command.\n"
-"update -r /cmds/std/who - Update the who command and "
-"its inherit_list().\n"
-"update -R /cmds/std/who - Update the who command and "
-"its deep_inherit_list().\n"
-"update -r - Update the cwf and its inherit_list().\n"
-"update -R - Update the cwf and its "
-"deep_inherit_list().\n";
 }

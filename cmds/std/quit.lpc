@@ -1,19 +1,29 @@
 /**
- * @file /cmds/std/quit.c
+ * @file /cmds/std/quit.lpc
  *
  * Quit command to save and disconnect from the MUD.
  *
  * @created 2005-04-06 - Tacitus @ LPUniversity
- * @last_modified 2005-10-08 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2005-04-06 - Tacitus - Created
  * 2005-10-08 - Tacitus - Last edited
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 #include <logs.h>
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "quit";
+
+  help_text =
+"This command will save your character and disconnect you from the mud.\n"
+"\n"
+"See also: save";
+}
 
 mixed main(/** @type {STD_BODY} */ object caller, string _arg) {
   object su_body;
@@ -42,12 +52,4 @@ mixed main(/** @type {STD_BODY} */ object caller, string _arg) {
     query_ip_number(caller) + " on " + ctime(time()) + "\n");
   destruct(caller);
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-" SYNTAX: quit\n\n"
-"This command will save your character and disconnect "
-"you from the mud.\n\n"
-"See also: save\n";
 }

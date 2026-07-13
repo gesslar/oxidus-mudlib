@@ -1,10 +1,26 @@
-//wall.c
-
-//Tacitus @ LPUniversity
-//01-JULY-05
-//Admin wall cmd
+/**
+ * @file /cmds/adm/wall.lpc
+ *
+ * Admin command that pages a system-wide message to every connected
+ * user, stamped with the sender's name and the current time.
+ *
+ * @created 2005-07-01 - Tacitus @ LPUniversity
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2005-07-01 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "wall <msg>";
+  help_text =
+    "This command pages a message to everybody on the MUD. The message is "
+    "prefixed with your name and the current time and delivered to every "
+    "connected user.";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   object *all_users;
@@ -26,9 +42,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   }
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return " SYNTAX: wall <msg>\n\n"
-    + "This command pages a message to everybody on the MUD.\n";
 }

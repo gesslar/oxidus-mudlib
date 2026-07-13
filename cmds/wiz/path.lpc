@@ -1,10 +1,29 @@
-//path.c
-
-//Tacitus @ LPUniversity
-//07-APR-05
-//Wizard command
+/**
+ * @file /cmds/wiz/path.lpc
+ *
+ * Shows or modifies the command search path.
+ *
+ * @created 2005-04-07 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2005-04-07 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Added help text and LPCDoc header
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "path\n"
+    "path -add <directory>\n"
+    "path -remove <directory>";
+  help_text = "Shows or modifies the list of directories the mud searches to "
+    "resolve the commands you type. With no arguments, it prints your current "
+    "path. Use -add <directory> to append a directory to your path and "
+    "-remove <directory> to drop one. Take care when removing directories: "
+    "removing an important one (such as the directory containing this command) "
+    "can leave you unable to run commands.";
+}
 
 mixed main(object caller, string str) {
   string action, arg, *path, ret;
@@ -49,13 +68,4 @@ mixed main(object caller, string str) {
   tell_me("New path: " + ret[0..<2] + "\n");
 
   return 1;
-}
-
-string help(object caller) {
-  return " SYNTAX: path <-[add/remove]> <directory>\n\n"
-    "This command allows you to modify the paths that the mud will\n"
-    "look in to try and parse your commands sent to the mud. This command\n"
-    "can make your user unusable if you remove important directories (such\n"
-    "as the directory that contains this command). If no arguments are\n"
-    "supplied, then it will tell you your current path.\n";
 }

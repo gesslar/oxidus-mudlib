@@ -1,12 +1,13 @@
 /**
- * @file /cmds/adm/master.c
+ * @file /cmds/adm/master.lpc
  * Command to reload core system files.
  *
  * @created 2024-07-17 - Gesslar
- * @last_modified 2024-07-17 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2024-07-17 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
@@ -24,6 +25,12 @@ void setup() {
     ({"Rehash system configuration",(: CONFIG_D->rehash_config() :)}),
     ({"Rehash help system",(: HELP_D->rehash() :)}),
   });
+
+  usage_text = "master";
+  help_text =
+    "This command reloads core system files: it destructs and reloads the "
+    "simul_efun object, the master object and its security, then rehashes the "
+    "system configuration and help system. No argument is taken.";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object _caller, string _arguments) {
@@ -51,10 +58,4 @@ mixed main(/** @type {STD_PLAYER} */ object _caller, string _arguments) {
     );
   else
     return _ok("System objects updated successfully.");
-}
-
-string query_help(object _caller) {
-  return
-" SYNTAX: master\n\n"
-"This command reloads core system files. No argument is taken.\n";
 }

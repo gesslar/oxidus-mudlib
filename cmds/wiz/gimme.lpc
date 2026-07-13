@@ -1,15 +1,25 @@
 /**
- * @file /cmds/wiz/gimme.c
+ * @file /cmds/wiz/gimme.lpc
  * Command to give coins to the wizard
  *
  * @created 2024-08-01 - Gesslar
- * @last_modified 2024-08-01 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2024-08-01 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "gimme <number> <type>";
+  help_text =
+    "Adds coins to your own wealth. Give the number of coins and the currency "
+    "type, which must be a valid currency from the currency daemon's list. The "
+    "number must be at least one. Fails if the amount would exceed what you can "
+    "hold.";
+}
 
 mixed main(object tp, string str) {
   string type;

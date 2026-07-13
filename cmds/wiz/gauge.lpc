@@ -1,14 +1,24 @@
 /**
- * @file /cmds/wiz/gauge.c
+ * @file /cmds/wiz/gauge.lpc
  *
- * Short description of this file and its purpose.
+ * Executes a command and reports how much CPU time it consumed.
  *
  * @created 2025-03-10 - Gesslar
- * @last_modified 2025-03-10 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2025-03-10 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
+
+inherit STD_CMD;
+
+void setup() {
+  usage_text = "gauge <command>";
+  help_text =
+  "The gauge command will execute the given command, and will tell you how "
+  "many milliseconds of CPU the command took.";
+}
 
 mixed main(object tp, string cmd) {
   mapping before, after;
@@ -30,13 +40,4 @@ mixed main(object tp, string cmd) {
     "%d milliseconds of user time.\n" +
     "%d eval cost.\n",
     stime, usertime, eval_cost);
-}
-
-string query_help(object user) {
-  return @text
-Usage: gauge <command>
-
-The gauge command will execute the given command, and will tell you how many
-milliseconds of CPU the command took.
-text;
 }

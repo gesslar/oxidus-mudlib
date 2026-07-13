@@ -1,18 +1,29 @@
 /**
- * @file /cmds/object/clean.c
+ * @file /cmds/object/clean.lpc
  * Command to destroy all non-living, non-protected objects
  * within a target object's inventory.
  *
  * @created 2005-10-28 - Icoz@LPUniversity
- * @last_modified 2024-02-04 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2005-10-28 - Icoz@LPUniversity - Created
  * 2005-10-29 - Tacitus - QC Review and edit
  * 2024-02-04 - Gesslar - General formatting and refactor
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "clean <object>";
+  help_text =
+"This command will destroy all objects within another "
+"object (aka the object's inventory). Your argument may "
+"be an object that is in your inventory, your "
+"environment, or a filename. If you do not specify an "
+"object, it will remove your inventory.";
+}
 
 public mixed main(
   /** @type {STD_PLAYER} */ object caller, string arg
@@ -68,14 +79,4 @@ public mixed main(
   }
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-"SYNTAX: clean <object>\n\n"
-"This command will destroy all objects within another "
-"object (aka the object's inventory). Your argument may "
-"be an object that is in your inventory, your "
-"environment, or a filename. If you do not specify an "
-"object, it will remove your inventory.";
 }

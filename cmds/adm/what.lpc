@@ -1,12 +1,25 @@
-/* what.c
-
- Tacitus @ LPUniversity
- 12-AUG-06
- Displays activity info about users
-
-*/
+/**
+ * @file /cmds/adm/what.lpc
+ *
+ * Admin command that displays the last command executed by each online user.
+ *
+ * @created 2006-08-12 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2006-08-12 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "what";
+  help_text =
+"This command lets you view the last command executed by every user "
+"currently logged in. It is recommended that you review any privacy "
+"policy that your mud might have before using this tool.";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string _arg) {
   if(!adminp(caller))
@@ -32,11 +45,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string _arg) {
   tell(caller, "=----------------------------------------------=\n");
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return " SYNTAX: what\n\n"
-    "This command allows you to view the last command executed by\n"
-    "all users logged in. It is recommended that you review any\n"
-    "privacy policy that your mud might have before using this tool.\n";
 }

@@ -1,20 +1,30 @@
 /**
- * @file /cmds/adm/revadmin.c
+ * @file /cmds/adm/revadmin.lpc
  *
  * Revokes a user's admin access by removing them from the 'admin'
  * group and stripping the admin command path. An admin who is not an
  * owner may not revoke an owner. Mirrors revdev.
  *
  * @created 2026-06-01 - Gesslar
- * @last_modified 2026-06-01 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2026-06-01 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 #include <logs.h>
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "revadmin <user>";
+  help_text =
+    "This command will revoke a user's admin access to the mud by removing "
+    "them from the group 'admin' and removing '/cmds/adm/' from the user's "
+    "command path. An admin who is not an owner may not revoke an owner.\n\n"
+    "See also: makeadmin, revdev";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   if(!adminp(previous_object()))
@@ -60,14 +70,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
     + body->query_real_name() + "'s admin status on " + ctime(time())
     + "\n");
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-    " SYNTAX: revadmin <user>\n\n"
-    "This command will revoke a user's admin access to the mud by\n"
-    "removing them from the group 'admin' and removing '/cmds/adm/'\n"
-    "from the user's command path. An admin who is not an owner may\n"
-    "not revoke an owner.\n\n"
-    "See also: makeadmin, revdev\n";
 }

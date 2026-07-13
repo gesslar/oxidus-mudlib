@@ -1,16 +1,33 @@
-//shutdown.c
-
-//Tacitus @ LPUniversity
-//01-JULY-05
-//Admin command
-
-//Recoded on October 22nd, 2005 by Tacitus
-//Last edited on October 22nd, 2005 by Tacitus
+/**
+ * @file /cmds/adm/shutdown.lpc
+ *
+ * Admin command to start or cancel a shutdown of the mud.
+ *
+ * @created 2005-07-01 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2005-07-01 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
+ */
 
 #include <logs.h>
 #include <shutdown.h>
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "shutdown [<stop>||<time>/now]";
+  help_text =
+"This command starts a shutdown of the mud. You can either supply the "
+"amount of time until the shutdown is to occur, or stop the current "
+"shutdown/reboot by giving the argument stop. You may also give the "
+"argument now to shut the mud down as soon as the command is given.\n\n"
+"Remember that this command shuts the mud down and it will not come "
+"back up on its own. If you wish for the mud to restart afterwards, "
+"look at the reboot command.\n\n"
+"See also: reboot";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   string status;
@@ -57,18 +74,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
     shutdown_d()->start(delay, SYS_SHUTDOWN);
     return 1;
   }
-}
-
-string query_help(object _caller) {
-  return
-    " SYNTAX: shutdown [<stop>||<time>/now]\n\n"
-    "This command allows you to start a shutdown of the mud. You\n"
-    "can either supply the ammount of time intill you the shutdown\n"
-    "is to occur or stop the current shutdown/reboot by giving the\n"
-    "argument stop. You may also give the argument now to shutdown\n"
-    "the mud as soon as the command is given.\n\n"
-    "It is important to remember that this command will shutdown the\n"
-    "the mud and will not come back up. If you wish for the mud to\n"
-    "restart afterwards, then look at the reboot command.\n\n"
-    "See also: reboot\n";
 }

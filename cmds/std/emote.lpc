@@ -1,15 +1,16 @@
 /**
- * @file /cmds/std/emote.c
+ * @file /cmds/std/emote.lpc
  *
  * Custom emote command with targeted name substitution.
  *
  * @created 2005-04-02 - Tacitus @ LPUniversity
- * @last_modified 2006-06-19 - Parthenon
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2005-04-02 - Tacitus - Created
  * 2005-10-08 - Tacitus - Last edited
  * 2006-06-19 - Parthenon - Last edited
+ * 2026-07-13 - Gesslar - Header updated; help left dynamic (uses caller name)
  */
 
 #define TP this_body()

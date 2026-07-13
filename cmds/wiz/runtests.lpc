@@ -1,13 +1,16 @@
 /**
- * @file /cmds/wiz/runtests.c
+ * @file /cmds/wiz/runtests.lpc
  *
  * Run unit tests under /tests/. With no argument, walks /tests/
  * recursively and invokes every runner.lpc found. With an argument,
  * invokes /tests/<arg>/runner directly.
  *
- * SYNTAX:
- *   runtests
- *   runtests adm/simul_efun
+ * @created 2024-07-24 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2024-07-24 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text
  */
 
 inherit STD_CMD;
@@ -16,6 +19,15 @@ inherit STD_CMD;
 
 private void invoke_runner(object tp, string runner_path);
 private void walk(object tp, string dir);
+
+void setup() {
+  usage_text = "runtests [<area>]\n";
+  help_text =
+    "Runs unit test suites under /tests/. With no argument, walks /tests/ "
+    "recursively and invokes every runner.lpc it finds. With an argument, "
+    "invokes /tests/<area>/runner directly, for example: "
+    "runtests adm/simul_efun.";
+}
 
 mixed main(object tp, string arg) {
   if(arg && strlen(arg)) {
@@ -70,14 +82,4 @@ private void walk(object tp, string dir) {
       invoke_runner(tp, chop(path, ".lpc", -1));
     }
   }
-}
-
-string help(object _caller) {
-  return(
-    " SYNTAX: runtests [<area>]\n\n"
-    "Run unit test suites under /tests/.\n\n"
-    "With no argument, walks /tests/ recursively and invokes every\n"
-    "runner.c it finds.\n\n"
-    "With an argument, invokes /tests/<area>/runner. For example:\n"
-    "    runtests adm/simul_efun\n");
 }

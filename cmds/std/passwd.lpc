@@ -1,14 +1,15 @@
 /**
- * @file /cmds/std/passwd.c
+ * @file /cmds/std/passwd.lpc
  *
  * Command to manage your own password or the password of another
  * user.
  *
  * @created 2024-07-14 - Gesslar
- * @last_modified 2024-07-14 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2024-07-14 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
@@ -16,6 +17,17 @@ inherit STD_CMD;
 private void password_confirmed(int status, object tp);
 private void new_password(string str, object tp);
 private void confirm_password(string str, string pass, object tp);
+
+void setup() {
+    usage_text = "passwd";
+
+    help_text =
+"This command allows you to change your current passwd. You will be asked to "
+"enter your current passwd for security purposes and then it will request you "
+"to input your new passwd and then will ask again to confirm. After you have "
+"provided the requested information, the command will inform you if the change "
+"was succesful.";
+}
 
 mixed main(object tp, string arg) {
     _info("Changing your password.");
@@ -50,14 +62,4 @@ private void confirm_password(string str, string pass, object tp) {
     } else {
         _error("Passwords do not match.");
     }
-}
-
-string query_help(object _caller) {
-    return
-"SYNTAX: passwd\n\n"
-"This command allows you to change your current passwd. You will be asked to "
-"enter your current passwd for security purposes and then it will request you "
-"to input your new passwd and then will ask again to confirm. After you have "
-"provided the requested information, the command will inform you if the change "
-"was succesful.";
 }

@@ -1,13 +1,30 @@
-//goto.c
-
-//Tacitus @ LPUniversity
-//29-JUNE-05
-//Wizard goto command
-//   * Thanks to Icoz
-
-//Last edited on July 22nd, 2006 by Parthenon
+/**
+ * @file /cmds/wiz/goto.lpc
+ *
+ * Wizard teleport command for moving to a player, a room by file path, or a
+ * loaded room object.
+ *
+ * @created 2005-06-29 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2005-06-29 - Tacitus - Created
+ * 2006-07-22 - Parthenon - Edited
+ * 2026-07-13 - Gesslar - Added help text and LPCDoc header
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "goto <player|room path|room object>";
+  help_text =
+    "Teleports you to another location. If the argument matches an online "
+    "player, you are moved to that player's room. Otherwise the argument is "
+    "treated as a room path (resolved relative to your current working "
+    "directory) or a loaded room object, and you are moved into that room. "
+    "Custom teleport-out and teleport-in messages are used if you have the "
+    "'teleport_out' and 'teleport_in' environment variables set.";
+}
 
 mixed main(object tp, string arg) {
   string custom, tmp;
@@ -107,12 +124,4 @@ mixed main(object tp, string arg) {
   }
 
   return _error("Invalid argument.");
-}
-
-string help(object tp) {
-  return
-"SYNTAX: goto <room/user>\n\n"
-"The goto command allows you to transport to another room by filename or "
-"transport to another user. If the user or room specified is not found, you "
-"will not be moved.\n";
 }
