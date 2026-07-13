@@ -62,16 +62,15 @@ void setup() {
       string err = catch(chop("foo", 0));
       ASSERT_NE(0, err);
     }),
-    // The left-chop branch (dir == 1) tests `sub[0..sub_len-1] == sub`, which
-    // compares sub to itself and is always true, then slices `str[0..sub_len]`.
-    // chop("foobar", "foo", 1) yields "foob" instead of "bar".
-    pending("left direction removes the prefix",
-      "dir==1 branch is broken — compares sub to itself, see string.c#L67-70"),
-    // With no dir argument, dir defaults to 0 and `if(dir != -1) dir = 1` routes
-    // to the broken left-chop branch, so chop("foobar", "bar") yields "foob"
-    // rather than the documented right-chop result "foo".
-    pending("default direction chops from the right",
-      "default dir routes to the broken left branch, see string.c#L57-70"),
+    test("left direction removes the prefix", function() {
+      ASSERT_EQ("bar", chop("foobar", "foo", 1));
+    }),
+    test("left direction leaves the string unchanged when the prefix is absent", function() {
+      ASSERT_EQ("foobar", chop("foobar", "xyz", 1));
+    }),
+    test("default direction chops from the right", function() {
+      ASSERT_EQ("foo", chop("foobar", "bar"));
+    }),
   }));
 
   describe("starts_with", ({

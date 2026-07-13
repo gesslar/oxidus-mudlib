@@ -54,27 +54,25 @@ string prepend(string source, string to_prepend) {
  * @param {int} [dir=-1] - The direction to chop: 1 for left, -1 for right.
  * @returns {string} The string with the substring chopped off if it was present.
  */
-varargs string chop(string str, string sub, int dir) {
-    int sub_len;
+varargs string chop(string str, string sub, int dir: (: -1 :)) {
+  assert_arg(stringp(str), 1, "Missing or invalid argument.");
+  assert_arg(stringp(sub), 2, "Missing or invalid argument.");
 
-    if(nullp(str)) error("chop: Missing argument 1 for chop");
-    if(nullp(sub)) error("chop: Missing argument 2 for chop");
+  if(dir != 1)
+    dir = -1;
 
-    if(dir != -1)
-        dir = 1;
-
-    sub_len = strlen(sub);
-    if(dir == 1) {
-        if(sub[0..sub_len-1] == sub) {
-            str = str[0..sub_len];
-        }
-    } else if(dir == -1) {
-        if(str[<sub_len..] == sub) {
-            str = str[0..<sub_len+1];
-        }
+  int sub_len = strlen(sub);
+  if(dir == 1) {
+    if(str[0..sub_len-1] == sub) {
+      str = str[sub_len..];
     }
+  } else if(dir == -1) {
+    if(str[<sub_len..] == sub) {
+      str = str[0..<sub_len+1];
+    }
+  }
 
-    return str;
+  return str;
 }
 
 /**
@@ -314,7 +312,9 @@ varargs mixed from_string(string str, int flag) {
         if(strlen(str) > 1 && str[0..1] == "0x") {
             tmp = "0x";
             str = str[2..];
-            while(str != "" && (str[0] >= '0' && str[0] <= '9')) {
+            while(str != "" && ((str[0] >= '0' && str[0] <= '9') ||
+                    (str[0] >= 'a' && str[0] <= 'f') ||
+                    (str[0] >= 'A' && str[0] <= 'F'))) {
                 tmp += str[0..0];
                 if(strlen(str) > 1) str = str[1..];
                 else str = "";
@@ -628,7 +628,7 @@ string sanitize_regex(string msg) {
   return msg;
 }
 
-private nomask string illegal_filename_chars = "[<>:\"/\\\\|?*\x01-\x1F\x7F]";
+private nomask string illegal_filename_chars = "([<>:\"/\\\\|?*\x01-\x1F\x7F])";
 
 /**
  * Sanitises a string so that it is safe to use as a filename.
