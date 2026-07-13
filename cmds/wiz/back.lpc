@@ -9,26 +9,26 @@
  * 2024-09-09 - Gesslar - Created
  */
 
-mixed main(object tp, string str) {
-  string loc;
-  object room;
-  string e;
-  int result;
-
-  loc = tp->query_last_location();
+mixed main(
+  /** @type {STD_PLAYER} */ object tp,
+  string _str
+) {
+  string loc = tp->query_last_location();
 
   if(!loc)
     return "You have no previous location to return to.";
 
-  e = catch(room = load_object(loc));
-  if(e)
-    return "There was a problem loading your previous location.";
+  /** @type {STD_ROOM} */ object room;
 
-  result = tp->move_living(room);
-  printf("Result = %d\n", result);
+  string e = catch(room = load_object(loc));
+  if(e)
+    return _error(tp, "There was a problem loading your previous location.\n%s", e);
+
+  int result = tp->move_living(room);
+
   if(result)
     return "You were unable to move to your previous location.\n"
-            "Reason: " + MOVE_REASON[result];
+           "Reason: " + MOVE_REASON[result];
 
   return "You return to " + room->query_short() + ".";
 }

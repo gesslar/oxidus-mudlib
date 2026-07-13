@@ -18,10 +18,12 @@
 inherit STD_CMD;
 
 private int delete_plan(object tp);
-public finish_edit(string text, object tp, int overwrite);
+public void finish_edit(int status, string file, string temp_file, object tp, int overwrite);
 
-mixed main(object tp, string arg) {
-  string tmp = "";
+mixed main(
+  /** @type {STD_PLAYER} */ object tp,
+  string arg
+) {
   string user = query_privs(tp);
   int overwrite = false;
   string file;
@@ -82,7 +84,7 @@ int delete_plan(object tp) {
   return _ok("Plan file %s deleted", file);
 }
 
-string query_help(object tp) {
+string query_help(object _tp) {
   return
 "SYNTAX: setplan [ -o|-d ]\n\n"
 "This command allows you to edit your .plan that is shown in your finger "

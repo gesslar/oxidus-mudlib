@@ -139,9 +139,12 @@ private int next_poll(object tp) {
   if(seconds < 0)
     return _info(tp, "No poll is currently scheduled.");
 
-  return _info(tp, "Next poll in %s (at %s).",
+  return _info(
+    tp,
+    "Next poll in %s (at %s).",
     time_as_string(seconds),
-    strftime("%b %d %Y %H:%M:%S", time() + seconds));
+    strftime("%b %d %Y %H:%M:%S", time() + seconds)
+  );
 }
 
 private int rehash(object tp) {
@@ -149,8 +152,10 @@ private int rehash(object tp) {
     return _error("Only admin may rehash alarms.");
 
   ALARM_D->rehash_alarms();
-  return _ok(tp,
-    "Alarms rehashed. Any runtime-added alarms have been discarded.");
+  return _ok(
+    tp,
+    "Alarms rehashed. Any runtime-added alarms have been discarded."
+  );
 }
 
 private int sort_by_next(class Alarm a, class Alarm b) {
@@ -172,8 +177,7 @@ private mixed list_alarms(object tp, string filter_type, int as_time) {
 
   if(!sizeof(alarms)) {
     if(filter_type)
-      return _info(tp, "No %s alarms are currently registered.",
-        filter_type);
+      return _info(tp, `No %s alarms are currently registered.`, filter_type);
     return _info(tp, "No alarms are currently registered.");
   }
 
@@ -210,7 +214,8 @@ private mixed list_alarms(object tp, string filter_type, int as_time) {
         idx,
         color, alarm.type,
         generate_obj_func_line(alarm.file, alarm.func),
-        fmt)
+        fmt
+      )
     });
   }
 
@@ -260,8 +265,13 @@ private void receive_target(string str, object tp, string type, int root) {
     return;
   }
 
-  tell(tp, sprintf("\nInput pattern [Format: %s]\n: ", pattern_help[type]),
-    MSG_PROMPT);
+  tell(
+    tp,
+    sprintf("\nInput pattern [Format: %s]\n: ",
+      pattern_help[type]
+    ),
+    MSG_PROMPT
+  );
   input_to("receive_pattern", 0, tp, type, root, obj, func, arg);
 }
 
@@ -283,8 +293,7 @@ private void receive_pattern(string str, object tp, string type, int root,
 
   busy = 0;
 
-  if(!ALARM_D->add_alarm(type_to_char[type], master, str, obj, func,
-                         args...))
+  if(!ALARM_D->add_alarm(type_to_char[type], master, str, obj, func, args...))
     _error(tp, "Could not add requested alarm.");
   else
     _ok(tp, "Alarm added to the \"%s\" type.", type);
@@ -326,16 +335,15 @@ private mixed show_info(object _tp, int num) {
       strftime("%b %d %Y %H:%M:%S", next_t));
 
   out += ({
-    sprintf("Alarm #%d  %s (%s)", num, alarm.type,
-      type_name ? capitalize(type_name) : "?"),
-    sprintf("  Pattern:    %s", alarm.pattern),
-    sprintf("  File:       %s", alarm.file),
-    sprintf("  Func:       %s", alarm.func),
-    sprintf("  Args:       %s", args_str),
-    sprintf("  Master:     %s", master_str),
-    sprintf("  ID:         %s", alarm.id),
-    sprintf("  Next fire:  %s", next_str),
-    sprintf("  Last fire:  %s", last_str),
+    `Alarm #${num} ${alarm.type} (${type_name ? capitalize(type_name) : "?"})`,
+    `  Pattern:    ${alarm.pattern}`,
+    `  File:       ${alarm.file}`,
+    `  Func:       ${alarm.func}`,
+    `  Args:       ${args_str}`,
+    `  Master:     ${master_str}`,
+    `  ID:         ${alarm.id}`,
+    `  Next fire:  ${next_str}`,
+    `  Last fire:  ${last_str}`,
   });
 
   return out;
