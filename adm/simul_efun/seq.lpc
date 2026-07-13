@@ -47,13 +47,13 @@ int seq_set(mixed ref *map, mixed key, mixed value) {
 
   assert_arg(valid_seq(map), 1, "Sequential map is required");
 
-  if((sz = sizeof(map)) > 0 && (i = find_index(map, (: $1[0] == $2 :), key)) != -1) {
+  if((sz = sizeof(map)) > 0 && (i = find_index(map, (: $1[0] == $(key) :))) != -1) {
     map[i][1] = value;
 
     return sz;
   }
 
-  return push(map, ({key, value}));
+  return push(ref map, ({key, value}));
 }
 
 /**
@@ -227,7 +227,8 @@ mixed *seq_from_mapping(mapping m) {
 
   assert_arg(mapp(m), 1, "Source must be a mapping.");
 
-  each(m, (: seq_set(ref $4, $1, $2) :), ref seq);
+  foreach(mixed key, mixed value in m)
+    seq_set(ref seq, key, value);
 
   return seq;
 }
