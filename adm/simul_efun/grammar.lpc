@@ -27,7 +27,7 @@ string ordinal(int num) {
       if(num == 1) return "first";
       if(num == 0) return "zeroth";
   } else {
-      x = (num < 14 && num > 10) ? 4 : num % 10;
+      x = (num % 100 >= 11 && num % 100 <= 13) ? 4 : num % 10;
       if(x == 1) return num + "st";
       else if(x == 2) return num + "nd";
       else if(x == 3) return num + "rd";
