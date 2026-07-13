@@ -1,16 +1,27 @@
 /**
- * @file /cmds/object/renew.c
+ * @file /cmds/object/renew.lpc
  * Command for renewing objects. Destructs the original
  * and reclones from a freshly loaded master.
  *
  * @created 2024-07-23 - Gesslar
- * @last_modified 2024-07-23 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2024-07-23 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "renew <object>";
+  help_text =
+"This command destructs a cloned object, reloads its "
+"master, and creates a fresh clone in the same "
+"location. Useful for picking up code changes without "
+"manually destructing and recloning.\n\n"
+"See also: update, clone, dest";
+}
 
 public mixed main(
   /** @type {STD_PLAYER} */ object caller, string str
@@ -81,14 +92,4 @@ public mixed main(
   }
 
   return _ok("Object renewed: %s", get_short(ob));
-}
-
-string query_help(object _caller) {
-  return
-"SYNTAX: renew <object>\n\n"
-"This command destructs a cloned object, reloads its "
-"master, and creates a fresh clone in the same "
-"location. Useful for picking up code changes without "
-"manually destructing and recloning.\n\n"
-"See also: update, clone, dest";
 }

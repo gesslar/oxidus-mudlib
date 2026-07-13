@@ -1,16 +1,23 @@
 /**
- * @file /cmds/std/version.c
+ * @file /cmds/std/version.lpc
  *
  * Display version information about the MUD software.
  *
  * @created 2006-05-05 - Tacitus @ LPUniversity
- * @last_modified 2006-05-05 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2006-05-05 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "version";
+  help_text =
+"This command returns version information about the software running this mud.";
+}
 
 mixed main(object tp, string _args) {
   tell(tp, mud_name() + " is running " + lib_name() +
@@ -20,11 +27,4 @@ mixed main(object tp, string _args) {
     arch() + ".\n");
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-" SYNTAX: version\n\n"
-"This command returns version information about the "
-"software running this mud.";
 }

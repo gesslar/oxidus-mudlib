@@ -1,18 +1,27 @@
 /**
- * @file /cmds/std/inventory.c
+ * @file /cmds/std/inventory.lpc
  *
  * Standard command to display a player's inventory.
  *
  * @created 2005-10-28 - Tacitus
- * @last_modified 2005-10-28 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2005-10-28 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
 
 private string query_wealth(object tp);
+
+void setup() {
+  usage_text = "inventory";
+
+  help_text =
+"This command displays a list of everything that is currently in your "
+"inventory.";
+}
 
 mixed main(object tp, string args) {
   string* shorts;
@@ -89,16 +98,4 @@ private string query_wealth(object tp) {
   }
 
   return implode(out, ", ");
-}
-
-/**
- * Help interface for this command.
- *
- * @param {STD_BODY} _tp - This player.
- * @returns {string} The help text.
- */
-string query_help(object _tp) {
-  return(" SYNTAX: inventory\n\n"
-      "This command displays a list of everything that is currently\n"
-      "in your inventory.\n");
 }

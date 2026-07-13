@@ -1,15 +1,26 @@
 /**
- * @file /cmds/wiz/healup.c
+ * @file /cmds/wiz/healup.lpc
  * Command for wizards to heal themselves and others.
  *
  * @created 2024-07-31 - Gesslar
- * @last_modified 2024-07-31 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2024-07-31 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text =
+    "healup\n"
+    "healup <living>\n";
+  help_text =
+    "Fully restores a living object. With no argument, restores yourself. With "
+    "an argument, restores the named living object if it can be found. Fails if "
+    "no such object exists or the target is not living.";
+}
 
 mixed main(object tp, string str) {
     object ob;

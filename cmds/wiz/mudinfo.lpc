@@ -1,12 +1,25 @@
-// /cmds/wiz/mudinfo.c
-// Mud information
-//
-// Created:     2024/02/04: Gesslar
-// Last Change: 2024/02/04: Gesslar
-//
-// 2024/02/04: Gesslar - Created
+/**
+ * @file /cmds/wiz/mudinfo.lpc
+ *
+ * Displays runtime statistics about the running mud.
+ *
+ * @created 2024-02-04 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2024-02-04 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text and LPCDoc header
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "mudinfo";
+  help_text = "Reports runtime statistics about the running mud. The output "
+    "lists the mud name and current boot number, the total number of loaded "
+    "objects, and counts broken down by category: virtual objects, living "
+    "objects, players, non-players, and rooms.";
+}
 
 mixed main(object tp, string arg) {
     object *obs, *tmp;

@@ -1,16 +1,35 @@
-//reboot.c
-
-//Tacitus @ LPUniversity
-//01-JULY-05
-//Admin command
-
-//Recoded on October 22nd, 2005 by Tacitus
-//Last edited on October 22nd, 2005 by Tacitus
+/**
+ * @file /cmds/adm/reboot.lpc
+ *
+ * Admin command that schedules, queries, or cancels a reboot of the
+ * mud via the shutdown daemon. The mud shuts down and comes back up.
+ *
+ * @created 2005-07-01 - Tacitus @ LPUniversity
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2005-07-01 - Tacitus - Created
+ * 2005-10-22 - Tacitus - Recoded
+ * 2026-07-13 - Gesslar - Moved help into setup()
+ */
 
 #include <logs.h>
 #include <shutdown.h>
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "reboot [<stop>||<time>/now]";
+  help_text =
+    "This command starts a reboot of the mud. Supply the number of minutes "
+    "until the reboot should occur, or 'now' to reboot as soon as the command "
+    "is given. Supply 'stop' to cancel a shutdown or reboot already in "
+    "progress. With no argument, the current shutdown/reboot status is "
+    "reported.\n\n"
+    "Note that this reboots the mud and brings it back up. If you want the mud "
+    "to stay down afterwards, use the shutdown command instead.\n\n"
+    "See also: shutdown";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   string status;
@@ -57,18 +76,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
     shutdown_d()->start(delay, SYS_REBOOT);
     return 1;
   }
-}
-
-string query_help(object _caller) {
-  return
-    " SYNTAX: reboot [<stop>||<time>/now]\n\n"
-    "This command allows you to start a reboot of the mud. You\n"
-    "can either supply the ammount of time intill you the reboot\n"
-    "is to occur or stop the current shutdown/reboot by giving the\n"
-    "argument stop. You may also give the argument now to reboot\n"
-    "the mud as soon as the command is given.\n\n"
-    "It is important to remember that this command will reboot the\n"
-    "the mud and will come back up. If you wish for the mud to not\n"
-    "restart afterwards, then look at the shutdown command.\n\n"
-    "See also: shutdown\n";
 }

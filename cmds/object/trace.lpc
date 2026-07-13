@@ -1,20 +1,37 @@
 /**
- * @file /cmds/object/trace.c
+ * @file /cmds/object/trace.lpc
  * Command to locate any object and its active clones,
  * with optional destruction.
  *
  * @created 1993-03-04 - Watcher@TMI
- * @last_modified 2024-02-04 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 1993-03-04 - Watcher@TMI - Created
  * 2024-02-04 - Gesslar - General formatting
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
 
 #define SYNTAX "Syntax: trace -[d/v] [object/filename]\n"
 #define PROTECT ({ })
+
+void setup() {
+  usage_text = "trace -[d/v] [object/filename]";
+  help_text =
+"This command allows the user to locate the requested "
+"object and any active clones with their respective "
+"locations. The parameter 'd' can be used to remove and "
+"destruct every copy. When the 'd' parameter is invoked, "
+"the clones and locations will not be displayed. This can "
+"be overridden with the 'v' parameter.\n\n"
+"The parameters can be given together and in any "
+"combination.\n\n"
+"For example: trace -dv /obj/dagger will destruct every "
+"copy of /obj/dagger and display their respective ids "
+"and locations.";
+}
 
 public mixed main(
   /** @type {STD_PLAYER} */ object caller, string str
@@ -140,19 +157,4 @@ public mixed main(
   }
 
   return explode(output, "\n");
-}
-
-string query_help(object _caller) {
-  return SYNTAX + "\n"
-"This command allows the user to locate the requested "
-"object and any active clones with their respective "
-"locations. The parameter 'd' can be used to remove and "
-"destruct every copy. When the 'd' parameter is invoked, "
-"the clones and locations will not be displayed. This can "
-"be overridden with the 'v' parameter.\n\n"
-"The parameters can be given together and in any "
-"combination.\n\n"
-"For example: trace -dv /obj/dagger will destruct every "
-"copy of /obj/dagger and display their respective ids "
-"and locations.\n";
 }

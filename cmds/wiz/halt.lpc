@@ -1,14 +1,35 @@
-// /cmds/wiz/halt.c
-// Halt combat
-//
-// Created:     2024/02/20: Gesslar
-// Last Change: 2024/02/20: Gesslar
-//
-// 2024/02/20: Gesslar - Created
+/**
+ * @file /cmds/wiz/halt.lpc
+ *
+ * Halts ongoing combat for one or more livings.
+ *
+ * @created 2024-02-20 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2024-02-20 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text and LPCDoc header
+ */
 
 #include <daemons.h>
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text =
+    "halt\n"
+    "halt <target>\n"
+    "halt all\n"
+    "halt global\n";
+
+  help_text =
+    "Halts ongoing combat by stopping all attacks for the chosen livings. "
+    "With no argument, combat is halted for you. Give a <target> name to halt "
+    "a single living present in your current room. Use 'all' to halt every "
+    "living in your room, or 'global' to halt every living in the game that "
+    "has an environment. This only stops the current combat; it does not "
+    "prevent combat from being started again.";
+}
 
 mixed main(object tp, string arg) {
   object *who;

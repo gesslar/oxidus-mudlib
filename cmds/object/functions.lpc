@@ -1,16 +1,26 @@
 /**
- * @file /cmds/object/functions.c
+ * @file /cmds/object/functions.lpc
  * Command to list functions contained in an object.
  *
  * @created 2006-08-16 - Parthenon@LPUniversity
- * @last_modified 2024-02-04 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2006-08-16 - Parthenon@LPUniversity - Created
  * 2024-02-04 - Gesslar - General formatting
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "functions <object>";
+  help_text =
+"This command will show the functions contained in "
+"<object>. You may use the id of the object if it is in "
+"your inventory or environment, otherwise you may use the "
+"filename of the object to try and locate it.";
+}
 
 public mixed main(
   /** @type {STD_PLAYER} */ object caller, string arg
@@ -37,13 +47,4 @@ public mixed main(
   caller->page(ret);
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-"SYNTAX: functions <object>\n\n"
-"This command will show the functions contained in "
-"<object>. You may use the id of the object if it is in "
-"your inventory or environment, otherwise you may use the "
-"filename of the object to try and locate it.";
 }

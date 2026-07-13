@@ -1,17 +1,35 @@
 /**
- * @file /cmds/std/colour.c
+ * @file /cmds/std/colour.lpc
  *
  * This is the colour command that enables a player to set and
  * update their colour preferences.
  *
  * @created 2025-03-10 - Gesslar
- * @last_modified 2025-03-10 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2025-03-10 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "colour [<on>|<off>|list|show [#]]";
+
+  help_text =
+"With no arguments, this command will tell you if you currently have "
+"colour enabled or disabled. You can also toggle colour by providing the "
+"arguments {{ul1}}on{{ul0}} to enable or {{ul1}}off{{ul0}} to disable.\n"
+"\n"
+"Use the {{ul1}}list{{ul0}} argument to list all the available colours.\n"
+"\n"
+"Use the {{ul1}}show{{ul0}} argument to see how a specific colour code "
+"will appear in the foreground and background. The argument must be a "
+"number between 0 and 255.\n"
+"\n"
+"See also: set";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   string cmd, arg;
@@ -67,21 +85,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
         return _info(caller,
           "Colour is currently disabled.");
   }
-}
-
-string query_help(object _caller) {
-  return
-"SYNTAX: colour [<on>|<off>|list|show [#]]\n\n"
-"With no arguments, this command will tell you if you currently have "
-"colour enabled or disabled. You can also toggle colour by providing the "
-"arguments {{ul1}}on{{ul0}} to enable or {{ul1}}off{{ul0}} to "
-"disable.\n"
-"\n"
-"Use the {{ul1}}list{{ul0}} argument to list all the available colours.\n"
-"\n"
-"Use the {{ul1}}show{{ul0}} argument to see how a specific colour code "
-"will appear in the foreground and background. The argument must be a "
-"number between 0 and 255.\n"
-"\n"
-"See also: set\n";
 }

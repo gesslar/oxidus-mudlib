@@ -1,16 +1,35 @@
 /**
- * @file /cmds/std/alias.c
+ * @file /cmds/std/alias.lpc
  *
  * Manage personal aliases.
  *
  * @created 2026-06-06 - Gesslar
- * @last_modified 2026-06-06 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2026-06-06 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text =
+    "alias - list your personal aliases\n"
+    "alias -g - list the global aliases available to you\n"
+    "alias <name> - show the expansion of one of your aliases\n"
+    "alias <name> <expansion> - add or update an alias\n"
+    "alias -<name> - remove an alias\n";
+  help_text =
+    "Manages your personal command aliases. With no arguments it lists the "
+    "aliases you have defined; with -g (or -global) it lists the global "
+    "aliases available to you across the groups you belong to. Given a name "
+    "and an expansion, it adds or updates that alias so typing the name runs "
+    "the expansion. Given a single name, it shows what that alias expands to. "
+    "Prefixing a name with a dash removes that alias. If the expansion begins "
+    "with a space, the alias becomes a prefix alias, matching whenever a "
+    "command line starts with the alias name.";
+}
 
 private mixed add_alias(object tp, string alias, string expansion);
 private mixed remove_alias(object tp, string alias);

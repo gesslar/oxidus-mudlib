@@ -1,13 +1,14 @@
 /**
- * @file /cmds/wiz/mupdate.c
+ * @file /cmds/wiz/mupdate.lpc
  * This command will cause the caller to be moved around
  * all coordinates in order to generate a new Mudlet map.
  *
  * @created 2024-08-23 - Gesslar
- * @last_modified 2024-08-23 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2024-08-23 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text
  */
 
 #include <classes.h>
@@ -16,6 +17,18 @@
 inherit STD_CMD;
 
 inherit CLASS_ROOMINFO;
+
+void setup() {
+  usage_text = "mupdate";
+
+  help_text =
+    "Regenerates your Mudlet map by walking every known coordinate in the "
+    "world. It gathers all rooms with coordinate data, sorts them by "
+    "elevation and position, then loads each in turn and sends its GMCP room "
+    "information to you so your client can rebuild the map. Progress is "
+    "reported as it proceeds. This is a heavy operation that visits every "
+    "mapped room, so it may take some time to finish. It takes no arguments.";
+}
 
 varargs void move_to_room(object tp, string *rooms, mapping data, int it);
 

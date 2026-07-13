@@ -1,16 +1,32 @@
-/* revdev.c
-
- Tacitus @ LPUniversity
- 15-JAN-06
- Admin command
-
-*/
-
-//Last edited on October 6th, 2006 by Tacitus
+/**
+ * @file /cmds/adm/revdev.lpc
+ *
+ * Revokes a user's developer access by removing them from the
+ * 'developer' group and stripping the developer command paths. An
+ * admin who is not an owner may not revoke an owner. Mirrors revadmin.
+ *
+ * @created 2006-01-15 - Tacitus @ LPUniversity
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2006-01-15 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
+ */
 
 #include <logs.h>
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "revdev <user>";
+  help_text =
+    "This command will revoke a user's developer access to the mud by removing "
+    "them from the group 'developer' and by removing the directories "
+    "'/cmds/wiz/', '/cmds/object/', '/cmds/file/', and '/cmds/adm/' from the "
+    "user's command path. An admin who is not an owner may not revoke an "
+    "owner.\n\n"
+    "See also: makedev";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   if(!adminp(previous_object()))
@@ -50,14 +66,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
     + body->query_real_name() + "'s developer status on " + ctime(time())
     + "\n");
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-    " SYNTAX: revdev <user>\n\n"
-    "This command will revoke a user's developer access to\n"
-    "the mud by removing them from the group 'developer' and\n"
-    "by removing the directories '/cmds/wiz/', '/cmds/object/'\n"
-    "and '/cmds/file/' from the user's command path.\n\n"
-    "See also: makedev\n";
 }

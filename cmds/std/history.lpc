@@ -1,17 +1,27 @@
 /**
- * @file /cmds/std/history.c
+ * @file /cmds/std/history.lpc
  *
  * Command implementation for viewing a player's command history.
  * Allows viewing full history or specific ranges of past commands.
  *
  * @created 2006-08-12 - Tacitus
- * @last_modified 2024-03-11
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2006-08-12 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "history [range]";
+  help_text =
+"This command allows you to view the history of commands that you've executed. "
+"By default it displays the last 15 commands executed by you but you may provide "
+"a custom amount by providing an argument of 'all' to view the entire history or "
+"a number of your choice.";
+}
 
 mixed main(object caller, string args) {
   int range, i;
@@ -37,13 +47,4 @@ mixed main(object caller, string args) {
   }
 
   return 1;
-}
-
-string query_help(object _caller) {
-    return(" SYNTAX: history [range]\n\n"
-    "This command allows you to view the history of commands that\n"
-    "you've executed. By default is displays the last 15 commands\n"
-    "executed by you but you may provide a custom ammount by providing\n"
-    "an argument of 'all' to view the entire history or a number of your\n"
-    "choice.\n");
 }

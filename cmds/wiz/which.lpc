@@ -1,12 +1,27 @@
-/* which.c
-
- Tacitus @ LPUniversity
- 05-Oct-06
- Scans command path for command
-
-*/
+/**
+ * @file /cmds/wiz/which.lpc
+ *
+ * Locates which file or verb a given command resolves to.
+ *
+ * @created 2006-10-05 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2006-10-05 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Added help text and LPCDoc header
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "which <verb>";
+  help_text = "Locates where a command would be found. It searches each "
+    "directory in your command path for a matching command file, checks the "
+    "local verbs added to your environment via add_action, and checks the "
+    "exits of your current room. Every match is reported, so a verb defined "
+    "in more than one place will show all of its locations.\n\n"
+    "See also: path";
+}
 
 mixed main(
   /** @type {STD_PLAYER} */ object caller,
@@ -47,11 +62,4 @@ mixed main(
   }
 
   return 1;
-}
-
-string help(object _caller) {
-  return " SYNTAX: which <verb/command>\n\n"
-    "This command will search through your command path, through local verbs "
-    "added via add_action, and exits for the specified command (aka verb).\n\n"
-    "See also: path\n";
 }

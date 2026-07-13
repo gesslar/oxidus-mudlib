@@ -1,16 +1,25 @@
 /**
- * @file /cmds/std/wealth.c
+ * @file /cmds/std/wealth.lpc
  *
  * Command to display the player's current wealth.
  *
  * @created 2024-03-02 - Gesslar
- * @last_modified 2024-03-02 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2024-03-02 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text
  */
 
 inherit STD_CMD;
+
+void setup() {
+    usage_text = "wealth";
+    help_text =
+        "Lists the amount of each currency you are currently carrying, one "
+        "line per currency in use. If no currency is defined in the game, it "
+        "reports that instead. The command takes no arguments.";
+}
 
 mixed main(/** @type {STD_BODY} */ object tp, string arg) {
     string *currencies = CURRENCY_D->currency_list();

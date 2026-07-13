@@ -1,21 +1,32 @@
 /**
- * @file /cmds/wiz/setplan.c
+ * @file /cmds/wiz/setplan.lpc
  * Command to manage one's .plan file
  *
  * @created 2006/07/22 - Parthenon
- * @last_modified 2024-07-20 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2006/07/22 - Parthenon - Created
  * 2006/07/23 - Parthenon - Updated - Gesslar has no idea what they updated
  * 2024-07-20 - Gesslar - Entirely rewrote the command and added support
  *                        for the new editor object.
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 
 #include <ed.h>
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "setplan [ -o|-d ]";
+  help_text =
+  "This command allows you to edit your .plan that is shown in your finger "
+  "information. If you use the '-o' option then your plan will be "
+  "overwritten otherwise what you type in will be appended to your current "
+  ".plan.\n\n"
+  "You may also delete your plan by using the '-d' option.";
+}
 
 private int delete_plan(object tp);
 public void finish_edit(int status, string file, string temp_file, object tp, int overwrite);
@@ -82,13 +93,4 @@ int delete_plan(object tp) {
   }
 
   return _ok("Plan file %s deleted", file);
-}
-
-string query_help(object _tp) {
-  return
-"SYNTAX: setplan [ -o|-d ]\n\n"
-"This command allows you to edit your .plan that is shown in your finger "
-"information. If you use the '-o' option then your plan will be overwritten "
-"otherwise what you type in will be appended to your current .plan.\n\n"
-"You may also delete your plan by using the '-d' option.\n";
 }

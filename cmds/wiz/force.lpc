@@ -1,12 +1,30 @@
-/* force.c
-
- Tacitus @ LPUniversity
- 05-JULY-06
- Developer Force Command
-
-*/
+/**
+ * @file /cmds/wiz/force.lpc
+ *
+ * Developer force command. Forces a living object to execute a command as
+ * if they had typed it themselves.
+ *
+ * @created 2006-07-05 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2006-07-05 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text =
+    "force <living> to <cmd>\n"
+    "force all [here] to <cmd>\n"
+    "force all users|npcs [here] to <cmd>  (admin)\n";
+  help_text =
+  "This command allows you to force a living object to execute a command as "
+  "if they had typed it themself. This means that the command must be in "
+  "their path or added by an add_action. Normal developers may not force "
+  "interactive objects (ie. users).";
+}
 
 mixed main(object tp, string args) {
   string target, cmd;
@@ -118,13 +136,4 @@ mixed main(object tp, string args) {
   }
 
   return 1;
-}
-
-string query_help(object tp) {
-  return
-"SYNTAX: force <living> <cmd>\n\n"
-"This command allows you to force a living object to execute a command as if "
-"they had typed it themself. This means that the command must be in their "
-"path or added by an add_action. Normal developers may not force interactive "
-"objects (ie. users).";
 }

@@ -1,16 +1,26 @@
 /**
- * @file /cmds/std/score.c
+ * @file /cmds/std/score.lpc
  *
  * Score command.
  *
  * @created 2024-08-06 - Gesslar
- * @last_modified 2024-08-06 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2024-08-06 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Added help text
  */
 
 inherit STD_CMD;
+
+void setup() {
+    usage_text = "score";
+    help_text =
+        "Displays your character sheet: your name, level, and race, your "
+        "current hit points, spell points, and magic points, and your "
+        "accumulated experience along with the amount required to advance to "
+        "the next level. The command takes no arguments.";
+}
 
 mixed main(/** @type {STD_BODY} */ object tp,
     string _str) {

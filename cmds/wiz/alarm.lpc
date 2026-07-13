@@ -1,12 +1,17 @@
-// /cmds/wiz/alarm.c
-// Command to inspect, add, remove, and rehash alarms registered with
-// the central alarm daemon.
-//
-// Created:     2024-02-25: Gesslar
-// Last Change: 2026-05-18: Gesslar
-//
-// 2024-02-25: Gesslar - Created
-// 2026-05-18: Gesslar - Subcommands: list/info/next/add/remove
+/**
+ * @file /cmds/wiz/alarm.lpc
+ *
+ * Command to inspect, add, remove, and rehash alarms registered with
+ * the central alarm daemon.
+ *
+ * @created 2024-02-25 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2024-02-25 - Gesslar - Created
+ * 2026-05-18 - Gesslar - Subcommands: list/info/next/add/remove
+ * 2026-07-13 - Gesslar - Moved help into setup()
+ */
 
 #include <daemons.h>
 #include <classes.h>
@@ -67,6 +72,43 @@ private nosave mapping pattern_help = ([
 ]);
 
 private nosave int busy;
+
+void setup() {
+  usage_text =
+  "alarm                     - list all alarms\n"
+  "alarm time                - list all alarms (timestamps)\n"
+  "alarm list [type]         - list alarms (filtered)\n"
+  "alarm info <#>            - show metadata for an alarm\n"
+  "alarm next                - seconds until next poll\n"
+  "alarm rehash              - rehash from config (admin)\n"
+  "alarm add [type]          - add a new alarm interactively\n"
+  "alarm add root [type]     - add as root permissions (admin)\n"
+  "alarm remove              - remove an alarm by number\n"
+  "\n"
+  "type: [o]nce / [h]ourly / [d]aily / [w]eekly /\n"
+  "      [m]onthly / [y]early\n"
+  "      (any unambiguous prefix; boot is config-file only)\n";
+
+  help_text =
+  "This command inspects, adds, removes, and rehashes alarms registered "
+  "with the central alarm daemon (ALARM_D).\n\n"
+  "Recurring alarms (hourly/daily/weekly/monthly/yearly) and boot alarms "
+  "typically live in the configured ALARMS_PATH and are rehashed "
+  "automatically at boot. One-shot (\"once\") alarms added at runtime via "
+  "\"alarm add once\" persist across reboots.\n\n"
+  "\"alarm rehash\" rereads all config files and discards any runtime-added "
+  "alarms.\n\n"
+  "Only an admin may add an alarm with root permissions or rehash the "
+  "alarm daemon.\n\n"
+  "PATTERNS BY TYPE:\n"
+  "  once     YY-MM-DD@HH:MM\n"
+  "  hourly   MM\n"
+  "  daily    HH:MM\n"
+  "  weekly   D@HH:MM     (D = day-of-week, Sunday = 0)\n"
+  "  monthly  D@HH:MM     (D = day-of-month)\n"
+  "  yearly   MM-DD@HH:MM\n"
+  "  boot     <seconds after boot> (config-file only)\n";
+}
 
 mixed main(object tp, string arg) {
   string type;
@@ -418,44 +460,4 @@ private string time_as_string(int number) {
   }
 
   return result;
-}
-
-string query_help(object _tp) {
-  return
-"Syntax: alarm                       - list all alarms\n"
-"        alarm time                  - list all alarms (timestamps)\n"
-"        alarm list [type]           - list alarms (filtered)\n"
-"        alarm info <#>              - show metadata for an alarm\n"
-"        alarm next                  - seconds until next poll\n"
-"        alarm rehash                - rehash from config (admin)\n"
-"        alarm add [type]            - add a new alarm interactively\n"
-"        alarm add root [type]       - add as root permissions (admin)\n"
-"        alarm remove                - remove an alarm by number\n"
-"\n"
-"        type: [o]nce / [h]ourly / [d]aily / [w]eekly /\n"
-"              [m]onthly / [y]early\n"
-"              (any unambiguous prefix; boot is config-file only)\n"
-"\n"
-"This command inspects, adds, removes, and rehashes alarms registered\n"
-"with the central alarm daemon (ALARM_D).\n"
-"\n"
-"Recurring alarms (hourly/daily/weekly/monthly/yearly) and boot alarms\n"
-"typically live in the configured ALARMS_PATH and are rehashed\n"
-"automatically at boot. One-shot (\"once\") alarms added at runtime via\n"
-"\"alarm add once\" persist across reboots.\n"
-"\n"
-"\"alarm rehash\" rereads all config files and discards any runtime-added\n"
-"alarms.\n"
-"\n"
-"Only an admin may add an alarm with root permissions or rehash the\n"
-"alarm daemon.\n"
-"\n"
-"PATTERNS BY TYPE:\n"
-"  once     YY-MM-DD@HH:MM\n"
-"  hourly   MM\n"
-"  daily    HH:MM\n"
-"  weekly   D@HH:MM     (D = day-of-week, Sunday = 0)\n"
-"  monthly  D@HH:MM     (D = day-of-month)\n"
-"  yearly   MM-DD@HH:MM\n"
-"  boot     <seconds after boot> (config-file only)\n";
 }

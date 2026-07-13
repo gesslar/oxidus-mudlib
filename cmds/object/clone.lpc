@@ -1,17 +1,25 @@
 /**
- * @file /cmds/object/clone.c
+ * @file /cmds/object/clone.lpc
  *
  * Command to clone objects into the game world.
  *
  * @created 2005-10-31 - Tacitus@LPUniversity
- * @last_modified 2006-07-19 - Parthenon
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2005-10-31 - Tacitus@LPUniversity - Created
  * 2006-07-19 - Parthenon - Edited
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "clone <file>";
+  help_text =
+"This command produces a clone of a file.\n\n"
+"See also: dest";
+}
 
 public mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   /** @type {STD_ITEM} */ object ob;
@@ -96,11 +104,4 @@ public mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
   caller->set_env("cwf", str);
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-"SYNTAX: clone <file>\n\n"
-"This command produces a clone of a file.\n\n"
-"See also: dest";
 }

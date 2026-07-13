@@ -1,16 +1,29 @@
-/* makedev.c
-
- Tacitus @ LPUniversity
- 14-JAN-06
- Admin Command
-
-*/
-
-/* Last edited on October 6th, 2006 by Tacitus */
+/**
+ * @file /cmds/adm/makedev.lpc
+ *
+ * Admin command to grant a user developer access.
+ *
+ * @created 2006-01-14 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2006-01-14 - Tacitus - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
+ */
 
 #include <logs.h>
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "makedev <user>";
+  help_text =
+"This command sets a user up with developer access to the mud by adding "
+"the user to the 'developer' group, creating them a home directory, and "
+"adding '/cmds/wiz/', '/cmds/object/', and '/cmds/file/' to the user's "
+"command path.\n\n"
+"See also: revdev";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
   object body;
@@ -59,14 +72,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string args) {
     + body->query_name() + " to developer status on " + ctime(time())
     + "\n");
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-    " SYNTAX: makedev <user>\n"
-    "This command will set up a user with developer access to\n"
-    "the mud by adding the user to the 'developer' group, creating\n"
-    "them a home directory, and adding '/cmds/wiz/', '/cmds/object/',\n"
-    "and '/cmds/file/' to the user's directory.\n\n"
-    "See also: revdev\n";
 }

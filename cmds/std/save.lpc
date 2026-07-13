@@ -1,17 +1,27 @@
 /**
- * @file /cmds/std/save.c
+ * @file /cmds/std/save.lpc
  *
  * A simple save command to persist player data.
  *
  * @created 2005-06-30 - Gwegster @ LPUniversity
- * @last_modified 2005-10-08 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2005-06-30 - Gwegster - Created
  * 2005-10-08 - Tacitus - Last edited
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "save";
+
+  help_text =
+"This command will save your character data.\n"
+"\n"
+"See also: quit";
+}
 
 mixed main(
   /** @type {STD_BODY} */ object caller,
@@ -21,11 +31,4 @@ mixed main(
     return _ok("Saved.");
 
   return _warn("Unable to save.");
-}
-
-string query_help(object _caller) {
-  return
-" SYNTAX: save\n\n"
-"This command will save your character data.\n\n"
-"See also: quit\n";
 }

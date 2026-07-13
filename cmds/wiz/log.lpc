@@ -1,15 +1,29 @@
-/* log.c
-
- Tacitus @ LPUniversity
- 14-JUL-06
- Log Viewer
-
- - Originaly coded by Gwegster @ LPUniversity
-*/
-
-/* Last updated on 14-JUL-06 by Tacitus */
+/**
+ * @file /cmds/wiz/log.lpc
+ *
+ * Displays the tail of a log file.
+ *
+ * @created 2006-07-14 - Gwegster
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2006-07-14 - Gwegster - Created
+ * 2006-07-14 - Tacitus - Updated
+ * 2026-07-13 - Gesslar - Added help text and LPCDoc header
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text = "log\n"
+    "log <logfile>";
+  help_text = "Displays the tail (the ending) of a log file. With no "
+    "argument it shows the 'log' file in your home directory if one exists, "
+    "otherwise it falls back to the driver compile log. Given an argument it "
+    "shows the tail of /log/<logfile>, including files in subdirectories of "
+    "/log/ (for example 'log driver/UPRECORD'). The number of lines shown is "
+    "controlled by your 'morelines' preference.";
+}
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   string logfile;
@@ -44,16 +58,4 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   out = ({ logfile + ":" }) + out;
 
   return out;
-}
-
-string help(object _caller) {
-  return " SYNTAX: log <logfile>\n\n"
-    "This command allows you to see the tail (ending) of different\n"
-    "logfiles. If you do not provide an argument and there is a file\n"
-    "named 'log' in your home directory, then it will display that.\n"
-    "If you don't provide an argument and there is not a file named\n"
-    "'log' in your home directory, it will display '/log/log' if it\n"
-    "exists. If you provide an argument, it will try to show the tail\n"
-    "of /log/<logfile>. You can also view the tail of logfiles in the\n"
-    "subdirectory of '/log/' (ex. 'log driver/UPRECORD').\n";
 }

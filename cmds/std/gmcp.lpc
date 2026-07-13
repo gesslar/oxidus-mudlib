@@ -1,13 +1,14 @@
 /**
- * @file /cmds/std/gmcp.c
+ * @file /cmds/std/gmcp.lpc
  *
  * Basic command for interacting with the GMCP system.
  *
  * @created 2024-02-23 - Gesslar
- * @last_modified 2024-02-23 - Gesslar
+ * @last_modified 2026-07-13 - Gesslar
  *
  * @history
  * 2024-02-23 - Gesslar - Created
+ * 2026-07-13 - Gesslar - Moved help into setup()
  */
 
 #include <gmcp_defines.h>
@@ -128,20 +129,4 @@ private void gmcp_gui_result(mapping response, object tp) {
             GMCP_LBL_GMCP_CLIENT_GUI_VERSION : version,
         ])
     );
-}
-
-string query_help(object _caller) {
-    return
-"Syntax: gmcp\n"
-"        gmcp <on/off>\n"
-"        gmcp gui\n\n"
-"Displays your current GMCP status or enables/disables GMCP. GMCP is a "
-"protocol that allows the server to send information to the client. This "
-"information can be used to enhance the user interface and provide additional "
-"information to the player. GMCP is only available if the client supports it "
-"and it is enabled in the client and the server.\n"
-"\n"
-"You can also use the 'gui' option to request the GUI information from the "
-"server. This will automatically install the latest version of the GUI for "
-"the "+mud_name()+" client.\n";
 }

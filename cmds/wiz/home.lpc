@@ -1,18 +1,31 @@
-/* home.c
-
-Tacitus @ LPUniversity
-23-OCT-05
-Standard Wizard Command
-
-This command will move you to ~/workroom.lpc if it
-exists. You can also provide the name of another
-developer to attempt to move into their workroom.
-
-*/
-
-//Last edited on July 22nd, 2006 by Parthenon
+/**
+ * @file /cmds/wiz/home.lpc
+ *
+ * Wizard command to teleport to your own workroom, or to another developer's
+ * workroom.
+ *
+ * @created 2005-10-23 - Tacitus
+ * @last_modified 2026-07-13 - Gesslar
+ *
+ * @history
+ * 2005-10-23 - Tacitus - Created
+ * 2006-07-22 - Parthenon - Edited
+ * 2026-07-13 - Gesslar - Added help text and LPCDoc header
+ */
 
 inherit STD_CMD;
+
+void setup() {
+  usage_text =
+    "home\n"
+    "home <developer>\n";
+  help_text =
+    "Teleports you to your own workroom (home/<you>/workroom.lpc) when given "
+    "no argument. With a developer name, teleports you to that developer's "
+    "workroom instead. If the requested workroom does not exist, you are not "
+    "moved. Custom teleport-out and teleport-in messages are used if you have "
+    "the 'teleport_out' and 'teleport_in' environment variables set.";
+}
 
 mixed main(object tp, string str) {
   string custom, tmp;
@@ -91,11 +104,4 @@ mixed main(object tp, string str) {
       return "Error [home]: " + capitalize(str) + " does not have a workroom.\n";
     }
   }
-}
-
-string help(object tp) {
-  return "SYNTAX: workroom [<user>]\n\n"
-    "This command will move you to ~/workroom.lpc if it\n"
-    "exists. You can also provide the name of another\n"
-    "developer to attempt to move into their workroom.\n";
 }
