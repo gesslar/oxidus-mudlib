@@ -53,6 +53,21 @@ void setup() {
     test("finds a key whose value is zero", function() {
       ASSERT_EQ(1, of("k", ([ "k": 0 ])));
     }),
+    // of() answers key membership, not value-nullness — so a key that maps to
+    // undefined is still present (the old !nullp(value) impl got this wrong).
+    test("finds a key whose value is undefined", function() {
+      mapping m = ([ ]);
+      m["k"] = undefined;
+      ASSERT_EQ(1, of("k", m));
+    }),
+    test("finds undefined when it is itself a key", function() {
+      mapping m = ([ ]);
+      m[undefined] = "v";
+      ASSERT_EQ(1, of(undefined, m));
+    }),
+    test("rejects undefined when it is not a key", function() {
+      ASSERT_EQ(0, of(undefined, ([ "k": 1 ])));
+    }),
   }));
 
   describe("of (string)", ({

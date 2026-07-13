@@ -21,19 +21,26 @@ string generate_uuid() {
  * Checks if a value is present in an array, mapping, or string.
  *
  * @param {mixed} needle - The value to search for.
- * @param {mixed} haystack  - The array, mapping, or string to search in.
+ * @param {mixed} haystack - The array, mapping, or string to search in.
  * @returns {int} 1 if the value is found, 0 otherwise.
  */
 int of(mixed needle, mixed haystack) {
   switch(typeof(haystack)) {
-    case T_ARRAY:
+    case T_ARRAY: {
       return member_array(needle, haystack) > -1;
-    case T_MAPPING:
-      return !nullp(haystack[needle]);
-    case T_STRING:
+    }
+
+    case T_MAPPING: {
+      return of(needle, keys(haystack));
+    }
+
+    case T_STRING: {
       return strsrch(haystack, needle) > -1;
-    default:
+    }
+
+    default: {
       return 0;
+    }
   }
 }
 
