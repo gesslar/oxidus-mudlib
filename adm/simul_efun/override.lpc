@@ -148,20 +148,19 @@ varargs int userp(object ob) {
 
 /**
  * @efun_override query_num
- * This function is an override of query_num(). It will return
- * the number in string form.
+ * This function is an override of query_num(). It will return the number in
+ * string form.
  *
  * @param {int} x - The number to convert to a string.
- * @param {int} many - If true, the number will be returned in plural form.
+ * @param {int} [many=0] - If 1, the number will be returned in plural form.
  * @returns {string} The number in string form.
  */
-varargs string query_num(int x, int many) {
-  string sign;
+varargs string query_num(int x, int many: (: 0 :)) {
+  assert_arg(!nullp(x) && intp(x), 1, "Missing argument.");
 
-  assert_arg(!nullp(x), 1, "Missing argument.");
-  assert_arg(!nullp(many) && intp(many), 2, "Invalid argument.");
+  many = !!many;
 
-  sign = x < 0 ? "negative " : "";
+  string sign = x < 0 ? "negative " : "";
   x = abs(x);
 
   return sign + efun::query_num(x, many);
