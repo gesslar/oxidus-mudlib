@@ -16,14 +16,14 @@ inherit STD_CMD;
 void setup() {
   usage_text = "cp <original> <destination>";
   help_text =
-"This command copies a file from its original location "
-"to a new one. The original file will remain in its "
-"original location.\n\n"
-"If the destination is a directory, the file will be "
-"copied into that directory. If the destination is a "
-"file, it will be overwritten.\n\n"
-"You may use absolute or relative paths for the source "
-"and/or destination.";
+    "This command copies a file from its original location to a new one. The "
+    "original file will remain in its original location.\n"
+    "\n"
+    "If the destination is a directory, the file will be copied into that "
+    "directory. If the destination is a file, it will be overwritten.\n"
+    "\n"
+    "You may use absolute or relative paths for the source and/or "
+    "destination.";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller,

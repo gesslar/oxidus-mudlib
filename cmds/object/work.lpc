@@ -25,11 +25,13 @@ void setup() {
     "used by other object commands.";
 }
 
-mixed main(/** @type {STD_PLAYER} */ object tp, string arg) {
+mixed main(
+  /** @type {STD_PLAYER} */ object tp,
+  string arg
+) {
   if(!arg) {
-    if(!environment(tp)) {
+    if(!environment(tp))
       return _error("You have no environment.");
-    }
 
     string cwd = query_directory(environment(tp));
     if(file_size(cwd) != -2)

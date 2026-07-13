@@ -18,14 +18,14 @@ inherit STD_CMD;
 void setup() {
   usage_text = "cd [directory]";
   help_text =
-"This command allows you to navigate through various "
-"directories. To use this command, you simply provide "
-"the directory, either an absolute path or one relative "
-"to the current directory, as the argument to this "
-"command.\n\n"
-"Typing 'cd' without any arguments will take you to "
-"your home directory.\n\n"
-"See also: mkdir, rmdir, ls";
+    "This command allows you to navigate through various directories. To use "
+    "this command, you simply provide the directory, either an absolute path "
+    "or one relative to the current directory, as the argument to this "
+    "command.\n"
+    "\n"
+    "Typing 'cd' without any arguments will take you to your home directory.\n"
+    "\n"
+    "See also: mkdir, rmdir, ls";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller,

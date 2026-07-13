@@ -18,11 +18,12 @@ inherit STD_CMD;
 void setup() {
   usage_text = "makedev <user>";
   help_text =
-"This command sets a user up with developer access to the mud by adding "
-"the user to the 'developer' group, creating them a home directory, and "
-"adding '/cmds/wiz/', '/cmds/object/', and '/cmds/file/' to the user's "
-"command path.\n\n"
-"See also: revdev";
+    "This command sets a user up with developer access to the mud by adding "
+    "the user to the 'developer' group, creating them a home directory, and "
+    "adding '/cmds/wiz/', '/cmds/object/', and '/cmds/file/' to the user's "
+    "command path.\n"
+    "\n"
+    "See also: revdev";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string args) {

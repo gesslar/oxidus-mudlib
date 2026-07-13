@@ -14,15 +14,16 @@ inherit STD_ACT;
 
 void setup() {
   usage_text =
-"unwield - Unwield your primary weapon.\n"
-"unwield off - Unwield your off-hand weapon.\n"
-"unwield all - Unwield every weapon you are wielding.\n"
-"unwield <weapon> - Unwield a specific weapon by name.\n";
+    "unwield - Unwield your primary weapon.\n"
+    "unwield off - Unwield your off-hand weapon.\n"
+    "unwield all - Unwield every weapon you are wielding.\n"
+    "unwield <weapon> - Unwield a specific weapon by name.\n";
   help_text =
-"Stop wielding a weapon. With no argument, unwields your primary "
-"weapon (right hand). Use 'off' for your off hand, 'all' to unwield "
-"everything at once, or name a specific weapon.\n\n"
-"See also: wield\n";
+    "Stop wielding a weapon. With no argument, unwields your primary "
+    "weapon (right hand). Use 'off' for your off hand, 'all' to unwield "
+    "everything at once, or name a specific weapon.\n"
+    "\n"
+    "See also: wield, wear, remove";
 }
 
 mixed main(/** @type {STD_BODY} */ object tp, string str) {

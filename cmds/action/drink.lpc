@@ -12,6 +12,15 @@
 
 inherit STD_ACT;
 
+void setup() {
+  usage_text = "drink <drink>";
+  help_text =
+    "This command will allow you to drink from a beverage you are holding. "
+    "Drinking consumes the beverage more quickly than sipping it.\n"
+    "\n"
+    "See also: sip, eat, nibble";
+}
+
 /**
  *
  * @param {STD_BODY} tp - The player
@@ -37,12 +46,4 @@ mixed main(object tp, string str) {
     return "You couldn't drink that.";
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-    "SYNTAX: drink <object>\n\n"
-    "This command will allow you to drink from a beverage you are holding. "
-    "Drinking consumes the beverage more quickly than sipping it.\n\n"
-    "See also: sip, eat";
 }

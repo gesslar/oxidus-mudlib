@@ -16,18 +16,22 @@ inherit STD_CMD;
 void setup() {
   usage_text = "pwd";
   help_text =
-"This command will inform you of your current working "
-"directory and current working file. This is important, "
-"as sometimes if you don't supply arguments to commands, "
-"they default to your current working file or directory "
-"(such as ls, ed, or update).";
+    "This command will inform you of your current working directory and "
+    "current working file. This is important, as sometimes if you don't "
+    "supply arguments to commands, they default to your current working file "
+    "or directory (such as ls, ed, or update).";
 }
 
-mixed main(/** @type {STD_PLAYER} */ object caller, string _arg) {
-  return _ok(sprintf(
-    "Current working directory: %s\n"
-    "Current working file: %s\n",
-    caller->query_env("cwd"),
-    caller->query_env("cwf"))
+mixed main(
+  /** @type {STD_PLAYER} */ object caller,
+  string _arg
+) {
+  return _ok(
+    sprintf(
+      "Current working directory: %s\n"
+      "Current working file: %s\n",
+      caller->query_env("cwd"),
+      caller->query_env("cwf")
+    )
   );
 }

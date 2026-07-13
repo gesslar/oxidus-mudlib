@@ -14,21 +14,24 @@ inherit STD_ACT;
 
 void setup() {
   usage_text =
-"put <object> in <container>\n"
-"put all <object> in <container>\n"
-"put <object> in <container> here\n"
-"put all <object> in <container> here\n";
+    "put <object> in <container>\n"
+    "put all <object> in <container>\n"
+    "put <object> in <container> here\n"
+    "put all <object> in <container> here\n";
   help_text =
-"This command allows you to put an object into a container. You can specify a "
-"specific object to put into a container, or you can put all objects of a "
-"specific type into a container. You can also specify whether the container "
-"is in your inventory or in the room you are in.\n\n"
-"See also: get, drop\n";
+    "This command allows you to put an object into a container. You can "
+    "specify a specific object to put into a container, or you can put all "
+    "objects of a specific type into a container. You can also specify "
+    "whether the container is in your inventory or in the room you are in.\n"
+    "\n"
+    "See also: get, drop\n";
 }
 
-mixed main(object tp, string str) {
+mixed main(
+  /** @type {STD_BODY} */ object tp,
+  string str
+) {
   string dest, target;
-  object env, ob, container;
   int all_flag = 0;
   int here_flag = 0;
 
@@ -46,9 +49,10 @@ mixed main(object tp, string str) {
     return "Put what where?";
   }
 
-  env = environment(tp);
+  /** @type {STD_ROOM} */ object env = environment(tp);
 
   // Find the container
+  /** @type {STD_CONTAINER} */ object container;
   if(here_flag) {
     container = find_target(tp, dest, env);
   } else {
@@ -78,8 +82,13 @@ mixed main(object tp, string str) {
       if(item == container)
         continue;
 
-      if(item->prevent_drop() || item->prevent_put() || container->prevent_put())
+      if(
+           call_if(item, "prevent_drop")
+        || call_if(item, "prevent_put")
+        || call_if(container, "prevent_put")
+      ) {
         continue;
+      }
 
       if(!container->can_hold_object(item))
         continue;
@@ -97,6 +106,8 @@ mixed main(object tp, string str) {
       return "You could not put any " + target + " in " + get_short(container) + ".";
 
   } else {
+    /** @type {STD_ITEM} */ object ob;
+
     // Handle 'put <object>' scenarios
     if(!(ob = find_target(tp, target, tp)))
       return "You do not have " + add_article(target) + ".";
@@ -104,11 +115,16 @@ mixed main(object tp, string str) {
     if(ob == container)
       return "You cannot put " + get_short(ob) + " in itself.";
 
-    if(ob->is_container())
+    if(call_if(ob, "is_container"))
       return "You cannot put a container inside another container.";
 
-    if(ob->prevent_drop() || ob->prevent_put() || container->prevent_put())
+    if(
+         call_if(ob, "prevent_drop")
+      || call_if(ob, "prevent_put")
+      || call_if(container, "prevent_put")
+    ) {
       return "You cannot put " + get_short(ob) + " in " + get_short(container) + ".";
+    }
 
     if(!container->can_hold_object(ob))
       return get_short(container) + " cannot hold " + get_short(ob) + ".";

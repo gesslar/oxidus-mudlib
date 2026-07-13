@@ -16,7 +16,7 @@ inherit STD_CMD;
 void setup() {
   usage_text = "cat <file>";
   help_text =
-"This command pages through an entire file at once.";
+    "This command pages through an entire file at once.";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller,

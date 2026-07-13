@@ -14,46 +14,49 @@
 inherit STD_CMD;
 
 void setup() {
-    usage_text = "unload <file>";
-    help_text =
-        "Unloads (destructs) the master copy of one or more objects matching "
-        "the given file pattern, resolved relative to your current working "
-        "directory. Each matching loaded object is removed and destructed so "
-        "that it will be freshly compiled the next time it is referenced. Any "
-        "object that currently has players present is skipped. A count of the "
-        "objects unloaded is reported when finished.";
+  usage_text = "unload <file>";
+  help_text =
+    "Unloads (destructs) the master copy of one or more objects matching "
+    "the given file pattern, resolved relative to your current working "
+    "directory. Each matching loaded object is removed and destructed so "
+    "that it will be freshly compiled the next time it is referenced. Any "
+    "object that currently has players present is skipped. A count of the "
+    "objects unloaded is reported when finished.";
 }
 
-mixed main(object tp, string arg) {
-    string file, *files;
-    object ob;
-    int unloaded = 0;
+mixed main(
+  /** @type {STD_PLAYER} */ object tp,
+  string arg
+) {
+  string file, *files;
+  int unloaded = 0;
 
-    if(!arg)
-        return _info("Usage: unload <file>");
+  if(!arg)
+    return _info("Usage: unload <file>");
 
-    files = get_files(tp->query_env("cwd"), arg);
-    if(!sizeof(files))
-        return _info("No files found matching: %s", arg);
+  files = get_files(tp->query_env("cwd"), arg);
+  if(!sizeof(files))
+    return _info("No files found matching: %s", arg);
 
-    foreach(file in files) {
-        ob = find_object(file);
+  foreach(file in files) {
+    /** @type {STD_OBJECT} */ object ob = find_object(file);
 
-        if(!ob)
-            continue;
+    if(!ob)
+      continue;
 
-        if(sizeof(present_players(ob))) {
-            _info("Skipping %s.", file);
-            continue;
-        }
-
-        catch(ob->remove());
-        if(ob)
-            destruct(ob);
-        unloaded++;
-
-        _ok("Unloaded %s.", file);
+    if(sizeof(present_players(ob))) {
+      _info("Skipping %s.", file);
+      continue;
     }
 
-    return _ok("%d files unloaded.", unloaded);
+    catch(ob->remove());
+    if(ob)
+      destruct(ob);
+
+    unloaded++;
+
+    _ok("Unloaded %s.", file);
+  }
+
+  return _ok("%d files unloaded.", unloaded);
 }

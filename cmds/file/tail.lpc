@@ -16,8 +16,7 @@ inherit STD_CMD;
 void setup() {
   usage_text = "tail <file>";
   help_text =
-"This command prints the last 20 lines of a specified "
-"file.";
+    "This command prints the last 20 lines of a specified file.";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller,

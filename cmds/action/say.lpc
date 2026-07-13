@@ -18,12 +18,14 @@ void setup() {
 "This command enables you to speak to the room.";
 }
 
-mixed main(/** @type {STD_BODY} */ object tp,
-    string str) {
-    if(!str)
-        return "Say what?";
+mixed main(
+  /** @type {STD_BODY} */ object tp,
+  string str
+) {
+  if(!str)
+    return "Say what?";
 
-    tp->simple_action("$N $vsay, \"$o\"", str);
+  tp->simple_action("$N $vsay, \"$o\"", str);
 
-    return 1;
+  return 1;
 }

@@ -17,16 +17,18 @@
 inherit STD_CMD;
 
 void setup() {
-  usage_text = "shutdown [<stop>||<time>/now]";
+  usage_text = "shutdown [<stop>|<time>/now]";
   help_text =
-"This command starts a shutdown of the mud. You can either supply the "
-"amount of time until the shutdown is to occur, or stop the current "
-"shutdown/reboot by giving the argument stop. You may also give the "
-"argument now to shut the mud down as soon as the command is given.\n\n"
-"Remember that this command shuts the mud down and it will not come "
-"back up on its own. If you wish for the mud to restart afterwards, "
-"look at the reboot command.\n\n"
-"See also: reboot";
+    "This command starts a shutdown of the mud. You can either supply the "
+    "amount of time until the shutdown is to occur, or stop the current "
+    "shutdown/reboot by giving the argument stop. You may also give the "
+    "argument now to shut the mud down as soon as the command is given.\n"
+    "\n"
+    "Remember that this command shuts the mud down and it will not come "
+    "back up on its own. If you wish for the mud to restart afterwards, "
+    "look at the reboot command.\n"
+    "\n"
+    "See also: reboot";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {

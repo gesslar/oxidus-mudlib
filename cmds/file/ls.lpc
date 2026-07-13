@@ -39,20 +39,20 @@ void setup() {
   usage_text = "ls [-l] [-a] [-S] [-t] [-r] [-F] [-P] "
     "[file1...]";
   help_text =
-"This command lists the contents of a directory "
-"(current directory if none is specified). '*' and '?' "
-"may be used as wildcards. '*' indicates any number of "
-"characters, while '?' indicates a single character.\n"
-"\n"
-"  -l  Shows extra information about files.\n"
-"  -a  Include hidden files.\n"
-"  -S  Size sort files.\n"
-"  -t  Date sort files.\n"
-"  -r  Reverse sort direction.\n"
-"  -F  Append an indicator to names.\n"
-"  -P  Display path for all dirs.\n"
-"\n"
-"See also: cd";
+    "This command lists the contents of a directory (current directory if "
+    "none is specified). '*' and '?' may be used as wildcards. '*' "
+    "indicates any number of characters, while '?' indicates a single "
+    "character.\n"
+    "\n"
+    "  -l  Shows extra information about files.\n"
+    "  -a  Include hidden files.\n"
+    "  -S  Size sort files.\n"
+    "  -t  Date sort files.\n"
+    "  -r  Reverse sort direction.\n"
+    "  -F  Append an indicator to names.\n"
+    "  -P  Display path for all dirs.\n"
+    "\n"
+    "See also: cd";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {

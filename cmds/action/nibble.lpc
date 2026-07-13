@@ -12,7 +12,19 @@
 
 inherit STD_ACT;
 
-mixed main(object tp, string str) {
+void setup() {
+  usage_text = "nibble <object>";
+  help_text =
+    "This command will allow you to nibble at food you are holding. Nibbling "
+    "consumes the food more slowly than eating it.\n"
+    "\n"
+    "See also: eat, drink, sip";
+}
+
+mixed main(
+  /** @type {STD_BODY} */ object tp,
+  string str
+) {
   /** @type {STD_FOOD} */ object ob;
   int uses;
 
@@ -31,12 +43,4 @@ mixed main(object tp, string str) {
     return "You couldn't nibble on that.";
 
   return 1;
-}
-
-string query_help(object _caller) {
-  return
-    "SYNTAX: nibble <object>\n\n"
-    "This command will allow you to nibble at food you are holding. Nibbling "
-    "consumes the food more slowly than eating it.\n\n"
-    "See also: eat, drink";
 }

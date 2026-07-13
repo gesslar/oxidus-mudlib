@@ -23,15 +23,17 @@ private string dir;
 void setup() {
   usage_text = "rm [-r] <file name>";
   help_text =
-"This command permanently removes a file. Please note "
-"that there is no 'Recycle Bin'. You must be extra "
-"careful when dealing with important files. You may "
-"also use the -r option to recursively remove all "
-"files and folders within <dir name>. It will ask you "
-"for a confirmation just to be safe.";
+    "This command permanently removes a file. Please note that there is no "
+    "'Recycle Bin'. You must be extra careful when dealing with important "
+    "files. You may also use the -r option to recursively remove all files "
+    "and folders within <dir name>. It will ask you for a confirmation just "
+    "to be safe.";
 }
 
-mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
+mixed main(
+  /** @type {STD_PLAYER} */ object caller,
+  string str
+) {
   int result;
 
   dir_tree = ({});
@@ -40,12 +42,10 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
     return _usage(caller);
 
   if(sscanf(str, "-r %s", dir) == 1) {
-    dir = resolve_path(
-      caller->query_env("cwd"), dir) + "/";
+    dir = resolve_path(caller->query_env("cwd"), dir) + "/";
 
     if(!directory_exists(dir))
-      return _error(caller,
-        "%s: No such directory.", dir);
+      return _error(caller, "%s: No such directory.", dir);
 
     if(!master()->valid_write(dir, caller, "rmdir"))
       return _error(caller, "Permission denied.");

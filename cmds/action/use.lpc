@@ -12,9 +12,22 @@
 
 inherit STD_ACT;
 
-private nosave string fail = "You don't know how to use that beyond what is apparent.";
+private nosave string fail =
+  "You don't know how to use that beyond what is apparent.";
 
-mixed use(/** @type {STD_BODY} */ object tp, string str) {
+void setup() {
+  usage_text = "use <object>";
+  help_text =
+    "This command will allow you to use an object you are carrying or one "
+    "that is present in your environment, provided it is something that can "
+    "be used. The effect depends on the object.";
+}
+
+
+mixed use(
+  /** @type {STD_BODY} */ object tp,
+  string str
+) {
   if(!strlen(str))
     return "Use what?";
 
@@ -32,12 +45,4 @@ mixed use(/** @type {STD_BODY} */ object tp, string str) {
     return fail;
 
   return result;
-}
-
-string query_help(object _caller) {
-  return
-    "SYNTAX: use <object>\n\n"
-    "This command will allow you to use an object you are carrying or one "
-    "that is present in your environment, provided it is something that can "
-    "be used. The effect depends on the object.";
 }
