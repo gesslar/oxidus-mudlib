@@ -8,7 +8,7 @@
   "summarySection": {
     "included": true,
     "collapsible": true,
-    "defaultOpen": false
+    "defaultOpen": true
   },
   "issuesTableSection": {
     "included": true,
