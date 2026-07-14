@@ -193,6 +193,8 @@ varargs object find_target(object tp, string str, object env, function f);
 varargs object *clones(mixed file, int env_only);
 varargs mixed *accessible_objects(object container, object pov);
 varargs object *accessible_objects_flat(object container, object pov);
+string ob_short(object ob);
+string ob_long(object ob);
 
 // File: predicates.c
 int roomp(object ob);
