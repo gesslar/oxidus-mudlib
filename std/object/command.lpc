@@ -1,8 +1,8 @@
 /**
  * @file /std/object/command.c
  *
- * Replacement for add_action, allowing for mixed results and
- * more flexible command handling.
+ * Replacement for add_action, allowing for mixed results and more flexible
+ * command handling.
  *
  * @created 2024-03-03 - Gesslar
  * @last_modified 2026-03-29 - Gesslar
@@ -23,10 +23,9 @@ private nosave string *__cmdHistory = ({});
 /**
  * Adds a command handler to this object.
  *
- * @param {string | string*} command - Command name or array of
- *                                     command names
- * @param {function | string} action - Function pointer or method
- *                                     name to handle command
+ * @param {string | string*} command - Command name or array of command names
+ * @param {function | string} action - Function pointer or method name to handle
+ *  command
  * @errors If action function does not exist
  * @errors If command or action parameters are invalid types
  */
@@ -54,8 +53,7 @@ public void add_command(mixed command, mixed action) {
 /**
  * Removes one or more commands from this object.
  *
- * @param {string | string*} command - Command name or array of
- *                                     command names
+ * @param {string | string*} command - Command name or array of command names
  */
 public void remove_command(mixed command) {
   if(stringp(command)) {
@@ -70,8 +68,7 @@ public void remove_command(mixed command) {
 /**
  * Removes all commands that use a specific action handler.
  *
- * @param {function | string} action - Function name or pointer
- *                                     to remove
+ * @param {function | string} action - Function name or pointer to remove
  */
 public void remove_command_all(mixed action) {
   foreach(mixed command, mixed act in __cmdHandlers) {
@@ -86,8 +83,8 @@ public void remove_command_all(mixed action) {
  * Returns the action associated with a command.
  *
  * @param {string} command - The command to query
- * @returns {function | string | undefined} Action handler, or
- *          undefined if not found
+ * @returns {function | string | undefined} Action handler, or undefined if not
+ *  found
  */
 public mixed query_command(string command) {
   return __cmdHandlers[command];
@@ -103,8 +100,8 @@ public mapping query_commands() {
 }
 
 /**
- * Returns all commands available to this object, including
- * inherited ones from the driver.
+ * Returns all commands available to this object, including inherited ones from
+ * the driver.
  *
  * @returns {string*} Array of all available command names
  */
@@ -113,13 +110,13 @@ public string *query_all_commands() {
 }
 
 /**
- * Finds all commands that share the same action handler.
- * Returns an array containing the given command and any other
- * commands that use the same action handler.
+ * Finds all commands that share the same action handler. Returns an array
+ * containing the given command and any other commands that use the same action
+ * handler.
  *
  * @param {string} command - The command to find matches for
- * @returns {string*} Array of commands sharing the same
- *          handler, or empty array
+ * @returns {string*} Array of commands sharing the same handler, or empty
+ *  array
  */
 public string *query_matching_commands(string command) {
   string *matches = allocate(1);
@@ -153,8 +150,7 @@ public void init_commands() {
  * @param {STD_PLAYER} user - The object triggering the command
  * @param {string} command - The command name
  * @param {string} arg - The command arguments
- * @returns {mixed} Result of command evaluation, or undefined
- *          if no handler
+ * @returns {mixed} Result of command evaluation, or undefined if no handler
  */
 public mixed evaluate_command(object user, string command, string arg) {
   if(stringp(__cmdHandlers[command]))
@@ -189,8 +185,8 @@ public string *get_path() {
 }
 
 /**
- * Adds a directory to the command search path. Requires admin
- * privileges or that the caller is this body.
+ * Adds a directory to the command search path. Requires admin privileges or
+ * that the caller is this body.
  *
  * @param {string} str - The directory path to add
  * @returns {int} 1 on success, 0 on failure
@@ -214,11 +210,11 @@ public int add_path(string str) {
 }
 
 /**
- * Sets the command search paths from a colon-delimited string
- * or an array of path strings.
+ * Sets the command search paths from a colon-delimited string or an array of
+ * path strings.
  *
- * @param {string | string*} path - Colon-delimited path string
- *                                  or array of paths
+ * @param {string | string*} path - Colon-delimited path string or array of
+ *  paths
  */
 public void set_path(mixed path) {
   string *paths;
@@ -232,8 +228,8 @@ public void set_path(mixed path) {
 }
 
 /**
- * Removes a directory from the command search path. Requires
- * admin privileges or that the caller is this body.
+ * Removes a directory from the command search path. Requires admin privileges
+ * or that the caller is this body.
  *
  * @param {string} str - The directory path to remove
  * @returns {int} 1 on success, 0 on failure
@@ -251,8 +247,7 @@ public int rem_path(string str) {
 }
 
 /**
- * Adds wizard-specific command paths from the wizard paths
- * configuration file.
+ * Adds wizard-specific command paths from the wizard paths configuration file.
  */
 public void add_wizard_path() {
   string *paths = explode_file("/adm/etc/wizard_paths");
@@ -261,8 +256,7 @@ public void add_wizard_path() {
 }
 
 /**
- * Removes all current command paths and restores standard
- * paths only.
+ * Removes all current command paths and restores standard paths only.
  */
 public void remove_wizard_paths() {
   filter(get_path(), (: rem_path :));
@@ -271,8 +265,7 @@ public void remove_wizard_paths() {
 }
 
 /**
- * Adds the standard command paths from the standard paths
- * configuration file.
+ * Adds the standard command paths from the standard paths configuration file.
  */
 public void add_standard_paths() {
   string *paths = explode_file("/adm/etc/standard_paths");
@@ -281,8 +274,7 @@ public void add_standard_paths() {
 }
 
 /**
- * Adds ghost-specific command paths from the ghost paths
- * configuration file.
+ * Adds ghost-specific command paths from the ghost paths configuration file.
  */
 public void add_ghost_paths() {
   string *paths = explode_file("/adm/etc/ghost_paths");
@@ -291,15 +283,14 @@ public void add_ghost_paths() {
 }
 
 /**
- * Returns command history entries. Requires the caller to be
- * the owning body or an admin.
+ * Returns command history entries. Requires the caller to be the owning body
+ * or an admin.
  *
  * @param {int} [index] - Starting index into the history
  * @param {int} [range] - End index for a range of entries
  * @returns {string*} Array of command history entries
  */
-public nomask varargs string *query_command_history(int index,
-    int range) {
+public nomask varargs string *query_command_history(int index, int range) {
   if(this_body() != this_object()
       && !adminp(previous_object()))
     return ({});
@@ -313,9 +304,8 @@ public nomask varargs string *query_command_history(int index,
 }
 
 /**
- * Main command dispatch hook. Resolves and executes commands
- * by checking object handlers, emotes, channels, and command
- * paths in order.
+ * Main command dispatch hook. Resolves and executes commands by checking
+ * object handlers, emotes, channels, and command paths in order.
  *
  * @param {string} arg - The raw command arguments
  * @returns {int} 1 if the command was handled, 0 otherwise
@@ -369,6 +359,7 @@ public int command_hook(string arg) {
   foreach(ob in obs) {
     result = ob->evaluate_command(this_object(), verb, arg);
     result = evaluate_result(result);
+
     if(result == 1)
       return 1;
   }
@@ -407,8 +398,7 @@ public int command_hook(string arg) {
     err = catch(cmd = load_object(cmds[0]));
 
     if(err) {
-      tell_me("Error: Command " + verb +
-        " non-functional.\n");
+      tell_me("Error: Command " + verb + " non-functional.\n");
       tell_me(err);
       return 1;
     }
@@ -426,12 +416,11 @@ public int command_hook(string arg) {
 }
 
 /**
- * Finds the full file path for a command verb by searching
- * the command paths.
+ * Finds the full file path for a command verb by searching the command paths.
  *
  * @param {string} verb - The command verb to look up
- * @returns {string | undefined} The full path to the command
- *          file without extension, or undefined if not found
+ * @returns {string | undefined} The full path to the command file without
+ *  extension, or undefined if not found
  */
 public string find_command_path(string verb) {
   string *paths = get_path();
@@ -469,12 +458,11 @@ private nomask int evaluate_result(mixed result) {
 }
 
 /**
- * Forces this object to execute a command. Requires the caller
- * to be this body or an admin.
+ * Forces this object to execute a command. Requires the caller to be this body
+ * or an admin.
  *
  * @param {string} cmd - The command string to execute
- * @returns {int} Result of the command execution, or 0 if
- *          permission denied
+ * @returns {int} Result of the command execution, or 0 if permission denied
  */
 public int force_me(string cmd) {
   if(this_body() != this_object()
