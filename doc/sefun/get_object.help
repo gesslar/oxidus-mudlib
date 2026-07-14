@@ -30,6 +30,6 @@
 ### EXAMPLE
 
     {{di1}}get_object("sword");           // Basic search
-    get_object("@orc");           // Environment of orc
+    get_object("@orc");            // Environment of orc
     get_object("me", this_body()); // The player themselves
-    get_object("here");           // Current room{{di0}}
+    get_object("here");            // Current room{{di0}}

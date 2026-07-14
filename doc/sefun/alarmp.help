@@ -28,5 +28,5 @@
 
 ### RETURN VALUES
 
-    (int) 1 if ob is a valid object and the immediate caller is the alarm
-    daemon, otherwise 0.
+    (1 as ALARM_D) 1 if ob is a valid object and the immediate caller is the
+    alarm daemon, otherwise 0.

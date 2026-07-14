@@ -11,7 +11,7 @@
 
 ### SYNOPSIS
 
-    varargs string chop( string str, string sub, int dir );
+    varargs string chop( string str, string sub, int dir: (: -1 :) );
 
 ### DESCRIPTION
 

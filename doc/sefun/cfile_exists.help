@@ -15,12 +15,13 @@
 
     Checks if a LPC source file exists.
 
-    Automatically appends ".c" to the filename before checking.
+    Resolves the source file via source_file(), which prefers a sibling .lpc
+    and falls back to .c.
 
 ### PARAMETERS
 
     file  (string)
-          Base path of LPC file without .c extension
+          Base path of LPC file, with or without extension
 
 ### RETURN VALUES
 
