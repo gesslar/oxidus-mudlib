@@ -190,8 +190,7 @@ public int gmcp_enabled() {
   if(!has_gmcp(this_object()))
     return 0;
 
-  // @lpc-expect-error: comparison is made at runtime after being inherited,
-  // you silly billy
+  // @lpc-expect-error: comparison is made at runtime after being inherited
   if(base_name() == LOGIN_OB)
     return 1;
 
