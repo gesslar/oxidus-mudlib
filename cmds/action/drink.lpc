@@ -31,6 +31,9 @@ mixed main(object tp, string str) {
   /** @type {STD_DRINK} */ object ob;
   int uses;
 
+  if(!str)
+    return _usage(tp);
+
   if(!ob = find_target(tp, str, tp))
     return "You don't have that.";
 
