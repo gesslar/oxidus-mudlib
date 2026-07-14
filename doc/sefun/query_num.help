@@ -9,15 +9,15 @@
 
 ### SYNOPSIS
 
-    varargs string query_num( int x, int many );
+    varargs string query_num( int x, int many: (: 0 :) );
 
 ### PARAMETERS
 
     x     (int)
           The number to convert to a string.
 
-    many  (int)
-          If true, the number will be returned in plural form.
+    many  (int, optional, default: 0)
+          If 1, the number will be returned in plural form.
 
 ### RETURN VALUES
 
