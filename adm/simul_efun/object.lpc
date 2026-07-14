@@ -749,14 +749,13 @@ string ob_long(object ob) {
   string long = ob->query_long() ?? "";
   string *xl = ob->query_extra_longs() ?? ({});
 
-  long = append(long, "\n");
   xl = filter(xl, (: stringp($1) && truthy($1) :));
   xl = map(xl, (: chop($1, "\n") :));
 
   if(sizeof(long) && sizeof(xl))
-    return `${long}\n${implode(xl, "\n")}`;
+    return `${append(long, "\n")}\n${implode(xl, "\n")}`;
   if(sizeof(long) && !sizeof(xl))
-    return long;
+    return append(long, "\n");
   if(!sizeof(long) && sizeof(xl))
     return implode(xl, "\n");
 
