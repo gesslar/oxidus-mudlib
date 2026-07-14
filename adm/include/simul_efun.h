@@ -173,28 +173,26 @@ varargs float dim_sigmoid(mixed val, mixed scale, mixed k);
 
 // File: object.c
 int caller_is(mixed ob);
-int getoid(object ob);
-int same_env_check(object ob1, object ob2, int top_env);
+varargs int same_env_check(object ob1, object ob2, int top_env);
 object *get_livings(mixed names, object room);
 object *get_players(mixed names, object room);
-object *present_clones(string file, object room);
+object *present_clones(mixed file, object room);
 object *present_livings(object room);
 object *present_players(object room);
 object *present_npcs(object room);
 object get_living(string name, object room);
 object get_player(string name, object room);
 object this_body();
+object this_caller();
+varargs object get_object(string str, object player);
+varargs mixed get_objects(string str, object player, int no_arr);
 varargs object top_environment(object ob);
 varargs object *all_environment(object ob);
-varargs mixed get_objects(string str, object player, int no_arr);
-varargs object find_ob(mixed ob, mixed cont);
-varargs object get_object(string str, object player);
-varargs object find_targets(object tp, string str, object env, function f);
+varargs object *find_targets(object tp, string str, object env, function f);
 varargs object find_target(object tp, string str, object env, function f);
 varargs object *clones(mixed file, int env_only);
 varargs mixed *accessible_objects(object container, object pov);
 varargs object *accessible_objects_flat(object container, object pov);
-object shutdown_d();
 
 // File: predicates.c
 int roomp(object ob);
