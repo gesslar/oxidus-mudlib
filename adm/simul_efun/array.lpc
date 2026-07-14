@@ -461,7 +461,7 @@ varargs int intersects(mixed *arr1, mixed *arr2, function compare) {
 /**
  * Removes and returns the last element of the array.
  *
- * @param {mixed*} arr - The array from which to pop an element.
+ * @param {mixed*} &arr - The array from which to pop an element.
  * @returns {mixed} The last element of the array.
  */
 mixed pop(mixed ref *arr) {
@@ -477,7 +477,7 @@ mixed pop(mixed ref *arr) {
  * Adds a new element to the end of the array and returns the new
  * size of the array.
  *
- * @param {mixed*} arr - The array to which to push an element.
+ * @param {mixed*} &arr - The array to which to push an element.
  * @param {mixed} value - The element to push onto the array.
  * @returns {int} The new size of the array.
  */
@@ -489,7 +489,7 @@ int push(mixed ref *arr, mixed value) {
 /**
  * Removes and returns the first element of the array.
  *
- * @param {mixed*} arr - The array from which to shift an element.
+ * @param {mixed*} &arr - The array from which to shift an element.
  * @returns {mixed} The first element of the array.
  */
 mixed shift(mixed ref *arr) {
@@ -505,7 +505,7 @@ mixed shift(mixed ref *arr) {
  * Adds a new element to the beginning of the array and returns
  * the new size of the array.
  *
- * @param {mixed*} arr - The array to which to unshift an element.
+ * @param {mixed*} &arr - The array to which to unshift an element.
  * @param {mixed} value - The element to unshift onto the array.
  * @returns {int} The new size of the array.
  */
@@ -517,7 +517,7 @@ int unshift(mixed ref *arr, mixed value) {
 /**
  * Adds a value to the end of an array only if it doesn't already exist.
  *
- * @param {mixed} arr The array to modify
+ * @param {mixed} &arr The array to modify
  * @param {mixed} value The value to add uniquely
  * @returns {int} The size of the array after the operation
  */
@@ -531,7 +531,7 @@ int set_push(mixed ref *arr, mixed value) {
 /**
  * Adds a value to the beginning of an array only if it doesn't already exist.
  *
- * @param {mixed} arr - The array to modify
+ * @param {mixed} &arr - The array to modify
  * @param {mixed} value - The value to add uniquely
  * @returns {int} The size of the array after the operation
  */
@@ -741,7 +741,7 @@ int some(mixed *arr, mixed criteria) {
 /**
  * Removes and returns an element at a specific index.
  *
- * @param {mixed*} arr - Array to modify
+ * @param {mixed*} &arr - Array to modify
  * @param {int} index - Index of element to remove
  * @returns {mixed} The removed element
  */
@@ -767,7 +767,7 @@ mixed eject(mixed ref *arr, int index) {
  * the index where it was found. If the value is not found, the array remains
  * unchanged and -1 is returned.
  *
- * @param {mixed} arr - The array to modify.
+ * @param {mixed} &arr - The array to modify.
  * @param {mixed} value - The value to remove from the array.
  * @returns {int} The index where the value was found and removed, or -1 if not found.
  * @errors If the first argument is not an array
@@ -801,7 +801,7 @@ varargs int eject_value(mixed ref *arr, mixed value) {
  * value are found. The function returns the total number of elements
  * that were removed.
  *
- * @param {mixed} arr - The array to modify.
+ * @param {mixed} &arr - The array to modify.
  * @param {mixed} value - The value to remove from the array.
  * @returns {int} The total number of occurrences that were removed.
  * @errors If the first argument is not an array
@@ -830,7 +830,7 @@ varargs int eject_value_all(mixed ref *arr, mixed value) {
 /**
  * Inserts an element at a specific index.
  *
- * @param {mixed*} arr - Array to modify
+ * @param {mixed*} &arr - Array to modify
  * @param {mixed} value - Value to insert
  * @param {int} index - Index where to insert
  * @returns {int} New size of array
