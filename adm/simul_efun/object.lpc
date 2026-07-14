@@ -697,3 +697,68 @@ varargs mixed *accessible_objects(object container, object pov) {
 varargs object *accessible_objects_flat(object container, object pov) {
   return flatten(accessible_objects(container, pov));
 }
+
+/**
+ * Builds the composite short description for an object.
+ *
+ * Combines the object's base short with any extra shorts, rendering
+ * each extra short parenthesized and space-separated after the base.
+ * When the base short is absent, only the extra shorts are returned;
+ * when both are absent, an empty string is returned.
+ *
+ * @param {STD_OBJECT} ob - The object whose short description to build.
+ * @returns {string} The composite short description, or "" if ob is not an
+ *  object or has nothing to show.
+ */
+string ob_short(object ob) {
+  if(!objectp(ob))
+    return "";
+
+  string short = ob->query_short() ?? "";
+  string *xs = ob->query_extra_shorts() ?? ({});
+
+  xs = filter(xs, (: stringp($1) && truthy($1) :));
+
+  if(sizeof(short) && sizeof(xs))
+    return `${short} ${implode(map(xs, (: `(${$1})` :)), " ")}`;
+  if(sizeof(short) && !sizeof(xs))
+    return short;
+  if(!sizeof(short) && sizeof(xs))
+    return implode(map(xs, (: `(${$1})` :)), " ");
+
+  return "";
+}
+
+/**
+ * Builds the composite long description for an object.
+ *
+ * Combines the object's base long with any extra longs, each on its
+ * own line beneath the base. The base long is newline-terminated and
+ * each extra long is stripped of a trailing newline before joining.
+ * When the base long is absent, only the extra longs are returned;
+ * when both are absent, an empty string is returned.
+ *
+ * @param {STD_OBJECT} ob - The object whose long description to build.
+ * @returns {string} The composite long description, or "" if ob is not an
+ *  object or has nothing to show.
+ */
+string ob_long(object ob) {
+  if(!objectp(ob))
+    return "";
+
+  string long = ob->query_long() ?? "";
+  string *xl = ob->query_extra_longs() ?? ({});
+
+  long = append(long, "\n");
+  xl = filter(xl, (: stringp($1) && truthy($1) :));
+  xl = map(xl, (: chop($1, "\n") :));
+
+  if(sizeof(long) && sizeof(xl))
+    return `${long}\n${implode(xl, "\n")}`;
+  if(sizeof(long) && !sizeof(xl))
+    return long;
+  if(!sizeof(long) && sizeof(xl))
+    return implode(xl, "\n");
+
+  return "";
+}
