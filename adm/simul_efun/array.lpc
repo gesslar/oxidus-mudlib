@@ -945,7 +945,7 @@ varargs void each(mixed src, function fun, mixed extra...) {
     int i, sz;
 
     for(i = 0, sz = sizeof(src); i < sz; i++)
-      evaluate(fun, src[i], src, extra...);
+      evaluate(fun, src[i], i, src, extra...);
   }
 
   if(mapp(src)) {
