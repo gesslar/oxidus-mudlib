@@ -55,7 +55,7 @@ mixed main(
   if(original == destination)
     return _error(caller, "Original and destination are the same.");
 
-  if(!master()->valid_write(destination, this_object(), "cp"))
+  if(!master()->valid_write(destination, caller, "cp"))
     return _error(caller, "Permission denied.");
 
   int result = cp(original, destination);
