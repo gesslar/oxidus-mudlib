@@ -699,8 +699,10 @@ private nomask void load_access() {
 /**
  * Translates a path glob into an anchored regex. '*' matches within a
  * single path segment (no slash); '**' matches the remainder of the path
- * (slashes included). Everything else is matched literally, with regex
- * metacharacters escaped.
+ * (slashes included). A trailing '/**' additionally matches the directory
+ * node itself, so '/adm/**' covers '/adm' as well as '/adm/foo' - callers
+ * pass a bare directory path without a trailing slash and still match.
+ * Everything else is matched literally, with regex metacharacters escaped.
  *
  * @param {string} pattern - The glob pattern.
  * @returns {string} An anchored regex equivalent.
@@ -708,6 +710,16 @@ private nomask void load_access() {
 private nomask string glob_to_regex(string pattern) {
   string re = "";
   int i, n = strlen(pattern);
+  int subtree = 0;
+
+  // Fold a trailing '/**' so the directory node matches too: '/adm/**'
+  // becomes ^/adm(/.*)?$, matching '/adm', '/adm/', and '/adm/foo' but not
+  // '/administrator'. The bare '/**' catch-all is left untouched.
+  if(n > 3 && pattern[<3..] == "/**") {
+    pattern = pattern[0..<4];
+    n = strlen(pattern);
+    subtree = 1;
+  }
 
   for(i = 0; i < n; i++) {
     int c = pattern[i];
@@ -726,6 +738,9 @@ private nomask string glob_to_regex(string pattern) {
       re += "\\" + pattern[i..i];
     }
   }
+
+  if(subtree)
+    re += "(/.*)?";
 
   return "^" + re + "$";
 }

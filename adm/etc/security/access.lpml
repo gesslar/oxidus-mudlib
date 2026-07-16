@@ -2,8 +2,11 @@
 //
 // Ordered: the FIRST rule whose glob matches the target file decides.
 // Glob syntax: * matches within one path segment, ** matches the rest
-// (including further slashes). A per-MUD override lives in the git-ignored
-// access.local.lpml; its rules are checked BEFORE these.
+// (including further slashes). A trailing "/**" also matches the directory
+// node itself, so "/adm/**" covers a bare "/adm" as well as "/adm/foo" -
+// commands need not append a slash before checking a directory path. A
+// per-MUD override lives in the git-ignored access.local.lpml; its rules
+// are checked BEFORE these.
 //
 // Capabilities:
 //   all            - anyone

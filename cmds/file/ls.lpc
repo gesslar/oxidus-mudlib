@@ -41,7 +41,15 @@ mixed main(
   string cwd = tp->query_env("cwd");
   string path = resolve_path(cwd, arg);
 
-  // An existing directory: list its contents.
+  // Gate on the wizard's own identity. get_dir()'s own valid_read (in
+  // perform_ls) runs as the command object - a developer - so it only
+  // bounds the tool's reach, not this player's; this is the real per-wizard
+  // check.
+  if(!master()->valid_read(path, tp, "ls"))
+    return _error(tp, "ls: %s: Permission denied.", arg);
+
+  // An existing directory: list its contents. The trailing slash is
+  // get_dir()'s "list inside the directory" form.
   if(directory_exists(path))
     return perform_ls(append(path, "/"), flags);
 
@@ -71,8 +79,10 @@ private mixed perform_ls(string target, string *flags) {
     });
   }
 
-  // get_dir() returns 0 (not an array) when valid_read denies the path;
-  // an existing, readable directory returns ({}) when it is merely empty.
+  // get_dir() returns 0 (not an array) when the driver's own valid_read
+  // denies the path (checked as this command - a developer - so this only
+  // bounds the tool; the per-wizard gate is in main()). An existing,
+  // readable directory returns ({}) when it is merely empty.
   mixed *entries = get_dir(target, -1);
 
   if(!pointerp(entries))
