@@ -34,8 +34,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
     return _error(caller, "%s already a file.", str);
 
   if(directory_exists(str))
-    return _error(caller,
-      "%s already a directory.", str);
+    return _error(caller, "%s already a directory.", str);
 
   if(!master()->valid_write(str, caller, "mkdir"))
     return _error(caller, "Permission denied.");
@@ -46,6 +45,5 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
     return _ok(caller,
       "Directory created: %s", str);
   else
-    return _error(caller,
-      "Could not create directory: %s", str);
+    return _error(caller, "Could not create directory: %s", str);
 }
