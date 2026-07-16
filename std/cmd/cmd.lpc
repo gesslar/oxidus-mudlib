@@ -116,7 +116,6 @@ string resolve_dir(object tp, string arg) {
   /** @type {STD_ITEM} */ object ob = get_object(arg);
   string dir;
 
-
   if(ob) {
     string *parts;
     string file;

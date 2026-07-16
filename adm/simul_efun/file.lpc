@@ -13,6 +13,7 @@
  */
 
 #include <simul_efun.h>
+#include <get_dir.h>
 
 /**
  * Ensures a file's parent directories exist.
@@ -525,6 +526,7 @@ mapping as_directory(string str) {
     "ext": ext,
     "path": str,
     "directory": true,
+    "modified": info[0][GD_FILE_MODIFIED],
   ]);
 }
 
@@ -560,12 +562,18 @@ mapping as_file(string str) {
     ext = name[dot+1..];
   }
 
+  int *st = stat(str);
+
   return ([
     "name": name,
     "base": base,
     "ext": ext,
     "path": str,
     "file": true,
+    "size": st[0],
+    "modified": st[1],
+    "loaded": st[2],
+    "created": st[3],
   ]);
 }
 
