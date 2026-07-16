@@ -54,6 +54,12 @@ private void new_password(string str, object tp) {
     input_to((:confirm_password:), I_NOECHO | I_NOESC, str, tp);
 }
 
+/**
+ *
+ * @param str
+ * @param pass
+ * @param {STD_PLAYER} tp
+ */
 private void confirm_password(string str, string pass, object tp) {
     if(str == pass) {
         _ok("Password accepted.");

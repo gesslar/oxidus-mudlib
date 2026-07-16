@@ -28,17 +28,21 @@ void setup() {
     "* If the destination is a file, an error will be returned.";
 }
 
-mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
+mixed main(
+  /** @type {STD_PLAYER} */ object caller,
+  string str
+) {
   string origin, dest;
 
   if(!str || !sscanf(str, "%s %s", origin, dest))
     return _usage(caller);
 
-  origin = resolve_path(caller->query_env("cwd"), origin);
-  dest = resolve_path(caller->query_env("cwd"), dest);
+  string cwd = caller->query_env("cwd");
+  origin = resolve_path(cwd, origin);
+  dest = resolve_path(cwd, dest);
 
-  if(!master()->valid_write(origin, caller, "mv")
-      || !master()->valid_write(dest, caller, "mv")
+  if(   !master()->valid_write(origin, caller, "mv")
+     || !master()->valid_write(dest, caller, "mv")
     ) {
     return _error(caller, "Permission denied.");
   }
@@ -55,6 +59,9 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
 
   if(stringp(e))
     return _error("Error moving: %s", e);
+
+  if(file_exists(dest))
+    caller->set_env("cwf", dest);
 
   return _ok(caller, "Moved %s to %s", origin, dest);
 }

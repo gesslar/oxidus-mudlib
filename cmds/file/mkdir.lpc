@@ -21,8 +21,10 @@ void setup() {
     "be created in the current working directory.";
 }
 
-mixed main(/** @type {STD_PLAYER} */ object caller,
-    string str) {
+mixed main(
+  /** @type {STD_PLAYER} */ object caller,
+  string str
+) {
   int result;
 
   if(!str)
@@ -42,8 +44,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
   result = mkdir(str);
 
   if(result)
-    return _ok(caller,
-      "Directory created: %s", str);
+    return _ok(caller, "Directory created: %s", str);
   else
     return _error(caller, "Could not create directory: %s", str);
 }
