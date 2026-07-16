@@ -1,5 +1,5 @@
 /**
- * @file /std/ext/material.c
+ * @file /std/ext/material.lpc
  *
  * Material extension module. Inherited by items (see EXT_MATERIAL) to
  * track the materials an object is composed of (e.g. "wood", "iron",

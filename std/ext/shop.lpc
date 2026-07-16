@@ -1,5 +1,5 @@
 /**
- * @file /std/ext/shop.c
+ * @file /std/ext/shop.lpc
  *
  * Inventory-based shop module. Inherited by rooms that wish to buy
  * and sell items via a persistent storage object. Provides the

@@ -1,5 +1,5 @@
 /**
- * @file /std/equip/weapon.c
+ * @file /std/equip/weapon.lpc
  *
  * Standard weapon object providing wield/unwield functionality.
  *

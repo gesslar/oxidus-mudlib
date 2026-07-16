@@ -1,5 +1,5 @@
 /**
- * @file /std/room/zone.c
+ * @file /std/room/zone.lpc
  *
  * Room-side zone module. Lets a room declare which zone it belongs
  * to via set_zone(); the room is then registered with that zone

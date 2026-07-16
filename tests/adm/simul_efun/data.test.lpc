@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/data.test.c
+ * @file /tests/adm/simul_efun/data.test.lpc
  *
  * Tests for the data_value, data_write, data_del, and data_inc
  * simul_efuns from /adm/simul_efun/data.c.

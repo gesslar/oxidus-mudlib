@@ -1,5 +1,5 @@
 /**
- * @file /std/object/weight.c
+ * @file /std/object/weight.lpc
  * Handles mass and weight mechanics for objects in the game.
  *
  * @created 2024-02-18 - Gesslar

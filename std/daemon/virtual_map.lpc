@@ -1,5 +1,5 @@
 /**
- * @file /std/daemon/virtual_map.c
+ * @file /std/daemon/virtual_map.lpc
  * Daemon responsible for managing virtual maps for a zone.
  * All coordinates are in the format of z,y,x.
  *

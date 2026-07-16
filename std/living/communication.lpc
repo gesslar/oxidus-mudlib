@@ -1,5 +1,5 @@
 /**
- * @file /std/living/communication.c
+ * @file /std/living/communication.lpc
  *
  * Per-living history buffers for inbound says, tells, and whispers,
  * along with the most recent sender for tell and whisper reply

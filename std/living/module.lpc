@@ -1,5 +1,5 @@
 /**
- * @file /std/living/module.c
+ * @file /std/living/module.lpc
  * Module management for user objects
  *
  * @created 2024-07-29 - Gesslar

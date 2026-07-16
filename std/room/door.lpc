@@ -1,5 +1,5 @@
 /**
- * @file /std/room/door.c
+ * @file /std/room/door.lpc
  *
  * Room door management system that handles door states, synchronization between
  * connected rooms, and player interactions. Uses the Door class to track door

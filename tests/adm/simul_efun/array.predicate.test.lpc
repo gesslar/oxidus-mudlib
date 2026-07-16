@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/array.predicate.test.c
+ * @file /tests/adm/simul_efun/array.predicate.test.lpc
  *
  * Tests for boolean-query simul_efuns in
  * /adm/simul_efun/array.c — uniformp(), includes(),

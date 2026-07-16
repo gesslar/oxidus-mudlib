@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/lpml.encode.test.c
+ * @file /tests/adm/simul_efun/lpml.encode.test.lpc
  *
  * Tests for lpml_encode() (LPC value -> JSON text) and decode/encode
  * roundtrips. lpml_encode emits standard JSON: undefined -> null,

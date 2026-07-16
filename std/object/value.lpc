@@ -1,5 +1,5 @@
 /**
- * @file /std/object/value.c
+ * @file /std/object/value.lpc
  *
  * Handles monetary value tracking for physical objects.
  *

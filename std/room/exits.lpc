@@ -1,5 +1,5 @@
 /**
- * @file /std/room/exits.c
+ * @file /std/room/exits.lpc
  * Exits are the connections between rooms.
  *
  * @created 2024-09-13 - Gesslar

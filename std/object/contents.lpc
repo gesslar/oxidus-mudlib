@@ -1,5 +1,5 @@
 /**
- * @file /std/object/contents.c
+ * @file /std/object/contents.lpc
  * Handles the capacity and contents of an object, providing
  * inventory management and mass/capacity tracking.
  *

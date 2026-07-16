@@ -1,5 +1,5 @@
 /**
- * @file /std/object/inventory.c
+ * @file /std/object/inventory.lpc
  *
  * Inventory inheritable for objects that can hold other objects.
  * Provides registration and automated spawning of items and NPCs

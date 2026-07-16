@@ -1,5 +1,5 @@
 /**
- * @file /std/test/test.c
+ * @file /std/test/test.lpc
  * Base for individual test files. A test file inherits this,
  * registers suites in setup() via describe()/test(), and is
  * cloned and invoked by a STD_TEST_RUNNER.

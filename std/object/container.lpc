@@ -1,5 +1,5 @@
 /**
- * @file /std/object/container.c
+ * @file /std/object/container.lpc
  * Container inheritable for objects that can hold other objects.
  *
  * @created 2024-07-23 - Gesslar

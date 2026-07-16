@@ -1,5 +1,5 @@
 /**
- * @file /std/ext/unicode.c
+ * @file /std/ext/unicode.lpc
  * Module for handling unicode characters.
  *
  * Portions of this were delightfully and unabashedly stolen from the Lima base

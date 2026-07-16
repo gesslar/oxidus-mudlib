@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/array.mutation.test.c
+ * @file /tests/adm/simul_efun/array.mutation.test.lpc
  *
  * Tests for the in-place ref-based array simul_efuns:
  * pop, push, shift, unshift, set_push, set_unshift,

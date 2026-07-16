@@ -1,5 +1,5 @@
 /**
- * @file /std/cmd/reporter.c
+ * @file /std/cmd/reporter.lpc
  *
  * Inherited by reporting commands such as bug, typo, and idea.
  * Handles the full report lifecycle: subject input, editor

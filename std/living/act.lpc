@@ -1,5 +1,5 @@
 /**
- * @file /std/living/act.c
+ * @file /std/living/act.lpc
  * Call-out based action module
  *
  * @created 2024-08-08 - Gesslar

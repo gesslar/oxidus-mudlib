@@ -1,5 +1,5 @@
 /**
- * @file /std/object/setup.c
+ * @file /std/object/setup.lpc
  * Provides a standardised setup and teardown chain for objects,
  * ensuring proper initialization and cleanup order.
  *

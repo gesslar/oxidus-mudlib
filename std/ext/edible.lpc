@@ -1,5 +1,5 @@
 /**
- * @file /std/ext/edible.c
+ * @file /std/ext/edible.lpc
  * This module is inherited in order to make something edible.
  *
  * @created 2024-08-06 - Gesslar

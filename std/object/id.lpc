@@ -1,5 +1,5 @@
 /**
- * @file /std/object/id.c
+ * @file /std/object/id.lpc
  * Manages object identifiers and adjectives for item recognition
  * and command parsing.
  *

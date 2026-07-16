@@ -1,5 +1,5 @@
 /**
- * @file /std/cmd/ability.c
+ * @file /std/cmd/ability.lpc
  *
  * Standard ability inheritance for commands. Provides the
  * framework for ability usage including condition checks,

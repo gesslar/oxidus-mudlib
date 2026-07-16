@@ -1,5 +1,5 @@
 /**
- * @file /std/room/items.c
+ * @file /std/room/items.lpc
  * Manages item descriptions within rooms for examination.
  *
  * @created 2024-09-13 - Gesslar

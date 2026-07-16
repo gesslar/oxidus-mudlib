@@ -1,5 +1,5 @@
 /**
- * @file /std/living/player.c
+ * @file /std/living/player.lpc
  * Player object for user characters. Handles the lifecycle of a
  * player body including login, logout, heartbeat, persistence,
  * environment variables, and GMCP integration.

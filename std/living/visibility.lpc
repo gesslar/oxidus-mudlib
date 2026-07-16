@@ -1,5 +1,5 @@
 /**
- * @file /std/user/visibility.c
+ * @file /std/user/visibility.lpc
  * Object for determining whether a living can see things
  *
  * @created 2024-07-23 - Gesslar

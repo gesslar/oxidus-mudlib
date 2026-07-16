@@ -1,5 +1,5 @@
 /**
- * @file /std/object/command.c
+ * @file /std/object/command.lpc
  *
  * Replacement for add_action, allowing for mixed results and more flexible
  * command handling.

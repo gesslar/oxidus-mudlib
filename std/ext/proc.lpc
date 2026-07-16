@@ -1,5 +1,5 @@
 /**
- * @file /std/ext/proc.c
+ * @file /std/ext/proc.lpc
  * Module for handling procs for objects.
  *
  * @created 2024-10-06 - Gesslar

@@ -1,5 +1,5 @@
 /**
- * @file /std/modules/mob/combat_memory.c
+ * @file /std/modules/mob/combat_memory.lpc
  * NPC combat memory module
  *
  * @created 2024-07-29 - Gesslar

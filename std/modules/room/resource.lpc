@@ -1,5 +1,5 @@
 /**
- * @file /std/modules/room/resource.c
+ * @file /std/modules/room/resource.lpc
  *
  * Added to rooms that can have resources.
  *

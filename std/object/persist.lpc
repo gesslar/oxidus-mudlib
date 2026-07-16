@@ -1,7 +1,7 @@
 /* Do not remove the headers from this file! see /USAGE for more info. */
 
 /**
- * @file /std/object/persist.c
+ * @file /std/object/persist.lpc
  * Provides persistence capabilities allowing objects to save and
  * restore their state to/from strings or files.
  *

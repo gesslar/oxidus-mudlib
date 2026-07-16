@@ -1,5 +1,5 @@
 /**
- * @file /std/object/heartbeat.c
+ * @file /std/object/heartbeat.lpc
  * Provides event management that synchronizes with an object's
  * heartbeat cycle. Events can be attached to execute during
  * heartbeats, which may vary in frequency due to buffs or status

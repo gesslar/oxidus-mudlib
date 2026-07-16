@@ -1,5 +1,5 @@
 /**
- * @file /std/zones/zone.c
+ * @file /std/zones/zone.lpc
  *
  * Base daemon for a zone. A zone is a logical grouping of rooms
  * — rooms register themselves with their zone via the room-side

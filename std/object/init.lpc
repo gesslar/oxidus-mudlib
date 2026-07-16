@@ -1,5 +1,5 @@
 /**
- * @file /std/object/init.c
+ * @file /std/object/init.lpc
  * Manages object initialization callbacks when objects encounter
  * each other in the game world.
  *

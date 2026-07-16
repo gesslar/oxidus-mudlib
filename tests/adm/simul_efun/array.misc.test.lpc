@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/array.misc.test.c
+ * @file /tests/adm/simul_efun/array.misc.test.lpc
  *
  * Tests for the leftover one-off array simul_efuns:
  * array_columns(), and sum_array().
