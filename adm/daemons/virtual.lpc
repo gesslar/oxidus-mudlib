@@ -40,7 +40,13 @@ public nomask object compile_object(string file) {
         return 0;
       }
 
-      result->set_virtual_master(file + "." + extension);
+      if(!result->query_virtual_master()) {
+        result->remove();
+
+        log_file("VIRTUAL", `No virtual master set for ${file}.`);
+
+        return 0;
+      }
 
       return result;
     }
@@ -85,6 +91,14 @@ public nomask object compile_object(string file) {
       e = catch(result = call_other(module, "compile_object", file));
       if(e) {
         log_file("VIRTUAL", e);
+        return 0;
+      }
+
+      if(!result->query_virtual_master()) {
+        result->remove();
+
+        log_file("VIRTUAL", `No virtual master set for ${file}.`);
+
         return 0;
       }
 

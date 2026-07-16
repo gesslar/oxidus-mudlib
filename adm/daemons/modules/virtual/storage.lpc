@@ -21,8 +21,7 @@
 
 inherit STD_DAEMON;
 
-public nomask object compile_object(string file) {
-  string name;
+public nomask object compile_object(string _file) {
   object ob;
   string e;
 
@@ -35,6 +34,8 @@ public nomask object compile_object(string file) {
 
   if(!ob)
     return 0;
+
+  ob->set_virtual_master(STD_STORAGE_OBJECT);
 
   return ob;
 }

@@ -52,5 +52,7 @@ public nomask object compile_object(string file) {
     return 0;
   }
 
+  obj->set_virtual_master(base_file);
+
   return obj;
 }
