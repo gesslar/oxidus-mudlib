@@ -13,7 +13,6 @@
 inherit STD_DAEMON;
 
 public nomask object compile_object(string file) {
-  string name;
   object ob;
   string e;
   string type = query_file_name();
@@ -27,6 +26,8 @@ public nomask object compile_object(string file) {
     log_file("VIRTUAL", e);
     return 0;
   }
+
+  ob->set_virtual_master(STD_GHOST);
 
   return ob;
 }
