@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/do.lpc
+ * @file /cmds/dev/do.lpc
  * do command to execute a number of commands and/or repeatedly
  *
  * @created 2024-07-13 - Gesslar

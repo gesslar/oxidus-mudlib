@@ -88,4 +88,4 @@ This system covers *library* configuration. Driver-level settings -- ports, stac
 | `adm/simul_efun/system.c` | `mud_config()` simul_efun |
 | `adm/etc/default.lpml` | Shipped default settings |
 | `adm/etc/config.lpml` | Local overrides (not tracked) |
-| `cmds/wiz/mudconfig.c` | `mudconfig` command -- dumps current config |
+| `cmds/dev/mudconfig.c` | `mudconfig` command -- dumps current config |

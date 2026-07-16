@@ -46,7 +46,7 @@ int chance = mud_config("RESOURCE.GLOBAL_SPAWN_CHANCE");
 int chance = mud_config("RESOURCE")["GLOBAL_SPAWN_CHANCE"];
 ```
 
-### mudconfig command — `/cmds/wiz/mudconfig.lpc`
+### mudconfig command — `/cmds/dev/mudconfig.lpc`
 
 Wizard command that dumps all current configuration via `pretty_map()`. No arguments.
 

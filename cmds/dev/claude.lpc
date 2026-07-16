@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/claude.lpc
+ * @file /cmds/dev/claude.lpc
  *
  * Activity-logging command for automated Claude agent sessions. Records
  * a timestamped, one-line description of what the agent is about to do

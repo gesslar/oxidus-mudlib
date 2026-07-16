@@ -29,6 +29,6 @@
 
 ### EXAMPLE
 
-    {{di1}}if(cfile_exists("/cmds/wiz/update")) {
-        compile_object("/cmds/wiz/update");
+    {{di1}}if(cfile_exists("/cmds/dev/update")) {
+        compile_object("/cmds/dev/update");
     }{{di0}}

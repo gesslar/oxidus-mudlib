@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/runtests.lpc
+ * @file /cmds/dev/runtests.lpc
  *
  * Run unit tests under /tests/. With no argument, walks /tests/
  * recursively and invokes every runner.lpc found. With an argument,

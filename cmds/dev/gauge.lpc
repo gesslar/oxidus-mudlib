@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/gauge.lpc
+ * @file /cmds/dev/gauge.lpc
  *
  * Executes a command and reports how much CPU time it consumed.
  *

@@ -51,8 +51,8 @@ int file_exists(string file) {
  * @param {string} file - Base path of LPC file, with or without extension
  * @returns {int} 1 if source file exists, 0 otherwise
  * @example
- * if(cfile_exists("/cmds/wiz/update")) {
- *     compile_object("/cmds/wiz/update");
+ * if(cfile_exists("/cmds/dev/update")) {
+ *     compile_object("/cmds/dev/update");
  * }
  */
 int cfile_exists(string file) {

@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/alarm.lpc
+ * @file /cmds/dev/alarm.lpc
  *
  * Command to inspect, add, remove, and rehash alarms registered with
  * the central alarm daemon.

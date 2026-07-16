@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/echo.lpc
+ * @file /cmds/dev/echo.lpc
  *
  * A command to echo a message to a room.
  *

@@ -114,7 +114,7 @@ greppable output. With it off, `_ok` etc. print just the bare message.
 **Precede every in-game command with the `claude` command**, e.g.
 `claude updating the score command`. This writes a timestamped line to the
 `claude` log (`/log/claude`) and pings any online admin so they can watch
-the session in real time. It's a `cmds/wiz/` command, so it requires the
+the session in real time. It's a `cmds/dev/` command, so it requires the
 dev/wiz access the `claude` character already has.
 
 ```text

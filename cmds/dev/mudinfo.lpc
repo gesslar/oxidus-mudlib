@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/mudinfo.lpc
+ * @file /cmds/dev/mudinfo.lpc
  *
  * Displays runtime statistics about the running mud.
  *

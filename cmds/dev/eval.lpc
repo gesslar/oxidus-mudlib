@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/eval.lpc
+ * @file /cmds/dev/eval.lpc
  *
  * Evaluate a string by first writing it to a temp file and then compiling and
  * executing it.
@@ -31,7 +31,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {
   _info(caller, "Evaluating: %s", arg);
 
   // Compile the snippet from a scratch file under /tmp, which the path-access
-  // table makes world-writable. The command's identity ([cmd_wiz]) can't
+  // table makes world-writable. The command's identity ([cmd_dev]) can't
   // write into a wizard's home, but it can write here. One file per caller so
   // concurrent evals don't collide.
   file = "/tmp/eval_" + caller->query_real_name() + ".lpc";

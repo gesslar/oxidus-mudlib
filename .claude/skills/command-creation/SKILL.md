@@ -25,7 +25,7 @@ You are helping create or modify commands for Oxidus. Commands are LPC files tha
 | Directory | Purpose | Config File |
 |---|---|---|
 | `cmds/std/` | Standard player commands | `adm/etc/standard_paths` |
-| `cmds/wiz/` | Wizard/developer commands | `adm/etc/wizard_paths` |
+| `cmds/dev/` | Wizard/developer commands | `adm/etc/wizard_paths` |
 | `cmds/adm/` | Admin commands | `adm/etc/wizard_paths` |
 | `cmds/file/` | File-related commands | `adm/etc/wizard_paths` |
 | `cmds/object/` | Object manipulation commands | `adm/etc/wizard_paths` |
@@ -320,7 +320,7 @@ mixed main(object tp, string arg) {
 ## Complete Example: Wizard Command with _error/_ok
 
 ```lpc
-// /cmds/wiz/force.lpc
+// /cmds/dev/force.lpc
 
 inherit STD_CMD;
 
