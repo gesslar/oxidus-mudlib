@@ -26,30 +26,26 @@ void setup() {
     "destination.";
 }
 
-mixed main(/** @type {STD_PLAYER} */ object caller,
-    string str) {
+mixed main(
+  /** @type {STD_PLAYER} */ object caller,
+  string str
+) {
   string original, destination;
 
-  if(!str
-  || sscanf(str, "%s %s", original, destination) != 2)
+  if(!str || sscanf(str, "%s %s", original, destination) != 2)
     return _usage(caller);
 
-  original = resolve_path(
-    caller->query_env("cwd"), original);
-  destination = resolve_path(
-    caller->query_env("cwd"), destination);
+  original = resolve_path(caller->query_env("cwd"), original);
+  destination = resolve_path(caller->query_env("cwd"), destination);
 
   if(!file_exists(original))
-    return _error(caller,
-      "No such file: %s", original);
+    return _error(caller, "No such file: %s", original);
 
-  if(directory_exists(destination)
-  || destination[<1] == '/') {
-    int pos;
-
+  if(directory_exists(destination) || destination[<1] == '/') {
     destination = append(destination, "/");
 
-    pos = strsrch(original, "/", -1);
+    int pos = strsrch(original, "/", -1);
+
     if(pos != -1)
       destination += original[(pos + 1)..];
     else
@@ -57,19 +53,17 @@ mixed main(/** @type {STD_PLAYER} */ object caller,
   }
 
   if(original == destination)
-    return _error(caller,
-      "Original and destination are the same.");
+    return _error(caller, "Original and destination are the same.");
 
-  if(!master()->valid_write(
-      destination, this_object(), "cp"))
+  if(!master()->valid_write(destination, this_object(), "cp"))
     return _error(caller, "Permission denied.");
 
-  cp(original, destination) < 0
-    ? _error(caller,
-        "Unable to copy %s to %s.",
-        original, destination)
-    : _ok(caller, "%s copied to %s",
-        original, destination);
+  int result = cp(original, destination);
 
-  return 1;
+  if(result < 0) {
+    return _error(caller, "Unable to copy %s to %s.", original, destination);
+  } else {
+    caller->set_env("cwf", destination);
+    return _ok(caller, "%s copied to %s", original, destination);
+  }
 }

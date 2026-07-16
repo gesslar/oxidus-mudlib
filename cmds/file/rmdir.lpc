@@ -21,27 +21,29 @@ void setup() {
     "wish to remove must be empty before it can be deleted).";
 }
 
-mixed main(/** @type {STD_PLAYER} */ object caller,
-    string str) {
+mixed main(
+  /** @type {STD_PLAYER} */ object caller,
+    string str
+  ) {
+
   if(!str)
     return _usage(caller);
 
-  str = resolve_path(caller->query_env("cwd"), str);
+  string cwd = caller->query_env("cwd");
+  string path = resolve_path(cwd, str);
 
-  if(!directory_exists(str) || file_exists(str))
-    return _error(caller,
-      "%s is not a directory.", str);
+  if(!directory_exists(path) || file_exists(path))
+    return _error(caller, "%s is not a directory.", path);
 
-  if(sizeof(get_dir(str + "/")))
-    return _error(caller, "%s is not empty.", str);
+  if(sizeof(get_dir(path + "/")))
+    return _error(caller, "%s is not empty.", path);
 
-  if(!master()->valid_write(str, caller, "rmdir"))
+  if(!master()->valid_write(path, caller, "rmdir"))
     return _error(caller, "Permission denied.");
 
-  rmdir(str)
-    ? _ok(caller, "Directory removed: %s", str)
-    : _error(caller,
-        "Could not remove directory: %s", str);
-
-  return 1;
+  int result = rmdir(path);
+  if(result)
+    return _ok(caller, "Directory removed: %s", path);
+  else
+    return _error(caller, "Could not remove directory: %s", path);
 }
