@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/string.affix.test.c
+ * @file /tests/adm/simul_efun/string.affix.test.lpc
  *
  * Tests for the affix simul_efuns from /adm/simul_efun/string.c:
  * append(), prepend(), chop(), starts_with(), and ends_with().

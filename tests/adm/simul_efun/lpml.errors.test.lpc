@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/lpml.errors.test.c
+ * @file /tests/adm/simul_efun/lpml.errors.test.lpc
  *
  * Sad-path tests for lpml_decode(): malformed input must raise an error
  * (caught here with catch()). The test runner suppresses caught-error

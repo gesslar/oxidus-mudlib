@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/string.search.test.c
+ * @file /tests/adm/simul_efun/string.search.test.lpc
  *
  * Tests for the search / predicate simul_efuns from /adm/simul_efun/string.c:
  * reverse_strsrch(), pcre_strsrch(), is_numeric(), and sanitize_regex().

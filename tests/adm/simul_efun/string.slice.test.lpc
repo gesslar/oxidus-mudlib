@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/string.slice.test.c
+ * @file /tests/adm/simul_efun/string.slice.test.lpc
  *
  * Tests for the slicing / casing simul_efuns from /adm/simul_efun/string.c:
  * extract(), substr(), reverse_string(), and all_caps().

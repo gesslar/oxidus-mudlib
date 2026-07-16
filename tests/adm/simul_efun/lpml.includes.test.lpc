@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/lpml.includes.test.c
+ * @file /tests/adm/simul_efun/lpml.includes.test.lpc
  *
  * Tests for lpml_decode() file-include preprocessing ("#path" values),
  * recursive includes, the \# literal-hash escape, and the

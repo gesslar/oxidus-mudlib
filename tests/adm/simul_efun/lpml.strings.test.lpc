@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/lpml.strings.test.c
+ * @file /tests/adm/simul_efun/lpml.strings.test.lpc
  *
  * Tests for lpml_decode() string handling: double/single quotes, escape
  * sequences, \uXXXX unicode, adjacent-string concatenation (space vs. \n

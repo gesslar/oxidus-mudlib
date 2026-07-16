@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/lpml.structures.test.c
+ * @file /tests/adm/simul_efun/lpml.structures.test.lpc
  *
  * Tests for lpml_decode() of objects and arrays: empty containers,
  * nesting, mixed-type arrays, trailing commas, and comment skipping

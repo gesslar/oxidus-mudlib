@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/string.format.test.c
+ * @file /tests/adm/simul_efun/string.format.test.lpc
  *
  * Tests for the formatting simul_efuns from /adm/simul_efun/string.c:
  * add_commas() and stringify().

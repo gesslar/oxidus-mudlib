@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/string.colour.test.c
+ * @file /tests/adm/simul_efun/string.colour.test.lpc
  *
  * Tests for the colour-related simul_efuns from /adm/simul_efun/string.c:
  * no_ansi(), colour(), and colourp(). These delegate to COLOUR_D.

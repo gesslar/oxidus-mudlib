@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/lpml.scalars.test.c
+ * @file /tests/adm/simul_efun/lpml.scalars.test.lpc
  *
  * Tests for lpml_decode() of top-level scalar values: booleans, null,
  * undefined, Infinity, NaN, the MAX_INT/MAX_FLOAT constants, and the
