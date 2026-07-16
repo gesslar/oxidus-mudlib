@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/currency.c
+ * @file /adm/daemons/currency.lpc
  *
  * Currency daemon. Loads the configured currency denominations and
  * their relative values, exposes ordered lookups, and converts amounts

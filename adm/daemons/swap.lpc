@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/swap.c
+ * @file /adm/daemons/swap.lpc
  *
  * Temporary storage daemon that provides a safe way to persist data across
  * object destruction and recreation. Acts as a holding space for data that

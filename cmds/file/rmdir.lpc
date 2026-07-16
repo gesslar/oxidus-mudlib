@@ -1,5 +1,5 @@
 /**
- * @file /cmds/file/rmdir.c
+ * @file /cmds/file/rmdir.lpc
  *
  * Command to remove a directory.
  *

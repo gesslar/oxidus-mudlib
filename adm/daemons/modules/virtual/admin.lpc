@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/modules/virtual/admin.c
+ * @file /adm/daemons/modules/virtual/admin.lpc
  * The virtual daemon that is responsible for creating player
  * objects.
  *

@@ -1,5 +1,5 @@
 /**
- * @file /adm/simul_efun/description.c
+ * @file /adm/simul_efun/description.lpc
  *
  * Simul-efun implementation of object description handling functions.
  * Provides standardized methods for retrieving and formatting object

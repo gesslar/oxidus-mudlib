@@ -1,5 +1,5 @@
 /**
- * @file /cmds/ghost/date.c
+ * @file /cmds/ghost/date.lpc
  * Date command displaying the current mud time.
  *
  * @created 2005-11-10 - Tacitus

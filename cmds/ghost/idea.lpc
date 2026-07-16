@@ -1,5 +1,5 @@
 /**
- * @file /cmds/ghost/idea.c
+ * @file /cmds/ghost/idea.lpc
  * Command for reporting ideas.
  *
  * @created 2024-07-13 - Gesslar

@@ -1,5 +1,5 @@
 /**
- * @file /adm/simul_efun/base64.c
+ * @file /adm/simul_efun/base64.lpc
  *
  * Simul-efun implementation of Base64 encoding and decoding functions.
  * Provides functionality to encode strings/buffers to Base64 and decode

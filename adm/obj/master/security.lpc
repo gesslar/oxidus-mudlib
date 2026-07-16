@@ -1,5 +1,5 @@
 /**
- * @file /adm/obj/master/security.c
+ * @file /adm/obj/master/security.lpc
  *
  * Security subsystem inherited by the master object. Implements the
  * role/group model and (eventually) the driver validation applies.

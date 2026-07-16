@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/message.c
+ * @file /adm/daemons/message.lpc
  * Message routines and functions
  *
  * @created 2024-07-28 - Gesslar

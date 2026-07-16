@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/colour.c
+ * @file /adm/daemons/colour.lpc
  *
  * Colour Parser daemon for handling and converting colour codes in text.
  * Provides functionality for colour code substitution, text wrapping, and

@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/signal.c
+ * @file /adm/daemons/signal.lpc
  *
  * Signal daemon that provides a system-wide event notification system.
  * Manages registration, dispatch, and cleanup of signal handlers (slots).

@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/coord.c
+ * @file /adm/daemons/coord.lpc
  *
  * Coordinate daemon to hold room data
  *

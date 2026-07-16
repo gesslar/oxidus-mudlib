@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/db.c
+ * @file /adm/daemons/db.lpc
  *
  * Database daemon providing SQLite3 database management and query
  * execution. Handles database creation, table management, and

@@ -1,5 +1,5 @@
 /**
- * @file /cmds/ghost/who.c
+ * @file /cmds/ghost/who.lpc
  * Who command displaying currently connected users.
  *
  * @created 2005-04-08 - Tacitus

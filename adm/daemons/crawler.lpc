@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/crawler.c
+ * @file /adm/daemons/crawler.lpc
  *
  * Crawls the game world room by room, deriving a coordinate grid for every
  * reachable room and handing the result to COORD_D. The crawl is kicked off

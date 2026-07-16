@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/modules/virtual/ghost.c
+ * @file /adm/daemons/modules/virtual/ghost.lpc
  * The virtual daemon that is responsible for creating player
  * objects.
  *

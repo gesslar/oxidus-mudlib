@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/advance.c
+ * @file /adm/daemons/advance.lpc
  * Daemon to handle XP and leveling
  *
  * @created 2024-07-28 - Gesslar

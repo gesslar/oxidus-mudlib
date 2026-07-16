@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/boot.c
+ * @file /adm/daemons/boot.lpc
  * Daemon to manage incrementing boot number and calling the
  * boot alarm.
  *

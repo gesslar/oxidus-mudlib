@@ -1,5 +1,5 @@
 /**
- * @file /cmds/action/go.c
+ * @file /cmds/action/go.lpc
  *
  * The go command.
  *

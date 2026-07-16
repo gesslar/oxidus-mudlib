@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/modules/virtual/storage.c
+ * @file /adm/daemons/modules/virtual/storage.lpc
  * This virtual daemon is responsible for creating virtual
  * storage objects. If the path passed is /storage/public/...
  * then the object created will be a shared storage object.

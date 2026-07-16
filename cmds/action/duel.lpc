@@ -1,5 +1,5 @@
 /**
- * @file /cmds/action/duel.c
+ * @file /cmds/action/duel.lpc
  *
  * Command to start combat with another living.
  *

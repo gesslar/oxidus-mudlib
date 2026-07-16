@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/resource.c
+ * @file /adm/daemons/resource.lpc
  *
  * Resource daemon for daemoning resources.
  *

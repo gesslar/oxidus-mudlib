@@ -1,5 +1,5 @@
 /**
- * @file /adm/simul_efun/prompt.c
+ * @file /adm/simul_efun/prompt.lpc
  *
  * Player input prompts driven by callbacks. Provides interactive,
  * input_to-based flows for collecting passwords (with attempt limits

@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/github_issues.c
+ * @file /adm/daemons/github_issues.lpc
  *
  * Daemon to handle GitHub issues. Uses the GitHub Issues API to
  * create issues in the mud's GitHub repository.

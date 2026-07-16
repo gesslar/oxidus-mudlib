@@ -1,5 +1,5 @@
 /**
- * @file /adm/simul_efun/exists.c
+ * @file /adm/simul_efun/exists.lpc
  *
  * Simul-efuns for checking existence of files, directories, and user data.
  * Provides consistent interfaces for validating filesystem resources.

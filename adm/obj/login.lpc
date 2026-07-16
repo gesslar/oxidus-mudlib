@@ -1,5 +1,5 @@
 /**
- * @file /adm/obj/login.c
+ * @file /adm/obj/login.lpc
  *
  * Login object cloned for each new connection. Handles account
  * authentication, character selection, character creation, and

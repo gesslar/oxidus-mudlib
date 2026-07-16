@@ -1,5 +1,5 @@
 /**
- * @file /cmds/ghost/bug.c
+ * @file /cmds/ghost/bug.lpc
  * Bug command for reporting bugs.
  *
  * @created 2024-07-07 - Gesslar

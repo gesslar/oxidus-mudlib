@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/gmcp.c
+ * @file /adm/daemons/gmcp.lpc
  *
  * GMCP (Generic Mud Communication Protocol) daemon responsible for handling
  * all GMCP-related communications between the MUD and clients.

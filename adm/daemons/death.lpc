@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/death.c
+ * @file /adm/daemons/death.lpc
  *
  * Handles death and revival event logging. Listens for player
  * death and revival signals and records them to the death log.

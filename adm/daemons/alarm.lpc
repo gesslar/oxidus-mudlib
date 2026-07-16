@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/alarm.c
+ * @file /adm/daemons/alarm.lpc
  *
  * Alarm daemon. Schedules and executes recurring or one-shot events
  * defined in the configured alarms directory (see the ALARMS_PATH

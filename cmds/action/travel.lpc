@@ -1,5 +1,5 @@
 /**
- * @file /cmds/action/travel.c
+ * @file /cmds/action/travel.lpc
  *
  * Command to run to common destinations from your current
  * location. Requires GMCP.

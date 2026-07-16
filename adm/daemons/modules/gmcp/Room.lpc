@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/modules/gmcp/Room.c
+ * @file /adm/daemons/modules/gmcp/Room.lpc
  *
  * GMCP module to handle Room.* packages. Sends room descriptions
  * and travel breadcrumbs to the player's client.

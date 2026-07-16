@@ -1,5 +1,5 @@
 /**
- * @file /cmds/file/tail.c
+ * @file /cmds/file/tail.lpc
  *
  * Command to print the last 20 lines of a file.
  *

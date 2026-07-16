@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/httpc.c
+ * @file /adm/daemons/httpc.lpc
  * HTTP client daemon to fetch data from the web
  * and return it to the caller via callback
  *

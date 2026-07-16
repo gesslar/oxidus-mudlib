@@ -1,5 +1,5 @@
 /**
- * @file /cmds/ghost/help.c
+ * @file /cmds/ghost/help.lpc
  * Help command for looking up help files and command help.
  *
  * @created 2005-10-08 - Tacitus
