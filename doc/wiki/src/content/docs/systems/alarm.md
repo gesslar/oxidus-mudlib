@@ -74,6 +74,6 @@ After editing alarm files, rebuild the live list with the `alarm` wizard command
 | File | Role |
 |---|---|
 | `adm/daemons/alarm.c` | `ALARM_D` -- parsing, scheduling, dispatch, persistence |
-| `cmds/wiz/alarm.c` | `alarm` wizard command -- list, add, and reload alarms |
+| `cmds/dev/alarm.c` | `alarm` wizard command -- list, add, and reload alarms |
 | `adm/etc/alarms/` | Default `ALARMS_PATH` -- alarm definition files |
 | `adm/etc/alarms/alarm.txt.example` | Annotated example alarm file |

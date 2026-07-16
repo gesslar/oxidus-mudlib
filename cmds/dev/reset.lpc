@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/reset.lpc
+ * @file /cmds/dev/reset.lpc
  * Resets a target object
  *
  * @created 2024-07-23 - Gesslar

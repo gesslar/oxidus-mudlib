@@ -357,7 +357,7 @@ string privs_file(string filename) {
   if(sscanf(filename, "/cmds/adm/%s", temp)) return "[cmd_adm]";
   if(sscanf(filename, "/cmds/file/%s", temp)) return "[cmd_file]";
   if(sscanf(filename, "/cmds/object/%s", temp)) return "[cmd_object]";
-  if(sscanf(filename, "/cmds/wiz/%s", temp))return "[cmd_wiz]";
+  if(sscanf(filename, "/cmds/dev/%s", temp))return "[cmd_dev]";
   if(sscanf(filename, "/home/%*s/%s/%*s", temp)) return "[home_" + temp + "]";
   if(sscanf(filename, "/open/%s", temp)) return "[open]";
   if(sscanf(filename, "/std/%s", temp)) return "[std_object]";

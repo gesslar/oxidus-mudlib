@@ -203,7 +203,7 @@ All defined in `include/signal.h`. String-based identifiers with category prefix
 | `SIG_PLAYER_DIED` | `"player:died"` | `std/living/body.lpc` | (object player, object killer) | Player death |
 | `SIG_PLAYER_REVIVED` | `"player:revived"` | `std/living/ghost.lpc` | (object player) | Player revival |
 | `SIG_PLAYER_ADVANCED` | `"player:advanced"` | `adm/daemons/advance.lpc` | (object player, mixed level) | Level up |
-| `SIG_USER_ENV_CHANGED` | `"player:env-changed"` | `cmds/wiz/env.lpc` | (object user, string var, string val) | Env variable changed |
+| `SIG_USER_ENV_CHANGED` | `"player:env-changed"` | `cmds/dev/env.lpc` | (object user, string var, string val) | Env variable changed |
 | `SIG_USER_PREF_CHANGED` | `"player:pref-changed"` | `cmds/std/set.lpc` | (object user, string pref, string val) | Preference changed |
 
 Note: `SIG_USER_ENV_CHANGED` and `SIG_USER_PREF_CHANGED` use the `SIG_PLAYER` prefix despite having `SIG_USER` names.

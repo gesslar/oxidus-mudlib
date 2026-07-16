@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/hb.lpc
+ * @file /cmds/dev/hb.lpc
  *
  * Reports heartbeat status for a specific object or for all livings.
  *

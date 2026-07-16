@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/halt.lpc
+ * @file /cmds/dev/halt.lpc
  *
  * Halts ongoing combat for one or more livings.
  *

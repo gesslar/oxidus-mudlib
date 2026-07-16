@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/mgenerate.lpc
+ * @file /cmds/dev/mgenerate.lpc
  * Generates an area map file.
  *
  * @created 2024-07-24 - Gesslar

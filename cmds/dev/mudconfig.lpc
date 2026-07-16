@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/mudconfig.lpc
+ * @file /cmds/dev/mudconfig.lpc
  *
  * Lists all MUD configuration options available to the mud_config() sefun.
  *

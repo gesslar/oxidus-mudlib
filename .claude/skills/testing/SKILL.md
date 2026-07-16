@@ -25,7 +25,7 @@ Follow `/lpc-coding-style` for all formatting.
 | `/std/test/test.lpc` | `STD_TEST` — base for individual test files |
 | `/std/test/runner.lpc` | `STD_TEST_RUNNER` — base for area runners |
 | `/include/test.h` | Assertion macros (system include: `#include <test.h>`) |
-| `/cmds/wiz/runtests.lpc` | The `runtests` wizard command |
+| `/cmds/dev/runtests.lpc` | The `runtests` wizard command |
 
 `STD_TEST` is defined in `mudlib.h` (auto-included via `global.h`); same for `STD_TEST_RUNNER`.
 

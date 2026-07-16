@@ -63,7 +63,7 @@ mixed main(
   MOVE_D->pre_walk_direction(tp, room, arg);
   MOVE_D->post_walk_direction(tp, dest, arg);
 
-  if(!wizardp(tp))
+  if(!devp(tp))
     tp->adjust_mp(-cost);
 
   return 1;

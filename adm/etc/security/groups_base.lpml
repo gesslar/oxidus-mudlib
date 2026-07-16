@@ -6,7 +6,7 @@
       "runtests"
     ],
     members: [
-      "[cmd_wiz]",
+      "[cmd_dev]",
       "[cmd_file]",
       "[cmd_object]",
     ],

@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/exits.lpc
+ * @file /cmds/dev/exits.lpc
  * Shows all the exits in the current room and where they lead.
  *
  * @created 2024-02-04 - Gesslar

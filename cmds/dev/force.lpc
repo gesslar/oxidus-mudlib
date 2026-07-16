@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/force.lpc
+ * @file /cmds/dev/force.lpc
  *
  * Developer force command. Forces a living object to execute a command as
  * if they had typed it themselves.

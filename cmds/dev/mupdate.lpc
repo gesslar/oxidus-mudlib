@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/mupdate.lpc
+ * @file /cmds/dev/mupdate.lpc
  * This command will cause the caller to be moved around
  * all coordinates in order to generate a new Mudlet map.
  *

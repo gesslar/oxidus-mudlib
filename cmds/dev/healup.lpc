@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/healup.lpc
+ * @file /cmds/dev/healup.lpc
  * Command for wizards to heal themselves and others.
  *
  * @created 2024-07-31 - Gesslar
