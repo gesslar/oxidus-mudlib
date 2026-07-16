@@ -1,0 +1,22 @@
+/**
+ * @file /cmds/std/quit.lpc
+ *
+ * Command to log out of the gane,
+ *
+ * @created 2026-07-16 - Gesslar
+ * @last_modified 2026-07-16 - Gesslar
+ *
+ * @history
+ * 2026-07-16 - Gesslar - Created
+ */
+
+mixed main(
+  /** @type {STD_PLAYER} */ object caller,
+  string _str
+) {
+  tell(caller, "Y'all come back, now, y'hear?\n");
+
+  caller->exit_world();
+
+  return 1;
+}
