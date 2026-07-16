@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/virtual.c
+ * @file /adm/daemons/virtual.lpc
  * Daemon for virtual objects
  *
  * @created 2024-02-04 - Gesslar

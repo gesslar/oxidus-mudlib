@@ -1,5 +1,5 @@
 /**
- * @file /adm/simul_efun/english.c
+ * @file /adm/simul_efun/english.lpc
  *
  * English language processing simul-efuns for text manipulation and grammar.
  * Provides functions for capitalization, articles, and pronoun generation

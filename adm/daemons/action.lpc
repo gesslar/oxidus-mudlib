@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/action.c
+ * @file /adm/daemons/action.lpc
  *
  * A message composition and delivery system for handling in-game
  * actions and their resulting messages. This daemon manages how

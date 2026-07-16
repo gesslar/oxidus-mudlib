@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/vnum.c
+ * @file /adm/daemons/vnum.lpc
  * Daemon to store room vnums
  *
  * @created 2024-08-18 - Gesslar

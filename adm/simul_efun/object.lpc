@@ -1,5 +1,5 @@
 /**
- * @file /adm/simul_efun/object.c
+ * @file /adm/simul_efun/object.lpc
  *
  * Object manipulation and querying simul-efuns. Provides utilities for
  * finding, filtering and managing game objects, including specialized

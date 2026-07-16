@@ -1,5 +1,5 @@
 /**
- * @file /cmds/action/put.c
+ * @file /cmds/action/put.lpc
  *
  * Command to put an object into a container.
  *

@@ -1,5 +1,5 @@
 /**
- * @file /cmds/action/open.c
+ * @file /cmds/action/open.lpc
  *
  * Command to open a container or door.
  *

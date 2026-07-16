@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/modules/message/combat.c
+ * @file /adm/daemons/modules/message/combat.lpc
  * Combat messaging module for the message daemon
  *
  * @created 2024-07-28 - Gesslar

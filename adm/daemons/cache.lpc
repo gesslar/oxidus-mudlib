@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/cache.c
+ * @file /adm/daemons/cache.lpc
  *
  * A daemon that reads files and caches the result for later consumption.
  * Cached records are keyed by resolved path and invalidated automatically

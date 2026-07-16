@@ -1,5 +1,5 @@
 /**
- * @file /cmds/action/close.c
+ * @file /cmds/action/close.lpc
  *
  * Command to close a container or door.
  *

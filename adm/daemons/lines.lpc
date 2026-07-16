@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/lines.c
+ * @file /adm/daemons/lines.lpc
  *
  * Daemon that handles line-drawing character substitution. Maps
  * Unicode box-drawing characters to ASCII or screenreader

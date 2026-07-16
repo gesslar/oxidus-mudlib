@@ -1,5 +1,5 @@
 /**
- * @file /cmds/action/look.c
+ * @file /cmds/action/look.lpc
  *
  * Command to look at things and the room and stuff.
  *

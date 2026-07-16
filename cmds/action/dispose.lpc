@@ -1,5 +1,5 @@
 /**
- * @file /cmds/action/dispose.c
+ * @file /cmds/action/dispose.lpc
  *
  * Command to dispose of dead bodies.
  *

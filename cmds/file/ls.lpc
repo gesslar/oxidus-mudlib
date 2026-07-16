@@ -1,5 +1,5 @@
 /**
- * @file /cmds/file/ls.c
+ * @file /cmds/file/ls.lpc
  *
  * List files and directories
  *

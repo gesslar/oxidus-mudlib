@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/grapevine.c
+ * @file /adm/daemons/grapevine.lpc
  * Grapevine WebSockets client
  *
  * @created 2024-07-17 - Gesslar

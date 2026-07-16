@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/modules/gmcp/Client.c
+ * @file /adm/daemons/modules/gmcp/Client.lpc
  *
  * GMCP module to handle Client.* packages. Forwards client-side
  * GUI installation directives to the player.

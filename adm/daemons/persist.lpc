@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/persist.c
+ * @file /adm/daemons/persist.lpc
  *
  * Persist daemon that periodically saves all registered persistent
  * objects. Discovers persistent objects at startup and responds to

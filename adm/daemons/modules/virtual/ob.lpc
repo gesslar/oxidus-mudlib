@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/modules/virtual/ob.c
+ * @file /adm/daemons/modules/virtual/ob.lpc
  * Base module for virtual objects
  *
  * @created 2024-08-22 - Gesslar

@@ -1,5 +1,5 @@
 /**
- * @file /cmds/action/eq.c
+ * @file /cmds/action/eq.lpc
  *
  * List all your equipped items.
  *

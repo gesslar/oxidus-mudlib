@@ -1,5 +1,5 @@
 /**
- * @file /cmds/file/mv.c
+ * @file /cmds/file/mv.lpc
  *
  * Move a file or directory.
  *

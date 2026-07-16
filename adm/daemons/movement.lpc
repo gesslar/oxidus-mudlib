@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/movement.c
+ * @file /adm/daemons/movement.lpc
  *
  * Daemon that provides movement checks, etc.
  *

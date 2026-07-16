@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/config.c
+ * @file /adm/daemons/config.lpc
  *
  * Configuration management daemon that provides a centralized system for
  * game settings. Uses a cascading configuration pattern where default values

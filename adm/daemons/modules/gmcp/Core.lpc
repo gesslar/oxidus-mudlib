@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/modules/gmcp/Core.c
+ * @file /adm/daemons/modules/gmcp/Core.lpc
  *
  * GMCP module to handle Core.* packages.
  *

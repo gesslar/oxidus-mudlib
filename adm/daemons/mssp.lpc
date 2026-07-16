@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/mssp.c
+ * @file /adm/daemons/mssp.lpc
  *
  * MSSP (Mud Server Status Protocol) daemon. Called by the master object to
  * respond to the get_mud_stats() apply. Dynamic and driver hard-coded values

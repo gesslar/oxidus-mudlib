@@ -1,5 +1,5 @@
 /**
- * @file /adm/simul_efun/file.c
+ * @file /adm/simul_efun/file.lpc
  *
  * File manipulation and querying simul-efuns. Provides secure methods for
  * reading, writing, and managing files, including logging and temporary files.

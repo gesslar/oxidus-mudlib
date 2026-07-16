@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/alias.c
+ * @file /adm/daemons/alias.lpc
  *
  * The alias daemon. Loads alias definitions from ETC_ALIASES, grouped
  * by security group, and resolves any alias at the head of a player's

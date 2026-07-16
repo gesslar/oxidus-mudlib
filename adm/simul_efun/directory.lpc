@@ -1,5 +1,5 @@
 /**
- * @file /adm/simul_efun/directory.c
+ * @file /adm/simul_efun/directory.lpc
  *
  * Directory manipulation and query simul-efuns. Provides secure methods
  * for creating directory hierarchies and retrieving directory paths.

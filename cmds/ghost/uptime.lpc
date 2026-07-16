@@ -1,5 +1,5 @@
 /**
- * @file /cmds/ghost/uptime.c
+ * @file /cmds/ghost/uptime.lpc
  * Uptime command displaying how long the mud has been running.
  *
  * @created 2005-04-08 - Tacitus

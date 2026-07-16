@@ -1,5 +1,5 @@
 /**
- * @file /adm/daemons/time.c
+ * @file /adm/daemons/time.lpc
  * This is the game's time daemon. It is responsible for keeping
  * track of the game's time and date. It also provides functions for converting
  * the game's time to real time and vice versa.

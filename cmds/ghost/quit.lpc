@@ -1,5 +1,5 @@
 /**
- * @file /cmds/ghost/quit.c
+ * @file /cmds/ghost/quit.lpc
  * Quit command for ghosts to disconnect from the mud.
  *
  * @created 2005-04-06 - Tacitus

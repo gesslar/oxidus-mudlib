@@ -1,5 +1,5 @@
 /**
- * @file /cmds/file/mkdir.c
+ * @file /cmds/file/mkdir.lpc
  *
  * Command to create a directory.
  *

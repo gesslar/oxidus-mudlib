@@ -1,5 +1,5 @@
 /**
- * @file /adm/simul_efun/data.c
+ * @file /adm/simul_efun/data.lpc
  *
  * Simple key-value data storage system for file-based persistence.
  * Provides functions for reading, writing, and manipulating data

@@ -1,5 +1,5 @@
 /**
- * @file /cmds/ghost/version.c
+ * @file /cmds/ghost/version.lpc
  * Version command displaying mudlib and driver information.
  *
  * @created 2006-05-05 - Tacitus

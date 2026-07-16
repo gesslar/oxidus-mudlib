@@ -1,5 +1,5 @@
 /**
- * @file /cmds/action/remove.c
+ * @file /cmds/action/remove.lpc
  *
  * Command to remove worn items.
  *

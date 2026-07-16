@@ -1,5 +1,5 @@
 /**
- * @file /adm/simul_efun/function.c
+ * @file /adm/simul_efun/function.lpc
  *
  * Advanced function manipulation and callback handling simul-efuns. Provides
  * tools for function validation, callback assembly, call tracing, and delayed

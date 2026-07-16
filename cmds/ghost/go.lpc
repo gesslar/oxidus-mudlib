@@ -1,5 +1,5 @@
 /**
- * @file /cmds/ghost/go.c
+ * @file /cmds/ghost/go.lpc
  * Command for moving around in the game as a ghost.
  *
  * @created 2024-02-03 - Gesslar
