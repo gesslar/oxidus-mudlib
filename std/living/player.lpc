@@ -90,8 +90,8 @@ void enter_world(int reconnecting) {
 }
 
 /**
- * Handles the player leaving the game world. Executes any
- * quit-file commands, saves the body, and notifies the room.
+ * Handles the player leaving the game world. Executes any quit-file commands,
+ * saves the body, and notifies the room.
  *
  * @public
  */
@@ -103,10 +103,7 @@ void exit_world() {
     return;
 
   if(file_size(home_path(query_real_name()) + ".quit") > 0) {
-    cmds = explode(read_file(home_path(query_real_name()) + ".quit"), "\n");
-
-    if(sizeof(cmds) <= 0)
-      return;
+    cmds = explode_file(home_path(query_real_name()) + ".quit");
 
     for(i = 0; i < sizeof(cmds); i ++)
       catch(command(cmds[i]));
@@ -115,9 +112,16 @@ void exit_world() {
   set_last_login(time());
 
   if(environment())
-    tell_them(query_name()+ " leaves " + mud_name() + ".\n");
+    tell_them(`${query_name()} leaves ${mud_name()}.\n`);
+
+  log_file(LOG_LOGIN,
+    `${ldatetime()} ${capitalize(query_real_name())} logged out from `
+    `${query_ip_number()}\n`
+  );
 
   save_body();
+
+  remove();
 }
 
 /**
