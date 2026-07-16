@@ -11,6 +11,7 @@
 #define CMD_EVAL             DIR_CMDS_WIZ "eval"
 
 // Std commands
+#define CMD_GO               DIR_CMDS_ACTION "go"
 #define CMD_LOOK             DIR_CMDS_ACTION "look"
 #define CMD_QUIT             DIR_CMDS_STD "quit"
 #define CMD_SU               DIR_CMDS_STD "su"
