@@ -107,9 +107,9 @@ private nomask nosave string ROLES_FILE_CUSTOM = "adm/custom/security/roles.map"
 private nomask nosave mapping *access_rules = ({});
 
 /**
- * When set, path-access refusals are enforced; when clear (the default),
- * they run in shadow mode - logged but permitted. Cached from
- * SECURITY_ENFORCE_PATHS at setup.
+ * When set, path-access refusals are enforced; when clear, they run in
+ * shadow mode - logged but permitted. Cached from SECURITY_ENFORCE_PATHS
+ * (default set) at setup.
  *
  * @type {int}
  */
@@ -647,9 +647,10 @@ private nomask mapping load_roles() {
  *
  * valid_read/valid_write resolve the caller's identity against the
  * ordered access table (access.lpml, plus the git-ignored override
- * access.local.lpml). It ships in SHADOW MODE: refusals are logged but
- * still permitted, so the table can be tuned against real traffic before
- * it bites. Flip SECURITY_ENFORCE_PATHS to enforce.
+ * access.local.lpml). Enforcement is gated on SECURITY_ENFORCE_PATHS:
+ * when set (the default in default.lpml) refusals are denied; when clear
+ * the layer runs in shadow mode - refusals are logged but still permitted,
+ * so the table can be tuned against real traffic before it bites.
  *
  * This is guardrails against fat-finger writes into /adm, not an ACL
  * engine - keep it at that altitude.
@@ -824,8 +825,8 @@ private nomask int access_ok(string file, object user, string op) {
 
 /**
  * Shadow-aware wrapper around access_ok used by valid_read/valid_write.
- * Refusals are logged either way; when SECURITY_ENFORCE_PATHS is off (the
- * default) the refusal is permitted anyway (shadow mode), otherwise it is
+ * Refusals are logged either way; when SECURITY_ENFORCE_PATHS is off the
+ * refusal is permitted anyway (shadow mode), otherwise (the default) it is
  * enforced.
  *
  * @param {string} file - The target file path.
