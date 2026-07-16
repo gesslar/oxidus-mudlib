@@ -1,5 +1,6 @@
 /**
  * @file /cmds/ghost/look.lpc
+ *
  * Ghost look command, inherits the standard look command.
  *
  * @created 2024-02-03 - Gesslar
