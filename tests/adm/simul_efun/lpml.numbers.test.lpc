@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/lpml.numbers.test.c
+ * @file /tests/adm/simul_efun/lpml.numbers.test.lpc
  *
  * Tests for lpml_decode() number parsing: decimal ints, floats,
  * leading/trailing decimal points, exponents, sign prefixes, and the

@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/lpml.keys.test.c
+ * @file /tests/adm/simul_efun/lpml.keys.test.lpc
  *
  * Tests for lpml_decode() object-key handling: plain identifier keys,
  * quoted keys, single-quoted keys, YAML-style spacey keys (with spaces,

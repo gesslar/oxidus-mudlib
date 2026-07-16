@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/string.convert.test.c
+ * @file /tests/adm/simul_efun/string.convert.test.lpc
  *
  * Tests for from_string() from /adm/simul_efun/string.c, which parses an LPC
  * value out of its string representation.
