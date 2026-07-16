@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/skills.c
+ * @file /cmds/std/skills.lpc
  *
  * Command for players to check their skill progress.
  *

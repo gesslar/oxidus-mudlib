@@ -1,5 +1,5 @@
 /**
- * @file /obj/drink/drink.c
+ * @file /obj/drink/drink.lpc
  *
  * Base drink inheritable for virtual drink items
  *

@@ -1,5 +1,5 @@
 /**
- * @file /obj/general/firekit.c
+ * @file /obj/general/firekit.lpc
  *
  * This object will create a fire used in a room.
  *

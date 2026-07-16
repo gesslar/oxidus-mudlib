@@ -1,5 +1,5 @@
 /**
- * @file /std/daemon/discord_bot.c
+ * @file /std/daemon/discord_bot.lpc
  * Discord server daemon
  *
  * @created 2024-07-06 - Gesslar

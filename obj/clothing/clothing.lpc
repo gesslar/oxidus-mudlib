@@ -1,5 +1,5 @@
 /**
- * @file /obj/clothing/clothing.c
+ * @file /obj/clothing/clothing.lpc
  *
  * Base clothing inheritable for virtual clothing items
  *

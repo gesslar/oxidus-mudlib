@@ -1,5 +1,5 @@
 /**
- * @file /obj/armour/armour.c
+ * @file /obj/armour/armour.lpc
  *
  * Base armour inheritable for virtual armour items
  *

@@ -1,5 +1,5 @@
 /**
- * @file /obj/mudlib/striker.c
+ * @file /obj/mudlib/striker.lpc
  *
  * Object that can be used to strike against another object to begin a fire.
  *

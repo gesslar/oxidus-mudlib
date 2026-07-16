@@ -1,5 +1,5 @@
 /**
- * @file /d/wastes/wastes_daemon.c
+ * @file /d/wastes/wastes_daemon.lpc
  *
  * Virtual map daemon for the wastes. Generates a procedural terrain
  * map using simplex noise, carves a river through it, classifies

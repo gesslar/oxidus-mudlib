@@ -1,5 +1,5 @@
 /**
- * @file /obj/mudlib/coin.c
+ * @file /obj/mudlib/coin.lpc
  * A coin object
  *
  * @created 2024-02-19 - Gesslar
