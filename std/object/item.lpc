@@ -1,5 +1,5 @@
 /**
- * @file /std/object/item.c
+ * @file /std/object/item.lpc
  * Base implementation for physical game items that can be
  * manipulated, carried, and moved between containers.
  *

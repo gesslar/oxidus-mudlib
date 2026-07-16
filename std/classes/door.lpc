@@ -1,5 +1,5 @@
 /**
- * @file /std/classes/door.c
+ * @file /std/classes/door.lpc
  *
  * Defines the Door class used to represent physical doors, gates, and other
  * passageways between rooms. Each door has state tracking (open/closed/locked),

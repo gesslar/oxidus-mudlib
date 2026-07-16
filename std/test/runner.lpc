@@ -1,5 +1,5 @@
 /**
- * @file /std/test/runner.c
+ * @file /std/test/runner.lpc
  * Base for area test runners. An area runner inherits this and
  * has no other obligation — run_tests() globs *.test.c siblings
  * of the inheriting runner, clones each, calls run(), and

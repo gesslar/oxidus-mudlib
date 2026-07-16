@@ -1,5 +1,5 @@
 /**
- * @file /std/mobs/monster.c
+ * @file /std/mobs/monster.lpc
  *
  * Standard monster inheritable for all types of monsters
  *

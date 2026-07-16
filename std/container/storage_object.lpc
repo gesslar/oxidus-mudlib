@@ -1,5 +1,5 @@
 /**
- * @file /std/container/storage_object.c
+ * @file /std/container/storage_object.lpc
  * Object for permanent or temporary storage, like shops or
  * armouries.
  *

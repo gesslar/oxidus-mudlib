@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/base64.test.c
+ * @file /tests/adm/simul_efun/base64.test.lpc
  *
  * Tests for base64_encode() and base64_decode() simul_efuns.
  */

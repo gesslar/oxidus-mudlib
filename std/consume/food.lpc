@@ -1,5 +1,5 @@
 /**
- * @file /std/consume/food.c
+ * @file /std/consume/food.lpc
  *
  * Food inheritable for objects that can be consumed.
  *

@@ -1,5 +1,5 @@
 /**
- * @file /std/object/cooldown.c
+ * @file /std/object/cooldown.lpc
  * Manages time-limited actions via cooldown timers.
  *
  * @created 2024-09-15 - Gesslar

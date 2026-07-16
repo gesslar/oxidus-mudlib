@@ -1,5 +1,5 @@
 /**
- * @file /std/daemon/http_server.c
+ * @file /std/daemon/http_server.lpc
  * This is an HTTP server that may be inherited by other objects
  * to create a custom HTTP server. It listens on a specified port
  * and accepts incoming connections.

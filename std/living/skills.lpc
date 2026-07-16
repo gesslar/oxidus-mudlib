@@ -1,5 +1,5 @@
 /**
- * @file /std/living/skills.c
+ * @file /std/living/skills.lpc
  *
  * Trainable skills for living objects.
  *

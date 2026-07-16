@@ -1,5 +1,5 @@
 /**
- * @file /std/ext/bank.c
+ * @file /std/ext/bank.lpc
  *
  * Extension module that provides banking commands for room objects.
  * Allows players to register accounts, deposit and withdraw currency,

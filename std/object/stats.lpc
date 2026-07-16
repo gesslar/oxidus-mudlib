@@ -1,5 +1,5 @@
 /**
- * @file /std/object/stats.c
+ * @file /std/object/stats.lpc
  * Tracks creation time, age, and creator information for objects.
  *
  * @created 2024-02-04 - Gesslar

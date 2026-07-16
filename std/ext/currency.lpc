@@ -1,5 +1,5 @@
 /**
- * @file /std/ext/currency.c
+ * @file /std/ext/currency.lpc
  *
  * Currency module that can be inherited for money handling. Provides
  * the transaction engine used by shops and other commerce modules,

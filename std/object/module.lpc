@@ -1,5 +1,5 @@
 /**
- * @file /std/object/module.c
+ * @file /std/object/module.lpc
  *
  * Module management for any object. Allows attaching and
  * detaching cloned module objects that provide additional

@@ -1,5 +1,5 @@
 /**
- * @file /std/living/body.c
+ * @file /std/living/body.lpc
  *
  * Body object that is shared by players and NPCs.
  *

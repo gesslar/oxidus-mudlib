@@ -1,5 +1,5 @@
 /**
- * @file /std/object/object.c
+ * @file /std/object/object.lpc
  * Base object implementation that provides core functionality
  * for all game objects.
  *

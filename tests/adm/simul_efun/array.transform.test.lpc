@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/array.transform.test.c
+ * @file /tests/adm/simul_efun/array.transform.test.lpc
  *
  * Tests for the return-new-array simul_efuns in
  * /adm/simul_efun/array.c. Covers distinct_array, uniq_array, reverse_array,

@@ -1,5 +1,5 @@
 /**
- * @file /std/ext/http.c
+ * @file /std/ext/http.lpc
  * HTTP module with shared functions for use in HTTP operations
  *
  * @created 2024-07-05 - Gesslar

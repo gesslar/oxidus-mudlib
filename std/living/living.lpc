@@ -1,5 +1,5 @@
 /**
- * @file /std/living/living.c
+ * @file /std/living/living.lpc
  * Setup and adjustments for living values of living beings.
  *
  * @created 2024-07-30 - Gesslar

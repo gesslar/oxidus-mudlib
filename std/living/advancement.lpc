@@ -1,5 +1,5 @@
 /**
- * @file /std/living/advancement.c
+ * @file /std/living/advancement.lpc
  *
  * Per-living XP and level state. Tracks current level, a temporary
  * level modifier (used by boons and curses), and accumulated

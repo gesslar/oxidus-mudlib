@@ -1,5 +1,5 @@
 /**
- * @file /std/modules/module.c
+ * @file /std/modules/module.lpc
  *
  * Base class for modules that attach to mobile (living) objects.
  * Inherits from STD_MODULE_BASE to provide the core attach/detach

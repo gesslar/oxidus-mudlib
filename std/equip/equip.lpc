@@ -1,5 +1,5 @@
 /**
- * @file /std/equip/equip.c
+ * @file /std/equip/equip.lpc
  * Base equipment object that provides equip/unequip functionality.
  *
  * Inherited by armour, clothing, and weapon objects to provide

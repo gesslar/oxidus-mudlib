@@ -1,5 +1,5 @@
 /**
- * @file /std/living/decision.c
+ * @file /std/living/decision.lpc
  * Decision making for living objects.
  *
  * Converted from: https://www.npmjs.com/package/utility-ai

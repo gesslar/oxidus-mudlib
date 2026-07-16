@@ -1,5 +1,5 @@
 /**
- * @file /std/living/combat.c
+ * @file /std/living/combat.lpc
  *
  * Combat module for living objects. Drives the per-round attack loop, threat
  * tracking for current and recently-seen enemies, hit-chance and damage

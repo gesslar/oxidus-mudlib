@@ -1,5 +1,5 @@
 /**
- * @file /std/living/damage.c
+ * @file /std/living/damage.lpc
  *
  * Damage delivery and receipt for living objects. Provides the
  * attacker-side entry point (deliver_damage) and the victim-side

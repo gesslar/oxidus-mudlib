@@ -1,5 +1,5 @@
 /**
- * @file /std/module_base.c
+ * @file /std/module_base.lpc
  *
  * Base class for modules that can be attached to any object.
  * Modules are cloned objects that attach to an owner and provide

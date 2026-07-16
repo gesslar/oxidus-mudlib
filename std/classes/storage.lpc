@@ -1,5 +1,5 @@
 /**
- * @file /std/classes/storage.c
+ * @file /std/classes/storage.lpc
  *
  * Class definition for StorageOptions used in storage room implementations.
  *

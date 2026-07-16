@@ -1,5 +1,5 @@
 /**
- * @file /std/daemon/http_client.c
+ * @file /std/daemon/http_client.lpc
  * This is a base HTTP client daemon that is intended to be
  * inherited by other objects to create a custom HTTP client. It
  * provides the ability to send HTTP requests to a server and

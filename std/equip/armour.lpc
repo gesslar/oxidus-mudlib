@@ -1,5 +1,5 @@
 /**
- * @file /std/equip/armour.c
+ * @file /std/equip/armour.lpc
  *
  * Standard armour object. Extends clothing with defence
  * ratings and armour class (AC) for damage mitigation in

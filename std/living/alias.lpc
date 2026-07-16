@@ -1,5 +1,5 @@
 /**
- * @file /std/living/alias.c
+ * @file /std/living/alias.lpc
  *
  * Per-living alias storage module. Holds the personal aliases belonging
  * to a single living, mapping each alias name to its expansion string,

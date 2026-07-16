@@ -1,5 +1,5 @@
 /**
- * @file /std/room/storage.c
+ * @file /std/room/storage.lpc
  * This is a room that enables players to access storage. Inherit
  * from this class to create a storage room.
  *

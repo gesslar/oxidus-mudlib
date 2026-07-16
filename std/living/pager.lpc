@@ -1,5 +1,5 @@
 /**
- * @file /std/user/pager.c
+ * @file /std/user/pager.lpc
  * Pager object for displaying text to the user in a paginated
  * format.
  *

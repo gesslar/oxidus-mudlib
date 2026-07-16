@@ -1,5 +1,5 @@
 /**
- * @file /std/living/appearance.c
+ * @file /std/living/appearance.lpc
  * Handles the appearance of living objects
  *
  * @created 2024-07-30 - Gesslar

@@ -1,5 +1,5 @@
 /**
- * @file /std/ext/shop_menu.c
+ * @file /std/ext/shop_menu.lpc
  * A module to enable a shop that uses a menu instead of an
  * inventory.
  *

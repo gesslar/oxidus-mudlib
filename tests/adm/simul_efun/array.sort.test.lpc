@@ -1,6 +1,6 @@
 // @lpc-nocheck
 /**
- * @file /tests/adm/simul_efun/array.sort.test.c
+ * @file /tests/adm/simul_efun/array.sort.test.lpc
  *
  * Tests for the sort wrappers in /adm/simul_efun/array.c —
  * sort_alpha(), sort_num(), sort_float(),

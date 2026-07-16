@@ -1,5 +1,5 @@
 /**
- * @file /std/consume/drink.c
+ * @file /std/consume/drink.lpc
  *
  * Drink inheritable for objects that can be consumed.
  *

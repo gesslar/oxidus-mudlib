@@ -1,5 +1,5 @@
 /**
- * @file /std/daemon/websocket_client.c
+ * @file /std/daemon/websocket_client.lpc
  * This is a base WebSocket client daemon that is intended to be
  * inherited by other objects to create a custom WS client. It
  * provides the ability to send start an HTTP session and then
