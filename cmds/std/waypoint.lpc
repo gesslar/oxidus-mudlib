@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/waypoint.c
+ * @file /cmds/std/waypoint.lpc
  *
  * Command for managing waypoints.
  *

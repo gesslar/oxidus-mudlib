@@ -1,5 +1,5 @@
 /**
- * @file /d/tunnels/tunnels_daemon.c
+ * @file /d/tunnels/tunnels_daemon.lpc
  *
  * Virtual map daemon for the underground tunnels area. Loads the
  * tunnels map file and supplies short, long, and exit data to the

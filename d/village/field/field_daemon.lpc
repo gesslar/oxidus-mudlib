@@ -1,5 +1,5 @@
 /**
- * @file /d/village/field/field_daemon.c
+ * @file /d/village/field/field_daemon.lpc
  *
  * Daemon backing the village field virtual area. Provides the room
  * setup helpers (exits, shorts, longs) used by the field's virtual

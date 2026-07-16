@@ -1,5 +1,5 @@
 /**
- * @file /d/cavern/cavern_daemon.c
+ * @file /d/cavern/cavern_daemon.lpc
  *
  * Cavern zone daemon. Procedurally generates a multi-layer cavern
  * map using a drunkard's-walk carver over a wall-filled grid, links

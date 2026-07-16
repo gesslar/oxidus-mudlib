@@ -1,5 +1,5 @@
 /**
- * @file /cmds/wiz/touch.c
+ * @file /cmds/wiz/touch.lpc
  * This command allows a wizard to create a new empty file.
  *
  * @created 2024-08-10 - Gesslar

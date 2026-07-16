@@ -1,5 +1,5 @@
 /**
- * @file /d/forest/forest_daemon.c
+ * @file /d/forest/forest_daemon.lpc
  *
  * Virtual-map daemon for the forest area. Loads the forest map file
  * and supplies short descriptions, long descriptions, and exits for

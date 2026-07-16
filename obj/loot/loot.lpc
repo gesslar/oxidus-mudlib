@@ -1,5 +1,5 @@
 /**
- * @file /obj/loot/loot.c
+ * @file /obj/loot/loot.lpc
  * Base loot inheritable. This is for vendor trash, etc.
  *
  * @created 2024-08-20 - Gesslar

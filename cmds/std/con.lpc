@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/con.c
+ * @file /cmds/std/con.lpc
  *
  * Check the condition of a living, including yourself.
  *

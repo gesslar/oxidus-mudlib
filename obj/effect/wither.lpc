@@ -1,5 +1,5 @@
 /**
- * @file /obj/effect/wither.c
+ * @file /obj/effect/wither.lpc
  *
  * Withering shadow effect — a clinging tendril of magical shadow
  * that weakens its victim's defenses for a fixed duration. Applies

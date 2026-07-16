@@ -1,5 +1,5 @@
 /**
- * @file /d/tunnels/tunnels_base.c
+ * @file /d/tunnels/tunnels_base.lpc
  *
  * Inheritable base for the virtual tunnel rooms. Sets up terrain
  * and zone, delegates room population to the tunnels daemon, and

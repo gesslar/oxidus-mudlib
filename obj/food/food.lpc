@@ -1,5 +1,5 @@
 /**
- * @file /obj/food/food.c
+ * @file /obj/food/food.lpc
  *
  * Base food inheritable for virtual food items
  *

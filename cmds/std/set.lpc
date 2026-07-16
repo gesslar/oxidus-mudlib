@@ -1,5 +1,5 @@
 /**
- * @file /cmds/std/set.c
+ * @file /cmds/std/set.lpc
  *
  * Command to manage preferences in a player object.
  *

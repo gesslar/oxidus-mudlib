@@ -1,5 +1,5 @@
 /**
- * @file /obj/effect/burn.c
+ * @file /obj/effect/burn.lpc
  *
  * Burn effect — a fire-typed damage-over-time that lives inside
  * its victim and ticks for a configured number of pulses. Attached

@@ -1,5 +1,5 @@
 /**
- * @file /d/maze/maze_daemon.c
+ * @file /d/maze/maze_daemon.lpc
  *
  * Virtual map daemon for the maze area. Procedurally generates a
  * three-dimensional maze using a depth-first search algorithm, then

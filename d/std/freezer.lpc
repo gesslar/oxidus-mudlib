@@ -1,5 +1,5 @@
 /**
- * @file /d/std/freezer.c
+ * @file /d/std/freezer.lpc
  * Room where bodies can hang out while not inhabited.
  *
  * @created 2024-08-11 - Gesslar

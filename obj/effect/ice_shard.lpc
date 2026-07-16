@@ -1,5 +1,5 @@
 /**
- * @file /obj/effect/ice_shard.c
+ * @file /obj/effect/ice_shard.lpc
  *
  * Ice shard effect — a magical shard of ice embedded in the victim
  * by the shard spell. Sits silently while attached, then shatters

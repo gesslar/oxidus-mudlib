@@ -1,5 +1,5 @@
 /**
- * @file /obj/resource/resource_node.c
+ * @file /obj/resource/resource_node.lpc
  *
  * This object is the base world resource spawn that exists in the game world.
  *
