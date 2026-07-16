@@ -89,5 +89,25 @@ mixed describe_environment(
     result += `You may go ${simple_list(exits, "and")}.`;
   }
 
+  object *obs = all_inventory(env);
+  obs = filter(obs, (: $(tp)->can_see($1) :));
+  obs -= ({ tp });
+
+  object *non_livs = filter(obs, (: !living($1) :));
+  object *livs = filter(obs, (: living :));
+  obs = non_livs + livs;
+
+  string *shorts = map(obs, (: ob_short :));
+  shorts = filter(shorts, (: strlen :));
+
+  if(sizeof(shorts)) {
+    string obs_desc = implode(shorts, "\n") + "\n";
+
+    if(sizeof(result))
+      result += "\n\n";
+
+    result += obs_desc;
+  }
+
   return result;
 }
