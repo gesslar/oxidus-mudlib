@@ -1,0 +1,135 @@
+/**
+ * @file /cmds/object/call.lpc
+ *
+ * Command to call an arbitrary function on an object and display the result.
+ * A terse alternative to eval for the common "poke a function and see what it
+ * returns" case.
+ *
+ * @created 2026-07-17 - Gesslar
+ * @last_modified 2026-07-17 - Gesslar
+ *
+ * @history
+ * 2026-07-17 - Gesslar - Created
+ */
+
+inherit STD_CMD;
+
+private object resolve_target(object caller, string spec);
+private mixed coerce_arg(string s);
+
+void setup() {
+  usage_text = "call <object>;<function>[;<arg>...]";
+  help_text =
+    "Calls <function> on <object> and shows the return value.\n"
+    "\n"
+    "<object> may be 'me', 'here', an object present in your inventory or "
+    "room, a living by name, or a file path (which is loaded if needed). "
+    "Arguments are separated by ';'. Numeric arguments are passed as int or "
+    "float; everything else is passed as a string.\n"
+    "\n"
+    "Examples:\n"
+    "  call here;query_short\n"
+    "  call me;query_name\n"
+    "  call /adm/daemons/config;get_mud_config;MORELINES\n"
+    "  call orc;set_hp;50";
+}
+
+mixed main(
+  /** @type {STD_PLAYER} */ object caller,
+  string str
+) {
+  if(!str)
+    return _usage(caller);
+
+  string *parts = explode(str, ";");
+  int sz = sizeof(parts);
+
+  if(sz < 2)
+    return _error(caller, "Syntax: call <object>;<function>[;<arg>...]");
+
+  string spec = trim(parts[0]);
+  string func = trim(parts[1]);
+
+  if(spec == "" || func == "")
+    return _error(caller, "Syntax: call <object>;<function>[;<arg>...]");
+
+  mixed *args = map(parts[2..], (: coerce_arg :));
+
+  /** @type {STD_OBJECT} */ object ob = resolve_target(caller, spec);
+  if(!ob)
+    return _error(caller, "Could not find object: %s", spec);
+
+  mixed result;
+  string err = catch(result = call_other(ob, ({ func }) + args));
+
+  if(err)
+    return _error(caller, "%s->%s() raised: %s",
+      file_name(ob), func, trim(err));
+
+  return _info(caller, "%s->%s() = %s",
+    file_name(ob), func, sprintf("%O", result));
+}
+
+/**
+ * Resolves an object specifier to an object without leaning on the legacy
+ * get_object()/get_objects() sefuns. Checks, in order: the 'me'/'here'
+ * keywords, the caller's inventory and room, livings by name, and finally a
+ * file path (loading it if necessary).
+ *
+ * @param {STD_PLAYER} caller - The command caller.
+ * @param {string} spec - The object specifier.
+ * @returns {object} The resolved object, or 0 if none matched.
+ */
+private object resolve_target(object caller, string spec) {
+  /** @type {STD_ROOM} */ object env = environment(caller);
+  object ob;
+
+  if(spec == "me")
+    return caller;
+
+  if(spec == "here" || spec == "env" || spec == "environment")
+    return env;
+
+  if(ob = present(spec, caller))
+    return ob;
+
+  if(env && (ob = present(spec, env)))
+    return ob;
+
+  if(ob = find_player(spec))
+    return ob;
+
+  if(ob = find_living(spec))
+    return ob;
+
+  string path = resolve_path(caller->query_env("cwd"), spec);
+
+  if(ob = find_object(path))
+    return ob;
+
+  catch(ob = load_object(path));
+
+  return ob;
+}
+
+/**
+ * Coerces a raw string argument to a typed value: an int or float when the
+ * trimmed text is wholly numeric, otherwise the string itself.
+ *
+ * @param {string} s - The raw argument text.
+ * @returns {mixed} The coerced value.
+ */
+private mixed coerce_arg(string s) {
+  int i;
+  float f;
+
+  s = trim(s);
+
+  if(sscanf(s, "%d", i) == 1 && s == sprintf("%d", i))
+    return i;
+
+  if(sscanf(s, "%f", f) == 1)
+    return f;
+
+  return s;
+}
