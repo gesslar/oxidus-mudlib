@@ -68,10 +68,6 @@ object body_d();
 string get_short(object ob);
 string get_long(object ob);
 
-// File: directory.c
-int assure_dir(string path);
-varargs string query_directory(object ob);
-
 // File: english.c
 string cap_words(string str);
 varargs string cap_significant_words(string str, int title);
@@ -113,6 +109,15 @@ mapping as_directory(string str);
 mapping as_file(string str);
 varargs mapping read_directory(string directory, string pattern);
 void recursive_delete(mapping dir, int include_self);
+string resolve_path(string base_dir, string path);
+string valid_path(string base_dir, string path);
+string valid_file(string base_dir, string path);
+string valid_dir(string base_dir, string path);
+string resolve_file(string base_dir, string path);
+string resolve_dir(string base_dir, string path);
+string *get_files(string base_dir, string path);
+int assure_dir(string path);
+varargs string query_directory(object ob);
 
 // File: function.c
 int valid_function(mixed f);
@@ -214,14 +219,6 @@ float random_float(mixed upper_bound);
 mixed element_of_weighted(mapping m);
 int random_clamp(int min, int max);
 int *sanitize_seed(mixed seed);
-
-// File: resolve_path.c
-string resolve_path(string base_dir, string path);
-string valid_path(string base_dir, string path);
-string valid_file(string base_dir, string path);
-string valid_dir(string base_dir, string path);
-string resolve_file(string base_dir, string path);
-string resolve_dir(string base_dir, string path);
 
 // File: save.c
 string object_data_directory(object ob);

@@ -661,3 +661,262 @@ void recursive_delete(mapping dir, int include_self: (: 0 :)) {
     }
   }
 }
+
+/**
+ * Resolves a path against a base directory into a canonical absolute mudlib
+ * path.
+ *
+ * Relative paths resolve against base_dir; absolute paths (a leading '/')
+ * ignore it. '.' and '..' components are collapsed, with '..' clamped at the
+ * root, and a trailing '.' or '..' component leaves a trailing slash. Special
+ * forms:
+ *   here       -> the source file of the caller's current environment
+ *   ~          -> the caller's home directory
+ *   ~/rest     -> the caller's home directory, then rest
+ *   ~name      -> that user's home directory
+ *   ~name/rest -> that user's home directory, then rest
+ *
+ * @param {string} base_dir - Directory that relative paths resolve against.
+ * @param {string} path - The path to resolve.
+ * @returns {string} The resolved absolute path.
+ */
+string resolve_path(string base_dir, string path) {
+  string *stack = ({ });
+  int dir_marker = 0;
+
+  base_dir ||= "/";
+  path ||= "";
+
+  // 'here' -> the source file of the caller's current environment.
+  if(path == "here") {
+    /** @type {STD_ROOM} */ object room;
+
+    if(this_body())
+      room = environment(this_body());
+
+    if(room)
+      return source_file(file_name(room));
+  }
+
+  // '~' home-directory expansion.
+  if(strlen(path) && path[0] == '~') {
+    if(path == "~" || path[0..1] == "~/") {
+      /** @type {STD_PLAYER} */ object body = this_body();
+
+      path = (body ? home_path(body->query_real_name()) : "/") + path[1..];
+    } else {
+      int slash = strsrch(path, "/");
+
+      if(slash == -1)
+        return home_path(path[1..]);
+
+      path = home_path(path[1..slash-1]) + path[slash..];
+    }
+  }
+
+  // Anchor relative paths to base_dir.
+  if(!strlen(path) || path[0] != '/')
+    path = `${base_dir}/${path}`;
+
+  // Collapse '.', '..' and empty components.
+  foreach(string part in explode(path, "/")) {
+    if(part == "")
+      continue;
+
+    if(part == ".") {
+      dir_marker = 1;
+    } else if(part == "..") {
+      dir_marker = 1;
+
+      if(sizeof(stack))
+        stack = stack[0..<2];
+    } else {
+      dir_marker = 0;
+      stack += ({ part });
+    }
+  }
+
+  path = `/${implode(stack, "/")}`;
+
+  if(dir_marker && path[<1] != '/')
+    path += "/";
+
+  return path;
+}
+
+/**
+ * Resolves and validates a path, checking if it exists as either
+ * a file or directory.
+ *
+ * @param {string} base_dir - The base directory to resolve relative paths from.
+ * @param {string} path - The path to resolve and validate.
+ * @returns {string|int} The resolved absolute path if valid, or 0 if invalid.
+ */
+string valid_path(string base_dir, string path) {
+  string resolved = resolve_path(base_dir, path);
+
+  return (file_exists(resolved) || directory_exists(resolved)) ? resolved : 0;
+}
+
+/**
+ * Resolves and validates a file path, checking if it exists as a
+ * file.
+ *
+ * @param {string} base_dir - The base directory to resolve relative paths from.
+ * @param {string} path - The file path to resolve and validate.
+ * @returns {string | undefined} The resolved absolute file path if valid, or undefined if invalid.
+ */
+string valid_file(string base_dir, string path) {
+  string resolved = resolve_path(base_dir, path);
+
+  return file_exists(resolved) ? resolved : undefined;
+}
+
+/**
+ * Resolves and validates a directory path, checking if it exists
+ * as a directory.
+ *
+ * @param {string} base_dir - The base directory to resolve relative paths from.
+ * @param {string} path - The directory path to resolve and validate.
+ * @returns {string|int} The resolved absolute directory path if valid, or 0 if invalid.
+ */
+string valid_dir(string base_dir, string path) {
+  string resolved = resolve_path(base_dir, path);
+
+  return directory_exists(resolved) ? resolved : 0;
+}
+
+/**
+ * Resolves a file path without checking its existence.
+ *
+ * @param {string} base_dir - The base directory to resolve relative paths from.
+ * @param {string} path - The file path to resolve.
+ * @returns {string} The resolved absolute file path.
+ */
+string resolve_file(string base_dir, string path) {
+  return resolve_path(base_dir, path);
+}
+
+/**
+ * Resolves a directory path without checking its existence,
+ * ensuring it ends with a slash.
+ *
+ * @param {string} base_dir - The base directory to resolve relative paths from.
+ * @param {string} path - The directory path to resolve.
+ * @returns {string} The resolved absolute directory path, ending with a slash.
+ */
+string resolve_dir(string base_dir, string path) {
+  string resolved = resolve_path(base_dir, path);
+
+  return (resolved[<1] == '/') ? resolved : resolved + "/";
+}
+
+/**
+ * Resolves a path and returns an array of matching files, supporting * wildcard pattern.
+ *
+ * @param {string} base_dir - The base directory to resolve relative paths from.
+ * @param {string} path - The path or pattern to resolve and search for files.
+ * @returns {string*} An array of matching file paths, or ({}) if invalid.
+ */
+string *get_files(string base_dir, string path) {
+  string resolved_path = resolve_path(base_dir, path);
+  string *parts, *files;
+  string dir, pattern;
+
+  // Use valid_dir_file to split the path and check if it's valid
+  parts = valid_dir_file(resolved_path);
+  if(!parts)
+    return ({});
+
+  dir = parts[0];
+  pattern = parts[1];
+
+  // If pattern doesn't contain "*", append it
+  if(strsrch(pattern, "*") == -1)
+    pattern += "*";
+
+  // Use get_dir() with the pattern
+  files = get_dir(dir + pattern);
+  files -= ({ ".", ".." });
+
+  // Construct full paths for the results
+  if(files && sizeof(files) > 0)
+    files = map(files, (: $(dir) + $1 :));
+
+  files = map(files, (: directory_exists($1) ? append($1, "/") : $1 :));
+
+  return files;
+}
+
+/**
+ * Creates a directory and all necessary parent directories.
+ *
+ * Temporarily assumes privileges of the calling object while creating
+ * the directory structure to ensure proper permissions.
+ *
+ * @param {string} path - Full directory path to create
+ * @returns {int} 1 if directory exists/created, 0 otherwise
+ * @example
+ * if(assure_dir("/d/players/" + name + "/letters")) {
+ *     tell_me("Created mail directory.\n");
+ * }
+ */
+mixed assure_dir(string path) {
+  string *parts, dir;
+  int j;
+
+  string old_privs;
+
+  if(file_size(path) == -2)
+    return 1;
+
+  old_privs = query_privs();
+  set_privs(this_object(), query_privs(previous_object()));
+
+  string err = catch {
+    parts = explode(path, "/");
+    dir = "";
+    for(j = 0; j < sizeof(parts); j++) {
+      dir += parts[j];
+      mkdir(dir);
+      dir += "/";
+    }
+  };
+
+  set_privs(this_object(), old_privs);
+
+  if(err)
+    return 0;
+
+  return file_size(path) == -2;
+}
+
+/**
+ * Gets the directory portion of an object's file path.
+ *
+ * Returns a directory path with leading and trailing slashes. Uses
+ * previous_object() if no object is provided.
+ *
+ * @param {object} [ob] - Object to get directory for
+ * @returns {string} Directory path with both leading and trailing slash
+ * @errors If no valid object is available
+ * @example
+ * string dir = query_directory(sword);  // Returns "/obj/weapon/"
+ */
+varargs string query_directory(object ob) {
+  string file, *parts;
+  string dir;
+
+  if(!objectp(ob))
+    ob = previous_object();
+
+  if(!objectp(ob))
+    error("Bad argument 1 to query_directory()");
+
+  file = base_name(ob);
+  parts = explode(file, "/");
+  parts = parts[0..<2];
+  dir = implode(parts, "/");
+
+  return append(prepend(dir, "/"), "/");
+}
