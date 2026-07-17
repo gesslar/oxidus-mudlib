@@ -65,6 +65,8 @@ private nomask void load_access();
 private nomask string glob_to_regex(string pattern);
 private nomask int owns_path(string privs, string file);
 private nomask int satisfies(string cap, string privs, string file);
+private nomask int is_command_privs(string privs);
+private nomask int identity_ok(string privs, string file, string op);
 private nomask int access_ok(string file, object user, string op);
 private nomask int access_gate(string file, object user, string op, string func);
 private nomask void log_access_denial(string file, object user, string op, string func, int enforced);
@@ -775,6 +777,25 @@ private nomask int owns_path(string privs, string file) {
 }
 
 /**
+ * Tests whether a privs string is one of the canonical command identities
+ * assigned by path in master's privs_file(). A command is a proxy for the
+ * player who invoked it, not an actor in its own right, so access_ok()
+ * resolves a command identity to the runner's authority.
+ *
+ * Matched by exact identity, NOT a "[cmd_...]" prefix pattern: an object
+ * under a "/obj/cmd_<x>/" directory is assigned "[cmd_<x>_object]" (the
+ * "/obj/<name>/" rule in privs_file()), which a prefix match would wrongly
+ * admit into the delegation path.
+ *
+ * @param {string} privs - The identity's privs string.
+ * @returns {int} 1 if the privs is a command identity, 0 otherwise.
+ */
+private nomask int is_command_privs(string privs) {
+  return member_array(privs,
+    ({ "[cmd_adm]", "[cmd_dev]", "[cmd_file]", "[cmd_object]" })) != -1;
+}
+
+/**
  * Evaluates a capability token against an identity and target file.
  *
  * @param {string} cap - The capability (all/none/self/role:x/group:x).
@@ -800,10 +821,44 @@ private nomask int satisfies(string cap, string privs, string file) {
 }
 
 /**
- * Resolves whether an identity may perform op ("read"/"write") on a file
- * against the access table. Trusted code identities and admins bypass the
- * table entirely; during early boot (before groups load) everything is
- * permitted so the master can read the very files the check depends on.
+ * Evaluates whether a single identity (by privs string) may perform op on
+ * file: trusted code identities and admins bypass the table, otherwise the
+ * first matching access rule's capability decides. A missing identity
+ * yields 0 here - access_ok() handles the driver/no-actor permit case.
+ *
+ * @param {string} privs - The identity's privs string.
+ * @param {string} file - The target file path.
+ * @param {string} op - "read" or "write".
+ * @returns {int} 1 if this identity is permitted, 0 otherwise.
+ */
+private nomask int identity_ok(string privs, string file, string op) {
+  if(!stringp(privs) || !truthy(privs))
+    return 0;
+
+  if(member_array(privs, ({ "[master]", "[adm_obj]", "[daemon]" })) != -1)
+    return 1;
+
+  if(has_role(privs, "admin"))
+    return 1;
+
+  foreach(mapping rule in access_rules) {
+    if(!pcre_match(file, rule["re"]))
+      continue;
+
+    return satisfies(rule[op], privs, file);
+  }
+
+  return 0;
+}
+
+/**
+ * Resolves whether an operation on a file is permitted. Checks the acting
+ * identity first; a command ([cmd_*]) additionally carries the authority of
+ * the runner who invoked it, since ownership ('self') is inherently the
+ * player's and the runner may hold roles the command identity lacks.
+ * Trusted code identities and admins bypass the table entirely; during
+ * early boot (before groups load) everything is permitted so the master can
+ * read the very files the check depends on.
  *
  * @param {string} file - The target file path.
  * @param {object} user - The object on whose behalf the op occurs.
@@ -822,17 +877,19 @@ private nomask int access_ok(string file, object user, string op) {
   if(!stringp(privs) || !truthy(privs))
     return 1;
 
-  if(member_array(privs, ({ "[master]", "[adm_obj]", "[daemon]" })) != -1)
+  // The acting identity's own authority decides first.
+  if(identity_ok(privs, file, op))
     return 1;
 
-  if(has_role(privs, "admin"))
-    return 1;
+  // A command is a proxy for the runner who invoked it, so grant it the
+  // runner's authority too. this_caller() is the interactive command-giver
+  // at the top of the chain - stable through the call chain and not
+  // reassignable mid-flow, unlike this_body()/this_player().
+  if(is_command_privs(privs)) {
+    object runner = this_caller();
 
-  foreach(mapping rule in access_rules) {
-    if(!pcre_match(file, rule["re"]))
-      continue;
-
-    return satisfies(rule[op], privs, file);
+    if(objectp(runner) && identity_ok(query_privs(runner), file, op))
+      return 1;
   }
 
   return 0;
