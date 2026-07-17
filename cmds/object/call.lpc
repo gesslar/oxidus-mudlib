@@ -15,7 +15,7 @@
 inherit STD_CMD;
 
 private object resolve_target(object caller, string spec);
-private mixed coerce_arg(string s);
+private mixed coerce_arg(object caller, string s);
 
 void setup() {
   usage_text = "call <object>;<function>[;<arg>...]";
@@ -53,7 +53,7 @@ mixed main(
   if(spec == "" || func == "")
     return _error(caller, "Syntax: call <object>;<function>[;<arg>...]");
 
-  mixed *args = map(parts[2..], (: coerce_arg :));
+  mixed *args = map(parts[2..], (: coerce_arg($(caller), $1) :));
 
   /** @type {STD_OBJECT} */ object ob = resolve_target(caller, spec);
   if(!ob)
@@ -63,8 +63,7 @@ mixed main(
   string err = catch(result = call_other(ob, ({ func }) + args));
 
   if(err)
-    return _error(caller, "%s->%s() raised: %s",
-      file_name(ob), func, trim(err));
+    return _error(caller, "%s->%s() raised: %s", file_name(ob), func, trim(err));
 
   return _info(caller, "%s->%s() = %s",
     file_name(ob), func, sprintf("%O", result));
@@ -114,22 +113,31 @@ private object resolve_target(object caller, string spec) {
 
 /**
  * Coerces a raw string argument to a typed value: an int or float when the
- * trimmed text is wholly numeric, otherwise the string itself.
+ * trimmed text is wholly numeric, otherwise the string itself. Also tries
+ * to resolve against an named object.
  *
  * @param {string} s - The raw argument text.
  * @returns {mixed} The coerced value.
  */
-private mixed coerce_arg(string s) {
+private mixed coerce_arg(object caller, string s) {
   int i;
   float f;
+  string unquoted;
 
   s = trim(s);
+
+  if(sscanf(s, "\"%s\"", unquoted) == 1)
+    return unquoted;
 
   if(sscanf(s, "%d", i) == 1 && s == sprintf("%d", i))
     return i;
 
   if(sscanf(s, "%f", f) == 1)
     return f;
+
+  object ob = resolve_target(caller, s);
+  if(objectp(ob))
+    return ob;
 
   return s;
 }
