@@ -684,8 +684,8 @@ string resolve_path(string base_dir, string path) {
   string *stack = ({ });
   int dir_marker = 0;
 
-  base_dir ||= "/";
-  path ||= "";
+  base_dir ??= "/";
+  path ??= "";
 
   // 'here' -> the source file of the caller's current environment.
   if(path == "here") {
