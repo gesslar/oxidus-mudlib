@@ -49,9 +49,8 @@ mixed main(
     return _error(caller, "%s is too large to display; use more instead.", file);
 
   string contents = read_file(file);
-  if(nullp(contents))
-    return _error(caller, "Could not read file: %s", file);
-
+  if(falsy(contents))
+    return _error(caller, "No data in file: %s", file);
 
   caller->set_env("cwf", file);
 
