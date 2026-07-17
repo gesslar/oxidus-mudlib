@@ -243,9 +243,6 @@ varargs void emit(string sig, mixed arg...);
 int slot(string sig, string func);
 int unslot(string sig);
 
-// File: socket.c
-string dump_socket_status();
-
 // File: string.c
 string append(string source, string to_append);
 string no_ansi(string str);
