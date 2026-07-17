@@ -155,7 +155,7 @@ private nomask mixed perform_update(object tp, mapping target) {
 
   if(target.virtual && objectp(target["object"])) {
     if(roomp(target["object"])) {
-      reload_it(target["object"]);
+      reload_it(file_name(target["object"]));
     }
   }
 
