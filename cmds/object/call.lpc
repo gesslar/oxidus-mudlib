@@ -14,7 +14,6 @@
 
 inherit STD_CMD;
 
-private object resolve_target(object caller, string spec);
 private mixed coerce_arg(object caller, string s);
 
 void setup() {
@@ -45,76 +44,40 @@ mixed main(
   int sz = sizeof(parts);
 
   if(sz < 2)
-    return _error(caller, "Syntax: call <object>;<function>[;<arg>...]");
+    return _usage(caller);
 
   string spec = trim(parts[0]);
   string func = trim(parts[1]);
 
   if(spec == "" || func == "")
-    return _error(caller, "Syntax: call <object>;<function>[;<arg>...]");
+    return _usage(caller);
 
   mixed *args = map(parts[2..], (: coerce_arg($(caller), $1) :));
 
-  /** @type {STD_OBJECT} */ object ob = resolve_target(caller, spec);
+  /** @type {STD_OBJECT} */ object ob = get_object(spec, caller);
   if(!ob)
-    return _error(caller, "Could not find object: %s", spec);
+    return _error("Could not find object: %s", spec);
+
+  if(!function_exists(func, ob))
+    return _info("Function '%s' does not exist on '%O'", func, ob);
 
   mixed result;
   string err = catch(result = call_other(ob, ({ func }) + args));
 
   if(err)
-    return _error(caller, "%s->%s() raised: %s", file_name(ob), func, trim(err));
+    return _error("%s->%s() raised: %s", file_name(ob), func, trim(err));
 
-  return _info(caller, "%s->%s() = %s",
-    file_name(ob), func, sprintf("%O", result));
-}
+  if(nullp(result))
+    return _info("%s->%s() = undefined", file_name(ob), func);
 
-/**
- * Resolves an object specifier to an object without leaning on the legacy
- * get_object()/get_objects() sefuns. Checks, in order: the 'me'/'here'
- * keywords, the caller's inventory and room, livings by name, and finally a
- * file path (loading it if necessary).
- *
- * @param {STD_PLAYER} caller - The command caller.
- * @param {string} spec - The object specifier.
- * @returns {object} The resolved object, or 0 if none matched.
- */
-private object resolve_target(object caller, string spec) {
-  /** @type {STD_ROOM} */ object env = environment(caller);
-  object ob;
-
-  if(spec == "me")
-    return caller;
-
-  if(spec == "here" || spec == "env" || spec == "environment")
-    return env;
-
-  if(ob = present(spec, caller))
-    return ob;
-
-  if(env && (ob = present(spec, env)))
-    return ob;
-
-  if(ob = find_player(spec))
-    return ob;
-
-  if(ob = find_living(spec))
-    return ob;
-
-  string path = resolve_path(caller->query_env("cwd"), spec);
-
-  if(ob = find_object(path))
-    return ob;
-
-  catch(ob = load_object(path));
-
-  return ob;
+  return _info("%s->%s() = %s", file_name(ob), func, sprintf("%O", result));
 }
 
 /**
  * Coerces a raw string argument to a typed value: an int or float when the
- * trimmed text is wholly numeric, otherwise the string itself. Also tries
- * to resolve against an named object.
+ * trimmed text is wholly numeric, a quoted string is passed through verbatim,
+ * and anything that resolves to a named object is passed as that object;
+ * otherwise the string itself.
  *
  * @param {string} s - The raw argument text.
  * @returns {mixed} The coerced value.
@@ -135,7 +98,7 @@ private mixed coerce_arg(object caller, string s) {
   if(sscanf(s, "%f", f) == 1)
     return f;
 
-  object ob = resolve_target(caller, s);
+  object ob = get_object(s, caller);
   if(objectp(ob))
     return ob;
 

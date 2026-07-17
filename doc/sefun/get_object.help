@@ -5,7 +5,11 @@
 ---
 ### NAME
 
-    get_object() - Locates a target object using flexible search criteria.
+    get_object() - Resolves a target object from a specifier string. Checks,
+    in order: the 'me'/'here' keywords, the context object's inventory and
+    its environment, livings by name, and finally a file path (loading it if
+    necessary). The search context defaults to this_body() when no object is
+    supplied.
 
 ### SYNOPSIS
 
@@ -13,23 +17,27 @@
 
 ### DESCRIPTION
 
-    Locates a target object using flexible search criteria.
-
-    Comprehensive search that looks through environments and inventories for
-    matching objects. Supports special prefixes and location markers.
+    Resolves a target object from a specifier string. Checks, in order: the
+    'me'/'here' keywords, the context object's inventory and its
+    environment, livings by name, and finally a file path (loading it if
+    necessary). The search context defaults to this_body() when no object is
+    supplied.
 
 ### PARAMETERS
 
-    str  (string)
-         Search string with optional prefixes
+    str     (string)
+            The object specifier.
+
+    player  (object, optional)
+            Context object for relative lookups; defaults to this_body()
+            when not an object.
 
 ### RETURN VALUES
 
-    (object) First matching object or 0 if none found
+    (object) The first matching object, or 0 if none matched.
 
 ### EXAMPLE
 
-    {{di1}}get_object("sword");           // Basic search
-    get_object("@orc");            // Environment of orc
-    get_object("me", this_body()); // The player themselves
-    get_object("here");            // Current room{{di0}}
+    {{di1}}get_object("sword");           // present in you or your environment
+    get_object("me", this_body()); // yourself
+    get_object("here");            // your environment{{di0}}

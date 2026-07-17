@@ -190,7 +190,6 @@ object get_player(string name, object room);
 object this_body();
 object this_caller();
 varargs object get_object(string str, object player);
-varargs mixed get_objects(string str, object player, int no_arr);
 varargs object top_environment(object ob);
 varargs object *all_environment(object ob);
 varargs object *find_targets(object tp, string str, object env, function f);
