@@ -19,9 +19,6 @@
 
 ### PARAMETERS
 
-    arr    (mixed*)
-           The array to which to push an element.
-
     value  (mixed)
            The element to push onto the array.
 

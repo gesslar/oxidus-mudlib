@@ -5,8 +5,8 @@
 ---
 ### NAME
 
-    resolve_path() - Resolves a given path relative to the current path,
-    handling special cases such as user directories and relative paths.
+    resolve_path() - Resolves a path against a base directory into a
+    canonical absolute mudlib path.
 
 ### SYNOPSIS
 
@@ -14,16 +14,24 @@
 
 ### DESCRIPTION
 
-    Resolves a given path relative to the current path, handling special
-    cases such as user directories and relative paths.
+    Resolves a path against a base directory into a canonical absolute
+    mudlib path.
+
+    Relative paths resolve against base_dir; absolute paths (a leading '/')
+    ignore it. '.' and '..' components are collapsed, with '..' clamped at
+    the root, and a trailing '.' or '..' component leaves a trailing slash.
+    Special forms: here -> the source file of the caller's current
+    environment ~ -> the caller's home directory ~/rest -> the caller's home
+    directory, then rest ~name -> that user's home directory ~name/rest ->
+    that user's home directory, then rest
 
 ### PARAMETERS
 
     base_dir  (string)
-              The current path.
+              Directory that relative paths resolve against.
 
     path      (string)
-              The next path to resolve.
+              The path to resolve.
 
 ### RETURN VALUES
 

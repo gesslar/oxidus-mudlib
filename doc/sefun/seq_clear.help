@@ -17,11 +17,6 @@
     Removes all key-value pairs from a sequential map. This mirrors
     JavaScript Map.clear() behavior.
 
-### PARAMETERS
-
-    map  (mixed)
-         The sequential map to clear
-
 ### EXAMPLE
 
     {{di1}}mixed *usermap = ({{"alice", 25}, {"bob", 30}});

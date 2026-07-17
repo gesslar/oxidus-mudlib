@@ -15,11 +15,6 @@
 
     Removes and returns the last element of the array.
 
-### PARAMETERS
-
-    arr  (mixed*)
-         The array from which to pop an element.
-
 ### RETURN VALUES
 
     (mixed) The last element of the array.

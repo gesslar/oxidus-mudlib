@@ -15,11 +15,6 @@
 
     Removes and returns the first element of the array.
 
-### PARAMETERS
-
-    arr  (mixed*)
-         The array from which to shift an element.
-
 ### RETURN VALUES
 
     (mixed) The first element of the array.
