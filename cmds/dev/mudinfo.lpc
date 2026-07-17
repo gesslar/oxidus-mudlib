@@ -21,24 +21,18 @@ void setup() {
     "objects, players, non-players, and rooms.";
 }
 
-mixed main(object tp, string arg) {
-    object *obs, *tmp;
-    string out = "";
+mixed main(object _tp, string _arg) {
+  object *obs = objects();
+  string out =
+  `Mud Name: ${mud_name()}\n`
+  `Boot Number: ${BOOT_D->query_boot_number()}\n`
+  `Objects: ${sizeof(obs)}\n`
+  `Virtual: ${sizeof(filter(obs, (: virtualp :)))}\n`
+  `Livings: ${sizeof(filter(obs, (: environment($1) && living($1) :)))}\n`
+  `Players: ${sizeof(filter(obs, (: userp :)))}\n`
+  `Non-Players: ${sizeof(filter(obs, (: environment($1) && living($1) && !userp($1) :)))}\n`
+  `Rooms: ${sizeof(filter(obs, (: $1->is_room() :)))}\n`
+  ;
 
-    out += "Mud Name: " + mud_name() + "\n";
-    out += "Boot Number: " + BOOT_D->query_boot_number() + "\n";
-    out += "Objects: " + sizeof(obs = objects()) + "\n";
-
-    tmp = filter(obs, (: virtualp :));
-    out += "Virtual: " + sizeof(tmp) + "\n";
-    tmp = filter(obs, (: environment($1) && living($1) :));
-    out += "Living: " + sizeof(tmp) + "\n";
-    tmp = filter(obs, (: userp :));
-    out += "Players: " + sizeof(tmp) + "\n";
-    tmp = filter(obs, (: environment($1) && living($1) && !userp($1) :));
-    out += "Non-Players: " + sizeof(tmp) + "\n";
-    tmp = filter(obs, (: $1->is_room() :));
-    out += "Rooms: " + sizeof(tmp) + "\n";
-
-    return out;
+  return out;
 }

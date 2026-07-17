@@ -38,7 +38,6 @@
 #include "/adm/simul_efun/security.lpc"
 #include "/adm/simul_efun/seq.lpc"
 #include "/adm/simul_efun/signal.lpc"
-#include "/adm/simul_efun/socket.lpc"
 #include "/adm/simul_efun/string.lpc"
 #include "/adm/simul_efun/system.lpc"
 #include "/adm/simul_efun/time.lpc"
