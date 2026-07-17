@@ -22,9 +22,6 @@
 
 ### PARAMETERS
 
-    arr    (mixed)
-           The array to modify.
-
     value  (mixed)
            The value to remove from the array.
 

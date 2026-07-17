@@ -20,9 +20,6 @@
 
 ### PARAMETERS
 
-    map    (mixed*)
-           The sequential map to modify (array of {key, value} pairs)
-
     key    (mixed)
            The key to set
 

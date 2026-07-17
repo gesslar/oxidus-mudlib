@@ -5,17 +5,11 @@
 ---
 ### NAME
 
-    valid_path() - Resolves and validates a path, checking if it exists as
-    either a file or directory.
+    valid_path()
 
 ### SYNOPSIS
 
     string valid_path( string base_dir, string path );
-
-### DESCRIPTION
-
-    Resolves and validates a path, checking if it exists as either a file or
-    directory.
 
 ### PARAMETERS
 

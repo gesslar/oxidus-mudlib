@@ -18,9 +18,6 @@
 
 ### PARAMETERS
 
-    arr    (mixed)
-           The array to modify
-
     value  (mixed)
            The value to add uniquely
 
