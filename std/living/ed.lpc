@@ -1,5 +1,6 @@
 /**
  * @file /std/user/ed.lpc
+ *
  * Object to handle interacting with basic or advanced editor.
  *
  * @created 2024-07-20 - Gesslar
@@ -90,8 +91,6 @@ void parse_input(string input) {
 // a string function instead of a function pointer. This is because the
 // function pointer may not be valid when the callback is called.
 varargs int ed_edit(string file, mixed *cb) {
-    string err;
-
     if(in_edit() || !nullp(edit_file))
         return _error(this_object(), "You are already editing a file.");
 

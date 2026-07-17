@@ -18,6 +18,14 @@
 
 inherit __DIR__ "master/security";
 
+// Set by the driver binary, not by us: lpcshell predefines __LPCSHELL__ when
+// it compiles the mudlib.
+#ifdef __LPCSHELL__
+private nosave nomask int lpcshell = 1;
+#else
+private nosave nomask int lpcshell = 0;
+#endif
+
 /* Functions */
 
 private nosave mapping errors = ([]);
@@ -121,7 +129,9 @@ protected void epilog(int _load_empty) {
     } else {
       out += sprintf(" Done (%.2fs)", time_frac() - time);
     }
-    debug_message(out);
+
+    if(!lpcshell)
+      debug_message(out);
   }
 
   emit(SIG_SYS_BOOT);
