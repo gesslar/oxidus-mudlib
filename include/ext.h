@@ -19,7 +19,6 @@
 #define EXT_PERSIST_DATA  DIR_STD_EXT "persist_data"
 #define EXT_POTABLE       DIR_STD_EXT "potable"
 #define EXT_PROC          DIR_STD_EXT "proc"
-#define EXT_REF           DIR_STD_EXT "ref"
 #define EXT_SHOP          DIR_STD_EXT "shop"
 #define EXT_SHOP_MENU     DIR_STD_EXT "shop_menu"
 #define EXT_UNICODE       DIR_STD_EXT "unicode"
