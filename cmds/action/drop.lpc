@@ -1,0 +1,37 @@
+/**
+ * @file /cmds/action/drop.lpc
+ *
+ * The drop command.
+ *
+ * @created 2026-07-16 - Gesslar
+ * @last_modified 2026-07-16 - Gesslar
+ *
+ * @history
+ * 2026-07-16 - Gesslar - Created
+ */
+
+inherit STD_ACT;
+
+mixed main(
+  /** @type {STD_BODY} */ object tp,
+  string arg
+) {
+  if(!arg)
+    return "Drop what?";
+
+  /** @type {STD_ITEM} */ object ob = get_object(arg);
+  if(   !ob
+     || !present(ob, tp)
+     || !tp->can_see(ob))
+    return "You do not posses that.";
+
+  if(call_if(ob, "prevent_drop", tp))
+    return "You cannot drop that.";
+
+  if(ob->move(environment(tp)))
+    return "You could not drop that.";
+
+  tp->simple_action("$N $vdrop a $o.", ob);
+
+  return 1;
+}

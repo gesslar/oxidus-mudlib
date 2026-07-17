@@ -1,0 +1,63 @@
+/**
+ * @file /cmds/std/get.lpc
+ *
+ * The get command. Picks things up and out of containers.
+ *
+ * @created 2026-07-16 - Gesslar
+ * @last_modified 2026-07-16 - Gesslar
+ *
+ * @history
+ * 2026-07-16 - Gesslar - Created
+ */
+
+inherit STD_ACT;
+
+mixed main(
+  /** @type {STD_BODY} */ object tp,
+  string arg
+) {
+  if(!arg)
+    return "Get what?";
+
+  /** @type {STD_ROOM|STD_CONTAINER} */ object env;
+  string ob_id, env_id;
+
+  if(sscanf(arg, "%s from %s", ob_id, env_id) == 2) {
+    env = get_object(env_id);
+    if(  !env
+      || (!present(env, tp) && !present(env, environment(tp)))
+      || !tp->can_see(env)
+    )
+      return `You do not possess ${env_id}.`;
+  } else {
+    ob_id = arg;
+    env = environment(tp);
+  }
+
+  if(!env->is_container())
+    return `${/** @type {STD_ITEM} */ (env)->query_short()} is not a container.`;
+
+  if(env->is_closed())
+    return `The ${/** @type {STD_ITEM} */ (env)->query_short()} is closed.`;
+
+  /** @type {STD_ITEM} */ object ob = present(ob_id, env);
+  if(    !ob
+      || !tp->can_see(ob)
+    ) {
+    return `You do not see ${ob_id}.`;
+  }
+
+  if(call_if(ob, "prevent_get", tp))
+    return 1;
+
+  if(ob->move(tp))
+    return `You could not get the ${ob->query_short()}.`;
+
+  if(env == environment(tp)) {
+    tp->simple_action("$N $vpick up a $o.", ob);
+  } else {
+    tp->simple_action("$N $vget a $o from a $o1.", ob, env);
+  }
+
+  return 1;
+}
