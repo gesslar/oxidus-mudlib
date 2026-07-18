@@ -14,212 +14,61 @@
 
 #include <simul_efun.h>
 
-//object.c
-
-//Tacitus @ LPUniversity
-//Grouped on October 22nd, 2005
-
-/*
-//      get_object() and get_objects()
-//      Created by Pallando@Ephemeral Dale   (92-06)
-//      Created by Watcher@TMI  (92-09-27)
-//      Revised by Watcher and Pallando (92-12-11)
-//      Re-written by Pallando (92-12-18)
-//      get_objects() added by Pallando@Tabor (93-03-02)
-//      "s", "c" & ">" added by Grendel@TMI-2 (93-07-14)
-//
-//      Use all possible methods to locate an object by the inputed
-//      name and return the object pointer if located.
-// Ideas for future expansion (please, anyone feel free to add them if they
-//                             have the time)
-//   "wizards" - the subset of "users" who are wizards.
-//   "livings" - all living objects
-//   "objects" - all loaded objects
-//   check the capitalized and lower_case version of str
-//   check wizard's home directories.
-*/
-
 /**
- * Locates a target object using flexible search criteria.
+ * Resolves a target object from a specifier string. Checks, in order: the
+ * 'me'/'here' keywords, the context object's inventory and its environment,
+ * livings by name, and finally a file path (loading it if necessary). The
+ * search context defaults to this_body() when no object is supplied.
  *
- * Comprehensive search that looks through environments and inventories
- * for matching objects. Supports special prefixes and location markers.
- *
- * @param {string} str - Search string with optional prefixes
- * @param {object STD_PLAYER} [player] - Context player for relative searches
- * @returns {object} First matching object or 0 if none found
- * @see get_objects
+ * @param {string} str - The object specifier.
+ * @param {object} [player] - Context object for relative lookups; defaults to
+ *                            this_body() when not an object.
+ * @returns {object} The first matching object, or 0 if none matched.
  * @example
- * get_object("sword");           // Basic search
- * get_object("@orc");            // Environment of orc
- * get_object("me", this_body()); // The player themselves
- * get_object("here");            // Current room
+ * get_object("sword");           // present in you or your environment
+ * get_object("me", this_body()); // yourself
+ * get_object("here");            // your environment
  */
 varargs object get_object(string str, object player) {
-  object what;
-  mixed tmp;
-
-  if(!str) return 0;
-  if(!player || !living(player)) player = this_body();
-  if(sscanf(str, "@%s", tmp) &&
-     (tmp = get_object(tmp, player)) &&
-     (what = environment(tmp))) {
-    return what;
-  }
-
-  if(player) { //  Check existance of this_body()
-    if(str == "me")
-      return player;
-    if(what = present(str, player))
-      return what; // Inventory check
-    if(what = environment(player)) { // Environment check
-      if(str == "here" || str == "env" || str == "environment")
-        return what;
-      if(what = present(str, what))
-        return what;
-    }
-  }
-
-  // Call might be made by a room so make a previous_object() check
-  // first just to be sure
-  if(what = present(str, previous_object())) return what;
-
-  //  Check to see if a living object matches the name
-  if(what = find_player(str)) return what;
-  if(what = find_living(str)) return what;
-
-  // Search for a matching file_name, completing path with
-  // user's present path
-  if(player)
-    str = resolve_path((string)player->query_env("cwd"), str);
-
-  what = find_object(str);
-  if(!what && (file_size(str) >= 0 || file_size(source_file(str)) >= 0))
-    catch(what = load_object(str));
-
-  return what;
-}
-
-// Created by Pallando@Tabor (93-03-02)
-// player - as per get_object()
-// no_arr - if specified, only 0 or an object will be returned,
-//          otherwise an array of objects may also be returned.
-// str - eg
-//   "pallando" - returns the object, /std/user#123
-//   "pallando:i" - returns pallando's inventory
-//   "pallando:e" - returns pallando's environment
-//   "pallando:e:d:12" - returns the 12th object in the deep inventory of
-//                       the room that pallando is in.
-//   "caractacus:e:lady" - finds a lady of the court of King Caractacus 8-)
-//   "users:rod" - searches the inventories of all users for a rod.
-//   "users:e:guard" - searches the environments of all users for a guard.
-//   "/std/ghost:c" - all the children of /std/ghost
-//   "users:s" - all the shadows of users
-/**
- * Locates multiple objects using extended search syntax.
- *
- * Supports advanced search patterns with colons for relationships:
- * - :i = inventory
- * - :e = environment
- * - :d = deep inventory
- * - :c = children
- * - :s = shadows
- *
- * @param {string} str - Search pattern with relationship markers
- * @param {object STD_PLAYER} [player] - Context player for relative searches
- * @param {int} [no_arr] - Return single object instead of array
- * @returns {mixed} Matching object(s) or 0 if none found
- * @see get_object
- * @example
- * get_objects("users:i");      // All items in all users' inventories
- * get_objects("room:e:guard"); // Guards in room's environment
- * get_objects("/std/monster:c"); // All monster clones
- */
-varargs mixed get_objects(string str, object player, int no_arr) {
-  mixed base, tmp, ret;
-  object what;
-  int i, s;
-
-  // Hmm.  i and s do several jobs here.  It would be clearer to use different
-  // variables (with longer names) for each job.
-  // Is it worth slowing the function (using more memory) to do this?
+  object ob, env;
 
   if(!str)
     return 0;
 
-  s = strlen(str);
-  i = s;
+  if(!objectp(player))
+    player = this_body();
 
-  while(i-- && (str[i..i] != ":")); // a reverse sscanf
+  if(objectp(player)) {
+    if(str == "me")
+      return player;
 
-  if((i > 0) && (i < (s - 1))) { // of form "%s:%s"
-    base = get_objects(str[0..(i-1)], player);
-    str = str[(i+1)..s];
-    if(!base)
-      return 0;
-    if(!pointerp(base))
-      base = ({ base });
-    s = sizeof(base);
-    ret = ({ });
-    if(str == "e") {
-      while(s--)
-        if(tmp = environment(base[s]))
-      ret += ({ tmp });
-    } else if(str == "i") {
-      while(s--)
-        if(tmp = all_inventory(base[s]))
-          ret += (pointerp(tmp) ? tmp : ({ tmp }));
-    } else if(str == "d") {
-      while(s--)
-        if(tmp = deep_inventory(base[s]))
-          ret += (pointerp(tmp) ? tmp : ({ tmp }));
-    } else if(sscanf(str, "%d", i)) {
-      if((i > -1) && (i < s))
-        return base[i];
-      else
-        return 0;
-    } else if(str == "c") {
-      while(s--)
-        if(tmp = children(base_name(base[s])))
-          ret += tmp;
-    } else if(str == "s") {
-      while(s--)
-        for(tmp=shadow(base[s],0);tmp;tmp=shadow(tmp,0))
-          ret += ({ tmp });
-    } else if(strlen(str) && str[0] == '>') {
-      str = extract(str,1);
-      while(s--)
-        if(objectp(tmp=(mixed)call_other(base[s],str)))
-          ret += ({ tmp });
-        else if(pointerp(tmp) && sizeof(tmp) && objectp(tmp[0]))
-          ret += tmp;
-    } else {
-      // This is the location to add more syntax options if wanted such as
-      // ith item in jth base object, all such items in all base objects, etc
-      while(s--)
-        if(what = present(str, base[s]))
-          return what;
-      return 0;
+    if(ob = present(str, player))
+      return ob;
+
+    if(env = environment(player)) {
+      if(str == "here" || str == "env" || str == "environment")
+        return env;
+
+      if(ob = present(str, env))
+        return ob;
     }
-
-    switch(sizeof(ret)) {
-      case 0:
-        return 0;
-        case 1:
-        return ret[0];
-    }
-
-    return(no_arr ? ret[0] : ret);
   }
 
-  if(str == "users") {
-    ret = users();
-    if(!no_arr) return ret;
-    if(sizeof(ret)) return ret[0];
-    return 0;
-  }
+  if(ob = find_player(str))
+    return ob;
 
-  return get_object(str, player);
+  if(ob = find_living(str))
+    return ob;
+
+  if(objectp(player))
+    str = resolve_path(player->query_env("cwd"), str);
+
+  if(ob = find_object(str))
+    return ob;
+
+  catch(ob = load_object(str));
+
+  return ob;
 }
 
 /**
