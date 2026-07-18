@@ -1,0 +1,30 @@
+/**
+ * @file /cmds/dev/wall.lpc
+ *
+ * Write to all.
+ *
+ * @created 2026-07-18 - Gesslar
+ * @last_modified 2026-07-18 - Gesslar
+ *
+ * @history
+ * 2026-07-18 - Gesslar - Created
+ */
+
+inherit STD_CMD;
+
+void setup() {
+  usage_text = "wall <text>";
+}
+
+mixed main(
+  /** @type {STD_PLAYER} */ object tp,
+  string str
+) {
+  if(!str)
+    return _usage(tp);
+
+  object *users = filter(users(), (: environment :));
+  tell(users, `[${ldatetime()}] - ${tp->query_name()}\n\n${append(str, "\n")}`);
+
+  return 1;
+}
