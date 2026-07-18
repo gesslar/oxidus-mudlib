@@ -303,10 +303,14 @@ private int _feedback(string type, mixed args...) {
   if(!result)
     return 0;
 
-  if(tp && interactive(tp))
-    tell(tp, append(result.message, "\n"));
-  else
+  if(tp && interactive(tp)) {
+    if(type == "question")
+      tell(tp, result.message);
+    else
+      tell(tp, append(result.message, "\n"));
+  } else {
     debug(result.message);
+  }
 
   return 1;
 }
