@@ -23,6 +23,7 @@
 
 #include <ed.h>
 
+private void parse_input(string input);
 private void finish_exit_callback();
 protected void abort_edit();
 
@@ -83,7 +84,7 @@ public int start_edit(string file, mixed *cb) {
 
   tell(this_object(), text);
 
-  input_to("parse_input", 0);
+  input_to(parse_input, 0);
 }
 
 private void parse_input(string input) {
@@ -97,7 +98,7 @@ private void parse_input(string input) {
 
   tell(this_object(), "║ ");
 
-  input_to("parse_input", 0);
+  input_to(parse_input, 0);
 }
 
 private void finish_exit_callback() {
@@ -211,7 +212,7 @@ private void ed_line(string line) {
 private void ed_continue() {
   if(in_edit(this_object())) {
     tell(this_object(), ed_prompt());
-    input_to("ed_line", 0);
+    input_to(ed_line, 0);
   } else {
     mixed *cb = ed_post;
     string target = ed_target;
