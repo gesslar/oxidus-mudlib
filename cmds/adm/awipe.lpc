@@ -33,7 +33,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string account) {
     return _error("Access denied.");
 
   if(!account)
-    return _info("Usage: awipe <account>");
+    return _usage(caller);
 
   account = lower_case(account);
 
@@ -42,8 +42,9 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string account) {
 
   _question(
     caller,
-    "Are you sure you want to delete account " + account + " and all of its "
-    "characters? [y/n] ", MSG_PROMPT
+    "Are you sure you want to delete account %s and all of its "
+    "characters? [y/n] ",
+    account
   );
 
   input_to("confirm_awipe", 0, caller, account);
@@ -53,7 +54,7 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string account) {
 
 void confirm_awipe(string str, object caller, string account) {
   if(str != "y" && str != "yes") {
-    _info(caller, "Abort [awipe]: Aborting account wipe.");
+    _info(caller, "Aborting account wipe.");
     return;
   }
 
@@ -68,13 +69,14 @@ void confirm_awipe(string str, object caller, string account) {
     master()->purge_roles(character);
 
     if(body = find_player(character)) {
-      _info(caller, "Disconnecting user '" + character + "'.");
+      _info(caller, "Disconnecting user '%s'.", character);
       _ok(body, "You watch as your body dematerializes.");
 
       if(environment(body)) {
         tell_down(
           environment(body),
-          "You watch as " + capitalize(character) + " dematerializes before your eyes.\n",
+          `You watch as ${capitalize(character)} dematerializes before your `
+          `eyes.\n`,
           0,
           ({ body })
         );
@@ -111,5 +113,7 @@ void confirm_awipe(string str, object caller, string account) {
   }
 
   _ok(caller, "Account '%s' has been wiped.", account);
-  log_file(LOG_AWIPE, capitalize(query_privs(caller)) + " awipes account " + account + " on " + ctime(time()) + "\n");
+  log_file(LOG_AWIPE,
+    `${capitalize(query_privs(caller))} awipes account ${account} on `
+    `${ldatetime()}\n`);
 }
