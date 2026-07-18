@@ -16,9 +16,9 @@
 #include "/std/living/include/pager.h"
 #include <command.h>
 
-private nosave mapping __cmdHandlers = ([]);
-private string *__cmdPaths = ({});
-private nosave string *__cmdHistory = ({});
+private nosave mapping __command_handlers = ([]);
+private string *__command_paths = ({});
+private nosave string *__command_history = ({});
 
 /**
  * Adds a command handler to this object.
@@ -30,15 +30,27 @@ private nosave string *__cmdHistory = ({});
  * @errors If command or action parameters are invalid types
  */
 public void add_command(mixed command, mixed action) {
+  assert_arg(
+    stringp(command) || pointerp(command) && uniformp(command, T_STRING),
+    1,
+    "Command must be a string or array of strings."
+  );
+
+  assert_arg(
+    stringp(action) || functionp(action),
+    2,
+    "Action must be a string or a function."
+  );
+
   if(stringp(command)) {
     remove_command(command);
     if(stringp(action)) {
       if(!function_exists(action))
         error("No such function " + action + " in " + file_name() + ".\n");
 
-      __cmdHandlers[command] = action;
+      __command_handlers[command] = action;
     } else if(valid_function(action)) {
-      __cmdHandlers[command] = action;
+      __command_handlers[command] = action;
     } else {
       error("Illegal action " + action + " in " + file_name() + ".\n");
     }
@@ -56,12 +68,18 @@ public void add_command(mixed command, mixed action) {
  * @param {string | string*} command - Command name or array of command names
  */
 public void remove_command(mixed command) {
+  assert_arg(
+    stringp(command) || pointerp(command) && uniformp(command, T_STRING),
+    1,
+    "Command must be a string or array of strings."
+  );
+
   if(stringp(command)) {
-    map_delete(__cmdHandlers, command);
+    map_delete(__command_handlers, command);
   } else if(pointerp(command)) {
     foreach(mixed cmd in command)
       if(stringp(cmd))
-        map_delete(__cmdHandlers, cmd);
+        map_delete(__command_handlers, cmd);
   }
 }
 
@@ -71,9 +89,15 @@ public void remove_command(mixed command) {
  * @param {function | string} action - Function name or pointer to remove
  */
 public void remove_command_all(mixed action) {
-  foreach(mixed command, mixed act in __cmdHandlers) {
+  assert_arg(
+    stringp(action) || functionp(action),
+    1,
+    "Action must be a string or a function."
+  );
+
+  foreach(mixed command, mixed act in __command_handlers) {
     if(act == action) {
-      map_delete(__cmdHandlers, command);
+      map_delete(__command_handlers, command);
       remove_command(command);
     }
   }
@@ -87,7 +111,13 @@ public void remove_command_all(mixed action) {
  *  found
  */
 public mixed query_command(string command) {
-  return __cmdHandlers[command];
+  assert_arg(
+    stringp(command),
+    1,
+    "Command must be a string."
+  );
+
+  return __command_handlers[command];
 }
 
 /**
@@ -96,7 +126,7 @@ public mixed query_command(string command) {
  * @returns {mapping} Copy of the commands mapping
  */
 public mapping query_commands() {
-  return copy(__cmdHandlers);
+  return copy(__command_handlers);
 }
 
 /**
@@ -119,18 +149,24 @@ public string *query_all_commands() {
  *  array
  */
 public string *query_matching_commands(string command) {
+  assert_arg(
+    stringp(command),
+    1,
+    "Command must be a string."
+  );
+
   string *matches = allocate(1);
 
-  if(nullp(__cmdHandlers[command]))
+  if(nullp(__command_handlers[command]))
     return ({});
 
   matches[0] = command;
 
-  foreach(mixed cmd, mixed action in __cmdHandlers) {
+  foreach(mixed cmd, mixed action in __command_handlers) {
     if(cmd == matches[0])
       continue;
 
-    if(action == __cmdHandlers[command])
+    if(action == __command_handlers[command])
       matches += ({ cmd });
   }
 
@@ -141,7 +177,7 @@ public string *query_matching_commands(string command) {
  * Initialises the commands mapping to an empty state.
  */
 public void init_commands() {
-  __cmdHandlers = ([]);
+  __command_handlers = ([]);
 }
 
 /**
@@ -153,13 +189,31 @@ public void init_commands() {
  * @returns {mixed} Result of command evaluation, or undefined if no handler
  */
 public mixed evaluate_command(object user, string command, string arg) {
-  if(stringp(__cmdHandlers[command]))
-    return call_other(this_object(), __cmdHandlers[command], user, arg);
+  assert_arg(
+    objectp(user) && living(user),
+    1,
+    "User must be a living object."
+  );
 
-  if(!valid_function(__cmdHandlers[command]))
+  assert_arg(
+    stringp(command),
+    2,
+    "Command must be a string."
+  );
+
+  assert_arg(
+    arg == 0 || stringp(arg),
+    3,
+    "Arg must be 0 or a string."
+  );
+
+  if(stringp(__command_handlers[command]))
+    return call_other(this_object(), __command_handlers[command], user, arg);
+
+  if(!valid_function(__command_handlers[command]))
     return null;
 
-  function action = __cmdHandlers[command];
+  function action = __command_handlers[command];
 
   return action(user, arg);
 }
@@ -168,10 +222,11 @@ public mixed evaluate_command(object user, string command, string arg) {
  * Driver apply for processing input before command parsing.
  *
  * @apply
+ * @private
  * @param {string} arg - The raw input string
  * @returns {string} The processed input string
  */
-string process_input(string arg) {
+private string process_input(string arg) {
   return arg;
 }
 
@@ -181,30 +236,35 @@ string process_input(string arg) {
  * @returns {string*} Copy of the command paths array
  */
 public string *get_path() {
-  return copy(__cmdPaths);
+  return copy(__command_paths);
 }
 
 /**
  * Adds a directory to the command search path. Requires admin privileges or
  * that the caller is this body.
  *
- * @param {string} str - The directory path to add
+ * @param {string} path - The directory path to add
  * @returns {int} 1 on success, 0 on failure
  */
-public int add_path(string str) {
+public int add_path(string path) {
+  assert_arg(
+    stringp(path),
+    1,
+    "Path must be a string."
+  );
+
   if(!adminp(previous_object()) && this_body() != this_object())
     return 0;
 
-  if(includes(__cmdPaths, str))
+  if(includes(__command_paths, path))
     return 0;
 
-  str = append(str, "/");
+  path = append(path, "/");
 
-  if(!directory_exists(str))
+  if(!directory_exists(path))
     return 0;
 
-  __cmdPaths = __cmdPaths || ({});
-  push(ref __cmdPaths, str);
+  push(ref __command_paths, path);
 
   return 1;
 }
@@ -217,6 +277,12 @@ public int add_path(string str) {
  *  paths
  */
 public void set_path(mixed path) {
+  assert_arg(
+    stringp(path) || pointerp(path) && uniformp(path, T_STRING),
+    1,
+    "Path must be a string or array of strings."
+  );
+
   string *paths;
 
   if(stringp(path))
@@ -231,17 +297,23 @@ public void set_path(mixed path) {
  * Removes a directory from the command search path. Requires admin privileges
  * or that the caller is this body.
  *
- * @param {string} str - The directory path to remove
+ * @param {string} path - The directory path to remove
  * @returns {int} 1 on success, 0 on failure
  */
-public int rem_path(string str) {
+public int rem_path(string path) {
+  assert_arg(
+    stringp(path),
+    1,
+    "Path must be a string."
+  );
+
   if(!adminp(previous_object()) && this_body() != this_object())
     return 0;
 
-  if(!includes(__cmdPaths, str))
+  if(!includes(__command_paths, path))
     return 0;
 
-  __cmdPaths -= ({str});
+  __command_paths -= ({path});
 
   return 1;
 }
@@ -291,16 +363,17 @@ public void add_ghost_paths() {
  * @returns {string*} Array of command history entries
  */
 public nomask varargs string *query_command_history(int index, int range) {
-  if(this_body() != this_object()
-      && !adminp(previous_object()))
+  if(    this_body() != this_object()
+      && !adminp(previous_object())
+    )
     return ({});
 
   if(!index)
-    return __cmdHistory + ({});
+    return copy(__command_history);
   else if(range)
-    return __cmdHistory[index..range] + ({});
+    return copy(__command_history[index..range]);
   else
-    return ({ __cmdHistory[index] });
+    return ({ __command_history[index] });
 }
 
 /**
@@ -365,9 +438,9 @@ public int command_hook(string arg) {
   }
 
   if(arg)
-    __cmdHistory += ({ verb + " " + arg });
+    push(& __command_history,`${verb} ${arg}`);
   else
-    __cmdHistory += ({ verb });
+    push(& __command_history, verb);
 
   // Communication checks
   catch {
@@ -385,7 +458,7 @@ public int command_hook(string arg) {
     verb = "go";
   }
 
-  cmds = map(__cmdPaths, (: $1 + $(verb) + ".lpc" :));
+  cmds = map(__command_paths, (: $1 + $(verb) + ".lpc" :));
   cmds = filter(cmds, (: file_exists :));
 
   sz = sizeof(cmds);
