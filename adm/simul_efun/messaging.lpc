@@ -59,7 +59,7 @@ varargs void tell_direct(object ob, string str, int msg_type) {
  * @param {string} str - The message string to send (sent to previous_object()).
  *
  * @overload
- * @param {object} ob - The object to send the message to.
+ * @param {object | object*} ob - The object to send the message to.
  * @param {string} str - The message string to send.
  * @param {int} [msg_type] - The message type.
  *
