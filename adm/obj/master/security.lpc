@@ -1031,16 +1031,20 @@ private int valid_object(object _ob) {
 /**
  * Driver apply: decides whether a file may override an efun.
  *
- * @TODO Update later.
- *
  * @apply
  * @param {string} _file - The file attempting the override.
  * @param {string} _efun_name - The name of the efun being overridden.
- * @param {string} _mainfile - The file defining the override.
- * @returns {int} Always 1.
+ * @param {string} mainfile - The file defining the override.
+ * @returns {int} 1 if permitted, 0 if not.
  */
-private int valid_override(string _file, string _efun_name, string _mainfile) {
-  return 1;
+public int valid_override(string _file, string _efun_name, string mainfile) {
+  if(mainfile == `${ADM_OBJ_SIMUL_EFUN}.lpc`)
+    return 1;
+
+  if(starts_with(mainfile, DIR_ADM_SIMUL_EFUN))
+    return 1;
+
+  return 0;
 }
 
 /**

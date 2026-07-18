@@ -24,7 +24,7 @@
 #include <ed.h>
 
 private void finish_exit_callback();
-private void abort_edit();
+protected void abort_edit();
 
 public string query_editing();
 
@@ -137,7 +137,7 @@ private void finish_exit_callback() {
   edit_file = post_edit = temp_file = null;
 }
 
-private void abort_edit() {
+protected void abort_edit() {
   if(!nullp(temp_file))
     defer((: rm, temp_file :));
 

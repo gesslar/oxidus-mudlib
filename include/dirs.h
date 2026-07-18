@@ -4,6 +4,7 @@
 #define DIR_ADM                 "/adm/"
 #define DIR_ADM_ETC             DIR_ADM "etc/"
 #define DIR_ADM_OBJ             DIR_ADM "obj/"
+#define DIR_ADM_SIMUL_EFUN      DIR_ADM "simul_efun/"
 #define DIR_CMDS                "/cmds/"
 #define DIR_CMDS_ACTION         DIR_CMDS "action/"
 #define DIR_CMDS_ADM            DIR_CMDS "adm/"

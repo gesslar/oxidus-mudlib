@@ -46,7 +46,7 @@ void shutdown(int how) {
   object po = previous_object();
 
   if(po != master() && po != load_object(SHUTDOWN_D))
-      return;
+    return;
 
   emit(SIG_SYS_SHUTDOWN);
   PERSIST_D->persist_objects();
