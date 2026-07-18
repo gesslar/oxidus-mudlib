@@ -17,7 +17,7 @@ Help files are plain text files stored without extension in `doc/` subdirectorie
 |---|---|---|
 | `doc/general/` | All players | Always |
 | `doc/game/` | All players | Always |
-| `doc/wiz/` | Developers | `devp(tp)` is true |
+| `doc/help/developer/` | Developers | `devp(tp)` is true |
 | `doc/driver/efun/` | Developers | `devp(tp)` is true |
 | `doc/driver/apply/` | Developers | `devp(tp)` is true |
 | `doc/admin/` | Admins | `adminp(tp)` is true |
@@ -49,7 +49,7 @@ The help command (`cmds/std/help.lpc`) searches in this order:
 
 1. **Command path** — checks if `<verb>.c` exists in the player's PATH and has `query_help()`
 2. **Help directories** — searches `HELP_PATH` (`doc/general/`, `doc/game/`) for a matching file
-3. **Dev directories** — if player is a developer, also checks `doc/wiz/`, `doc/driver/efun/`, `doc/driver/apply/`
+3. **Dev directories** — if player is a developer, also checks `doc/help/developer/`, `doc/driver/efun/`, `doc/driver/apply/`
 4. **Admin directory** — if player is admin, also checks `doc/admin/`
 
 If nothing is found, the failed search is logged to `log/help.log`.
@@ -106,7 +106,7 @@ The autodoc daemon (`adm/daemons/autodoc.lpc`) parses JSDoc-style comments from 
 
 Supported tags: `@description`, `@def`, `@param`, `@returns`, `@example`
 
-Run via the `autodoc scan` wizard command.
+Run via the `autodoc scan` developer command.
 
 ## Creating a New Help File
 
@@ -135,7 +135,7 @@ See also: commands
 
 ### Example: Developer Help File
 
-File: `doc/wiz/virtual_objects`
+File: `doc/help/developer/virtual_objects`
 ```
 Virtual objects are data-driven objects loaded from definition files rather
 than compiled LPC source.

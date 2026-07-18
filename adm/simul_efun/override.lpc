@@ -60,7 +60,7 @@ void shutdown(int how) {
  * privileges when the caller is an admin or the master object, when the
  * object resides in a player's home directory and the privilege string
  * matches the player name, or when the caller is the eval command (which
- * runs evaluated code under the invoking wizard's identity).
+ * runs evaluated code under the invoking developer's identity).
  *
  * @param {object} ob - The object to set privileges on
  * @param {string} privs - The privilege string to assign

@@ -16,7 +16,7 @@ inherit STD_CMD;
 void setup() {
   usage_text = "echo <message>";
   help_text =
-"This command provides a wizard with the ability to print a message to everyone "
+"This command provides a developer with the ability to print a message to everyone "
 "in the room.\n"
 "\n"
 "* The message is printed as-is\n"

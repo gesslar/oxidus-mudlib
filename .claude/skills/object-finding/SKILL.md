@@ -1,6 +1,6 @@
 ---
 name: object-finding
-description: Understand and use the object-finding simul_efuns for Oxidus. Covers find_target, find_targets, find_ob, get_object, get_objects, present_livings, present_players, present_npcs, present_clones, clones, top_environment, same_env_check, accessible_objects, this_body, and this_caller.
+description: Understand and use the object-finding simul_efuns for Oxidus. Covers find_target, find_targets, find_ob, get_object, present_livings, present_players, present_npcs, present_clones, clones, top_environment, same_env_check, accessible_objects, this_body, and this_caller.
 ---
 
 # Object Finding Skill
@@ -20,8 +20,7 @@ You are helping write or modify code that needs to locate objects in the game wo
 | Find a specific player by name in a room | `get_player(name, room)` |
 | Find all clones of a file in a container | `present_clones(file, container)` |
 | Find all clones of a file in the game | `clones(file)` |
-| Flexible search with keywords ("me", "here", "@") | `get_object(str, player)` |
-| Complex hierarchical search (`:i`, `:e`, `:d`) | `get_objects(str, player)` |
+| Flexible search with keywords ("me", "here") | `get_object(str, player)` |
 | Programmatic file-name match in a container | `find_ob(ob, container)` |
 | Get the room an object is ultimately in | `top_environment(ob)` |
 | Check if two objects share an environment | `same_env_check(ob1, ob2)` |
@@ -192,45 +191,15 @@ varargs object get_object(string str, object player)
 ```
 
 **Search order:**
-1. `@name` prefix — returns environment of the named object
-2. `"me"` — returns the player
-3. Player inventory (`present(str, player)`)
-4. `"here"` / `"env"` / `"environment"` — returns player's environment
-5. Environment inventory (`present(str, environment(player))`)
-6. `previous_object()` inventory
-7. `find_player(str)` — global player lookup
-8. `find_living(str)` — global living lookup
-9. Path resolution + `load_object()` — file-based lookup
+1. `"me"` — returns the player
+2. Player inventory (`present(str, player)`)
+3. `"here"` / `"env"` / `"environment"` — returns player's environment
+4. Environment inventory (`present(str, environment(player))`)
+5. `find_player(str)` — global player lookup
+6. `find_living(str)` — global living lookup
+7. Path resolution (`resolve_path` against the caller's cwd) + `find_object()`/`load_object()` — file-based lookup
 
-Best for wizard commands and flexible user input parsing.
-
-### get_objects(str, player, no_arr)
-
-Extended search with relationship markers. Supports chaining.
-
-```lpc
-varargs mixed get_objects(string str, object player, int no_arr)
-```
-
-**Relationship markers** (colon-separated):
-| Marker | Meaning |
-|---|---|
-| `:i` | Inventory of base objects |
-| `:e` | Environment of base objects |
-| `:d` | Deep inventory of base objects |
-| `:c` | All children (clones) of base file |
-| `:s` | All shadows of base objects |
-| `:>method` | Call method, use result if object(s) |
-| `:N` (number) | Array index into results |
-
-```lpc
-get_objects("users:i")           // All items in all users' inventories
-get_objects("bob:e:guard")       // Guards in Bob's room
-get_objects("/std/monster:c")    // All monster clones
-get_objects("users:s")           // All shadows on users
-get_objects("users:0")           // First user
-get_objects("users")             // All users (special keyword)
-```
+The context object defaults to `this_body()` when not supplied. Best for developer commands and flexible user input parsing.
 
 ### find_ob(ob, container)
 

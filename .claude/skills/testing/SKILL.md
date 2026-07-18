@@ -1,11 +1,11 @@
 ---
 name: testing
-description: Write and run unit tests for Oxidus. Covers the STD_TEST framework, test file layout under /tests/, area runners (STD_TEST_RUNNER), the runtests wizcmd, assertion macros, deep-equality via same(), sad-path testing via master test-mode suppression, pending() tests for known-broken boundaries, the @lpc-nocheck directive, and LPC quirks that bite tests (0 vs undefined, lambda capture limits, loose array compare).
+description: Write and run unit tests for Oxidus. Covers the STD_TEST framework, test file layout under /tests/, area runners (STD_TEST_RUNNER), the runtests developer command, assertion macros, deep-equality via same(), sad-path testing via master test-mode suppression, pending() tests for known-broken boundaries, the @lpc-nocheck directive, and LPC quirks that bite tests (0 vs undefined, lambda capture limits, loose array compare).
 ---
 
 # Testing
 
-You are writing or running unit tests for Oxidus. Tests live under `/tests/`, mirroring the source-tree layout, and run via the `runtests` wizard command.
+You are writing or running unit tests for Oxidus. Tests live under `/tests/`, mirroring the source-tree layout, and run via the `runtests` developer command.
 
 Follow `/lpc-coding-style` for all formatting.
 
@@ -25,7 +25,7 @@ Follow `/lpc-coding-style` for all formatting.
 | `/std/test/test.lpc` | `STD_TEST` — base for individual test files |
 | `/std/test/runner.lpc` | `STD_TEST_RUNNER` — base for area runners |
 | `/include/test.h` | Assertion macros (system include: `#include <test.h>`) |
-| `/cmds/dev/runtests.lpc` | The `runtests` wizard command |
+| `/cmds/dev/runtests.lpc` | The `runtests` developer command |
 
 `STD_TEST` is defined in `mudlib.h` (auto-included via `global.h`); same for `STD_TEST_RUNNER`.
 

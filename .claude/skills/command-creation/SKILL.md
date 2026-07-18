@@ -25,10 +25,10 @@ You are helping create or modify commands for Oxidus. Commands are LPC files tha
 | Directory | Purpose | Config File |
 |---|---|---|
 | `cmds/std/` | Standard player commands | `adm/etc/standard_paths` |
-| `cmds/dev/` | Wizard/developer commands | `adm/etc/wizard_paths` |
-| `cmds/adm/` | Admin commands | `adm/etc/wizard_paths` |
-| `cmds/file/` | File-related commands | `adm/etc/wizard_paths` |
-| `cmds/object/` | Object manipulation commands | `adm/etc/wizard_paths` |
+| `cmds/dev/` | Developer commands | `adm/etc/dev_paths` |
+| `cmds/adm/` | Admin commands | `adm/etc/admin_paths` |
+| `cmds/file/` | File-related commands | `adm/etc/dev_paths` |
+| `cmds/object/` | Object manipulation commands | `adm/etc/dev_paths` |
 | `cmds/ability/` | Ability-based commands | |
 | `cmds/spell/` | Spell commands | |
 | `cmds/ghost/` | Ghost/unregistered user commands | `adm/etc/ghost_paths` |
@@ -49,7 +49,7 @@ Also: `STD_REPORTER` (`std/cmd/reporter.lpc`) — for bug/idea/typo reports, inh
 
 | Inherit | When |
 |---|---|
-| `STD_CMD` | General commands, info display, wizard tools — no action checks needed |
+| `STD_CMD` | General commands, info display, developer tools — no action checks needed |
 | `STD_ACT` | Player actions (drop, eat, close) — includes `EXT_CHECKS` for validation |
 | `STD_ABILITY` | Abilities with HP/SP/MP costs, cooldowns, and condition checks |
 | `STD_SPELL` | Spells (extends ability with spell-specific features) |
@@ -317,7 +317,7 @@ mixed main(object tp, string arg) {
 }
 ```
 
-## Complete Example: Wizard Command with _error/_ok
+## Complete Example: Developer Command with _error/_ok
 
 ```lpc
 // /cmds/dev/force.lpc

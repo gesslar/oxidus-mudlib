@@ -26,6 +26,6 @@
 
 ### EXAMPLE
 
-    {{di1}}if(directory_exists("/d/wizards/" + name)) {
-        tell_me("Wizard directory exists.\n");
+    {{di1}}if(directory_exists("/d/domains/" + name)) {
+        tell_me("Domain directory exists.\n");
     }{{di0}}

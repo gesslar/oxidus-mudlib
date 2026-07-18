@@ -310,7 +310,7 @@ DB_D writes errors to `/log/system/db` via `log_file()`. Connection failures, qu
 
 ### Vacuum / integrity check
 
-Run on demand from a wizard tool:
+Run on demand from a developer tool:
 
 ```lpc
 DB_D->query("bank", "VACUUM");
@@ -329,7 +329,7 @@ DB_D->query("bank", "VACUUM INTO '/data/db/backup/bank-2026-05-02.sqlite3'");
 
 (`VACUUM INTO` requires SQLite ≥ 3.27 — check with `allowUpsert()` as a rough proxy, or call `sqliteVersion()` directly.)
 
-### Inspecting state from a wizard command
+### Inspecting state from a developer command
 
 ```lpc
 mapping dbs = DB_D->queryDatabases();         // names → file paths

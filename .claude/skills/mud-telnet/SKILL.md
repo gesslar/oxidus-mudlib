@@ -1,6 +1,6 @@
 ---
 name: mud-telnet
-description: Connect to the running Oxidus MUD via telnet to test in-game functionality, reload objects with update, run wizard/admin commands, and verify colour rendering. Use when a task requires in-game verification or execution.
+description: Connect to the running Oxidus MUD via telnet to test in-game functionality, reload objects with update, run developer/admin commands, and verify colour rendering. Use when a task requires in-game verification or execution.
 ---
 
 # MUD Telnet Access
@@ -15,7 +15,7 @@ Use telnet access for:
 
 - Testing in-game functionality (commands, output, messages, etc.)
 - Reloading objects after code changes (`update /path/to/file.lpc`)
-- Running wizard/admin commands
+- Running developer/admin commands
 - Verifying colour code rendering
 
 Do NOT use for:
@@ -115,7 +115,7 @@ greppable output. With it off, `_ok` etc. print just the bare message.
 `claude updating the score command`. This writes a timestamped line to the
 `claude` log (`/log/claude`) and pings any online admin so they can watch
 the session in real time. It's a `cmds/dev/` command, so it requires the
-dev/wiz access the `claude` character already has.
+dev access the `claude` character already has.
 
 ```text
 > claude <description of what you're about to do>
