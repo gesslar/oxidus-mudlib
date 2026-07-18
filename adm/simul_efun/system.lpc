@@ -187,7 +187,7 @@ varargs void debug(mixed str, mixed args...) {
 
 private nosave mapping _symbols = ([
   "ok"      : ({ ({ SYSTEM_OK,      "" }), ({ "\u2022 ", "o ", "" }) }), // • = bullet point
-  "error"   : ({ ({ SYSTEM_ERROR,   "" }), ({ "\u25CF ", "o ", "" }) }), // ● = black circle
+  "error"   : ({ ({ SYSTEM_ERROR,   "" }), ({ "\u2022 ", "o ", "" }) }), // • = bullet point
   "warn"    : ({ ({ SYSTEM_WARNING, "" }), ({ "\u25B2 ", "o ", "" }) }), // ▲ = black up-pointing triangle
   "info"    : ({ ({ SYSTEM_INFO,    "" }), ({ "\u25E6 ", "o ", "" }) }), // ◦ = white bullet
   "question": ({ ({ SYSTEM_QUERY,   "" }), ({ "\u25C6 ", "o ", "" }) }), // ◆ = black diamond
