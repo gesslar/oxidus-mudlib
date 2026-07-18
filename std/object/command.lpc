@@ -17,7 +17,7 @@
 #include <command.h>
 
 private nosave mapping __command_handlers = ([]);
-private string *__command_paths = ({});
+private string* __command_paths = ({});
 private nosave string *__command_history = ({});
 
 /**
@@ -256,6 +256,8 @@ public int add_path(string path) {
   if(!adminp(previous_object()) && this_body() != this_object())
     return 0;
 
+  __command_paths ??= ({});
+
   if(includes(__command_paths, path))
     return 0;
 
@@ -264,7 +266,7 @@ public int add_path(string path) {
   if(!directory_exists(path))
     return 0;
 
-  push(ref __command_paths, path);
+  push(& __command_paths, path);
 
   return 1;
 }
@@ -277,6 +279,8 @@ public int add_path(string path) {
  *  paths
  */
 public void set_path(mixed path) {
+  __command_paths ??= ({});
+
   assert_arg(
     stringp(path) || pointerp(path) && uniformp(path, T_STRING),
     1,
@@ -309,6 +313,8 @@ public int rem_path(string path) {
 
   if(!adminp(previous_object()) && this_body() != this_object())
     return 0;
+
+  __command_paths ??= ({});
 
   if(!includes(__command_paths, path))
     return 0;
