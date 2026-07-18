@@ -82,7 +82,7 @@ void create() {
 
 void flag(string str) {
   if(str == "builddocs") {
-    call_out((: shutdown, 0 :), 10);
+    call_out((: shutdown, SYS_SHUTDOWN :), 10);
   } else {
     debug_message("Unknown flag: " + str);
   }

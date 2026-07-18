@@ -41,7 +41,7 @@ case "$1" in
 
             echo "Exit status: $exit_status"
 
-            if [[ $exit_status -eq 0 ]]; then
+            if [[ $exit_status -eq 1 ]]; then
                 echo "Driver exited with reboot status code. Restarting."
                 sleep 1  # Optional: Add a small delay before restarting
             else
