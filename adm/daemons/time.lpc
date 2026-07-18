@@ -1,8 +1,9 @@
 /**
  * @file /adm/daemons/time.lpc
- * This is the game's time daemon. It is responsible for keeping
- * track of the game's time and date. It also provides functions for converting
- * the game's time to real time and vice versa.
+ *
+ * This is the game's time daemon. It is responsible for keeping track of the
+ * game's time and date. It also provides functions for converting the game's
+ * time to real time and vice versa.
  *
  * @created 2024-08-05 - Gesslar
  * @last_modified 2024-08-05 - Gesslar
@@ -24,9 +25,9 @@ private nosave int year_start, months_in_year, days_in_year, hour_length, hours_
 void setup() {
   int next_day;
 
-  config = json_decode(read_file("/adm/etc/time/time.json"));
-  months = json_decode(read_file("/adm/etc/time/months.json"));
-  seasons = json_decode(read_file("/adm/etc/time/seasons.json"));
+  config = load_lpml("/adm/etc/time/time.lpml");
+  months = load_lpml("/adm/etc/time/months.lpml");
+  seasons = load_lpml("/adm/etc/time/seasons.lpml");
 
   months_in_year = sizeof(months);
   days_in_year = sum(map(months, (: $1[1] :)));
