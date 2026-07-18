@@ -20,8 +20,8 @@
  * @param {string} dirname - Path of directory to check
  * @returns {int} 1 if directory exists, 0 otherwise
  * @example
- * if(directory_exists("/d/wizards/" + name)) {
- *     tell_me("Wizard directory exists.\n");
+ * if(directory_exists("/d/domains/" + name)) {
+ *     tell_me("Domain directory exists.\n");
  * }
  */
 int directory_exists(string dirname) {

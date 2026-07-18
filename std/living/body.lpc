@@ -52,8 +52,10 @@ void mudlib_setup() {
 
   enable_commands();
   add_standard_paths();
-  if(devp())
-    add_wizard_path();
+  if(adminp())
+    add_admin_path();
+  else if(devp())
+    add_dev_path();
 
   if(!query_pref("prompt"))
     set_pref("prompt", ">");

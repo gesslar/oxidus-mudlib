@@ -52,7 +52,7 @@ mixed main(object tp, string arg) {
 
 /**
  *
- * @param {STD_PLAYER} tp - The wizard running the tests.
+ * @param {STD_PLAYER} tp - The developer running the tests.
  * @param {string} runner_path - The Test Runner object.
  */
 private void invoke_runner(object tp, string runner_path) {

@@ -319,10 +319,10 @@ public int rem_path(string path) {
 }
 
 /**
- * Adds wizard-specific command paths from the wizard paths configuration file.
+ * Adds admin-specific command paths from the admin paths configuration file.
  */
-public void add_wizard_path() {
-  string *paths = explode_file("/adm/etc/wizard_paths");
+public void add_admin_path() {
+  string *paths = explode_file("/adm/etc/admin_paths");
 
   filter(paths, (: add_path :));
 }
@@ -330,7 +330,25 @@ public void add_wizard_path() {
 /**
  * Removes all current command paths and restores standard paths only.
  */
-public void remove_wizard_paths() {
+public void remove_admin_paths() {
+  filter(get_path(), (: rem_path :));
+
+  add_standard_paths();
+}
+
+/**
+ * Adds dev-specific command paths from the dev paths configuration file.
+ */
+public void add_dev_path() {
+  string *paths = explode_file("/adm/etc/dev_paths");
+
+  filter(paths, (: add_path :));
+}
+
+/**
+ * Removes all current command paths and restores standard paths only.
+ */
+public void remove_dev_paths() {
   filter(get_path(), (: rem_path :));
 
   add_standard_paths();

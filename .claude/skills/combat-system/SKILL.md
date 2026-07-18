@@ -288,7 +288,7 @@ if(!is_dead() && query_hp() <= 0.0) {
 ### `die()` Flow
 
 1. `stop_all_attacks()` — clear combat state
-2. SU body ejection (if wizard is possessing this body)
+2. SU body ejection (if a developer is possessing this body)
 3. `simple_action("$N $vhave perished.")` — room message
 4. `save_body()` — persist player state
 5. `emit(SIG_PLAYER_DIED, this_object(), killed_by())` — signal

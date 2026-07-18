@@ -10,7 +10,7 @@
 #define DIR_CMDS_FILE           DIR_CMDS "files/"
 #define DIR_CMDS_OBJECT         DIR_CMDS "object/"
 #define DIR_CMDS_STD            DIR_CMDS "std/"
-#define DIR_CMDS_WIZ            DIR_CMDS "wiz/"
+#define DIR_CMDS_DEV            DIR_CMDS "dev/"
 #define DIR_DAEMON_MODULES      DIR_DAEMONS "modules/"
 #define DIR_DAEMONS             DIR_ADM "daemons/"
 #define DIR_DOMAIN              "/d/"

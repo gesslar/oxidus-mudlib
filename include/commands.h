@@ -8,7 +8,7 @@
 #define CMD_SHUTDOWN         DIR_CMDS_ADM "shutdown"
 
 // Wiz commands
-#define CMD_EVAL             DIR_CMDS_WIZ "eval"
+#define CMD_EVAL             DIR_CMDS_DEV "eval"
 
 // Std commands
 #define CMD_GO               DIR_CMDS_ACTION "go"

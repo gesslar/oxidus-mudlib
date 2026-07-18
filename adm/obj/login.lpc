@@ -467,10 +467,8 @@ private void first_admin_login() {
     string privs = query_privs(body);
 
     assure_dir(home_path);
-    assure_dir(home_path + "public");
-    assure_dir(home_path + "private");
     catch(cp("/d/std/workroom.lpc", home_path(privs)));
-    body->add_wizard_path();
+    body->add_admin_path();
     // TODO: double-check i don't also need admin and developer now
     master()->add_role(privs, "owner");
     write_file(mud_config("FIRST_USER"), privs, 1);
