@@ -253,7 +253,7 @@ public int add_path(string path) {
     "Path must be a string."
   );
 
-  if(!adminp(previous_object()) && this_body() != this_object())
+  if(!adminp(this_caller()) && this_body() != this_object())
     return 0;
 
   __command_paths ??= ({});
@@ -311,7 +311,7 @@ public int rem_path(string path) {
     "Path must be a string."
   );
 
-  if(!adminp(previous_object()) && this_body() != this_object())
+  if(!adminp(this_caller()) && this_body() != this_object())
     return 0;
 
   __command_paths ??= ({});
@@ -388,7 +388,7 @@ public void add_ghost_paths() {
  */
 public nomask varargs string *query_command_history(int index, int range) {
   if(    this_body() != this_object()
-      && !adminp(previous_object())
+      && !adminp(this_caller())
     )
     return ({});
 
