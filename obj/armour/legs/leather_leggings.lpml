@@ -6,10 +6,10 @@
   name: "sturdy leather leggings",
   short: "pair of sturdy leather leggings",
   long: "These leggings are layered from thick, treated leather and fitted to"
-        " protect the thigh and shin without restricting stride. Dyed a rich,"
-        " earthy brown to match their jerkin, the seams are double-stitched"
-        " and the leather is boiled harder over the knees and shins. A row of"
-        " side straps allows the fit to be drawn snug against the leg.",
+        "protect the thigh and shin without restricting stride. Dyed a rich,"
+        "earthy brown to match their jerkin, the seams are double-stitched"
+        "and the leather is boiled harder over the knees and shins. A row of"
+        "side straps allows the fit to be drawn snug against the leg.",
   mass: 80,
   value: 18,
   slot: "legs",

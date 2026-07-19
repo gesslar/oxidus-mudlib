@@ -2,7 +2,7 @@
   type: "mammal",
   name: "wasterel",
   short: "wasterel",
-  long: "A cunning wasteland cat prowls the desolate terrain, its eyes "
+  long: "A cunning wasteland cat prowls the desolate terrain, its eyes"
         "glinting with hunger.",
   id: [
     "wasterel",

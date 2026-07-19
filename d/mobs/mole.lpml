@@ -2,7 +2,7 @@
   type: "mammal",
   name: "tunnel mole",
   short: "tunnel mole",
-  long: "A burly tunnel mole digs at the dirt with its broad, shovel-like "
+  long: "A burly tunnel mole digs at the dirt with its broad, shovel-like"
         "claws. Its velvety dark fur is caked with earth.",
   id: [
     "tunnel mole",

@@ -4,7 +4,7 @@
   type: "mammal",
   name: "waste rat",
   short: "waste rat",
-  long: "A scrappy waste rat scurries through the debris, searching for "
+  long: "A scrappy waste rat scurries through the debris, searching for"
         "scraps to eat.",
   id: [
     "waste rat",

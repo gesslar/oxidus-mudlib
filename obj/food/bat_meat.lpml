@@ -4,7 +4,7 @@
   adj: ["bat","raw","stringy"],
   name: "bat meat",
   short: "a chunk of bat meat",
-  long: "This is a stringy chunk of meat carved from a cave bat. It needs to "
+  long: "This is a stringy chunk of meat carved from a cave bat. It needs to"
         "be cooked before eating.",
   mass: 10,
   value: 15,

@@ -97,6 +97,29 @@ Adjacent string values automatically concatenate. The joining rule depends on wh
 
 This works across quote styles (double and single quotes can be mixed).
 
+**Never pad a fragment with a space.** The separator is supplied by the parser, exactly as in YAML folding. A trailing space before the closing quote — or a leading space after the opening quote of the next fragment — produces a **double space** in the decoded string:
+
+```lpml
+{
+  // WRONG — trailing space before the closing quote
+  long: "A long, curved fang taken from the jaw of a shadow wolf, ivory "
+        "shading to a smoky grey at the root.",
+  // Result: "...ivory  shading to a smoky grey..."   <-- two spaces
+
+  // WRONG — leading space after the opening quote
+  long: "This heavy cloak is woven from thick, undyed wool in a natural"
+        " greyish-brown, its weave dense enough to turn a cold wind.",
+  // Result: "...natural  greyish-brown..."           <-- two spaces
+
+  // RIGHT — no padding at either edge; the parser joins with one space
+  long: "A long, curved fang taken from the jaw of a shadow wolf, ivory"
+        "shading to a smoky grey at the root.",
+  // Result: "...ivory shading to a smoky grey..."
+}
+```
+
+A trailing space on the *final* fragment is equally wrong — it leaves a stray space at the end of the value. The only fragment that may end in whitespace is one ending with an explicit `\n`, where the parser adds nothing.
+
 ```lpml
 {
   // These join with spaces (no trailing \n):
@@ -125,7 +148,15 @@ This works across quote styles (double and single quotes can be mixed).
 
 ### Multiline Strings (Source Line Folding)
 
-Actual newlines in the source (pressing Enter) are converted to spaces. Escape sequences like `\n` remain as literal newline characters. This means you write long strings naturally across source lines without worrying about embedded newlines.
+Actual newlines *inside* a single quoted string (pressing Enter without closing the quote) are folded. Escape sequences like `\n` survive folding and remain literal newline characters. This means you write long strings naturally across source lines without worrying about embedded newlines.
+
+Folding rules:
+
+- Each source line is trimmed, then joined to the previous with a single space.
+- A **blank source line** becomes a paragraph break — a literal `\n` — rather than a space.
+- The folded result is trimmed, so leading and trailing whitespace on the value is discarded.
+
+Note that folding applies within one quoted string; concatenation of *adjacent* quoted strings is the separate rule above, and only concatenation is affected by edge padding.
 
 ### File Includes
 
@@ -144,6 +175,7 @@ Rules:
 - File includes are processed recursively (included files may themselves contain includes).
 - If a file cannot be found, an implementation SHOULD keep the include string as its literal value.
 - To produce a literal `#` at the start of a string (preventing include processing), escape it: `\#`.
+- A relative path resolves against the including file's directory. Traversal is single-direction only: `./sub/file.lpml` and `../../dir/file.lpml` are fine, but mixed traversal such as `./../what/no.lpml` is not resolved. Absolute paths (leading `/`) are used as-is.
 
 ```lpml
 {
@@ -194,12 +226,16 @@ Objects support nesting and trailing commas:
 
 ### Special Values
 
-#### Infinity and NaN
+#### null, undefined, Infinity and NaN
 
-`Infinity`, `-Infinity`, and `NaN` are valid values. In LPC, these map to `undefined` (equivalent to `([])[0]`) because LPC does not have native Infinity/NaN support.
+`null`, `undefined`, `Infinity`, `-Infinity`, and `NaN` are all valid values, and **all decode to LPC `undefined`** (equivalent to `([])[0]`) — LPC has no native null, Infinity, or NaN. `undefined` is an LPML keyword; JSON5 has no such literal.
+
+Because they collapse to the same value, a decoded key holding `null` is indistinguishable from an absent key. Test with `undefinedp()`, not `== 0` — `typeof()` in this lib returns `T_UNDEFINED` for these. On encode, `undefined` is written back out as `null`.
 
 ```lpml
 {
+  nothing: null,
+  also_nothing: undefined,
   inf: Infinity,
   neg_inf: -Infinity,
   nan: NaN,
@@ -252,11 +288,13 @@ Standard JSON escape sequences are supported in strings:
 | String concatenation | no | yes |
 | File includes | no | yes |
 | Multiline folding | no | yes |
+| `undefined` literal | no | yes |
 
 ## Formatting Guidelines
 
 - Keep lines within 80 columns. LPML files are MUD configuration data consumed in terminal contexts where 80 columns is the norm.
 - Break long string concatenation values across multiple lines to stay within the limit.
+- **Never pad a string fragment with a leading or trailing space.** The parser supplies the separator; padding yields a double space. Break at a word boundary and let the join do the work. This is the single most common defect in hand-written LPML.
 - Break long arrays across multiple lines if they would exceed 80 columns.
 
 ## Complete Example

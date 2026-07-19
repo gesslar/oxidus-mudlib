@@ -6,10 +6,10 @@
   name: "sturdy leather boots",
   short: "pair of sturdy leather boots",
   long: "These boots rise to mid-calf, built from thick, earthy-brown leather"
-        " that matches the rest of the set. The soles are heavy and stitched"
-        " twice over for the road, and a hardened leather guard shields the"
-        " shin and instep. Broad straps and a snug buckle at the top keep"
-        " them firmly in place.",
+        "that matches the rest of the set. The soles are heavy and stitched"
+        "twice over for the road, and a hardened leather guard shields the"
+        "shin and instep. Broad straps and a snug buckle at the top keep"
+        "them firmly in place.",
   mass: 55,
   value: 15,
   slot: "feet",

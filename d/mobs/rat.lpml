@@ -2,7 +2,7 @@
   type: "rodent",
   name: "cave rat",
   short: "cave rat",
-  long: "A grimy cave rat skitters through the gloom, its eyes reflecting the "
+  long: "A grimy cave rat skitters through the gloom, its eyes reflecting the"
         "faintest glimmer of light. Its long pink tail drags behind it.",
   id: [
     "cave rat",

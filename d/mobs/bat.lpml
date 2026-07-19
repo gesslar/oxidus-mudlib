@@ -2,7 +2,7 @@
   type: "mammal",
   name: "cave bat",
   short: "cave bat",
-  long: "A leathery cave bat clings to the ceiling, its small black eyes "
+  long: "A leathery cave bat clings to the ceiling, its small black eyes"
         "watching for intruders. Its tiny fangs glisten in the gloom.",
   id: [
     "cave bat",

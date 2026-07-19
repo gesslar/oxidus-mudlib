@@ -4,7 +4,7 @@
   adj: ["boar","sharp"],
   name: "boar tusk",
   short: "a sharp boar tusk",
-  long: "This is a curved, sharp tusk from a wild boar. It could be used for "
+  long: "This is a curved, sharp tusk from a wild boar. It could be used for"
         "crafting or as a primitive weapon.",
   mass: 20,
   material: ["bone"],

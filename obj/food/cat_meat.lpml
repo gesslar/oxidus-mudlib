@@ -4,7 +4,7 @@
   adj: ["cat", "raw", "fresh"],
   name: "cat meat",
   short: "a chunk of cat meat",
-  long: "This is a fresh chunk of cat meat. It needs to be cooked before "
+  long: "This is a fresh chunk of cat meat. It needs to be cooked before"
         "eating.",
   mass: 25,
   value: 30,

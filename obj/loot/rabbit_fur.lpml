@@ -9,7 +9,7 @@
   name: "rabbit fur",
   short: "a patch of soft rabbit fur",
   long:
-    "This is a small patch of soft, fluffy fur from a rabbit. It could be "
+    "This is a small patch of soft, fluffy fur from a rabbit. It could be"
     "used for crafting warm clothing.",
   mass: 10,
   material: [

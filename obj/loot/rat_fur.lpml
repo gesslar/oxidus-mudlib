@@ -4,7 +4,7 @@
   adj: ["waste","scrappy"],
   name: "rat fur",
   short: "a piece of rat fur",
-  long: "This is a scrappy piece of fur from a waste rat. It could be useful "
+  long: "This is a scrappy piece of fur from a waste rat. It could be useful"
         "for crafting.",
   mass: 10,
   material: ["fur"],
