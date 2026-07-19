@@ -232,7 +232,7 @@ void setup() {
 inherit STD_WEAPON;
 
 mixed equip_check(object tp) {
-  if(tp->query_attribute("strength") < 10)
+  if(tp->get_attribute("strength") < 10)
     return "You are not strong enough to wield this.";
   return 1;
 }

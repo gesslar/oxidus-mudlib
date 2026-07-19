@@ -31,7 +31,7 @@ mixed main(/** @type {STD_BODY} */ object tp,
     foreach(attr in attrs) {
         out += sprintf("%-15s: %d\n",
             capitalize(attr),
-            tp->query_attribute(attr)
+            tp->get_attribute(attr)
         );
     }
 

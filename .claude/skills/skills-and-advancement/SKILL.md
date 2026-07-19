@@ -258,9 +258,9 @@ Default attributes (from config): `"strength"`, `"dexterity"`, `"constitution"`,
 | Function | Signature | Description |
 |---|---|---|
 | `set_attribute` | `int (string key, int value)` | Set directly. Returns new value or null if invalid key |
-| `query_attribute` | `int (string key, int raw)` | Returns `value + query_effective_boon("attribute", key)`. If `raw=1`, raw only |
+| `get_attribute` | `int (string key, int raw)` | Returns `value + query_effective_boon("attribute", key)`. If `raw=1`, raw only |
 | `modify_attribute` | `int (string key, int value)` | Adjust by delta |
-| `query_attributes` | `mapping ()` | Returns copy of all attributes |
+| `get_attributes` | `mapping ()` | Returns copy of all attributes |
 | `init_attributes` | `void ()` | Loads from config, initializes missing to 5 |
 
 Like skills, attributes support boon/curse modifiers via `query_effective_boon("attribute", key)`.

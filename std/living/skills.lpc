@@ -8,49 +8,19 @@
  * toward the next level) and a "subskills" submapping. Dot-paths
  * (e.g. "combat.melee.slashing") address nodes within the tree.
  *
- * Improvement is use-based: callers invoke use_skill() and, on a
- * 20% roll, improve_skill() picks a node from the skill's dot-path
- * via a weighted draw favouring leaves over roots, then applies a
- * single random_float against the supplied cap to that node.
- * Parent skills therefore grow organically alongside the children
- * that are used, but more slowly because they are picked less
- * often. Callers may pass mod_adjust to raise the upper bound on
- * the random draw — useful for low-frequency call sites (specific
- * spells, niche abilities) where the default 0.01 cap would feel
- * too slow. NPCs are seeded at setup with every skill set to
- * level * 3.0 so that query_skill_level() is honest in combat math
- * without any special-case branching.
+ * Improvement is use-based: callers invoke use_skill(), which rolls
+ * for a chance to hand progress to improve_skill().
  *
  * @created 2024-07-31 - Gesslar
- * @last_modified 2026-05-10 - Gesslar
+ * @last_modified 2026-07-19 - Gesslar
  *
  * @history
  * 2024-07-31 - Gesslar - Created
- * 2026-05-10 - Gesslar - Documentation pass; NPC skills seeded at
- *                        level*3 instead of zero so query_skill_level
- *                        reflects them; dropped NPC shortcut in
- *                        query_skill, then renamed query_skill to
- *                        query_raw_skill so the name advertises its
- *                        no-floor / no-boon semantics; use_skill
- *                        gained an optional mod_adjust that raises
- *                        the upper bound on per-call random progress,
- *                        and improve_skill's progress argument is
- *                        now mixed (float/int/closure) and is always
- *                        treated as the random_float cap, with the
- *                        weighted bubble-up running every call;
- *                        extracted find_skill_node() helper so the
- *                        nested-tree walk is no longer duplicated
- *                        across every read/leaf-mutate function;
- *                        added query_raw_skill_level (floored, no
- *                        boon) and has_skill (1/0 existence check);
- *                        improve_skill explored per-node depth-
- *                        tightening but settled on the simpler
- *                        shape: every node on the path shares the
- *                        same cap, with bubble-up balance living
- *                        entirely in the pick weights — easier to
- *                        tune and faithful to the call-site's
- *                        request regardless of which node is
- *                        chosen.
+ * 2026-05-10 - Gesslar - Renamed query_skill to query_raw_skill and
+ *                        added the floored/boon query grid; use_skill
+ *                        gained mod_adjust; extracted find_skill_node.
+ * 2026-07-19 - Gesslar - Doc pass: removed restated internals and
+ *                        corrected stale claims.
  */
 
 #include <skills.h>
@@ -207,12 +177,10 @@ private nomask mapping find_skill_node(string skill) {
 }
 
 /**
- * Get the raw float level of a skill — no flooring, no boon
- * modifier. Use query_skill_level() for combat math.
+ * Get a skill's level — unfloored, no boon modifier.
  *
  * @param {string} skill - The dot-path of the skill.
- * @returns {float} The raw float level, or null if the skill is not
- *                  found or input is invalid.
+ * @returns {float} The level, or null if not found or invalid.
  */
 float query_raw_skill(string skill) {
   mapping node = find_skill_node(skill);
@@ -224,15 +192,10 @@ float query_raw_skill(string skill) {
 }
 
 /**
- * Get the float level of a skill with boon modifiers applied — the
- * unfloored counterpart to query_skill_level(). Use this when the
- * fractional progress matters (proc rolls, scaling formulas); use
- * query_skill_level() when you want the integer level.
+ * Get a skill's level — unfloored, boon applied.
  *
  * @param {string} skill - The dot-path of the skill.
- * @returns {float} The raw float level plus the boon modifier, or
- *                  null if the skill is not found or input is
- *                  invalid.
+ * @returns {float} The level, or null if not found or invalid.
  */
 float query_skill(string skill) {
   mapping node = find_skill_node(skill);
@@ -244,15 +207,10 @@ float query_skill(string skill) {
 }
 
 /**
- * Get the floored level of a skill with boon modifiers applied.
- * Combat formulas use this function rather than query_raw_skill()
- * because the boon modifier is applied here. Use
- * query_raw_skill_level() to get the floored level without boons.
+ * Get a skill's level — floored, boon applied.
  *
  * @param {string} skill - The dot-path of the skill.
- * @returns {float} The floored level with the boon modifier applied,
- *                  or null if the skill is not found or input is
- *                  invalid.
+ * @returns {float} The level, or null if not found or invalid.
  */
 float query_skill_level(string skill) {
   mapping node = find_skill_node(skill);
@@ -264,13 +222,10 @@ float query_skill_level(string skill) {
 }
 
 /**
- * Get the floored level of a skill with no boon modifier applied.
- * Equivalent to query_skill_level(skill, 1) under a name that makes
- * the unbuffed intent obvious at the call site.
+ * Get a skill's level — floored, no boon modifier.
  *
  * @param {string} skill - The dot-path of the skill.
- * @returns {float} The floored level with no boon applied, or null
- *                  if the skill is not found or input is invalid.
+ * @returns {float} The level, or null if not found or invalid.
  */
 float query_raw_skill_level(string skill) {
   mapping node = find_skill_node(skill);
@@ -336,21 +291,14 @@ void set_skills(mapping s) {
 }
 
 /**
- * Invoke a skill, granting it a 20% chance to improve. On a
- * successful roll, improve_skill() is called with the named skill
- * and mod_adjust as the random_float cap; weighted bubble-up still
- * runs, so the node that actually gains progress may be a parent
- * on the dot-path rather than the named leaf. If the skill does
- * not yet exist, it is created at level 1.0 via assure_skill() and
- * no improvement is rolled this call.
+ * Invoke a skill, rolling for a chance to improve it. The chance
+ * scales with the skill's current level. An unknown skill is
+ * created instead, with no roll this call.
  *
  * @param {string} skill - The dot-path of the skill being used.
- * @param {mixed} [mod_adjust] - Upper bound for the per-call random
- *                               progress. Accepts a float, an int,
- *                               or a closure that evaluates to one
- *                               of those. Omit (or null) to fall
- *                               back to the 0.01 default in
- *                               improve_skill().
+ * @param {mixed} [mod_adjust] - Progress bound, passed through to
+ *                               improve_skill(). Omit for its
+ *                               default.
  * @returns {int | undefined} 1 if the roll fired this call, 0
  *                            otherwise, or null on invalid input.
  */
@@ -388,34 +336,20 @@ string *query_skill_path(string skill) {
  * Apply progress to a skill, with weighted bubble-up.
  *
  * A target node is chosen from the skill's dot-path via a weighted
- * draw favouring leaves over roots (weights are (depth+1)*3, so
- * for a 3-segment path the leaf is picked 50% of the time, the
- * middle 33%, the root 17%). A single random_float draw against
- * the supplied cap is then added to the chosen node's level.
- * Parent skills therefore grow organically alongside the children
- * that are used, but more slowly because they are picked less
- * often. The cap is the same for every node on the path — bubble-
- * up balance lives entirely in the pick weights.
- *
- * The progress argument is the upper bound for the random draw,
- * not the literal amount applied. It accepts:
- *
- *   - omitted / null — defaults to 0.01.
- *   - float — used as-is.
- *   - int — promoted to float.
- *   - closure — evaluated against this_object(), then coerced.
- *
- * If the integer level of the chosen node rises as a result, a
- * notification is sent to the living object.
+ * draw favouring leaves over roots, so parents grow alongside the
+ * children that are used, but more slowly. The node then gains a
+ * random amount of progress, bounded by potential_progress, and
+ * the living object is told if that crosses a level.
  *
  * @param {string} skill - The dot-path used to seed the weighted
  *                         walk.
  * @param {mixed} [potential_progress=0.01] - Upper bound for the
- *                            random roll. See description for
- *                            accepted forms.
- * @returns {float} The new raw level of the chosen node after
- *                  progress is applied, 0 if an intermediate is
- *                  missing, or null on invalid input.
+ *                            random roll, not the amount applied.
+ *                            A float, an int, or a closure
+ *                            evaluated against this_object().
+ * @returns {float} The chosen node's new level, 0 if an
+ *                  intermediate is missing, or null on invalid
+ *                  input.
  */
 varargs float improve_skill(string skill, mixed potential_progress: (: 0.01 :)) {
   if(!stringp(skill))
@@ -482,12 +416,9 @@ int query_skill_progress(string skill) {
 }
 
 /**
- * Set a skill's level to an integer value, replacing whatever was
- * stored.
- *
- * Unlike set_skill_level(), this accepts an int and does not
- * enforce a minimum level. Intermediate nodes must already exist —
- * this function will not create them.
+ * Set a skill's level to an integer value. Unlike
+ * set_skill_level(), takes an int and enforces no minimum.
+ * Intermediate nodes must already exist.
  *
  * @param {string} skill - The dot-path of the skill.
  * @param {int} level - The new level value.
@@ -509,12 +440,9 @@ int modify_skill_level(string skill, int level) {
 }
 
 /**
- * Seed every NPC skill to level * 3.0 so that query_skill_level()
- * is honest for combat math. Called from npc.c::set_level() after
- * the level is updated.
+ * Reseed every NPC skill from the NPC's current level.
  *
- * @param {float} level - The NPC's current level. Each skill is
- *                        stored as level * 3.0.
+ * @param {float} level - The NPC's current level.
  * @returns {int} 1 if the skill tree was traversed, 0 if there were
  *                no skills to adjust.
  */
@@ -528,7 +456,7 @@ public int adjust_skills_by_npc_level(float level) {
 }
 
 /**
- * Recursively set every skill's level to level * 3.0. NPC-only —
+ * Recursively set every skill's level to level * 4.0. NPC-only —
  * errors out if called on a user.
  *
  * @param {mapping} current_skills - The skills submapping at the
@@ -548,7 +476,7 @@ private nomask mapping adjust_skill_levels(mapping current_skills, float level) 
     if(mapp(skill_data) && mapp(skill_data["subskills"]))
       adjust_skill_levels(skill_data["subskills"], level);
 
-    current_skills[sk]["level"] = level * 3.0;
+    current_skills[sk]["level"] = level * 4.0;
   }
 
   return current_skills;

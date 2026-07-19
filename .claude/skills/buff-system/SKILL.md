@@ -95,7 +95,7 @@ int count = tp->remove_curse_by_name(
 
 | Class | Type Examples | Integrated In |
 |---|---|---|
-| `attribute` | `strength`, `dexterity`, `constitution`, `intelligence`, `wisdom`, `charisma` | `std/living/attributes.lpc` — `query_attribute()` adds `query_effective_boon("attribute", key)` |
+| `attribute` | `strength`, `dexterity`, `constitution`, `intelligence`, `wisdom`, `charisma` | `std/living/attributes.lpc` — `get_attribute()` adds `query_effective_boon("attribute", key)` |
 | `vital` | `max_hp`, `max_sp`, `max_mp` | `std/living/vitals.lpc` — `query_max_hp/sp/mp()` adds `query_effective_boon("vital", ...)` |
 | `skill` | Any skill name | `std/living/skills.lpc` — skill level queries add `query_effective_boon("skill", skill)` |
 
