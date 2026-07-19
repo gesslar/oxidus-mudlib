@@ -23,7 +23,7 @@ void setup() {
 }
 
 mixed main(object tp, string str) {
-    object ob;
+    /** @type {STD_BODY} */ object ob;
 
     if(!str)
         ob = tp;
