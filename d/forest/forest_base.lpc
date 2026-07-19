@@ -13,7 +13,6 @@ inherit STD_ROOM;
 
 void repopulate();
 
-private nosave string *mob_files = ({});
 /** @type {STD_NPC*} */ private nosave object *__mobs = ({});
 private nosave float spawn_chance = 10.0;
 
@@ -30,31 +29,32 @@ void virtual_setup(mixed _args...) {
   __DIR__ "forest_daemon"->setup_long(this_object());
 
   add_reset((: repopulate :));
-
-  mob_files = ({
-    "/mob/deer",
-    "/mob/doe",
-    "/mob/giant_red_squirrel",
-    "/mob/crimson_fox",
-    "/mob/monstrous_wasp",
-  });
 }
 
 void repopulate() {
   /** @type {STD_NPC} */ object mob;
-  string file;
 
   __mobs -= ({ 0 });
+
   foreach(mob in __mobs) {
     if(objectp(mob)) {
       mob->simple_action("$N $vscamper away into the forest.");
-      mob->remove();
+      mob->clean_remove();
     }
   }
 
   if(random_float(100.0) < spawn_chance) {
-    file = element_of(mob_files);
-    __mobs += ({ add_inventory(file) });
-    __mobs->simple_action("$N $vappear from the undergrowth.");
+    mapping mob_data = element_of_weighted(
+      __DIR__ "forest_daemon"->query_mob_files()
+    );
+    string file = mob_data["path"];
+    int level = random_clamp(mob_data["level"][0], mob_data["level"][1]);
+
+    mob = add_inventory(file);
+    mob->set_level(level);
+
+    __mobs += ({ mob });
+
+    mob->simple_action("$N $vemerge from the undergrowth.");
   }
 }
