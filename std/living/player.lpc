@@ -119,7 +119,12 @@ void exit_world() {
     `${query_ip_number()}\n`
   );
 
+  // Save our body's state. Additionally, saves our inventory.
   save_body();
+
+  // After saving inventory, we now clean our contents so that we don't drop
+  // things into the room.
+  clean_contents();
 
   remove();
 }
