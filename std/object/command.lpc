@@ -454,6 +454,12 @@ public int command_hook(string arg) {
   obs += ({ this_object() });
 
   foreach(ob in obs) {
+    // An earlier handler may have destructed a later candidate — lazy resets
+    // fire on the first call_other into a stale object, and reset functions
+    // are free to clean_remove() anything in this snapshot.
+    if(!objectp(ob))
+      continue;
+
     result = ob->evaluate_command(this_object(), verb, arg);
     result = evaluate_result(result);
 
