@@ -81,15 +81,17 @@ void combat_round() {
 
   swing();
 
+  if(!valid_enemy(victim))
+    return;
+
   GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_STATUS, ([
     GMCP_LBL_CHAR_STATUS_CURRENT_ENEMY: victim->query_name(),
     GMCP_LBL_CHAR_STATUS_CURRENT_ENEMY_HEALTH: sprintf("%.2f", victim->hp_ratio()),
     GMCP_LBL_CHAR_STATUS_CURRENT_ENEMIES: keys(__current_enemies),
   ]));
 
-  if(find_call_out(__next_combat_round) == -1) {
+  if(find_call_out(__next_combat_round) == -1)
     next_round();
-  }
 }
 
 /**
@@ -345,7 +347,7 @@ void strike_enemy(object enemy, object weapon) {
   dam =
       base
     + query_effective_level()
-    + skill
+    + (skill + query_skill_level("combat") / 2.0)
     - enemy->query_effective_level()
     - enemy->query_defence_amount(wtype)
     - enemy->query_skill_level("combat.defence")
@@ -812,10 +814,14 @@ mapping query_defence() {
  * @returns {float} The defence value, or 0.0 if not configured.
  */
 float query_defence_amount(string type) {
-  if(!__defence)
-    return 0.0;
+  if(pcp(this_object())) {
+    if(!__defence)
+      return 0.0;
 
-  return __defence[type];
+    return __defence[type];
+  } else {
+    return query_level() * 0.5;
+  }
 }
 
 /**
@@ -852,7 +858,7 @@ mapping adjust_protection() {
       __ac += ob->query_ac();
   }
 
-  return __defence;
+  return copy(__defence);
 }
 
 /**
@@ -862,7 +868,10 @@ mapping adjust_protection() {
  * @returns {float} The current total AC.
  */
 float query_ac() {
-  return __ac;
+  if(pcp(this_object()))
+    return __ac;
+  else
+    return query_level() + (query_level() * 2.0);
 }
 
 /**

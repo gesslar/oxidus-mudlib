@@ -48,9 +48,10 @@ float deliver_damage(object victim, float damage, string type) {
   if(damage < 0)
     return 0;
 
-  tell(this_object(), sprintf("delivering %O %O damage\n", damage, type));
+  float received = victim->receive_damage(this_object(), damage, type);
+  tell(this_object(), sprintf("delivering %O %O damage => %O\n", damage, type, received));
 
-  return victim->receive_damage(this_object(), damage, type);
+  return received;
 }
 
 /**
@@ -74,13 +75,20 @@ float deliver_damage(object victim, float damage, string type) {
  *                  the body was already dead.
  */
 float receive_damage(object attacker, float damage, string type) {
-  float def, red, mod, level, alevel, level_difference;
+  float def, red, mod, level, alevel, level_difference, new_damage;
 
   if(!attacker)
     return 0.0;
 
-  if(damage < 0.0)
+  if(query_hp() <= 0.0)
     return 0.0;
+
+  new_damage = damage;
+
+  if(damage < 0.0) {
+    tell(this_object(), sprintf("receiving %O %O damage => %O\n", damage, type, new_damage));
+    return 0.0;
+  }
 
   def = query_defence_amount(type);
   red = percent_of(def, damage);
@@ -100,13 +108,12 @@ float receive_damage(object attacker, float damage, string type) {
   red -= percent_of(mod, damage);
 
   // The damage is reduced by the level modifier
-  damage -= red;
+  new_damage -= red;
+
+  tell(this_object(), sprintf("receiving %O %O damage => %O\n", damage, type, new_damage));
 
   if(damage < 0.0)
     damage = 0.0;
-
-  if(query_hp() <= 0.0)
-    return 0.0;
 
   // Take the damage
   adjust_hp(-damage);
