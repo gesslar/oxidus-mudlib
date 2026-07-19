@@ -62,21 +62,27 @@ mixed main(
   }
 
   if(!container)
-    return "There is no container named '" + dest + "' here.";
+    return `There is no container named '${dest}' here.`;
+
+  // A living has an inventory (so is_container() is true), but you don't stuff
+  // things into people.
+  if(living(container))
+    return `You cannot put anything into ${get_short(container)}.`;
 
   if(!container->is_container())
-    return get_short(container) + " is not a container.";
+    return `${get_short(container)} is not a container.`;
 
   if(container->is_closed())
-    return get_short(container) + " is closed.";
+    return `${get_short(container)} is closed.`;
 
   // Handle 'put all' scenarios
   if(all_flag) {
-    object *obs = find_targets(tp, target, tp, (: !$1->is_container() :));
+    object *obs = find_targets(tp, target, tp,
+      (: !$1->is_container() && !living($1) :));
     int put_count = 0;
 
     if(sizeof(obs) < 1)
-      return "You do not have any " + target + ".";
+      return `You do not have any ${target}.`;
 
     foreach(object item in obs) {
       if(item == container)
@@ -94,7 +100,7 @@ mixed main(
         continue;
 
       if(item->move(container)) {
-        tell(tp, "You could not put " + get_short(item) + " in " + get_short(container) + ".\n");
+        tell(tp, `You could not put ${get_short(item)} in ${get_short(container)}.\n`);
         continue;
       }
 
@@ -103,17 +109,20 @@ mixed main(
     }
 
     if(put_count == 0)
-      return "You could not put any " + target + " in " + get_short(container) + ".";
+      return `You could not put any ${target} in ${get_short(container)}.`;
 
   } else {
     /** @type {STD_ITEM} */ object ob;
 
     // Handle 'put <object>' scenarios
     if(!(ob = find_target(tp, target, tp)))
-      return "You do not have " + add_article(target) + ".";
+      return `You do not have ${add_article(target)}.`;
+
+    if(living(ob))
+      return `You cannot put ${get_short(ob)} into ${get_short(container)}.`;
 
     if(ob == container)
-      return "You cannot put " + get_short(ob) + " in itself.";
+      return `You cannot put ${get_short(ob)} in itself.`;
 
     if(call_if(ob, "is_container"))
       return "You cannot put a container inside another container.";
@@ -123,14 +132,14 @@ mixed main(
       || call_if(ob, "prevent_put")
       || call_if(container, "prevent_put")
     ) {
-      return "You cannot put " + get_short(ob) + " in " + get_short(container) + ".";
+      return `You cannot put ${get_short(ob)} in ${get_short(container)}.`;
     }
 
     if(!container->can_hold_object(ob))
-      return get_short(container) + " cannot hold " + get_short(ob) + ".";
+      return `${get_short(container)} cannot hold ${get_short(ob)}.`;
 
     if(ob->move(container))
-      return "You could not put " + get_short(ob) + " in " + get_short(container) + ".";
+      return `You could not put ${get_short(ob)} in ${get_short(container)}.`;
 
     tp->simple_action("$N $vput a $o into a $o1.", ob, container);
   }
