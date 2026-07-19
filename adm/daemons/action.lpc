@@ -651,6 +651,41 @@ varargs void other_action(mixed msg, mixed *obs...) {
 }
 
 /**
+ * Generates and sends a message to everyone except the actor and target.
+ *
+ * Like other_action, but the target is also excluded from the room broadcast.
+ * Pair it with my_target_action/target_action when the actor and target should
+ * see something the rest of the room does not (e.g. a precise coin count while
+ * bystanders see only a vague quantity).
+ *
+ * @param {string|string*} msg - Message template or array of templates
+ * @param {object} target - The target of the action
+ * @param {mixed*} obs - Variable number of objects involved
+ */
+varargs void other_target_action(mixed msg, object target, mixed *obs...) {
+  string others;
+  string str_msg;
+  object *who;
+
+  if(!sizeof(msg))
+    return;
+
+  who = ({ previous_object(), target });
+
+  if(pointerp(msg))
+    msg = element_of(msg);
+
+  str_msg = /** @type {string} */ (msg);
+  others = compose_message(0, str_msg, who, obs...);
+
+  tell_down(all_inventory(previous_object()), others);
+  tell_down(all_inventory(target), others);
+
+  if(environment(previous_object()))
+    tell_all(environment(previous_object()), others, null, who);
+}
+
+/**
  * Generates and sends messages for an action involving an actor and target.
  *
  * @param {string|string*} msg - Message template or array of templates
