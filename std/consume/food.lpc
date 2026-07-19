@@ -14,6 +14,7 @@
 inherit STD_ITEM;
 
 inherit EXT_EDIBLE;
+inherit EXT_HEALING;
 
 string consume_message();
 
@@ -23,7 +24,13 @@ void mudlib_setup() {
   save_var(([
     "_uses": "set_uses",
     "_max_uses": "set_max_uses",
-    "_use_status_message": "set_use_status_message"
+    "_use_status_message": "set_use_status_message",
+    "__max_healing_hp": "set_max_healing_hp",
+    "__max_healing_sp": "set_max_healing_sp",
+    "__max_healing_mp": "set_max_healing_mp",
+    "__healing_hp": "set_healing_hp",
+    "__healing_sp": "set_healing_sp",
+    "__healing_mp": "set_healing_mp",
   ]));
 }
 

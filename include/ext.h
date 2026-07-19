@@ -10,6 +10,7 @@
 #define EXT_CURRENCY      DIR_STD_EXT "currency"
 #define EXT_EDIBLE        DIR_STD_EXT "edible"
 #define EXT_GMCP          DIR_STD_EXT "gmcp"
+#define EXT_HEALING       DIR_STD_EXT "healing"
 #define EXT_HTTP          DIR_STD_EXT "http"
 #define EXT_LOG           DIR_STD_EXT "log"
 #define EXT_LOOT          DIR_STD_EXT "loot"
