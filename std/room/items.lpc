@@ -10,13 +10,14 @@
  * 2025-03-16 - GitHub Copilot - Added documentation
  */
 
-private nosave mapping _items = ([]);
+private nosave mapping __items = ([]);
 
 mapping set_items(mapping item_data);
 mapping remove_item(string id);
 mapping add_item(mixed id, string desc);
-mapping query_items();
-string query_item(string id);
+mapping get_items();
+string get_item(string id);
+int has_item(string id);
 
 /**
  * Sets up items that can be examined in the room.
@@ -41,9 +42,9 @@ mapping set_items(mapping item_data) {
     }
   }
 
-  _items = item;
+  __items = item;
 
-  return query_items();
+  return get_items();
 }
 
 /**
@@ -51,8 +52,18 @@ mapping set_items(mapping item_data) {
  *
  * @returns {mapping} A copy of the items mapping
  */
-mapping query_items() {
-  return copy(_items);
+mapping get_items() {
+  return copy(__items);
+}
+
+/**
+ * Returns 1 if an item is described in this room.
+ *
+ * @param {string} id - The id to check.
+ * @returns {int} 1 if the item is present, 0 if not.
+ */
+int has_item(string id) {
+  return includes(keys(__items), id);
 }
 
 /**
@@ -66,14 +77,14 @@ mapping query_items() {
  * @param {string} id - The item ID to look up
  * @returns {string} The item description, or 0 if not found
  */
-string query_item(string id) {
+string get_item(string id) {
   mixed item, value;
   string result;
 
   if(!nullp(item))
     return 0;
 
-  foreach(item, value in _items) {
+  foreach(item, value in __items) {
     if(pointerp(item)) {
       int i;
 
@@ -113,12 +124,12 @@ string query_item(string id) {
  * @returns {mapping} The updated items mapping (copy)
  */
 mapping remove_item(string id) {
-  if(!_items[id])
-    return query_items();
+  if(!__items[id])
+    return get_items();
 
-  map_delete(_items, id);
+  map_delete(__items, id);
 
-  return query_items();
+  return get_items();
 }
 
 /**
@@ -133,17 +144,17 @@ mapping add_item(mixed id, string desc) {
     int i;
 
     for(; i < sizeof(id); i++) {
-      if(_items[id[i]])
-        map_delete(_items, id);
+      if(__items[id[i]])
+        map_delete(__items, id);
 
-      _items += ([id[i] : desc]);
+      __items += ([id[i] : desc]);
     }
   } else {
-    if(_items[id])
-      map_delete(_items, id);
+    if(__items[id])
+      map_delete(__items, id);
 
-    _items += ([id : desc]);
+    __items += ([id : desc]);
   }
 
-  return query_items();
+  return get_items();
 }
