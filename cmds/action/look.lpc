@@ -14,9 +14,12 @@ inherit STD_ACT;
 
 mixed identify_filename(object ob, int vm);
 mixed describe_environment(object tp);
+mixed describe_object(object tp, object ob);
+mixed describe_living(object tp, object ob);
+mixed describe_item(object tp, string item);
 
 mixed main(
-  /** @type {STD_PLAYER} */ object tp,
+  /** @type {STD_BODY} */ object tp,
   string arg
 ) {
   if(!environment(tp))
@@ -25,50 +28,33 @@ mixed main(
   if(falsy(arg))
     return describe_environment(tp);
 
+  /** @type {STD_ITEM | STD_BODY} */ object ob;
+  if(ob = find_target(tp, arg, tp))
+    return describe_object(tp, ob);
+
+  if(ob = find_target(tp, arg, environment(tp)))
+    return describe_object(tp, ob);
+
+  if(arg == "me")
+    return describe_living(tp, tp);
+
+  if(/** @type {STD_ROOM} */ (environment(tp))->has_item(arg))
+    return describe_item(tp, arg);
+
   return "You don't see that here.";
 }
 
-/**
- *
- * @param {STD_OBJECT} ob
- * @param vm
- */
-mixed identify_filename(object ob, int vm) {
-  vm = !!vm;
-
-  string fn = file_name(ob);
-
-  if(virtualp(ob)) {
-    if(vm == 0) {
-      if(ob->query_virtual_master())
-        return `${fn} [V]`;
-      else
-        return `${fn} [VM]`;
-    } else {
-      string virt = ob->query_virtual_master();
-
-      if(!virt)
-        return `${fn} [Virtual]`;
-      else
-        return `${fn} [${virt}]`;
-    }
-  } else {
-    return fn;
-  }
-}
-
 mixed describe_environment(
-  /** @type {STD_PLAYER} */ object tp
+  /** @type {STD_BODY} */ object tp
 ) {
   /** @type {STD_ROOM} */ object env = environment(tp);
   string result = "";
+  int fns = devp(tp) && tp->query_pref("look_filename") == "on";
 
-  if(devp(tp)) {
-    if(tp->query_pref("look_filename") == "on") {
-      string fn = `{{069}}${identify_filename(env, 1)}{{res}}`;
+  if(fns) {
+    string fn = `{{069}}${identify_filename(env, 1)}{{res}}`;
 
-      result += append(fn, "\n");
-    }
+    result += append(fn, "\n");
   }
 
   string short = ob_short(env);
@@ -97,7 +83,16 @@ mixed describe_environment(
   object *livs = filter(obs, (: living :));
   obs = non_livs + livs;
 
-  string *shorts = map(obs, (: ob_short :));
+  string *shorts = map(obs, function(object ob, int fns) {
+    string short = ob_short(ob);
+    if(!truthy(short))
+      return "";
+
+    if(fns)
+      return `${short} (${identify_filename(ob, 0)})`;
+    else
+      return short;
+  }, fns);
   shorts = filter(shorts, (: strlen :));
 
   if(sizeof(shorts)) {
@@ -110,4 +105,99 @@ mixed describe_environment(
   }
 
   return result;
+}
+
+mixed describe_object(
+  /** @type {STD_BODY} */ object tp,
+  /** @type {STD_ITEM | STD_BODY} */ object ob
+) {
+  if(living(ob))
+    return describe_living(tp, ob);
+
+  string result = "";
+  int fns = devp(tp) && tp->query_pref("look_filename") == "on";
+
+  if(fns) {
+    string fn = `{{069}}${identify_filename(ob, 1)}{{res}}`;
+
+    result += append(fn, "\n");
+  }
+
+  string short = ob_short(ob);
+  if(truthy(short)) {
+    result += append(short, "\n");
+  }
+
+  string long = ob_long(ob);
+  if(truthy(long))
+    result += append(long, "\n");
+
+  return result;
+}
+
+mixed describe_living(
+  /** @type {STD_BODY} */ object tp,
+  /** @type {STD_BODY} */ object ob
+) {
+  string result = "";
+  int fns = devp(tp) && tp->query_pref("look_filename") == "on";
+
+  if(fns) {
+    string fn = `{{069}}${identify_filename(ob, 1)}{{res}}`;
+
+    result += append(fn, "\n");
+  }
+
+  string short = ob_short(ob);
+  if(truthy(short)) {
+    result += append(short, "\n");
+  }
+
+  string long = ob_long(ob);
+  if(truthy(long))
+    result += append(long, "\n");
+
+  string race = ob->query_race();
+  string gender = ob->query_gender();
+  string sub = tp == ob ? "You" : capitalize(subjective(ob));
+  string verb = tp == ob ? "are" : "is";
+
+  if(truthy(race) && truthy(gender))
+    result += `${sub} ${verb} ${add_article(gender)} ${race}.\n`;
+  else if(truthy(race))
+    result += `${sub} ${verb} ${add_article(race)}.\n`;
+  else if(truthy(gender))
+    result += `${sub} ${verb} ${gender}.\n`;
+
+  return result;
+}
+
+mixed describe_item(object tp, string item) {
+  return /** @type {STD_ROOM} */ (environment(tp))->get_item(item);
+}
+
+/**
+ *
+ * @param {STD_OBJECT} ob
+ * @param vm
+ */
+mixed identify_filename(object ob, int vm) {
+  vm = !!vm;
+
+  string fn = file_name(ob);
+
+  if(virtualp(ob)) {
+    if(vm == 0) {
+      return `${fn} [V]`;
+    } else {
+      string virt = ob->query_virtual_master();
+
+      if(!virt)
+        return `${fn} [Virtual]`;
+      else
+        return `${fn} [${virt}]`;
+    }
+  } else {
+    return fn;
+  }
 }
