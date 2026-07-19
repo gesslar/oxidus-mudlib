@@ -29,7 +29,6 @@ void setup() {
  */
 mixed main(object tp, string str) {
   /** @type {STD_FOOD} */ object ob;
-  int uses;
 
   if(!ob = find_target(tp, str, tp))
     return "You don't have that.";
@@ -37,13 +36,23 @@ mixed main(object tp, string str) {
   if(!ob->is_edible())
     return "You can't eat that.";
 
-  uses = ob->query_uses();
+  int uses = ob->query_uses();
+  int max_uses = ob->query_max_uses();
 
   if(uses < 1)
     return "There is nothing left to eat.";
 
-  if(!ob->eat_obj(tp))
+  mapping healing = ob->get_healing();
+  int eaten = ob->eat_obj(tp);
+
+  if(!eaten)
     return "You couldn't eat that.";
+
+  if(uses == max_uses && mapp(healing)) {
+    tp->adjust_hp(healing.hp);
+    tp->adjust_sp(healing.sp);
+    tp->adjust_mp(healing.mp);
+  }
 
   return 1;
 }

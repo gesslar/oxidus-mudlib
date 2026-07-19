@@ -18,4 +18,8 @@ varargs void virtual_setup(mapping data) {
   data["mass"] && set_mass(data["mass"]);
   data["value"] && set_value(data["value"]);
   data["uses"] && set_uses(data["uses"]);
+  data["healing"] && set_healing(data["healing"]);
+  data["healing_hp"] && set_healing_hp(data["healing_hp"]);
+  data["healing_sp"] && set_healing_sp(data["healing_sp"]);
+  data["healing_mp"] && set_healing_mp(data["healing_mp"]);
 }

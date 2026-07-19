@@ -15,4 +15,5 @@
     autovalue: true,
     edible: true,
   },
+  healing: 3,
 }

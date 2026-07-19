@@ -13,4 +13,5 @@
     autovalue: true,
     raw: true,
   },
+  healing: 6,
 }

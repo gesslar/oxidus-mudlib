@@ -8,4 +8,5 @@
   mass: 5,
   value: 2,
   uses: 1,
+  healing: 3,
 }
