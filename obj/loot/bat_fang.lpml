@@ -4,7 +4,7 @@
   adj: ["bat","tiny","needle-like"],
   name: "bat fang",
   short: "a tiny bat fang",
-  long: "This is a needle-like fang plucked from the maw of a cave bat. It "
+  long: "This is a needle-like fang plucked from the maw of a cave bat. It"
         "could be useful for crafting small piercing instruments.",
   mass: 1,
   material: ["bone"],

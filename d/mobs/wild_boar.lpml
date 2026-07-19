@@ -2,7 +2,7 @@
   type: "mammal",
   name: "wild boar",
   short: "wild boar",
-  long: "A wild boar is here, snuffling around for food. Its tusks look sharp "
+  long: "A wild boar is here, snuffling around for food. Its tusks look sharp"
         "and dangerous.",
   id: [
     "wild boar",

@@ -4,7 +4,7 @@
   adj: ["raw", "fresh"],
   name: "raw pork",
   short: "a chunk of raw pork",
-  long: "This is a fresh chunk of raw pork from a wild boar. It needs to be "
+  long: "This is a fresh chunk of raw pork from a wild boar. It needs to be"
         "cooked before eating.",
   mass: 30,
   value: 40,

@@ -6,11 +6,11 @@
   type: "mammal",
   name: "bramble cur",
   short: "bramble cur",
-  long: "Once it was a dog. The blight has made it something else: a lean, "
-        "scarred hound whose matted hide has gone half to bark, with thorns "
-        "grown through the skin along its spine and a green sickly light "
-        "behind its eyes. It pulls its lips back from yellow teeth and a low "
-        "wet snarl works in its throat. This is what guards the heart of "
+  long: "Once it was a dog. The blight has made it something else: a lean,"
+        "scarred hound whose matted hide has gone half to bark, with thorns"
+        "grown through the skin along its spine and a green sickly light"
+        "behind its eyes. It pulls its lips back from yellow teeth and a low"
+        "wet snarl works in its throat. This is what guards the heart of"
         "the thicket, and it has come home to find you in it.",
   id: [
     "bramble cur",

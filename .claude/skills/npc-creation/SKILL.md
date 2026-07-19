@@ -1,6 +1,6 @@
 ---
 name: npc-creation
-description: Create and modify NPCs and monsters for Oxidus. Covers code-based NPCs (STD_NPC), data-driven monsters (virtual_setup, LPML), setLevel, race modules, body parts, heartbeat optimization, combat memory, loot/coin tables, utility-AI decisions, and the virtual compile flow.
+description: Create and modify NPCs and monsters for Oxidus. Covers code-based NPCs (STD_NPC), data-driven monsters (virtual_setup, LPML), set_level, race modules, body parts, heartbeat optimization, combat memory, loot/coin tables, utility-AI decisions, and the virtual compile flow.
 ---
 
 # NPC Creation Skill
@@ -10,7 +10,7 @@ You are helping create and modify NPCs/monsters for Oxidus. Follow the `lpc-codi
 ## Architecture Overview
 
 ```
-STD_NPC (std/living/npc.lpc)               — NPC base: heartbeat, setLevel, death detect
+STD_NPC (std/living/npc.lpc)               — NPC base: heartbeat, set_level, death detect
   └── STD_BODY                            — inherits skills, combat, vitals, wealth, etc.
 
 STD_MONSTER (std/mobs/monster.lpc)          — data-driven virtual_setup for LPML mobs
@@ -51,7 +51,7 @@ void setup() {
     set_id(({"guard", "town guard"}));
     set_gender("male");
     set_race("human");
-    setLevel(5.0);                          // BEFORE custom skills
+    set_level(5.0);                          // BEFORE custom skills
     set_damage(8.0);
     set_weapon_name("sword");
     set_weapon_type("slashing");
@@ -114,11 +114,11 @@ In `mudlib_setup()` (for clones):
 4. `add_hb("stop_heart_beat")` — checked each heartbeat to stop when room is empty.
 5. `add_module("mob/combat_memory")` — loads combat memory module.
 
-### `setLevel(float level)`
+### `set_level(float level)`
 
-**Overrides** the body's `setLevel`. After setting the level, calls `adjust_skills_by_npc_level(level)` which **resets all stored skill levels to near-zero** (`random_float(0.01)`).
+**Overrides** the body's `set_level`. After setting the level, calls `adjust_skills_by_npc_level(level)`, which **seeds every stored skill to a multiple of the NPC's level** so combat math reads honest values. The multiplier lives in `adjust_skill_levels()` in `/std/living/skills.lpc`.
 
-**Order matters:** If you add skills and then call `setLevel()`, the skills are wiped. Set level first, then add any custom skills if needed (though for NPCs, `query_skill()` uses the `level * 3` shortcut anyway).
+**Order matters:** If you add custom skills and then call `set_level()`, `adjust_skills_by_npc_level()` overwrites them all. Set level first, then add any custom skills if needed (though for NPCs every skill already resolves to the level-scaled value, so custom values rarely matter).
 
 ### NPC Weapon Properties
 
@@ -126,7 +126,7 @@ Used when the NPC has no wielded weapon object:
 
 | Function | Default | Description |
 |---|---|---|
-| `set_damage(float)` | `0.0` | Base damage. If `<= 0`, uses `random_float(queryLevel() * 2.0)` |
+| `set_damage(float)` | `0.0` | Base damage. If `<= 0`, the roll scales with level: `query_level() + random_float(query_level())` |
 | `set_weapon_name(string)` | `"fist"` | Display name for combat messages |
 | `set_weapon_type(string)` | `"bludgeoning"` | Damage type string |
 
@@ -446,9 +446,9 @@ Memory is populated from `combat.lpc::start_attack()` for NPC combatants. Resets
 
 NPCs interact with the skill system differently from players:
 
-1. **`query_skill()` returns `queryLevel() * 3.0`** for all skills — NPCs never use stored skill values for this function.
-2. **`setLevel()` wipes stored skills** via `adjust_skills_by_npc_level()`.
-3. **`query_skill_level()` reads stored values** (near-zero after `setLevel`) — no NPC shortcut.
+1. **Every NPC skill is scaled from the NPC's level**, not trained. `set_level()` seeds each stored skill node to a multiple of the level via `adjust_skills_by_npc_level()` — it does not wipe them to zero.
+2. **The query functions read those seeded values**, so `query_skill()` returns the scaled level (plus any boon) and `query_skill_level()` returns it floored. There is no NPC special-casing in the query path.
+3. The multiplier is defined in `adjust_skill_levels()` in `/std/living/skills.lpc` — check there rather than assuming a figure.
 4. See the `skills-and-advancement` skill for full details on the skill system.
 
 ## Signals
@@ -469,7 +469,7 @@ NPCs interact with the skill system differently from players:
 
 ## Gotchas
 
-1. **`setLevel()` on NPCs wipes stored skills.** Always call `setLevel()` before adding custom skills.
+1. **`set_level()` on NPCs overwrites stored skills** with the level-scaled value. Always call `set_level()` before adding custom skills.
 2. **`set_race()` silently falls back** if the race module file doesn't exist. The NPC will have no body parts, no equipment slots, and no regen rates. No error is raised.
 3. **NPCs stop ticking in empty rooms.** No heartbeat = no regen, no boon processing, no AI decisions, no death detection. An NPC at 1 HP in an empty room stays at 1 HP indefinitely.
 4. **`add_func()` matches by exact description string.** If the string doesn't match a registered decision, the function is never called.

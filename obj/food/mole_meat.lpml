@@ -4,7 +4,7 @@
   adj: ["mole","raw","gamey"],
   name: "mole meat",
   short: "a chunk of mole meat",
-  long: "This is a gamey chunk of meat carved from a tunnel mole. It needs to "
+  long: "This is a gamey chunk of meat carved from a tunnel mole. It needs to"
         "be cooked before eating.",
   mass: 20,
   value: 25,

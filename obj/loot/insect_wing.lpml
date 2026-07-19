@@ -4,7 +4,7 @@
   adj: ["insect","delicate"],
   name: "insect wing",
   short: "a delicate insect wing",
-  long: "This is a thin, transparent wing from an insect. It's very fragile "
+  long: "This is a thin, transparent wing from an insect. It's very fragile"
         "but might be useful in certain alchemical recipes.",
   mass: 1,
   material: ["insect"],
