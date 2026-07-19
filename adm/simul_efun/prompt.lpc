@@ -153,7 +153,7 @@ varargs void prompt_colour(object body, mixed *cb, string prompt) {
 
   mess += "\n\n";
 
-  mess += "Select one of (colour), (0-255), (c)olour list, (p)lain, or (q)uit.\n"
+  mess += "Select one of (colour), #(000-fff), (c)olour list, (p)lain, or (q)uit.\n"
           "Your choice: ";
 
   tell(body, mess);
@@ -190,7 +190,7 @@ private void _prompt_colour(string input, string prompt, object body, mixed *bas
     prompt += "\n";
     prompt += list;
     prompt += "\n";
-    prompt += "Select (0-255), (p)lain), or (q)uit.\n";
+    prompt += "Select #(000-fff), (p)lain, or (q)uit.\n";
     prompt += "Your choice: ";
 
     tell(body, prompt);
