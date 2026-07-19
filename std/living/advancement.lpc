@@ -32,7 +32,7 @@ private int __xp = 0;
  * @returns {int} The current XP total.
  */
 int query_xp() {
-  return __xp;
+  return to_int(__xp);
 }
 
 /**
