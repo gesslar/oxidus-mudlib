@@ -20,6 +20,7 @@ inherit STD_VIRTUAL_MAP;
 // Forward declarations
 private void setup_forest_shorts();
 private void setup_forest_longs();
+private void load_mobs();
 
 private nosave string *forest_shorts;
 private nosave string *forest_longs;
@@ -28,10 +29,20 @@ private nosave string forest_map_file;
 
 private nosave int rot = 0;
 
+/**
+ * Weighted spawn pool for forest mobs, keyed by a mapping containing
+ * the mob path and level range, with the value being the relative
+ * spawn weight.
+ *
+ * @type {([ ([ string: mixed ]): int ])}
+ */
+private nosave mapping mob_files = ([]);
+
 void setup() {
   apply_map_file(__DIR__ "forest_map.txt");
   setup_forest_shorts();
   setup_forest_longs();
+  load_mobs();
 }
 
 /**
@@ -183,4 +194,35 @@ public void setup_exits(object room) {
   }
 
   room->set_exits(exits);
+}
+
+/**
+ * Loads the forest spawn pool from spawn.lpml into mob_files. Each
+ * entry is keyed by a mapping containing the mob's file path and
+ * level range, with the LPML weight as the value.
+ */
+private void load_mobs() {
+  mapping spawn = load_lpml(__DIR__ "spawn.lpml");
+
+  mob_files = ([]);
+
+  each(spawn, function(mapping mob) {
+    mapping mob_data = ([
+        "path": mob["path"],
+        "level": mob["level"]
+      ]);
+
+    mob_files[mob_data] = mob["weight"];
+  });
+}
+
+/**
+ * Returns the loaded spawn pool for forest rooms to use when
+ * deciding which mob to spawn.
+ *
+ * @returns {([ ([ string: mixed ]): int ])} The weighted spawn
+ *                                           pool mapping.
+ */
+public mapping query_mob_files() {
+  return mob_files;
 }
