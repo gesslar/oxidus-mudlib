@@ -94,6 +94,9 @@ public nomask object compile_object(string file) {
         return 0;
       }
 
+      if(!result)
+        return 0;
+
       if(!result->query_virtual_master()) {
         result->remove();
 
