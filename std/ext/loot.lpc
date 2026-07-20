@@ -25,7 +25,7 @@ varargs public void add_loot(mixed item, float chance) {
   if(!floatp(chance))
     return;
 
-  chance = clamp(0.0, 100.0, chance);
+  chance = clamp(chance, 0.0, 100.0);
 
   switch(typeof(item)) {
     case T_STRING :
@@ -62,7 +62,7 @@ varargs public void add_coin(string type, int num, float chance) {
   if(!floatp(chance))
     return;
 
-  chance = clamp(0.0, 100.0, chance);
+  chance = clamp(chance, 0.0, 100.0);
 
   _coin_table += ({ ({ type, num, chance }) });
 }

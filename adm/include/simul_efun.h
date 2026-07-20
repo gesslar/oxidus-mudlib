@@ -163,7 +163,7 @@ varargs void tell_them(string str, object *exclude, int message_type);
 // File: number.c
 float percent_of(float a, float b);
 float percent(float a, float b);
-float clamp(float min, float max, float val);
+float clamp(float val, float min, float max);
 int clamped(float val, float min, float max);
 int between(float val, float min, float max);
 varargs float remainder(mixed a, mixed b);
