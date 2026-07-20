@@ -60,7 +60,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
           victim
         );
         tp->deliver_damage(victim, initial, "cold");
-        tp->use_skill("arcane.discipline.frost", 0.15);
+        tp->use_skill("arcane.discipline.frost", 0.5);
 
         // Shards stack — each caster's shard shatters on its own
         // schedule, so group casts don't trample each other.

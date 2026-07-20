@@ -53,7 +53,7 @@ mixed use(
       victim
     );
     tp->deliver_damage(victim, damage, "lightning");
-    tp->use_skill("arcane.discipline.lightning", 0.15);
+    tp->use_skill("arcane.discipline.lightning", 0.5);
   } else {
     tp->simple_action(
       "The bolt of lightning fizzles harmlessly."
