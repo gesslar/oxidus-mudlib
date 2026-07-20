@@ -61,7 +61,7 @@ varargs object get_object(string str, object player) {
     return ob;
 
   if(objectp(player))
-    str = resolve_path(player->query_env("cwd"), str);
+    str = resolve_path(/** @type {STD_BODY} */ (player)->query_env("cwd"), str);
 
   if(ob = find_object(str))
     return ob;
