@@ -353,7 +353,7 @@ mixed cmd_sell(object tp, string str) {
     int coins = sum(values(value));
     string mess, *list;
 
-    if(nullp(cost)) {
+    if(!cost) {
       tell(tp, "The shop refuses to buy your " + short + ".\n");
       continue;
     }
