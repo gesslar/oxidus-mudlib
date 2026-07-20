@@ -15,8 +15,10 @@ inherit STD_ACT;
 mixed identify_filename(object ob, int vm);
 mixed describe_environment(object tp);
 mixed describe_object(object tp, object ob);
+mixed describe_contents(object tp, object ob);
 mixed describe_living(object tp, object ob);
 mixed describe_item(object tp, string item);
+private string *format_contents(object *obs, int fns);
 
 mixed main(
   /** @type {STD_BODY} */ object tp,
@@ -28,15 +30,37 @@ mixed main(
   if(falsy(arg))
     return describe_environment(tp);
 
-  /** @type {STD_ITEM | STD_BODY} */ object ob;
-  if(ob = find_target(tp, arg, tp))
-    return describe_object(tp, ob);
-
-  if(ob = find_target(tp, arg, environment(tp)))
-    return describe_object(tp, ob);
-
   if(arg == "me")
     return describe_living(tp, tp);
+
+  int here = 0, contents = 0;
+
+  if(sscanf(arg, "at %s here", arg) == 1) {         // look at <x>
+    here = 1;
+  } else if(sscanf(arg, "at %s", arg) == 1) {       // look at <x> here
+    // nothing to do
+  } else if(sscanf(arg, "in %s here", arg) == 1) {  // look in <x>
+    here = 1;
+    contents = 1;
+  } else if(sscanf(arg, "in %s", arg) == 1) {       // look in <x> here
+    contents = 1;
+  } else if(sscanf(arg, "%s here", arg) == 1) {     // look <x> here
+    here = 1;
+  }
+
+  /** @type {STD_ITEM | STD_BODY} */ object ob;
+  if(!here)
+    ob = find_target(tp, arg, tp);
+
+  if(!ob)
+    ob = find_target(tp, arg, environment(tp));
+
+  if(ob) {
+    if(contents)
+      return describe_contents(tp, ob);
+
+    return describe_object(tp, ob);
+  }
 
   if(/** @type {STD_ROOM} */ (environment(tp))->has_item(arg))
     return describe_item(tp, arg);
@@ -83,17 +107,7 @@ mixed describe_environment(
   object *livs = filter(obs, (: living :));
   obs = non_livs + livs;
 
-  string *shorts = map(obs, function(object ob, int fns) {
-    string short = ob_short(ob);
-    if(!truthy(short))
-      return "";
-
-    if(fns)
-      return `${short} (${identify_filename(ob, 0)})`;
-    else
-      return short;
-  }, fns);
-  shorts = filter(shorts, (: strlen :));
+  string *shorts = format_contents(obs, fns);
 
   if(sizeof(shorts)) {
     string obs_desc = implode(shorts, "\n") + "\n";
@@ -131,6 +145,50 @@ mixed describe_object(
   string long = ob_long(ob);
   if(truthy(long))
     result += append(long, "\n");
+
+  return result;
+}
+
+mixed describe_contents(
+  /** @type {STD_BODY} */ object tp,
+  /** @type {STD_CONTAINER} */ object ob
+) {
+  if(living(ob))
+    return "Wouldn't that be amazing?";
+
+  string result = "";
+  int fns = devp(tp) && tp->query_pref("look_filename") == "on";
+
+  if(fns) {
+    string fn = `{{069}}${identify_filename(ob, 1)}{{res}}`;
+
+    result += append(fn, "\n");
+  }
+
+  string short = ob_short(ob);
+  if(truthy(short)) {
+    result += append(short, "\n");
+  }
+
+  if(ob->is_closed()) {
+    result += "It is closed.";
+  } else {
+    object *obs = all_inventory(ob);
+    obs = filter(obs, (: $(tp)->can_see($1) :));
+    obs -= ({ tp });
+
+    string *shorts = format_contents(obs, fns);
+    if(sizeof(shorts)) {
+      if(truthy(result))
+        result += "\n";
+
+      shorts = map(shorts, (: `  ${$1}` :));
+      unshift(& shorts, "Contents:");
+      result += implode(shorts, "\n");
+    } else {
+      result += "You see nothing inside.";
+    }
+  }
 
   return result;
 }
@@ -200,4 +258,21 @@ mixed identify_filename(object ob, int vm) {
   } else {
     return fn;
   }
+}
+
+private string *format_contents(object *obs, int fns) {
+  string *shorts = map(obs, function(object ob, int fns) {
+    string short = ob_short(ob);
+    if(!truthy(short))
+      return "";
+
+    if(fns)
+      return `${short} (${identify_filename(ob, 0)})`;
+    else
+      return short;
+  }, fns);
+
+  shorts = filter(shorts, (: strlen :));
+
+  return shorts;
 }
