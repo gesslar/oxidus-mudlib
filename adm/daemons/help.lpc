@@ -160,7 +160,7 @@ mapping *query_help(string topic, object who) {
 
     // Includes carry an explicit priv; plain directories fall back to the
     // directory name acting as its own priv.
-    string priv = helps["priv"] ?? cat;
+    // string priv = helps["priv"] ?? cat;
 
     // if(priv == "all" || !includes(groups, priv))
     //   push(ref result, ({ cat, helps[topic] }));
