@@ -12,16 +12,22 @@
 
 inherit STD_CMD;
 
+private string *format_contents(object *obs, int fns);
+
 mixed main(
   /** @type {STD_BODY} */ object tp,
-  string _arg
+  string arg
 ) {
   object *obs = all_inventory(tp);
   obs = filter(obs, (: $(tp)->can_see($1) :));
 
-  string *shorts = map(obs, (: ob_short :));
-  shorts = filter(shorts, (: strlen :));
-  shorts = map(shorts, (: `  ${$1}` :));
+  if(arg)
+    obs = filter(obs, (: $1->id($(arg)) :));
+
+  string *shorts = format_contents(
+    obs,
+    devp(tp) && tp->query_pref("look_filename") == "on"
+  );
 
   string *result =
       ({ "You are carrying:", "" })
@@ -30,4 +36,23 @@ mixed main(
     ;
 
   return result;
+}
+
+private string *format_contents(object *obs, int fns) {
+  string *shorts = map(obs, function(object ob, int fns) {
+    int equipped = /** @type {STD_ARMOUR|STD_CLOTHING|STD_WEAPON} */ (ob)->equipped();
+    string short = ob_short(ob);
+
+    if(!truthy(short))
+      return "";
+
+    if(fns)
+      return `${equipped?"*":" "}${short} (${file_name(ob)})`;
+    else
+      return `${equipped?"*":" "}${short}`;
+  }, fns);
+
+  shorts = filter(shorts, (: strlen :));
+
+  return shorts;
 }
