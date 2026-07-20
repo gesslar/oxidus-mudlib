@@ -81,9 +81,6 @@ string get_item(string id) {
   mixed item, value;
   string result;
 
-  if(!nullp(item))
-    return 0;
-
   foreach(item, value in __items) {
     if(pointerp(item)) {
       int i;
