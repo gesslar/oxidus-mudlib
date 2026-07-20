@@ -30,6 +30,14 @@ positive evidence of a real defect.
 - **Numeric coercion preserves float values** through int-typed locals in
   FluffOS. `int x = <float expr>` does not necessarily truncate; verify before
   claiming a truncation bug.
+- **Calling an undefined function is not an error.** `ob->foo()` /
+  `call_other(ob, "foo")` where `ob` does not define `foo()` returns `0`; it
+  does **not** raise a missing-function runtime error (`apply_low()` in
+  `src/vm/internal/apply.cc` pops the arguments and returns 0). Duck-typed
+  calls across mixed inventories are a normal idiom here. Do not flag an
+  unguarded `->` call as a crash, and do not suggest a `function_exists()`
+  guard for one — the guard is only meaningful when the code must distinguish
+  "absent" from a legitimately returned `0`.
 - **Reserved type words** (`buffer`, `function`, `class`, `mapping`, `object`,
   `mixed`, …) may not be used as variable names — that one *is* worth flagging.
 - **Closures.** In `(: :)` closures, `$N` is the call-time positional argument
@@ -56,6 +64,22 @@ positive evidence of a real defect.
 
 You have the whole repository. Use it before you write a comment.
 
+- **Cite the driver source before you assert a failure mode.** Any finding that
+  says the driver will *do* something — raise a runtime error, fail to resolve
+  a call, crash, truncate, coerce, or reject a path — is a claim about
+  fluffos/fluffos, and you have that repository. Read the code that implements
+  it before the comment exists: the efun, the apply/call dispatch, the relevant
+  bytecode handler. This is a gate, not a suggestion. C or C++ intuition about
+  what "should" happen is not evidence, and neither is the absence of a
+  construct from general LPC knowledge; this driver has extensions. If the
+  source refutes the claim, drop the comment; if you cannot find the
+  implementing code, you have not confirmed the failure mode — also drop it.
+- **Suggesting a defensive guard is asserting a failure mode.** Proposing a
+  `function_exists()`, `objectp()`, `nullp()`, or similar check implies the
+  unguarded path breaks. That implication needs the same source-level proof as
+  any other finding. "Defensive anyway" is not a justification — if the driver
+  makes the unguarded call safe, the guard is noise and the comment should not
+  exist.
 - **State findings as facts, not conditionals.** "If `foo()` returns null then
   this dereferences null" is not a finding — it is unfinished homework. Go read
   `foo()` and its callers. Either it *can* return null on a real path (now it is
