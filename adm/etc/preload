@@ -43,3 +43,6 @@
 
 # Message Daemon
 /adm/daemons/message
+
+# Time Daemon
+/adm/daemons/time
