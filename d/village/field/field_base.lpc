@@ -36,6 +36,9 @@ public void repopulate() {
 
   __mobs -= ({ 0 });
 
+  if(sizeof(filter(__mobs, (: $1->in_combat() :))))
+    return;
+
   foreach(mob in __mobs) {
     if(objectp(mob)) {
       mob->simple_action("$N $vwander off through the grass.");
