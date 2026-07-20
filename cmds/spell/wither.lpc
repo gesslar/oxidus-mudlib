@@ -57,7 +57,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
           "{{83a}}$N $vreach out with a grasping shadow toward $t!{{res}}",
           victim
         );
-        tp->use_skill("arcane.discipline.shadow", 0.15);
+        tp->use_skill("arcane.discipline.shadow", 0.5);
 
         // Withers stack across casters — each contributes its own
         // -amount to the three defense skills.

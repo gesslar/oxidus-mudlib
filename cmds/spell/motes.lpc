@@ -56,7 +56,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
           victim
         );
         tp->deliver_damage(victim, damage, "light");
-        tp->use_skill("arcane.discipline.light", 0.15);
+        tp->use_skill("arcane.discipline.light", 0.5);
       } else {
         tp->simple_action(
           "The motes of light disperse harmlessly."
