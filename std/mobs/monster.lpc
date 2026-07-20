@@ -53,6 +53,8 @@ void virtual_setup(mixed args...) {
     set_weapon_name(data["weapon name"]);
   if(!nullp(data["weapon type"]))
     set_weapon_type(data["weapon type"]);
+  data["attack speed"] && set_attack_speed(data["attack speed"]);
+  data["plus attack speed"] && add_attack_speed(data["plus attack speed"]);
 
   // Set race
   if(!nullp(data["race"]))

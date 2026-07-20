@@ -21,6 +21,7 @@
   ],
   weapon name: "stinger",
   weapon type: "piercing",
+  plus attack speed: 0.5,
   level: [6, 8],
   gender: [
     "male",
