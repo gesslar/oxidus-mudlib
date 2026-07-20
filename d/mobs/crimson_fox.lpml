@@ -21,6 +21,7 @@
   ],
   weapon name: "fangs",
   weapon type: "piercing",
+  plus attack speed: 0.25,
   level: [5, 8],
   gender: [
     "male",
