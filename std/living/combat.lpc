@@ -115,7 +115,7 @@ int start_attack(object victim) {
   if(!__seen_enemies[victim])
     __seen_enemies[victim] = 1.0;
 
-  if(!userp())
+  if(npcp(this_object()))
     module("combat_memory", "add_to_memory", victim);
 
   if(!__next_combat_round || find_call_out(__next_combat_round) == -1)
@@ -312,40 +312,33 @@ private fail_strike(object enemy, object weapon) {
  *                          or NPC defaults.
  */
 void strike_enemy(object enemy, object weapon) {
-  string wname, wtype;
-  string *messes, mess;
-  float dam;
-  string skill_name;
-  float skill;
-  float base, variance, wbase;
-  mapping weapon_info;
-  string proc;
-
   if(!valid_enemy(enemy))
     return;
 
   if(!current_enemy(enemy))
     return;
 
-  weapon_info = query_weapon_info(weapon);
+  mapping weapon_info = query_weapon_info(weapon);
 
-  skill_name = sprintf(weapon_info["skill"]);
-  skill = query_skill_level(skill_name);
-  base = percent_of(5.0, enemy->query_max_hp());
-  variance = percent_of(25.0, base);
-  base -= variance;
-  variance = random_float(variance);
+  string skill_name = sprintf(weapon_info["skill"]);
+  float skill = query_skill_level(skill_name);
+  float base = 5.0;
+  float subtracted = percent_of(25.0, base);
+
+  base -= subtracted;
+  float variance = random_float(subtracted);
   base += variance;
 
-  wbase = weapon_info["base"];
-  wname = weapon_info["name"];
-  wtype = weapon_info["type"];
+  float wbase = weapon_info["base"];
+  string wname = weapon_info["name"];
+  string wtype = weapon_info["type"];
 
   if(enemy->query_mp() < 0.0)
       base += 4.0;
 
-  dam =
+  float dam =
       base
+    + wbase
     + query_effective_level()
     + (skill + query_skill_level("combat") / 2.0)
     - enemy->query_effective_level()
@@ -358,8 +351,8 @@ void strike_enemy(object enemy, object weapon) {
   if(dam < 0.0)
     dam = 1.0;
 
-  mess = MESS_D->get_message("combat", wtype, to_int(ceil(dam)));
-  messes = ACTION_D->action(({ this_object(), enemy }), mess, ({wname}));
+  string mess = MESS_D->get_message("combat", wtype, to_int(ceil(dam)));
+  string *messes = ACTION_D->action(({ this_object(), enemy }), mess, ({wname}));
 
   tell(this_object(), messes[0], MSG_COMBAT_HIT);
   tell(enemy, messes[1], MSG_COMBAT_HIT);
@@ -370,6 +363,7 @@ void strike_enemy(object enemy, object weapon) {
   add_threat(enemy, dam);
   add_seen_threat(enemy, dam);
 
+  string proc;
   if(weapon && weapon->is_weapon()) {
     if(stringp(proc = call_if(weapon, "can_proc"))) {
       call_if(weapon, "proc", proc, this_object(), enemy);
@@ -400,7 +394,7 @@ mapping query_weapon_info(object weapon) {
     skill_name = sprintf("combat.melee.%s", wtype);
     base = weapon->query_dc();
   } else {
-    if(userp()) {
+    if(pcp(this_object())) {
       wname = "fist";
       wtype = "bludgeoning";
       skill_name = "combat.melee.unarmed";
@@ -740,13 +734,16 @@ float add_seen_threat(object enemy, float amount) {
  * Adjusts the attack speed by a delta and clamps the result to the legal range
  * of 0.5 to 10.0 seconds per round.
  *
+ * The amount is inverted, such that a positive number added reduces the delay.
+ * The lower the faster!
+ *
  * @param {float} amount - Delta to apply (may be negative).
- * @returns {float} The new clamped attack speed.
+ * @returns {float} The new attack speed.
  */
 float add_attack_speed(float amount) {
-  __attack_speed += amount;
+  __attack_speed -= amount;
 
-  __attack_speed = clamp(0.5, 10.0, __attack_speed);
+  __attack_speed = clamp(__attack_speed, 0.5, 10.0);
 
   return __attack_speed;
 }
@@ -756,9 +753,14 @@ float add_attack_speed(float amount) {
  * callers are responsible for staying in range.
  *
  * @param {float} speed - The new attack speed in seconds.
+ * @returns {float} The attack speed.
  */
-void set_attack_speed(float speed) {
+float set_attack_speed(float speed) {
   __attack_speed = speed;
+
+  __attack_speed = clamp(__attack_speed, 0.5, 10.0);
+
+  return __attack_speed;
 }
 
 /**

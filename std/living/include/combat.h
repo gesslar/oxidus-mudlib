@@ -27,7 +27,7 @@ int valid_seen_enemy(object enemy);
 float add_threat(object enemy, float amount);
 float add_seen_threat(object enemy, float amount);
 float add_attack_speed(float amount);
-void set_attack_speed(float speed);
+float set_attack_speed(float speed);
 float query_attack_speed();
 void set_defence(mapping def);
 void add_defence(string type, float amount);
