@@ -72,10 +72,14 @@ varargs string save_to_string(int recursep) {
     tmp = ([]);
 
     foreach(string element, string func in elements) {
-      tmp[element] = ([
-        "value": fetch_variable(element),
-        "func": func,
-      ]);
+      mixed value = fetch_variable(element);
+
+      if(!nullp(value)) {
+        tmp[element] = ([
+          "value": value,
+          "func": func,
+        ]);
+      }
     }
 
     if(sizeof(tmp))
