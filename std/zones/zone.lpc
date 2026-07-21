@@ -101,7 +101,7 @@ string query_zone_name() {
  *
  * @returns {int} 1 if the daemon may be destructed, 0 otherwise.
  */
-int request_clean_up() {
+int can_clean_up() {
   __rooms -= ({ 0 });
 
   if(sizeof(__rooms) == 0)

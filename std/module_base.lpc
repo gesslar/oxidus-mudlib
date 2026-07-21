@@ -71,7 +71,7 @@ public object query_owner() {
  *
  * @returns {int} 1 if eligible for cleanup, 0 if not
  */
-public int request_clean_up() {
+public int can_clean_up() {
   if(!clonep())
     return 1;
 
