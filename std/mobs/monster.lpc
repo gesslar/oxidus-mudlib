@@ -55,6 +55,20 @@ void virtual_setup(mixed args...) {
     set_weapon_type(data["weapon type"]);
   data["attack speed"] && set_attack_speed(data["attack speed"]);
   data["plus attack speed"] && add_attack_speed(data["plus attack speed"]);
+  data["proc chance"] && set_proc_chance(data["proc chance"]);
+  if(pointerp(data["simple procs"])) {
+    foreach(mapping proc in data["simple procs"]) {
+      add_simple_proc(
+        proc.tag,
+        proc.messages,
+        proc.damage_type,
+        proc.attack_type ?? "melee",
+        proc.weight,
+        proc.cooldown,
+        proc.severity,
+      );
+    }
+  }
 
   // Set race
   if(!nullp(data["race"]))

@@ -37,6 +37,7 @@
 #define STD_MODULE_BASE     DIR_STD "module_base"
 #define STD_LIVING          DIR_STD_LIVING "living"
 #define STD_NPC             DIR_STD_LIVING "npc"
+#define STD_NPC_PROC        DIR_STD_LIVING "proc"
 #define STD_OB_E            DIR_STD "object/ob_prop"
 #define STD_OBJECT          DIR_STD "object/object"
 #define STD_PLAYER          DIR_STD_LIVING "player"
