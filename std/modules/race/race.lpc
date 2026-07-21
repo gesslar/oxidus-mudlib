@@ -230,7 +230,7 @@ int query_body_part_vitalness_modifier(string part) {
  * and is a key in the body_parts mapping. Force is an optional argument that
  * will force the function to forgo the check for membership in the body_parts
  * @param {string} part - the body part to check
- * @param {[int=0]} force - optional, default 0
+ * @param {int} [force=0] - optional, default 0
  * @returns {int} 1 if the body part is valid, 0 otherwise
  */
 int valid_body_part(string part, int force: (: 0 :)) {
