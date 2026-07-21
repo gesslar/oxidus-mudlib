@@ -150,6 +150,11 @@ public varargs void proc_npc(string tag) {
 private void perform_simple_proc(string tag, mapping proc) {
   /** @type {STD_BODY} */ object enemy = highest_threat();
 
+  string skill_name = `combat.${proc.attack_type}.${proc.damage_type}`;
+
+  if(!can_strike(enemy, skill_name))
+    return;
+
   if(sizeof(proc.messages) == 1) {
     target_action(proc.messages[0], enemy);
   } else if(sizeof(proc.messages) == 2) {
@@ -157,7 +162,7 @@ private void perform_simple_proc(string tag, mapping proc) {
     other_target_action(proc.messages[1], enemy);
   }
 
-  float raw = calculate_damage(enemy, `combat.${proc.attack_type}.${proc.damage_type}`);
+  float raw = calculate_damage(enemy, skill_name);
   float damage = adjust_damage_by_severity(raw, proc.severity);
 
   deliver_damage(enemy, damage, proc.damage_type);

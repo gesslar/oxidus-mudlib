@@ -68,11 +68,11 @@ void add_proc(string name, mixed proc) {
   if(stringp(proc) || valid_function(proc))
     proc = ([ "function": proc ]);
 
-  if(nullp(proc["cooldown"]))
-    proc["cooldown"] = __proc_cooldown;
+  if(nullp(proc.cooldown))
+    proc.cooldown = __proc_cooldown;
 
-  if(nullp(proc["weight"]))
-    proc["weight"] = __proc_weight;
+  if(nullp(proc.weight))
+    proc.weight = __proc_weight;
 
   __procs[name] = proc;
 }
@@ -163,9 +163,9 @@ string can_proc() {
   // Iterate through all procs and check if they can proc, if they have
   // a cooldown
   foreach(string name, mapping proc in __procs) {
-    if(proc["cooldown"] > 0) {
-      if(now - __cooldowns[name] > proc["cooldown"]) {
-        procs[name] = proc["chance"] || 100;
+    if(proc.cooldown > 0) {
+      if(now - __cooldowns[name] > proc.cooldown) {
+        procs[name] = proc.weight || 100;
       }
     }
   }

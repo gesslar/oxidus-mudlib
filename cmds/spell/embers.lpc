@@ -58,7 +58,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
           "{{f73}}Glowing embers cling to $t!{{res}}",
           victim
         );
-        tp->use_skill("arcane.discipline.fire", 0.5);
+        tp->use_skill("arcane.discipline.fire", 1.15);
 
         // Recasting reapplies a fresh burn rather than stacking.
         mapping existing = victim->query_curse_object(
@@ -76,10 +76,9 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
         victim->curse_object(eff, 6);
         eff->start();
       } else {
-        tp->simple_action(
-          "The embers fizzle and fall away harmlessly."
-        );
-        victim->use_skill("arcane.combat.evade", 0.1);
+        tp->simple_action("The embers fizzle and fall away harmlessly.");
+        tp->use_skill("arcane.discipline.fire", 0.25);
+        victim->use_skill("combat.defence.evade", 0.1);
       }
 
       victim->start_attack(tp);

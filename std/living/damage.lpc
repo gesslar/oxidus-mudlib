@@ -77,36 +77,33 @@ public float deliver_damage(object victim, float damage, string type) {
  *                  the body was already dead.
  */
 public float receive_damage(object attacker, float damage, string type) {
-  float def, red, mod, level, alevel, level_difference, new_damage;
-
   if(!attacker)
     return 0.0;
 
   if(query_hp() <= 0.0)
     return 0.0;
 
-  new_damage = damage;
+  float new_damage = damage;
 
   if(damage < 0.0) {
     tell(this_object(), sprintf("receiving %O %O damage => %O\n", damage, type, new_damage));
     return 0.0;
   }
 
-  def = query_defence_amount(type);
-  red = percent_of(def, damage);
+  float def = query_defence_amount(type);
+  float red = percent_of(def, damage);
 
   // The global damage level modifier
-  mod = mud_config("DAMAGE_LEVEL_MODIFIER");
+  float mod = to_float(mud_config("COMBAT.DAMAGE_LEVEL_MODIFIER"));
 
   // The level of the attacker and the victim
-  level = query_effective_level();
-  alevel = attacker->query_effective_level();
+  float level = query_effective_level();
+  float alevel = attacker->query_effective_level();
 
   // The difference in levels between the attacker and the victim
-  level_difference = alevel - level;
+  float level_difference = alevel - level;
 
-  // The damage level modifier is multiplied by the difference in levels
-  mod = mod * level_difference;
+  mod *= level_difference;
   red -= percent_of(mod, damage);
 
   // The damage is reduced by the level modifier
@@ -114,11 +111,11 @@ public float receive_damage(object attacker, float damage, string type) {
 
   tell(this_object(), sprintf("receiving %O %O damage => %O\n", damage, type, new_damage));
 
-  if(damage < 0.0)
-    damage = 0.0;
+  if(new_damage < 0.0)
+    new_damage = 0.0;
 
   // Take the damage
-  adjust_hp(-damage);
+  adjust_hp(-new_damage);
 
   // Set the last damaged by object
   set_last_damaged_by(attacker);
@@ -126,7 +123,7 @@ public float receive_damage(object attacker, float damage, string type) {
   if(query_hp() <= 0.0)
     set_killed_by(attacker);
 
-  return damage;
+  return new_damage;
 }
 
 /**
@@ -144,8 +141,8 @@ public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
 
   string skill_name = stringp(weapon_or_skill) ? weapon_or_skill : weapon_info["skill"];
   float skill = query_skill_level(skill_name);
-  float base = 5.0;
-  float subtracted = percent_of(25.0, base);
+  float base = to_float(mud_config("COMBAT.BASE_DAMAGE"));
+  float subtracted = percent_of(to_float(mud_config("COMBAT.DAMAGE_VARIANCE")), base);
 
   base -= subtracted;
   float variance = random_float(subtracted);
@@ -156,13 +153,18 @@ public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
   if(enemy->query_mp() < 0.0)
     base += 4.0;
 
+  string defence_skill;
+  if(strsrch(skill_name, "arcane.") == 0) {
+    defence_skill = "combat.defence.evade";
+  } else {
+    defence_skill = "combat.defence.dodge";
+  }
+
   float dam =
       base
     + wbase
-    + query_effective_level()
     + (skill + query_skill_level("combat") / 2.0)
-    - enemy->query_effective_level()
-    - enemy->query_skill_level("combat.defence")
+    - enemy->query_skill_level(defence_skill)
   ;
 
   return dam;

@@ -228,7 +228,7 @@ int next_round() {
  */
 public int can_strike(object enemy, mixed weapon) {
   float ac;
-  float chance = mud_config("DEFAULT_HIT_CHANCE");
+  float chance = mud_config("COMBAT.DEFAULT_HIT_CHANCE");
   float lvl = query_effective_level();
   float vlvl = enemy->query_effective_level();
   float result;
@@ -246,7 +246,7 @@ public int can_strike(object enemy, mixed weapon) {
     skill_name = weapon;
     ac = enemy->query_spell_ac();
     if(strsrch(weapon, "arcane.") == 0)
-      defence_skill = "arcane.combat.evade";
+      defence_skill = "combat.defence.evade";
     else
       defence_skill = "combat.defence.dodge";
   } else
