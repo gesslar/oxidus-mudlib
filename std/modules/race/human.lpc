@@ -12,8 +12,6 @@
 inherit __DIR__ "race";
 
 void setup() {
-  ::setup();
-
   regen_rate = ([
     "hp" : 2.0,
     "sp" : 2.0,

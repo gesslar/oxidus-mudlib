@@ -141,7 +141,7 @@ public varargs object add_module(string module_file, mixed args...) {
   string name = mod->query_name();
   mixed existing = __modules[name];
 
-  if(!nullp(existing) && !pointerp(existing)) {
+  if(!mod->allows_multi() && !nullp(existing)) {
     mod->remove();
     return 0;
   }
@@ -160,12 +160,14 @@ public varargs object add_module(string module_file, mixed args...) {
     return 0;
   }
 
-  if(pointerp(existing))
-    __modules[name] = push(ref __modules, mod);
-  else if(mod->allows_multi())
-    __modules[name] = ({ mod });
-  else
+  if(mod->allows_multi()) {
+    if(pointerp(existing))
+      push(ref __modules[name], mod);
+    else
+      __modules[name] = ({ mod });
+  } else {
     __modules[name] = mod;
+  }
 
   call_if(this_object(), "add_destruct", (:on_destruct_function:));
 

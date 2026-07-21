@@ -77,7 +77,7 @@ protected nosave mapping body_part_modifiers = ([ ]);
 
 protected nosave mapping equipment_slots = ([ ]);
 
-void setup() {
+void base_setup() {
   module_name = "race";
 }
 
