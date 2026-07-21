@@ -245,7 +245,7 @@ string query_storage_directory() {
  *
  * @returns {int} 1 if the object should be cleaned up, 0 if not
  */
-int request_clean_up() {
+int can_clean_up() {
     if(sizeof(all_inventory()) == 0 && classp(storage_options) &&
        storage_options.clean_on_empty)
         return 1;

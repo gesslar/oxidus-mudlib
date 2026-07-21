@@ -1,48 +1,74 @@
 /**
  * @file /std/ext/clean.lpc
- * Clean up routine
  *
- * @created 2022/08/24 - Gesslar
- * @last_modified 2022/08/24 - Gesslar
+ * Automatic clean-up routine for objects. Decides, on the driver's
+ * behalf, whether an idle object may destruct itself to reclaim
+ * memory, and performs the teardown when it may.
+ *
+ * @created 2022-08-24 - Gesslar
+ * @last_modified 2026-07-21 - Gesslar
  *
  * @history
- * 2022/08/24 - Gesslar - Created
+ * 2022-08-24 - Gesslar - Created
+ * 2026-07-21 - Gesslar - Documented; moved fdecls to <clean.h>
  */
 
+#include <clean_up.h>
 #include <clean.h>
 
 // Variables
-private nosave int no_clean_up = 0;
-private nosave int debug_clean = 0;
+private nosave int __no_clean_up = 0;
+private nosave int __debug_clean = 0;
 
 // Functions
-int can_clean_up();
-varargs int set_no_clean(int no_clean);
-int query_no_clean();
-int request_clean_up() { return 1 ; }
-private int clean_up_check(mixed ob);
+private int clean_up_check(mixed obs);
 
 // Functions from other objects
 int is_daemon();
 int is_command();
 int remove();
 
+/**
+ * Enables or disables verbose tracing of clean-up decisions for
+ * this object. When enabled, each branch of `clean_up()` reports
+ * why the object did or did not clean up.
+ *
+ * @param {int} i - Truthy to enable debug tracing, falsy to
+ *                  disable it.
+ */
 void set_debug_clean(int i) {
-  debug_clean = !!i;
+  __debug_clean = !!i;
 }
 
-/*protected*/ int clean_up(int refs) {
+/**
+ * Driver apply invoked when this object becomes a candidate for
+ * clean-up. Refuses in every case that would make destructing the
+ * object unsafe or premature — it has an environment, is a user or
+ * interactive, is flagged no-clean, still has outstanding
+ * references, has pending call_outs (commands/daemons), or contains
+ * items that must persist. When none of those hold, it emits a
+ * `cleaning_up` event, empties its inventory into the void, removes
+ * itself, and destructs.
+ *
+ * @apply
+ * @param {int} refs - The number of references the driver holds to
+ *                     this object.
+ * @returns {int} `CLEAN_NEVER_AGAIN` if the object destructed or
+ *                should never be reconsidered, or `CLEAN_LATER` to
+ *                be asked again on a later sweep.
+ */
+protected int clean_up(int refs) {
   /** @type {STD_OBJECT*} */
   object *contents;
   int check;
 
-  if(debug_clean) debug("%O checking if we are to clean up.", this_object());
+  if(__debug_clean) debug("%O checking if we are to clean up.", this_object());
 
   // If we have an environment, straight up don't ask again. We can never
   // lose our environment and only non-environmented things are cleaned up.
   // Things with an environment rely on their environment to clean them up.
   if(environment()) {
-    if(debug_clean) debug("   ❌ %O never cleaning again because it has an environment.", this_object());
+    if(__debug_clean) debug("   ❌ %O never cleaning again because it has an environment.", this_object());
     return CLEAN_NEVER_AGAIN;
   }
 
@@ -53,14 +79,14 @@ void set_debug_clean(int i) {
   check = clean_up_check(this_object());
 
   if(check > 0) {
-    if(debug_clean) debug("   ❌ %O never cleaning again because it is a user, interactive, or is no_clean.", this_object());
+    if(__debug_clean) debug("   ❌ %O never cleaning again because it is a user, interactive, or is no_clean.", this_object());
     return CLEAN_NEVER_AGAIN;
   }
 
   // Now ask permission to clean up. If we answer false, we'll check again
   // later.
-  if(request_clean_up() == 0) {
-    if(debug_clean) debug("   ⌛ %O cleaning up later because it requested not to clean up.", this_object());
+  if(can_clean_up() == 0) {
+    if(__debug_clean) debug("   ⌛ %O cleaning up later because it requested not to clean up.", this_object());
     return CLEAN_LATER;
   }
 
@@ -69,9 +95,9 @@ void set_debug_clean(int i) {
   // virtual items, because refs is weird with them.
   // if(clonep())
   if(refs > 1) {
-    if(debug_clean) debug("   ⌛ Number of references: %O", refs);
+    if(__debug_clean) debug("   ⌛ Number of references: %O", refs);
     if(!virtualp()) {
-      if(debug_clean) debug("   ⌛ %O cleaning up later because it has more than one reference.", this_object());
+      if(__debug_clean) debug("   ⌛ %O cleaning up later because it has more than one reference.", this_object());
       return CLEAN_LATER;
     }
   }
@@ -85,7 +111,7 @@ void set_debug_clean(int i) {
     calls = filter(calls, (: $1[0] == $2 :), this_object());
 
     if(sizeof(calls)) {
-      if(debug_clean) debug("   ⌛ %O cleaning up later because it has pending call_outs.", this_object());
+      if(__debug_clean) debug("   ⌛ %O cleaning up later because it has pending call_outs.", this_object());
       return CLEAN_LATER;
     }
   }
@@ -94,13 +120,13 @@ void set_debug_clean(int i) {
   // determine if we have any items in us that need to be cleaned up.
   contents = deep_inventory();
   if(clean_up_check(contents) > 0) {
-    if(debug_clean) debug("   ⌛ %O cleaning up later because it has users or interactives in it.", this_object());
+    if(__debug_clean) debug("   ⌛ %O cleaning up later because it has users or interactives in it.", this_object());
     return CLEAN_LATER;
   }
 
-  contents = filter(contents, (: $1->request_clean_up() == 0 :));
+  contents = filter(contents, (: $1->can_clean_up() == 0 :));
   if(sizeof(contents)) {
-    if(debug_clean) debug("   ⌛ %O cleaning up later because it has items that requested not to clean up.", this_object());
+    if(__debug_clean) debug("   ⌛ %O cleaning up later because it has items that requested not to clean up.", this_object());
     return CLEAN_LATER;
   }
 
@@ -113,7 +139,7 @@ void set_debug_clean(int i) {
   contents -= ({ 0 });
   contents->move(ROOM_VOID);
 
-  if(debug_clean) debug("   ✔️ %O cleaning up now.", this_object());
+  if(__debug_clean) debug("   ✔️ %O cleaning up now.", this_object());
 
   call_if(this_object(), "remove");
 
@@ -123,23 +149,45 @@ void set_debug_clean(int i) {
   return CLEAN_NEVER_AGAIN;
 }
 
-int can_clean() {
-  return request_clean_up();
-}
-
+/**
+ * Sets or clears this object's no-clean flag. While set, the object
+ * refuses to be cleaned up regardless of its idleness. Clearing the
+ * flag re-requests clean-up queries from the driver via
+ * `request_clean_up()`, which would otherwise never resume after a
+ * no-clean object last answered `CLEAN_NEVER_AGAIN`.
+ *
+ * @param {int} [no_clean=1] - Truthy to protect the object from
+ *                             clean-up, falsy to allow it again.
+ * @returns {int} The resulting no-clean flag state.
+ */
 varargs int set_no_clean(int no_clean: (: 1 :)) {
-  no_clean_up = !!no_clean;
+  __no_clean_up = !!no_clean;
 
-  return no_clean_up;
-}
+  if(__no_clean_up == 0)
+    request_clean_up();
 
-int query_no_clean() {
-  return no_clean_up;
+  return __no_clean_up;
 }
 
 /**
+ * Reports whether this object is currently protected from clean-up
+ * by its no-clean flag.
  *
- * @param {STD_OBJECT*} obs - The objects
+ * @returns {int} 1 if the object is flagged no-clean, otherwise 0.
+ */
+int query_no_clean() {
+  return __no_clean_up;
+}
+
+/**
+ * Counts how many of the given objects are ineligible for clean-up,
+ * i.e. are flagged no-clean, are users, or are interactive. Used to
+ * veto a container's clean-up when any of its contents must persist.
+ *
+ * @param {STD_OBJECT | STD_OBJECT*} obs - A single object or an
+ *                                         array of objects to test.
+ *                                         Non-objects are ignored.
+ * @returns {int} The number of objects that must not be cleaned up.
  */
 private int clean_up_check(mixed obs) {
   int result;
@@ -150,7 +198,8 @@ private int clean_up_check(mixed obs) {
   if(!pointerp(obs))
     return 0;
 
-  foreach(object ob in obs) {
+  /** @type {STD_OBJECT} */ object ob;
+  foreach(ob in obs) {
     if(!objectp(ob))
       continue;
 
@@ -162,3 +211,13 @@ private int clean_up_check(mixed obs) {
 
   return result;
 }
+
+/**
+ * Permission hook asked before this object cleans itself up.
+ * Objects override this to defer clean-up while they are busy or
+ * hold transient state. The base implementation always permits it.
+ *
+ * @returns {int} 1 to permit clean-up, 0 to defer it to a later
+ *                sweep.
+ */
+int can_clean_up() { return 1 ; }

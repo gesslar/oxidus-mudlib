@@ -1,7 +1,7 @@
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
 
-#include <clean.h>
+#include <clean_up.h>
 #include <colour.h>
 #include <daemons.h>
 #include <gmcp_defines.h>
