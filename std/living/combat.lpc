@@ -320,31 +320,11 @@ void strike_enemy(object enemy, object weapon) {
 
   mapping weapon_info = query_weapon_info(weapon);
 
-  string skill_name = sprintf(weapon_info["skill"]);
-  float skill = query_skill_level(skill_name);
-  float base = 5.0;
-  float subtracted = percent_of(25.0, base);
+  string skill_name = weapon_info.skill;
+  string wtype = weapon_info.type;
+  string wname = weapon_info.name;
 
-  base -= subtracted;
-  float variance = random_float(subtracted);
-  base += variance;
-
-  float wbase = weapon_info["base"];
-  string wname = weapon_info["name"];
-  string wtype = weapon_info["type"];
-
-  if(enemy->query_mp() < 0.0)
-      base += 4.0;
-
-  float dam =
-      base
-    + wbase
-    + query_effective_level()
-    + (skill + query_skill_level("combat") / 2.0)
-    - enemy->query_effective_level()
-    - enemy->query_defence_amount(wtype)
-    - enemy->query_skill_level("combat.defence")
-  ;
+  float dam = calculate_damage(enemy, weapon);
 
   use_skill(skill_name);
 
@@ -363,10 +343,25 @@ void strike_enemy(object enemy, object weapon) {
   add_threat(enemy, dam);
   add_seen_threat(enemy, dam);
 
+  if(!valid_enemy(enemy))
+    return;
+
   string proc;
   if(weapon && weapon->is_weapon()) {
     if(stringp(proc = call_if(weapon, "can_proc"))) {
       call_if(weapon, "proc", proc, this_object(), enemy);
+    }
+  }
+
+  if(!valid_enemy(enemy))
+    return;
+
+  if(npcp(this_object())) {
+    string tag = call_if(this_object(), "can_proc");
+    if(tag) {
+      catch {
+        /** @type {STD_NPC} */ (this_object())->proc_npc(tag);
+      };
     }
   }
 }

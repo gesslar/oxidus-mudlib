@@ -11,6 +11,7 @@
 
 inherit STD_BODY;
 inherit EXT_LOOT;
+inherit STD_NPC_PROC;
 
 inherit __DIR__ "living";
 

@@ -17,7 +17,9 @@
  * 2026-05-10 - Gesslar - Documentation pass
  */
 
+#include <combat.h>
 #include <damage.h>
+#include <skills.h>
 #include <vitals.h>
 
 // Functions from other objects
@@ -41,7 +43,7 @@ object set_killed_by(object ob);
  *                  reductions, or 0 if the victim is missing or
  *                  the input damage was negative.
  */
-float deliver_damage(object victim, float damage, string type) {
+public float deliver_damage(object victim, float damage, string type) {
   if(!victim)
     return 0;
 
@@ -74,7 +76,7 @@ float deliver_damage(object victim, float damage, string type) {
  *                  attacker is missing, the input was negative, or
  *                  the body was already dead.
  */
-float receive_damage(object attacker, float damage, string type) {
+public float receive_damage(object attacker, float damage, string type) {
   float def, red, mod, level, alevel, level_difference, new_damage;
 
   if(!attacker)
@@ -125,4 +127,62 @@ float receive_damage(object attacker, float damage, string type) {
     set_killed_by(attacker);
 
   return damage;
+}
+
+/**
+ *
+ * @param {STD_BODY} enemy
+ * @param {object | string} weapon_or_skill
+ */
+public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
+  mapping weapon_info;
+
+  if(objectp(weapon_or_skill))
+    weapon_info = query_weapon_info(weapon_or_skill);
+  else
+    weapon_info = query_weapon_info(undefined);
+
+  string skill_name = stringp(weapon_or_skill) ? weapon_or_skill : weapon_info["skill"];
+  float skill = query_skill_level(skill_name);
+  float base = 5.0;
+  float subtracted = percent_of(25.0, base);
+
+  base -= subtracted;
+  float variance = random_float(subtracted);
+  base += variance;
+
+  float wbase = weapon_info["base"];
+
+  if(enemy->query_mp() < 0.0)
+    base += 4.0;
+
+  float dam =
+      base
+    + wbase
+    + query_effective_level()
+    + (skill + query_skill_level("combat") / 2.0)
+    - enemy->query_effective_level()
+    - enemy->query_skill_level("combat.defence")
+  ;
+
+  return dam;
+}
+
+public float adjust_damage_by_severity(float damage, string severity) {
+  switch(severity) {
+    case "weak":
+      return damage * 0.25;
+    case "moderate":
+      return damage * 0.75;
+    case "normal":
+      return damage;
+    case "heavy":
+      return damage * 1.50;
+    case "high":
+      return damage * 1.75;
+    case "brutal":
+      return damage * 2.0;
+    default:
+      error("Invalid damage severity.");
+  }
 }
