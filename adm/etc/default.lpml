@@ -63,8 +63,14 @@
   DEFAULT_HEART_RATE: 10,
   OBJECT_DATA_DIR: "/data/obj/",
   DEFAULT_RACE: "human",
-  DAMAGE_LEVEL_MODIFIER: 25,
-  DEFAULT_HIT_CHANCE: 65,
+  // The damage level modifier is multiplied by the difference in levels
+  COMBAT: {
+    BASE_DAMAGE: 1.0,
+    DAMAGE_LEVEL_MODIFIER: 15.0,
+    DAMAGE_VARIANCE: 15.0,
+    DEFAULT_HIT_CHANCE: 65.0,
+    NPC_SKILL_MULTIPLIER: 2.0,
+  },
   PLAYER_AUTOLEVEL: true,
   BASE_TNL: 100,
   TNL_RATE: 1.25,

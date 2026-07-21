@@ -203,7 +203,10 @@ float query_skill(string skill) {
   if(pcp(this_object()))
     node = find_skill_node(skill);
   else
-    node = ([ "level": query_effective_level() * 4.0 ]);
+    node = ([
+      "level":  query_effective_level()
+              * to_float(mud_config("COMBAT.NPC_SKILL_MULTIPLIER")),
+    ]);
 
   if(!node)
     return null;
@@ -223,7 +226,9 @@ float query_skill_level(string skill) {
   if(pcp(this_object()))
     node = find_skill_node(skill);
   else
-    node = ([ "level": query_effective_level() * 4.0 ]);
+    node = ([ "level":  query_effective_level()
+                      * to_float(mud_config("COMBAT.NPC_SKILL_MULTIPLIER"))
+    ]);
 
   if(!node)
     return null;
@@ -466,8 +471,8 @@ public int adjust_skills_by_npc_level(float level) {
 }
 
 /**
- * Recursively set every skill's level to level * 4.0. NPC-only —
- * errors out if called on a user.
+ * Recursively set every skill's level to level * COMBAT.NPC_SKILL_MULTIPLIER.
+ * NPC-only — errors out if called on a user.
  *
  * @param {mapping} current_skills - The skills submapping at the
  *                                   current recursion depth.
@@ -486,7 +491,9 @@ private nomask mapping adjust_skill_levels(mapping current_skills, float level) 
     if(mapp(skill_data) && mapp(skill_data["subskills"]))
       adjust_skill_levels(skill_data["subskills"], level);
 
-    current_skills[sk]["level"] = level * 4.0;
+    current_skills[sk]["level"] =
+        level
+      * to_float(mud_config("COMBAT.NPC_SKILL_MULTIPLIER"));
   }
 
   return current_skills;

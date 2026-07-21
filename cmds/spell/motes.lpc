@@ -56,12 +56,11 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
           victim
         );
         tp->deliver_damage(victim, damage, "light");
-        tp->use_skill("arcane.discipline.light", 0.5);
+        tp->use_skill("arcane.discipline.light", 1.15);
       } else {
-        tp->simple_action(
-          "The motes of light disperse harmlessly."
-        );
-        victim->use_skill("arcane.combat.evade", 0.1);
+        tp->simple_action("The motes of light disperse harmlessly.");
+        tp->use_skill("arcane.discipline.light", 0.25);
+        victim->use_skill("combat.defence.evade", 0.1);
       }
 
       victim->start_attack(tp);

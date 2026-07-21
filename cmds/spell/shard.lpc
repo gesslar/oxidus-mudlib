@@ -60,7 +60,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
           victim
         );
         tp->deliver_damage(victim, initial, "cold");
-        tp->use_skill("arcane.discipline.frost", 0.5);
+        tp->use_skill("arcane.discipline.frost", 1.15);
 
         // Shards stack — each caster's shard shatters on its own
         // schedule, so group casts don't trample each other.
@@ -71,10 +71,9 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
         eff->set_fixed(1);
         victim->curse_object(eff, 3);
       } else {
-        tp->simple_action(
-          "The shard of ice splinters harmlessly."
-        );
-        victim->use_skill("arcane.combat.evade", 0.1);
+        tp->simple_action("The shard of ice splinters harmlessly.");
+        tp->use_skill("arcane.discipline.frost", 0.25);
+        victim->use_skill("combat.defence.evade", 0.1);
       }
 
       victim->start_attack(tp);
