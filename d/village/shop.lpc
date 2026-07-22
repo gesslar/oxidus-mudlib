@@ -64,7 +64,13 @@ void setup() {
   init_shop();
 
   add_shop_inventory(
-    "/obj/weapon/piercing/rusty_sword",
+    "/obj/weapon/piercing/1h/rusty_sword",
+    "/obj/weapon/piercing/1h/dagger.weapon",
+    "/obj/weapon/slashing/1h/short_sword.weapon",
+    "/obj/weapon/bludgeoning/1h/mace.weapon",
+    "/obj/weapon/bludgeoning/2h/quarterstaff.weapon",
+    "/obj/weapon/piercing/2h/spear.weapon",
+    "/obj/weapon/slashing/2h/greatsword.weapon",
     "/obj/armour/head/leather_cap.armour",
     "/obj/armour/neck/leather_gorget.armour",
     "/obj/armour/torso/leather_jerkin.armour",
