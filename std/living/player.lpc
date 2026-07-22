@@ -47,7 +47,7 @@ void setup_body() {
   nullp(query_xp()) && set_xp(0);
   init_living();
   rehash_capacity();
-  update_regen_interval();
+  init_healing();
   set_log_prefix(sprintf("(%O)", this_object()));
 
   add_hb(save_body);

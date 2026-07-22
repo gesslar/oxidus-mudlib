@@ -73,8 +73,8 @@ void Status(object who, mapping payload) {
 /**
  * Sends the player's vital statistics to the client.
  *
- * Includes current and maximum values for health points (HP), stamina
- * points (SP), and mana points (MP).
+ * Includes current and maximum values for health points (HP), skill points
+ * (SP), and movement points (MP).
  *
  * @param {STD_PLAYER} who - The player receiving the GMCP data.
  * @param {mapping} payload - Optional custom vitals data.
