@@ -26,6 +26,6 @@ void setup() {
   ]);
 }
 
-int set_up_body_parts(object ob, mixed args...) {
+int set_up_body_parts(object _ob, mixed _args...) {
   return use_default_body_parts();
 }
