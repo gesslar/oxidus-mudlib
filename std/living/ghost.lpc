@@ -49,18 +49,17 @@ void setup_body() {
   call_out("revive", 1);
 }
 
-int revive(string str) {
-    object body;
+int revive(string _str) {
     string name = query_privs();
 
     if(this_body() != this_object())
         return 0;
 
-    body = BODY_D->create_body(name);
+    /** @type {STD_PLAYER} */ object body = BODY_D->create_body(name);
 
     exec(body, this_object());
 
-    body->setup_body(name);
+    body->setup_body();
     body->set_dead(0);
     body->set_hp(1.0);
     body->set_sp(1.0);
