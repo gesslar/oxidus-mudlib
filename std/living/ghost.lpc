@@ -92,7 +92,10 @@ void net_dead() {
 
 void reconnect() {
     tell("Success: Reconnected.\n");
-    if(environment()) tell_them(query_name() + " brigtens.\n");
+
+    if(environment())
+      tell_them(query_name() + " brightens.\n");
+
     remove_extra_short("link_dead");
 }
 
