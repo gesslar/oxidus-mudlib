@@ -12,10 +12,15 @@
 inherit __DIR__ "race";
 
 void setup() {
-  regen_rate = ([
+  __regen_rate += ([
     "hp" : 2.0,
     "sp" : 2.0,
     "mp" : 4.0,
+  ]);
+
+  __attribute_mod += ([
+    "constitution": 1,
+    "strength": 1,
   ]);
 }
 
