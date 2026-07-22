@@ -43,7 +43,7 @@ void setup_body() {
   if(!query_pref("colour")) set_pref("colour", "off");
   if(!query_pref("prompt")) set_pref("prompt", ">");
   if(!query_pref("biff")) set_pref("biff", "off");
-  update_regen_interval();
+  init_healing();
   init_vitals();
   set_log_prefix(sprintf("(%O)", this_object()));
   call_out("revive", 1);
