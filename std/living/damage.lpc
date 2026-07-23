@@ -51,7 +51,10 @@ public float deliver_damage(object victim, float damage, string type) {
     return 0;
 
   float received = victim->receive_damage(this_object(), damage, type);
+
+#if 0
   tell(this_object(), sprintf("delivering %O %O damage => %O\n", damage, type, received));
+#endif
 
   return received;
 }
@@ -86,7 +89,9 @@ public float receive_damage(object attacker, float damage, string type) {
   float new_damage = damage;
 
   if(damage < 0.0) {
+#if 0
     tell(this_object(), sprintf("receiving %O %O damage => %O\n", damage, type, new_damage));
+#endif
     return 0.0;
   }
 
@@ -109,7 +114,9 @@ public float receive_damage(object attacker, float damage, string type) {
   // The damage is reduced by the level modifier
   new_damage -= red;
 
+#if 0
   tell(this_object(), sprintf("receiving %O %O damage => %O\n", damage, type, new_damage));
+#endif
 
   if(new_damage < 0.0)
     new_damage = 0.0;
@@ -168,6 +175,7 @@ public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
     - enemy->query_skill_level(defence_skill)
   ;
 
+#if 0
   false && _debug("base %O + wbase %O + skill %O - enemy skill %O = %O",
     base,
     wbase,
@@ -175,6 +183,7 @@ public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
     enemy->query_skill_level(defence_skill),
     dam
   );
+#endif
 
   return dam;
 }

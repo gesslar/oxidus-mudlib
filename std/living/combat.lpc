@@ -153,7 +153,8 @@ int start_attack(object victim) {
  *  weapon instead of the main.
  */
 varargs void swing(int count, int multi) {
-  multi = !!multi;
+  int off_hand_swing = !!multi;
+  int next_multi = 0;
 
   object enemy = highest_threat();
   object weapon;
@@ -182,12 +183,15 @@ varargs void swing(int count, int multi) {
   if(sizeof(wielded)) {
     string main_slot = slots[0];
     object main_hand = wielded[main_slot];
-    mapping off_hands = filter(wielded, (: $1 != $(main_slot) :));
+    // A two-handed weapon occupies every slot it needs with the same object,
+    // so exclude the main hand by object as well as by slot.
+    mapping off_hands = filter(wielded,
+      (: $1 != $(main_slot) && $2 != $(main_hand) :));
 
-    if(multi) {
+    if(off_hand_swing) {
       object *possible = distinct_array(values(off_hands));
+
       weapon = element_of(possible);
-      multi = 0;
     } else {
       weapon = main_hand;
 
@@ -197,22 +201,14 @@ varargs void swing(int count, int multi) {
 
         float roll = random_float(100.0);
 
-        if(roll < multi_chance) {
-          multi = 1;
-        } else {
-          multi = 0;
-        }
-      } else {
-        multi = 0;
+        if(roll < multi_chance)
+          next_multi = 1;
       }
     }
   }
 
-  if(multi)
-    tell(this_object(), "{{909}}#-> {{res}}");
-
   if(can_strike(enemy, weapon)) {
-    strike_enemy(enemy, weapon);
+    strike_enemy(enemy, weapon, off_hand_swing);
   } else {
     enemy->use_skill("combat.defence.dodge");
     fail_strike(enemy, weapon);
@@ -222,11 +218,11 @@ varargs void swing(int count, int multi) {
   count--;
 
   // if we're doing second weapon, we gotta do it anyway
-  if(multi)
+  if(next_multi)
     count++;
 
   if(count)
-    swing(count, multi);
+    swing(count, next_multi);
 }
 
 /**
@@ -347,7 +343,7 @@ private fail_strike(object enemy, object weapon) {
  * @param {STD_WEAPON} [weapon] - The weapon used, or null for unarmed
  *                          or NPC defaults.
  */
-void strike_enemy(object enemy, object weapon) {
+void strike_enemy(object enemy, object weapon, int off_hand) {
   if(!valid_enemy(enemy))
     return;
 
@@ -369,6 +365,9 @@ void strike_enemy(object enemy, object weapon) {
 
   string mess = MESS_D->get_message("combat", wtype, to_int(ceil(dam)));
   string *messes = ACTION_D->action(({ this_object(), enemy }), mess, ({wname}));
+
+  if(off_hand)
+    tell(this_object(), "{{909}}#-> {{res}}");
 
   tell(this_object(), messes[0], MSG_COMBAT_HIT);
   tell(enemy, messes[1], MSG_COMBAT_HIT);

@@ -312,7 +312,7 @@ mixed cmd_buy(object tp, string str) {
  *                         allowed, or an error message on failure.
  */
 mixed cmd_sell(object tp, string str) {
-  /** @type {STD_ITEM | STD_ARMOUR | STD_CLOTHING | STD_WEAPON} */ object ob;
+  object ob;
   /** @type {STD_ITEM*} */ object *obs;
   int sz;
   int use_mass = mud_config("USE_MASS");
@@ -353,13 +353,15 @@ mixed cmd_sell(object tp, string str) {
     int coins = sum(values(value));
     string mess, *list;
 
+    if(/** @type {STD_ARMOUR | STD_CLOTHING | STD_WEAPON} */ (ob)->equipped())
+      continue;
+    if(/** @type {STD_CONTAINER} */ (ob)->is_container())
+      continue;
+
     if(!cost) {
       tell(tp, "The shop refuses to buy your " + short + ".\n");
       continue;
     }
-
-    if(/** @type {STD_ARMOUR|STD_CLOTHING|STD_WEAPON} */ (ob)->equipped())
-      continue;
 
     if(use_mass) {
       int fill = tp->query_fill();
