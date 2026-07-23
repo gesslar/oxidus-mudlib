@@ -1,126 +1,182 @@
 /**
  * @file /std/object/setup.lpc
- * Provides a standardised setup and teardown chain for objects,
- * ensuring proper initialization and cleanup order.
+ *
+ * Provides the standardised setup and teardown chains for objects,
+ * ensuring a predictable initialisation and cleanup order.
+ *
+ * There are four chains, and they are mirrors of one another. Each runs
+ * the same steps, in the same order, with the same argument passing:
+ *
+ *   1. std_* - The most basic step, for objects in /std.
+ *   2. mudlib_* - The mudlib level of an object.
+ *   3. base_* - The base of a family of objects, such as the rooms of a
+ *      common zone or a room-type.
+ *   4. pre_*_0 through pre_*_4 - Numbered hooks, run in ascending order.
+ *   5. The main step, used by any object that is not a base object.
+ *   6. post_*_0 through post_*_4 - Numbered hooks, run in ascending
+ *      order.
+ *   7. Persistence - restore_data/post_restore on the way up,
+ *      save_data/post_save on the way down, for persistent objects.
+ *   8. mudlib_complete_* - Final completion of the chain.
+ *
+ * Every step is called through call_if(), so an object only pays for
+ * the steps it actually defines.
+ *
+ * The chains are paired. setup_chain() is run from create() and is
+ * unwound by unsetup_chain() from on_destruct(). virtual_setup_chain()
+ * is run from virtual_start() for data-driven objects and is unwound by
+ * virtual_unsetup_chain(). Because the virtual chain runs last, it is
+ * unwound first.
  *
  * @created 2024-01-29 - Gesslar
- * @last_modified 2025-03-16 - GitHub Copilot
+ * @last_modified 2026-07-23 - Gesslar
  *
  * @history
  * 2024-01-29 - Gesslar - Created
  * 2025-03-16 - GitHub Copilot - Added documentation
+ * 2026-07-23 - Gesslar - Mirrored the four chains, added the virtual
+ *                        unsetup chain, removed duplicated calls
  */
+
+// The number of numbered pre_/post_ hook slots in each chain.
+#define SETUP_HOOK_SLOTS 5
 
 /**
- * Executes the complete setup chain for an object in the proper order.
+ * Calls each of the numbered hooks belonging to a chain step.
  *
- * The setup chain is executed in this order:
- * 1. mudlib_setup - Low-level setup for mudlib core functionality
- * 2. base_setup - Base type setup (room types, item types, etc.)
- * 3. pre_setup_0 through pre_setup_4 - Pre-setup hooks
- * 4. setup - Main setup function for specific object configuration
- * 5. post_setup_0 through post_setup_4 - Post-setup hooks
- * 6. restore_data and post_restore - For persistent objects
- * 7. mudlib_complete_setup - Final setup completion
+ * The hooks are named by appending the slot number to the prefix, and
+ * are called in ascending order from 0 through SETUP_HOOK_SLOTS - 1.
  *
- * @param {mixed...} args - Variable arguments to pass to setup functions
+ * @param {string} prefix - The hook name, including its trailing
+ *                          underscore, such as "pre_setup_".
+ * @param {mixed...} args - Arguments to pass to each hook.
  */
-varargs void setup_chain(mixed args...) {
+private varargs void call_numbered_hooks(string prefix, mixed args...) {
   int x;
 
-  // Intended for the most base stup in /std
-  call_if(this_object(), "std_setup", args...);
+  for(x = 0; x < SETUP_HOOK_SLOTS; x++)
+    call_if(this_object(), `${prefix}${x}`, args...);
+}
 
-  // Intended for objects at their very mudlib level
-  call_if(this_object(), "mudlib_setup", args...);
-
-  // Intended for objects that that are base for things like rooms of
-  // a common zone, room-type, or anything else that needs to setup
-  // the base of its object, after the mudlib_setup has been called.
-  call_if(this_object(), "base_setup", args...);
-
-  x = 5;
-  for(x = 0; x < 5; x++)
-    call_if(this_object(), "pre_setup_"+x, args...);
-
-  // The actual setup function that is ordinarily used by any object
-  // that isn't the master or a base object.
-  call_if(this_object(), "setup", args...);
-
-  x = 5;
-  for(x = 0; x < 5; x++)
-    call_if(this_object(), "post_setup_"+x, args...);
-
-  if(call_if(this_object(), "query_persistent")) {
-    call_if(this_object(), "restore_data");
-    call_if(this_object(), "post_restore");
-  }
+/**
+ * Restores a persistent object as part of a setup chain.
+ *
+ * Non-persistent objects are skipped entirely, so that post_restore is
+ * not called for an object that had nothing to restore.
+ */
+private void restore_chain() {
+  if(!call_if(this_object(), "query_persistent"))
+    return;
 
   call_if(this_object(), "restore_data");
   call_if(this_object(), "post_restore");
-
-  call_if(this_object(), "mudlib_complete_setup");
 }
 
 /**
- * Executes the complete teardown chain for an object in the proper order.
+ * Saves a persistent object as part of an unsetup chain.
  *
- * The unsetup chain is executed in this order:
- * 1. mudlib_unsetup - Low-level teardown for mudlib core functionality
- * 2. base_unsetup - Base type teardown
- * 3. pre_unsetup_0 through pre_unsetup_4 - Pre-unsetup hooks
- * 4. unsetup - Main unsetup function for specific object cleanup
- * 5. post_unsetup_0 through post_unsetup_4 - Post-unsetup hooks
- * 6. save_data and post_save - For persistent objects
+ * Non-persistent objects are skipped entirely, so that post_save is not
+ * called for an object that had nothing to save.
  */
-void unsetup_chain() {
-  int x;
+private void save_chain() {
+  if(!call_if(this_object(), "query_persistent"))
+    return;
 
-  // Itended for objects at their very mudlib level
-  call_if(this_object(), "mudlib_unsetup", previous_object(1));
-
-  // Intended for objects that that are base for things like rooms of
-  // a common zone, room-type, or anything else that needs to unsetup
-  // the base of its object, after the mudlib_unsetup has been called.
-  call_if(this_object(), "base_unsetup", previous_object(1));
-
-  for(x = 0; x < 5; x++)
-    call_if(this_object(), "pre_unsetup_"+x, previous_object(1));
-
-  // The actual unsetup function that is ordinarily used by any object
-  // that isn't the master or a base object.
-  call_if(this_object(), "unsetup", previous_object(1));
-
-  for(x = 0; x < 5; x++)
-    call_if(this_object(), "post_unsetup_"+x, previous_object(1));
-
-  if(call_if(this_object(), "query_persistent")) {
-    call_if(this_object(), "save_data");
-    call_if(this_object(), "post_save");
-  }
+  call_if(this_object(), "save_data");
+  call_if(this_object(), "post_save");
 }
 
 /**
- * Executes the setup chain for a virtual object.
+ * Executes the complete setup chain for an object.
  *
- * Similar to setup_chain() but calls virtual-specific setup functions.
- * Used for dynamically created objects like procedurally generated rooms.
+ * Run from create() for every object.
  *
- * @param {mixed...} args - Variable arguments to pass to setup functions
+ * @param {mixed...} args - The creation arguments, passed to each step.
+ */
+varargs void setup_chain(mixed args...) {
+  call_if(this_object(), "std_setup", args...);
+  call_if(this_object(), "mudlib_setup", args...);
+  call_if(this_object(), "base_setup", args...);
+
+  call_numbered_hooks("pre_setup_", args...);
+
+  call_if(this_object(), "setup", args...);
+
+  call_numbered_hooks("post_setup_", args...);
+
+  restore_chain();
+
+  call_if(this_object(), "mudlib_complete_setup", args...);
+}
+
+/**
+ * Executes the complete teardown chain for an object.
+ *
+ * Run from on_destruct(), unwinding what setup_chain() established.
+ *
+ * @param {mixed...} args - The teardown arguments, passed to each step.
+ */
+varargs void unsetup_chain(mixed args...) {
+  call_if(this_object(), "std_unsetup", args...);
+  call_if(this_object(), "mudlib_unsetup", args...);
+  call_if(this_object(), "base_unsetup", args...);
+
+  call_numbered_hooks("pre_unsetup_", args...);
+
+  call_if(this_object(), "unsetup", args...);
+
+  call_numbered_hooks("post_unsetup_", args...);
+
+  save_chain();
+
+  call_if(this_object(), "mudlib_complete_unsetup", args...);
+}
+
+/**
+ * Executes the complete setup chain for a virtual object.
+ *
+ * Run from virtual_start() after setup_chain() has already completed,
+ * for data-driven objects such as procedurally generated rooms and
+ * items compiled from LPML.
+ *
+ * @param {mixed...} args - The creation arguments, passed to each step.
  */
 varargs void virtual_setup_chain(mixed args...) {
-  int x;
-
+  call_if(this_object(), "virtual_std_setup", args...);
   call_if(this_object(), "virtual_mudlib_setup", args...);
+  call_if(this_object(), "virtual_base_setup", args...);
 
-  for(x = 0; x < 5; x++)
-    call_if(this_object(), "pre_virtual_setup_" + x, args...);
+  call_numbered_hooks("pre_virtual_setup_", args...);
 
   call_if(this_object(), "virtual_setup", args...);
 
-  x = 5;
-  while(x--)
-    call_if(this_object(), "post_virtual_setup_" + x, args...);
+  call_numbered_hooks("post_virtual_setup_", args...);
 
-  call_if(this_object(), "virtual_mudlib_complete_setup");
+  restore_chain();
+
+  call_if(this_object(), "virtual_mudlib_complete_setup", args...);
+}
+
+/**
+ * Executes the complete teardown chain for a virtual object.
+ *
+ * Run from on_destruct() before unsetup_chain(), unwinding what
+ * virtual_setup_chain() established.
+ *
+ * @param {mixed...} args - The teardown arguments, passed to each step.
+ */
+varargs void virtual_unsetup_chain(mixed args...) {
+  call_if(this_object(), "virtual_std_unsetup", args...);
+  call_if(this_object(), "virtual_mudlib_unsetup", args...);
+  call_if(this_object(), "virtual_base_unsetup", args...);
+
+  call_numbered_hooks("pre_virtual_unsetup_", args...);
+
+  call_if(this_object(), "virtual_unsetup", args...);
+
+  call_numbered_hooks("post_virtual_unsetup_", args...);
+
+  save_chain();
+
+  call_if(this_object(), "virtual_mudlib_complete_unsetup", args...);
 }
