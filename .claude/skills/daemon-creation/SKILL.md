@@ -54,13 +54,14 @@ When a daemon is loaded, `create()` calls `setup_chain()` which runs these funct
 
 | Step | Function | Purpose |
 |---|---|---|
-| 1 | `mudlib_setup()` | Low-level mudlib initialization. Used by base inheritable classes (e.g., `STD_HTTP_CLIENT` uses this). **Do not use in your daemon** unless you are writing a base class. |
-| 2 | `base_setup()` | Base type setup. For intermediate inheritables. |
-| 3 | `pre_setup_0` .. `pre_setup_4` | Pre-setup hooks (5 levels) |
-| 4 | **`setup()`** | **Main setup — this is what your daemon implements** |
-| 5 | `post_setup_0` .. `post_setup_4` | Post-setup hooks (5 levels) |
-| 6 | `restore_data()` + `post_restore()` | Automatic for persistent objects |
-| 7 | `mudlib_complete_setup()` | Final setup completion |
+| 1 | `std_setup()` | Most basic setup. Reserved for `/std` objects. |
+| 2 | `mudlib_setup()` | Low-level mudlib initialization. Used by base inheritable classes (e.g., `STD_HTTP_CLIENT` uses this). **Do not use in your daemon** unless you are writing a base class. |
+| 3 | `base_setup()` | Base type setup. For intermediate inheritables. |
+| 4 | `pre_setup_0` .. `pre_setup_4` | Pre-setup hooks (5 levels) |
+| 5 | **`setup()`** | **Main setup — this is what your daemon implements** |
+| 6 | `post_setup_0` .. `post_setup_4` | Post-setup hooks (5 levels) |
+| 7 | `restore_data()` + `post_restore()` | Automatic for persistent objects |
+| 8 | `mudlib_complete_setup()` | Final setup completion |
 
 ### Which function to use
 
@@ -74,12 +75,16 @@ When a daemon is destructed, `unsetup_chain()` runs:
 
 | Step | Function | Purpose |
 |---|---|---|
-| 1 | `mudlib_unsetup()` | Low-level teardown |
-| 2 | `base_unsetup()` | Base type teardown |
-| 3 | `pre_unsetup_0` .. `pre_unsetup_4` | Pre-unsetup hooks |
-| 4 | `unsetup()` | Main cleanup |
-| 5 | `post_unsetup_0` .. `post_unsetup_4` | Post-unsetup hooks |
-| 6 | `save_data()` + `post_save()` | Automatic for persistent objects |
+| 1 | `std_unsetup()` | Most basic teardown. Reserved for `/std` objects. |
+| 2 | `mudlib_unsetup()` | Low-level teardown |
+| 3 | `base_unsetup()` | Base type teardown |
+| 4 | `pre_unsetup_0` .. `pre_unsetup_4` | Pre-unsetup hooks |
+| 5 | `unsetup()` | Main cleanup |
+| 6 | `post_unsetup_0` .. `post_unsetup_4` | Post-unsetup hooks |
+| 7 | `save_data()` + `post_save()` | Automatic for persistent objects |
+| 8 | `mudlib_complete_unsetup()` | Final teardown completion |
+
+The teardown chain is a step-for-step mirror of the setup chain. Virtual objects have their own pair, `virtual_setup_chain()` / `virtual_unsetup_chain()`, with the same shape and `virtual_`-prefixed hook names.
 
 Implement `unsetup()` if your daemon needs cleanup (e.g., closing sockets, removing call_outs).
 

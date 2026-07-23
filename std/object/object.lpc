@@ -286,7 +286,9 @@ string query_virtual_master() {
  * Called by the driver before the object is destructed.
  *
  * Updates capacity and mass of the environment, triggers GMCP events,
- * and runs the destruct chain and functions.
+ * runs the destruct functions, and then unwinds the setup chains. A
+ * virtual object unwinds its virtual chain first, since that chain was
+ * the last one to run.
  */
 void on_destruct() {
   object env = environment();
@@ -304,7 +306,12 @@ void on_destruct() {
   }
 
   process_destruct();
-  unsetup_chain();
+
+  // The virtual chain ran last, so it is unwound first.
+  if(__virtual_master)
+    virtual_unsetup_chain(previous_object(1));
+
+  unsetup_chain(previous_object(1));
 }
 
 /**
