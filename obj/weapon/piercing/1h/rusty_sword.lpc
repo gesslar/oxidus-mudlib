@@ -24,7 +24,7 @@ void setup() {
            "sharp and serviceable, and the blade is straight and true.");
   set_mass(50);
   set_hands(1);
-  set_dc(1.5);
+  set_dc(6.5);
   set_damage_type("piercing");
   set_value(10);
 

@@ -13,6 +13,6 @@
   mass: 60,
   value: 16,
   hands: 2,
-  dc: 2.5,
+  dc: 7.5,
   type: "piercing",
 }

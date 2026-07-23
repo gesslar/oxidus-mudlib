@@ -12,6 +12,6 @@
   mass: 50,
   value: 10,
   hands: 2,
-  dc: 2.2,
+  dc: 7.2,
   type: "bludgeoning",
 }

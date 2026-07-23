@@ -68,9 +68,6 @@ void apply() {
   __tag_evade = victim->curse(
     "wither", "skill", "combat.defence.evade", __amount, dur
   );
-  __tag_defence = victim->curse(
-    "wither", "skill", "combat.defence", __amount, dur
-  );
 }
 
 int expire_obj(int expired) {
@@ -81,7 +78,6 @@ int expire_obj(int expired) {
 
   victim->remove_curse("skill", "combat.defence.dodge", __tag_dodge);
   victim->remove_curse("skill", "combat.defence.evade", __tag_evade);
-  victim->remove_curse("skill", "combat.defence", __tag_defence);
 
   if(expired)
     victim->simple_action("The withering shadow lifts from $n.");

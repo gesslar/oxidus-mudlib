@@ -227,6 +227,12 @@ mixed describe_living(
   else if(truthy(gender))
     result += `${sub} ${verb} ${gender}.\n`;
 
+  string *vitals = ob->query_condition_string();
+  if(pointerp(vitals)) {
+    if(strlen(result))
+      result += `${sub} ${verb} ${vitals[0]}.`;
+  }
+
   return result;
 }
 

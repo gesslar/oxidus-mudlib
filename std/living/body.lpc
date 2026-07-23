@@ -91,7 +91,7 @@ protected string *query_body_slots() {
  *
  * @returns {string*} A copy of the weapon slot names.
  */
-protected string *query_weapon_slots() {
+public string *query_weapon_slots() {
   return copy(weapon_slots);
 }
 
@@ -121,7 +121,10 @@ protected void die() {
   if(objectp(body = query_su_body())) {
     exec(body, this_object());
     body->move(environment());
-    body->simple_action("$N $vis violently ejected from the body of $o.", this_object());
+    body->simple_action(
+      "$N $vis violently ejected from the body of $o.",
+      this_object()
+    );
     clear_su_body();
   }
 
@@ -233,11 +236,11 @@ protected void event_remove(object _prev) {
  *
  * @param {mixed} dest - The destination object or path.
  * @param {string} [dir="somewhere"] - The direction of travel, used in the
- *                                     departure message.
- * @param {string} [depart_message] - Departure message override, or
- *                                    "SILENT" to suppress it.
- * @param {string} [arrive_message] - Arrival message override, or
- *                                    "SILENT" to suppress it.
+ *  departure message.
+ * @param {string} [depart_message] - Departure message override, or "SILENT"
+ *  to suppress it.
+ * @param {string} [arrive_message] - Arrival message override, or "SILENT" to
+ *  suppress it.
  * @returns {int} 0 on success, or a non-zero move failure code.
  */
 public varargs int move_living(mixed dest, string dir, string depart_message, string arrive_message) {
@@ -256,7 +259,11 @@ public varargs int move_living(mixed dest, string dir, string depart_message, st
 
   if(curr) {
     if(depart_message != "SILENT") {
-      depart_message = depart_message || query_env("move_out") || "$N leaves $D.";
+      depart_message =
+        depart_message
+        || query_env("move_out")
+        || "$N leaves $D.";
+
       dir = dir || "somewhere";
 
       tmp = replace_string(depart_message, "$N", query_name());
@@ -271,7 +278,10 @@ public varargs int move_living(mixed dest, string dir, string depart_message, st
   if(arrive_message != "SILENT") {
     curr = environment();
 
-    arrive_message = arrive_message || query_env("move_in") || "$N arrives.\n";
+    arrive_message =
+      arrive_message
+      || query_env("move_in")
+      || "$N arrives.\n";
     tmp = replace_string(arrive_message, "$N", query_name());
 
     tmp = append(tmp, "\n");
@@ -296,8 +306,8 @@ public varargs int move_living(mixed dest, string dir, string depart_message, st
  * TODO: For now, just returns 1 until more is implemented that will affect
  * this.
  *
- * @returns {int | string} 1 if the body passes the ability check,
- *                         otherwise a string error message.
+ * @returns {int | string} 1 if the body passes the ability check, otherwise a
+ *  string error message.
  */
 public int is_able() {
   return 1;
@@ -347,8 +357,8 @@ public void set_su_body(object source) {
 }
 
 /**
- * Returns the body we are inhabiting. Will be undefined if
- * we are already in our own body.
+ * Returns the body we are inhabiting. Will be undefined if we are already in
+ * our own body.
  *
  * @returns {STD_BODY|0} The body we are currently inhabiting, or null.
  */
