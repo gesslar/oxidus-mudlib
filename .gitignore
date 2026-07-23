@@ -5,8 +5,14 @@ log
 /log/*
 !/log/.keep
 !/log/*/.keep
+
+# ignore files
 .rgignore
+
+# generated files
 trace_lpcc.json
+
+# mudlib files
 /home/*
 !/home/*/.keep
 .local
@@ -45,6 +51,7 @@ journal.*
 /adm/etc/mssp.lpml
 .vscode/keybindings.json
 .vscode/tasks.json
+.vscode/settings.json
 
 # Driver stuff
 /adm/dist/bin/
