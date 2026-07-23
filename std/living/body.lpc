@@ -4,11 +4,15 @@
  * Body object that is shared by players and NPCs.
  *
  * @created 2024-07-29 - Gesslar
- * @last_modified 2026-07-04 - Gesslar
+ * @last_modified 2026-07-23 - Gesslar
  *
  * @history
  * 2024-07-29 - Gesslar - Created
  * 2026-07-04 - Gesslar - Applied coding style and documentation
+ * 2026-07-23 - Gesslar - Renamed mudlib_setup() to std_setup(). It will now
+ *                        run before mudlib_setup() so inheritors will not need
+ *                        to make super calls.
+ *
  */
 
 #include <body.h>
