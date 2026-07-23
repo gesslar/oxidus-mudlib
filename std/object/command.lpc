@@ -258,10 +258,10 @@ public int add_path(string path) {
 
   __command_paths ??= ({});
 
+  path = append(path, "/");
+
   if(includes(__command_paths, path))
     return 0;
-
-  path = append(path, "/");
 
   if(!directory_exists(path))
     return 0;
@@ -316,12 +316,28 @@ public int rem_path(string path) {
 
   __command_paths ??= ({});
 
+  path = append(path, "/");
+  
   if(!includes(__command_paths, path))
     return 0;
 
   __command_paths -= ({path});
 
   return 1;
+}
+
+/**
+ * Returns 1 if the body has access to the specified path. If not, 0.
+ * 
+ * @param {string} path - The file path to check.
+ * @returns {int} 1 if has the path, 0 otherwise.
+ */
+public int has_path(string path) {
+  __command_paths ??= ({});
+
+  path = append(path, "/");
+
+  return includes(__command_paths, path);
 }
 
 /**
