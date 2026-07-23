@@ -18,6 +18,7 @@ public string *get_path();
 public int add_path(string str);
 public void set_path(mixed path);
 public int rem_path(string str);
+public int has_path(string path);
 public void add_dev_path();
 public void remove_dev_paths();
 public void add_admin_path();

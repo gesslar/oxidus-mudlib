@@ -21,7 +21,7 @@ void setup() {
   "gaudy shade of pink, sits in one corner, while oversized, plush couches "
   "in animal prints dominate the space. The ceiling is adorned with faux-"
   "gold leaf, and a large painting of a sunset hangs crookedly on the wall, "
-  "its colours almost blinding. This room is a testament to the residents'"
+  "its colours almost blinding. This room is a testament to the residents' "
   "questionable taste.");
 
   set_exits(([
@@ -49,4 +49,6 @@ void setup() {
     short: "A grand door",
     long: "A grand door that leads to the foyer."
   ));
+
+  add_object(__DIR__ "mon/arcanist", 1);
 }

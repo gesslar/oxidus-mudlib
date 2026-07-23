@@ -146,15 +146,13 @@ varargs object add_inventory(mixed file, string uuid, mixed *args...) {
 /**
  * Registers an object to be automatically spawned during reset.
  *
- * Positional args are: path (string), count (int|function, default
- * 1), then any extra arguments forwarded to the constructor when
- * the object is cloned.
+ * Positional args are: path (string), count (int|function, default 1), then
+ * any extra arguments forwarded to the constructor when the object is cloned.
  *
- * @param {mixed...} args - Positional argument list (path, count,
- *                          then constructor args).
- * @returns {string, undefined} UUID of the registered definition,
- *                              or undefined when no path was given
- *                              or that path is already registered.
+ * @param {mixed...} args - Positional argument list (path, count, then
+ *  constructor args).
+ * @returns {string | undefined} UUID of the registered definition, or
+ *  undefined when no path was given or that path is already registered.
  */
 varargs string add_object(mixed args...) {
   mapping element;
@@ -171,7 +169,8 @@ varargs string add_object(mixed args...) {
     return;
 
   // Double-check we don't already have this object in our inventory mapping
-  foreach(uuid, element in values(__inventory)) {
+  mapping *elements = values(__inventory);
+  foreach(element in elements) {
     if(element["object"] == args[0]) {
       return;
     }
@@ -191,6 +190,7 @@ varargs string add_object(mixed args...) {
     element["args"] = ({});
 
   uuid = generate_uuid();
+
   __inventory[uuid] = element;
 
   return uuid;
