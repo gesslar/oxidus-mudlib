@@ -12,6 +12,6 @@
   mass: 45,
   value: 15,
   hands: 1,
-  dc: 1.5,
+  dc: 6.5,
   type: "slashing",
 }

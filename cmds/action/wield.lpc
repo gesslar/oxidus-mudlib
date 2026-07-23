@@ -24,29 +24,53 @@ void setup() {
     "See also: unwield, wear, remove, eq\n";
 }
 
-mixed main(/** @type {STD_BODY} */ object tp, string str) {
-  /** @type {STD_WEAPON} */
-  object ob;
+mixed main(
+  /** @type {STD_BODY} */ object tp,
+  string str
+) {
+  /** @type {STD_WEAPON} */ object ob;
   mixed result;
+  string *slots = tp->query_weapon_slots();
 
   if(!str) {
     mapping wielded = tp->query_wielded();
-    string *slots, slot;
+    string *wielded_slots, wielded_slot;
     string out;
     int max;
 
     if(!sizeof(wielded))
       return "You are not wielding anything.";
 
-    slots = keys(wielded);
-    max = max(map(slots, (: strlen :)));
+    wielded_slots = keys(wielded);
+    max = max(map(wielded_slots, (: strlen :)));
 
     out = "You are wielding the following weapons:\n\n";
-    foreach(slot in slots)
-      out += sprintf("%*s : %s\n", max, capitalize(slot),
-        get_short(wielded[slot]));
+    foreach(wielded_slot in wielded_slots)
+      out += sprintf(
+        "%*s : %s\n",
+        max,
+        capitalize(wielded_slot), get_short(wielded[wielded_slot])
+      );
 
     return out;
+  }
+
+  string hand;
+  if(sscanf(str, "%s in %s", str, hand) == 2) {
+    if(hand == "1") {
+      hand = slots[0];
+    } else if(hand == "2") {
+      hand = slots[1];
+    } else {
+      string slot = find(slots, (: starts_with($1, `${$(hand)} `) :));
+      if(!slot)
+        return "You may not wield anything there.";
+
+      hand = slot;
+    }
+
+  } else {
+    hand = slots[0];
   }
 
   if(!ob = find_target(tp, str, tp))
@@ -58,26 +82,26 @@ mixed main(/** @type {STD_BODY} */ object tp, string str) {
   if(tp->equipped(ob))
     return "You are already wielding that weapon.";
 
-  result = tp->can_equip(ob, "right hand");
+  result = tp->can_equip(ob, hand);
 
   if(stringp(result))
     return result;
 
   if(result == 0)
-    return "1 You cannot wield that weapon.";
+    return "You cannot wield that weapon.";
 
   result = ob->can_equip(tp);
 
   if(!result)
-    return "2 You cannot wield that weapon.";
+    return "You cannot wield that weapon.";
 
-  result = ob->equip(tp, "right hand");
+  result = ob->equip(tp, hand);
 
   if(stringp(result))
     return result;
 
   if(result == 0)
-    return "3 You cannot wield that weapon.";
+    return "You cannot wield that weapon.";
 
   tp->simple_action("$N $vwield $o.", get_short(ob));
 

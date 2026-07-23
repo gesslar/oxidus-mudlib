@@ -19,4 +19,5 @@ varargs void virtual_setup(mapping data) {
   data.hands && set_hands(data.hands);
   data.dc && set_dc(data.dc);
   data.type && set_damage_type(data.type);
+  data.speed && set_speed_mod(data.speed);
 }

@@ -35,6 +35,8 @@ private nosave mapping __seen_enemies = ([]);
 
 private nosave float __attack_speed = 2.0;
 private nosave int __next_combat_round = 0;
+private nosave int __first_strike = 0;
+private nosave int __second_strike = 0;
 
 /** @type {([ string: float ])} */
 private nosave mapping __defence = ([]);
@@ -94,6 +96,13 @@ void combat_round() {
     next_round();
 }
 
+public void reset_combat_round() {
+  if(in_combat() && __next_combat_round && find_call_out(__next_combat_round) > -1) {
+    remove_call_out(__next_combat_round);
+    next_round();
+  }
+}
+
 /**
  * Begin attacking a victim. Adds it to the current and seen enemy tables,
  * schedules the first combat round, and tells the victim to start attacking
@@ -133,6 +142,12 @@ int start_attack(object victim) {
  * skill. Stops early if the attacker is exhausted, the enemy is invalid, or
  * count is exhausted.
  *
+ * Note: Some preparation is in the works for weapon speed, but I haven't
+ * quite figured out how I'm going to do it just yet. I might have to break
+ * swing out into something else, or maybe combat round, because count exists
+ * for flurries of attacks, but it doesn't really account for fast or slow
+ * weapons. We'll see how that goes in the future.
+ *
  * @param {int} [count=1] - Remaining swings to perform.
  * @param {int} [multi] - Non-zero if this iteration should pick an off-hand
  *  weapon instead of the main.
@@ -147,9 +162,6 @@ varargs void swing(int count, int multi) {
   if(nullp(count))
     count = 1;
 
-  if(count < 1)
-    return;
-
   if(!enemy)
     return;
 
@@ -161,24 +173,43 @@ varargs void swing(int count, int multi) {
     return;
   }
 
+  if(count < 1)
+    return;
+
   mapping wielded = query_wielded();
   wielded = filter(wielded, (: objectp($2) :));
 
   if(sizeof(wielded)) {
     string main_slot = slots[0];
+    object main_hand = wielded[main_slot];
+    mapping off_hands = filter(wielded, (: $1 != $(main_slot) :));
 
     if(multi) {
-      mapping off_hand = filter(wielded, (: $1 != $(main_slot) :));
-      object *possible = distinct_array(values(off_hand));
+      object *possible = distinct_array(values(off_hands));
       weapon = element_of(possible);
       multi = 0;
     } else {
-      weapon = wielded[main_slot];
+      weapon = main_hand;
 
-      if(random(100) < 5 + query_skill_level("combat.melee"))
-        multi = 1;
+      if(sizeof(off_hands)) {
+        float multi_chance =  15.0
+                            + floor(query_skill_level("combat.melee") / 5.0);
+
+        float roll = random_float(100.0);
+
+        if(roll < multi_chance) {
+          multi = 1;
+        } else {
+          multi = 0;
+        }
+      } else {
+        multi = 0;
+      }
     }
   }
+
+  if(multi)
+    tell(this_object(), "{{909}}#-> {{res}}");
 
   if(can_strike(enemy, weapon)) {
     strike_enemy(enemy, weapon);
@@ -187,19 +218,24 @@ varargs void swing(int count, int multi) {
     fail_strike(enemy, weapon);
   }
 
-  swing(count - 1, multi);
+  // Subtract for this round
+  count--;
+
+  // if we're doing second weapon, we gotta do it anyway
+  if(multi)
+    count++;
+
+  if(count)
+    swing(count, multi);
 }
 
 /**
- * Schedules the next combat round. Adds up to 1.5 seconds of jitter to the
- * configured attack speed so attackers do not all fire on the same tick.
+ * Schedules the next combat round.
  *
  * @returns {int} The call_out handle for the scheduled round.
  */
 int next_round() {
   float speed = __attack_speed;
-
-  speed += random_float(1.5);
 
   __next_combat_round = call_out_walltime("combat_round", speed);
 

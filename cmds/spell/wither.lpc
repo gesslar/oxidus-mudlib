@@ -60,10 +60,10 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
         tp->use_skill("arcane.discipline.shadow", 1.15);
 
         // Withers stack across casters — each contributes its own
-        // -amount to the three defense skills.
+        // -amount to two defence skills.
         eff = clone_object("/obj/effect/wither");
         eff->set_caster(tp);
-        eff->set_amount(10);
+        eff->set_amount(2);
         eff->set_duration(30);
         eff->move(victim);
         eff->set_fixed(1);

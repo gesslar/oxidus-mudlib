@@ -23,6 +23,7 @@ private nosave int __equipped = 0;
 private nosave string __slot;
 private nosave mixed __dc = 1.0;
 private nosave string __damage_type = "bludgeoning";
+private nosave float __speed_mod = 0.0;
 
 /**
  * Sets how many hands are required to wield this weapon.
@@ -114,6 +115,16 @@ string query_damage_type() {
   return __damage_type;
 }
 
+float set_speed_mod(float mod) {
+  __speed_mod = mod;
+
+  return mod;
+}
+
+float get_speed_mod(float mod) {
+  return __speed_mod;
+}
+
 /**
  * Returns the body slot this weapon occupies when wielded.
  *
@@ -167,6 +178,11 @@ mixed equip(object tp, string slot) {
     return result;
 
   __equipped = 1;
+
+  // If you unwield a speedy weapon and then wield a slower one, you did not
+  // help yourself. Soz. But this is a penalty regardless for wielding during
+  // combat, which is a good idea.
+  tp->reset_combat_round();
 
   GMCP_D->send_gmcp(tp, GMCP_PKG_CHAR_ITEMS_UPDATE, ({ this_object(), tp }));
 

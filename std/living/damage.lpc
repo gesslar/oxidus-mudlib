@@ -134,10 +134,11 @@ public float receive_damage(object attacker, float damage, string type) {
 public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
   mapping weapon_info;
 
-  if(objectp(weapon_or_skill))
+  if(objectp(weapon_or_skill)) {
     weapon_info = query_weapon_info(weapon_or_skill);
-  else
+  } else {
     weapon_info = query_weapon_info(undefined);
+  }
 
   string skill_name = stringp(weapon_or_skill) ? weapon_or_skill : weapon_info["skill"];
   float skill = query_skill_level(skill_name);
@@ -166,6 +167,14 @@ public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
     + (skill + query_skill_level("combat") / 2.0)
     - enemy->query_skill_level(defence_skill)
   ;
+
+  false && _debug("base %O + wbase %O + skill %O - enemy skill %O = %O",
+    base,
+    wbase,
+    (skill + query_skill_level("combat") / 2.0),
+    enemy->query_skill_level(defence_skill),
+    dam
+  );
 
   return dam;
 }
