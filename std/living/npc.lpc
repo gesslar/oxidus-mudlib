@@ -1,10 +1,16 @@
-/* npc.c
-
- Tacitus @ LPUniversity
- 28-JUNE-06
- Non-player character
-
-*/
+/**
+ * @file /std/living/npc.lpc
+ *
+ * NPC logic.
+ *
+ * @created ????-??-?? - Gesslar
+ * @last_modified 2026-07-23 - Gesslar
+ *
+ * @history
+ * ????-??-?? - Gesslar - Created
+ * 2026-07-23 - Gesslar - Removed the super call, since `STD_BODY` now handles
+ *                        lifecycle through std_setup().
+ */
 
 #include <npc.h>
 #include <logs.h>
