@@ -107,7 +107,7 @@ public int earn_xp(object tp, int amount) {
  *
  * @public
  * @param {STD_PLAYER} killer - The object that killed the opponent.
- * @param {STD_NPC | STD_PLAYER} killed - The object that was killed.
+ * @param {STD_BODY} killed - The object that was killed.
  * @returns {int} The amount of XP awarded, or 0 if either object is null.
  */
 int kill_xp(object killer, object killed) {

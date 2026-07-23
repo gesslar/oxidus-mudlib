@@ -7,7 +7,7 @@ varargs void swing(int count, int multi);
 int next_round();
 public int can_strike(object enemy, mixed weapon);
 private fail_strike(object enemy, object weapon);
-void strike_enemy(object enemy, object weapon);
+public varargs void strike_enemy(object enemy, object weapon, int off_hand);
 mapping query_weapon_info(object weapon);
 int attacking(object victim);
 varargs int stop_attack(object victim, int seen);
