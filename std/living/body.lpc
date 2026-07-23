@@ -42,7 +42,7 @@ inherit __DIR__ "wealth";
 inherit EXT_ACTION;
 inherit EXT_LOG;
 
-void mudlib_setup() {
+void std_setup() {
   if(!clonep() &&
      origin() != ORIGIN_LOCAL &&
      previous_object() != body_d()

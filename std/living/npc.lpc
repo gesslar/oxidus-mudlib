@@ -16,8 +16,6 @@ inherit STD_NPC_PROC;
 inherit __DIR__ "living";
 
 void mudlib_setup() {
-  ::mudlib_setup();
-
   init_living();
 
   if(clonep()) {
