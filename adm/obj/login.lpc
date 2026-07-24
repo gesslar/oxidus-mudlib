@@ -112,7 +112,7 @@ public void gmcp_authenticated(string _username, string char) {
     write_file(
       log_dir() + LOG_LOGIN,
       capitalize(old_body->query_real_name()) + " reconnected from " +
-        query_ip_number(this_object()) + " on " + ctime(time()) + "\n"
+        query_ip_number(this_object()) + " on " + ldatetime() + "\n"
     );
 
     if(interactive(old_body)) {
@@ -395,7 +395,7 @@ private void character_menu_input(string str, string prompt) {
   write_file(
     log_dir() + LOG_LOGIN,
     capitalize(characters[i]) + " logged in from " +
-    query_ip_number(this_object()) + " on " + ctime(time()) + "\n"
+    query_ip_number(this_object()) + " on " + ldatetime() + "\n"
   );
 
   enter_world(characters[i], 0);
@@ -443,7 +443,7 @@ private void new_character(string str) {
   write_file(
     log_dir() + LOG_LOGIN,
     capitalize(str) + " logged in from " +
-    query_ip_number(this_object()) + " on " + ctime(time()) + "\n"
+    query_ip_number(this_object()) + " on " + ldatetime() + "\n"
   );
 
   assure_dir(str);
@@ -495,7 +495,7 @@ private void reconnect(string str, string name) {
     write_file(
       log_dir() + LOG_LOGIN,
       capitalize(body->query_real_name()) + " reconnected from " +
-      query_ip_number(this_object()) + " on " + ctime(time()) + "\n"
+      query_ip_number(this_object()) + " on " + ldatetime() + "\n"
     );
 
     if(interactive(body)) {
@@ -511,7 +511,7 @@ private void reconnect(string str, string name) {
     write_file(
       log_dir() + LOG_LOGIN,
       capitalize(str) + " logged in from " + query_ip_number(this_object()) +
-      " on " + ctime(time()) + "\n"
+      " on " + ldatetime() + "\n"
     );
 
     enter_world(name, 0);
@@ -675,7 +675,7 @@ private string parse_tokens(string text) {
       ", and " + filter(users()->query_name(),
       (: $1 != "login" :))[<1]);
     text = replace_string(text, "%user_count", "" + sizeof(users()));
-    text = replace_string(text, "%date", ctime(time()));
+    text = replace_string(text, "%date", ldatetime());
     text = replace_string(text, "%open_status", open_status());
     text = replace_string(text, "%email", admin_email());
     text = replace_string(text, "%lib_name", lib_name());

@@ -97,7 +97,7 @@ void heart_beat() {
         if(environment())
           tell_them(query_name() + " fades out of existance.\n");
 
-        log_file(LOG_LOGIN, query_real_name() + " auto-quit after 1 hour of net-dead at " + ctime(time()) + ".\n");
+        log_file(LOG_LOGIN, query_real_name() + " auto-quit after 1 hour of net-dead at " + ldatetime() + ".\n");
         destruct(this_object());
       }
     } else {

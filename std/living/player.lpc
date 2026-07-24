@@ -170,7 +170,7 @@ void net_dead() {
     tell_all(environment(), query_name()+ " falls into stupor.\n");
 
   add_extra_short("link_dead", "[stupor]");
-  log_file(LOG_LOGIN, query_real_name() + " went link-dead on " + ctime(time()) + "\n");
+  log_file(LOG_LOGIN, query_real_name() + " went link-dead on " + ldatetime() + "\n");
 
   if(interactive(this_object()))
     emit(SIG_USER_LINKDEAD, this_object());
@@ -211,7 +211,7 @@ void heart_beat() {
       if((time() - query_last_login()) > 3600) {
         if(environment())
           simple_action("$N $vfade out of existence.");
-        log_file(LOG_LOGIN, query_real_name() + " auto-quit after 1 hour of net-dead at " + ctime(time()) + ".\n");
+        log_file(LOG_LOGIN, query_real_name() + " auto-quit after 1 hour of net-dead at " + ldatetime() + ".\n");
         remove();
         return;
       }
