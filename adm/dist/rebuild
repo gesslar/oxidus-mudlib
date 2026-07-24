@@ -46,6 +46,21 @@ cp -v ../local_options src/local_options
 rm -rf build
 mkdir build
 cd build
+
+# The build directory is thrown away every run, so ccache is what keeps repeat
+# builds quick. Use it when it is installed, and carry on without it when it is
+# not — nothing here depends on it.
+ccache_args=()
+if command -v ccache >/dev/null 2>&1; then
+    ccache_args=(
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+    )
+    echo -e "${gold}[INFO]${reset} ccache found - using it to speed up compilation."
+else
+    echo -e "${gold}[INFO]${reset} ccache not found - compiling without it."
+fi
+
 # OXIDUS_CMAKE_EXTRA lets callers append cmake flags without editing this script.
 # It is empty by default (local builds stay -march=native). The Docker build sets
 # it to "-DMARCH_NATIVE=OFF" so the published driver runs on any x86-64 CPU.
@@ -55,6 +70,7 @@ cd build
      -DPACKAGE_DB=1 \
      -DPACKAGE_DB_SQLITE=3 \
      -DPACKAGE_UIDS=OFF \
+     "${ccache_args[@]}" \
      ${OXIDUS_CMAKE_EXTRA:-}
 
 make -j "$(nproc)" install
