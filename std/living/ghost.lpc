@@ -86,7 +86,7 @@ void net_dead() {
         tell_all(environment(), query_name()+ " begins to fade.\n");
 
     add_extra_short("link_dead", "[fading]");
-    log_file(LOG_LOGIN, query_real_name() + " went link-dead on " + ctime(time()) + "\n");
+    log_file(LOG_LOGIN, query_real_name() + " went link-dead on " + ldatetime() + "\n");
 
 }
 
@@ -106,7 +106,7 @@ void heart_beat() {
             if((time() - query_last_login()) > 3600) {
                 if(environment())
                     tell_them(query_name() + " fades out of existance.\n");
-                log_file(LOG_LOGIN, query_real_name() + " auto-quit after 1 hour of net-dead at " + ctime(time()) + ".\n");
+                log_file(LOG_LOGIN, query_real_name() + " auto-quit after 1 hour of net-dead at " + ldatetime() + ".\n");
                 remove();
                 return;
             }

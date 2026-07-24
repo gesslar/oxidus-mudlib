@@ -1,14 +1,14 @@
 /**
  * @file /std/object/object.lpc
- * Base object implementation that provides core functionality
- * for all game objects.
+ * 
+ * Base object implementation that provides core functionality for all game
+ * objects.
  *
- * @created 2005-04-04 - Tacitus
+ * @created 2024-07-24 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot
  *
  * @history
- * 2005-04-04 - Tacitus - Created
- * 2006-07-14 - Tacitus - Last updated
+ * 2024-07-24 - Entirely replaced originally distributed, legacy code.
  * 2025-03-16 - GitHub Copilot - Added documentation
  */
 
@@ -44,8 +44,8 @@ private nosave mixed _prevent_get = 0;
 /**
  * Driver apply called when the object is created.
  *
- * Sets up the object and processes the setup chain, then calls reset().
- * This function is private so only the driver can call it.
+ * Sets up the object and processes the setup chain, then calls reset(). This
+ * function is private so only the driver can call it.
  *
  * @param {mixed...} args - Variable arguments passed during creation
  */

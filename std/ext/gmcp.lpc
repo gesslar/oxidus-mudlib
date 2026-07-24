@@ -49,7 +49,7 @@ void gmcp(string message) {
     gmcp_module = DIR_STD_HANDLERS "gmcp/" + gmcp.package + ".lpc";
     if(!file_exists(gmcp_module)) {
         log_file("system/gmcp", "[%s] Module %s not found [%O]",
-            ctime(),
+            ldatetime(),
             gmcp_module,
             previous_object() || this_object()
         );

@@ -165,7 +165,7 @@ varargs string tail(string path, int line_count) {
  * @param {mixed} [arg] - Optional formatting arguments
  * @returns {int} 1 on success, 0 on failure
  * @example
- * log_file("system.log", "Server started at %s", ctime());
+ * log_file("system.log", "Server started at %s", ldatetime());
  */
 varargs int log_file(string file, string str, mixed arg...) {
   if(!file || !str)

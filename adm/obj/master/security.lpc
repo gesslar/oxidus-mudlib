@@ -35,11 +35,10 @@
  * adm/obj/master.lpc->privs_file(string filename) decides what objects
  * identify as when loaded.
  *
- * @created 2005-04-23 - Tacitus
+ * @rewritten 2026-06-16 - Gesslar
  * @last_modified 2026-06-16 - Gesslar
  *
  * @history
- * 2005-04-23 - Tacitus - Created as valid.c
  * 2026-06-16 - Gesslar - Rebuilt as the role/group security model
  */
 
