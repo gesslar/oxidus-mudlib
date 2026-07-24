@@ -116,8 +116,8 @@ the `TLS_CERT` / `TLS_KEY` config keys.
   `OXIDUS_UID:OXIDUS_GID` (default `1000`) via `gosu` and runs the driver
   unprivileged.
 - **Reboot loop.** The driver runs in a reboot loop mirroring `adm/dist/run`: an
-  in-game reboot (`exit 0`) restarts it automatically, while a real shutdown
-  stops the container.
+  in-game reboot (`exit 1`) restarts it automatically, while a real shutdown
+  (`exit 0`) stops the container.
 
 ## Running vs. rebuilding (stable at run, fresh at build)
 

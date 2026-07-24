@@ -150,7 +150,8 @@ if [ "$(id -u)" = "0" ]; then
 fi
 
 # --- Phase 2: unprivileged driver loop (we are now PUID:PGID) -------------
-# Reboot loop with signal handling (mirrors adm/dist/run; exit 0 == reboot).
+# Reboot loop with signal handling (mirrors adm/dist/run; exit 1 == reboot,
+# exit 0 == clean shutdown, anything else == crash — both stop the container).
 set +e
 child=""
 shutdown() {
@@ -167,10 +168,10 @@ while true; do
   wait "${child}"
   status=$?
   echo "[entrypoint] driver exited with status ${status}"
-  if [ "${status}" -eq 0 ]; then
+  if [ "${status}" -eq 1 ]; then
     echo "[entrypoint] reboot requested, restarting..."
-    # No delay between reboots, matching bin/run (sleep commented out there).
-    # This also leaves no window for a stop signal to land between drivers.
+    # No delay between reboots, matching adm/dist/run's intent. This also
+    # leaves no window for a stop signal to land between drivers.
   else
     break
   fi
