@@ -134,7 +134,7 @@ varargs void send_gmcp(object body, string gmcp_package, mixed arg) {
 
   if(!file_exists(gmcp_module)) {
     log_file("system/gmcp", "[%s] Module %s not found [%O]",
-      ctime(),
+      ldatetime(),
       gmcp_module,
       previous_object()->query_gmcp_module() ?
         previous_object(1) :
