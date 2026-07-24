@@ -19,7 +19,13 @@ services:
     # image: ghcr.io/gesslar/oxidus:latest
     container_name: oxidus
     init: true                 # tini as PID 1: clean signal forwarding + zombie reaping
-    restart: unless-stopped
+    # "no", not unless-stopped/on-failure: mirrors adm/dist/run, where only an
+    # in-game reboot restarts the driver. Reboot (exit 1) is absorbed by the
+    # entrypoint's own loop and never surfaces here, so the container process
+    # only exits on a clean shutdown (0) or a crash (non-zero) — both must stay
+    # down. Auto-restarting a crash would bury the fault in a boot loop; leave
+    # the dead container up for triage instead.
+    restart: "no"
     stop_grace_period: 30s     # give the driver time to save on shutdown
     ports:
       - "1336:1336"            # plain telnet
