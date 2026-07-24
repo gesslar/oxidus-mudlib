@@ -28,7 +28,7 @@ void setup() {
  */
 void player_died(object player, object killer) {
   log_file("death", sprintf("[%s] %s was killed by %s [%O]\n",
-      ctime(),
+      ldatetime(),
       player->query_name(),
       killer ? killer->query_name() : "unknown",
       environment(player)
@@ -44,7 +44,7 @@ void player_died(object player, object killer) {
  */
 void player_revived(object player) {
   log_file("death", sprintf("[%s] %s was revived [%O]\n",
-      ctime(),
+      ldatetime(),
       player->query_name(),
       environment(player)
     )

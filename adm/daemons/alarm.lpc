@@ -278,19 +278,19 @@ private void execute_alarm(class Alarm alarm) {
 
   if(!cfile_exists(alarm.file)) {
     log_file("system/alarm", "[%s] File %s does not exist\n",
-      ctime(), alarm.file);
+      ldatetime(), alarm.file);
     return;
   }
 
   if(err = catch(ob = load_object(alarm.file))) {
     log_file("system/alarm", "[%s] Unable to load file %s: %O\n",
-      ctime(), alarm.file, err);
+      ldatetime(), alarm.file, err);
     return;
   }
 
   if(!ob) {
     log_file("system/alarm", "[%s] Unable to load file %s\n",
-      ctime(), alarm.file);
+      ldatetime(), alarm.file);
     return;
   }
 
@@ -301,7 +301,7 @@ private void execute_alarm(class Alarm alarm) {
 
   if(err) {
     log_file("system/alarm", "[%s] Error executing alarm %s: %O\n",
-      ctime(), alarm.func, err);
+      ldatetime(), alarm.func, err);
   }
 
   save_data();
@@ -418,7 +418,7 @@ class Alarm create_alarm(string *parts, int silent) {
   };
   if(err) {
     log_file("system/alarm", "[%s] Error in create_alarm: %O",
-      ctime(), err);
+      ldatetime(), err);
     return null;
   }
 
@@ -564,7 +564,7 @@ int calculate_alarm_time(class Alarm alarm, int next) {
 
   if(err) {
     log_file("system/alarm", "[%s] Error in calculate_alarm_time: %O",
-      ctime(), err);
+      ldatetime(), err);
     return -1;
   }
 
@@ -660,7 +660,7 @@ int validate_alarm(class Alarm alarm, int silent) {
 
   if(!cfile_exists(alarm.file)) {
     log_file("system/alarm", "[%s] File %s does not exist\n%O",
-      ctime(), alarm.file, alarm);
+      ldatetime(), alarm.file, alarm);
     if(!silent)
       throw("File does not exist");
     return 0;
@@ -668,7 +668,7 @@ int validate_alarm(class Alarm alarm, int silent) {
 
   if(err = catch(ob = load_object(alarm.file))) {
     log_file("system/alarm", "[%s] Unable to load file %s: %O\n%O",
-      ctime(), alarm.file, err, alarm);
+      ldatetime(), alarm.file, err, alarm);
     if(!silent)
       throw("Unable to load file");
     return 0;
@@ -677,7 +677,7 @@ int validate_alarm(class Alarm alarm, int silent) {
   if(!function_exists(alarm.func, ob)) {
     log_file("system/alarm",
       "[%s] Function %s does not exist in file %s\n%O",
-      ctime(), alarm.func, alarm.file, alarm);
+      ldatetime(), alarm.func, alarm.file, alarm);
     if(!silent)
       throw("Function does not exist");
     return 0;
@@ -688,7 +688,7 @@ int validate_alarm(class Alarm alarm, int silent) {
 
     if(time < time()) {
       log_file("system/alarm", "[%s] Time is in the past\n%O",
-        ctime(), alarm);
+        ldatetime(), alarm);
       if(!silent)
         throw("Time is in the past");
       return 0;
@@ -719,7 +719,7 @@ varargs void test_alarm(class Alarm alarm) {
     return;
 
   debug_message(sprintf("Alarm %O: %O called at %s",
-    alarm.args..., ctime()));
+    alarm.args..., ldatetime()));
   log_file("alarms",
-    sprintf("Alarm %O: %O called at %s", alarm.args..., ctime()));
+    sprintf("Alarm %O: %O called at %s", alarm.args..., ldatetime()));
 }
