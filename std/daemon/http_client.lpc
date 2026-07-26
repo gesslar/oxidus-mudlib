@@ -504,7 +504,7 @@ private nomask void process_response(int fd, mapping server) {
   // If someone identifies the format, please update this!
   else {
     _log(2, "No content-length or chunked transfer encoding found. "
-      "Therefore, assumingthe response is the entire body. 🤷🏻");
+      "Therefore, assuming the response is the entire body. 🤷🏻");
 
     response = buf;
   }
