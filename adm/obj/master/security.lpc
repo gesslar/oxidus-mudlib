@@ -907,9 +907,6 @@ private nomask int access_ok(string file, object user, string op) {
  * @returns {int} 1 if permitted (or shadowed), 0 if enforced-denied.
  */
 private nomask int access_gate(string file, object user, string op, string func) {
-  int ok;
-
-
   // A nested check (the logging below reads/writes files) must not
   // recurse; permit it and let the outermost call decide.
   if(in_access_check)
