@@ -14,12 +14,12 @@
 inherit STD_CMD;
 
 void setup() {
-    usage_text = "time";
-    help_text =
-        "Reports the current in-game time as tracked by the time daemon. The "
-        "command takes no arguments.";
+  usage_text = "time";
+  help_text =
+    "Reports the current in-game time as tracked by the time daemon. The "
+    "command takes no arguments.";
 }
 
 mixed main(object tp, string str) {
-    return sprintf("It is now %s.\n", TIME_D->query_full_time());
+  return sprintf("It is now %s.\n", TIME_D->query_full_time());
 }

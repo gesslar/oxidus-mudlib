@@ -12,6 +12,16 @@
 
 inherit STD_CMD;
 
+void setup() {
+  help_text =
+    "Empties an object's inventory, destructing everything in it. With no "
+    "argument it cleans the room you are standing in. Livings are left "
+    "alone; everything else is asked to remove itself first and destructed "
+    "outright if it survives that.\n"
+    "\n"
+    "See also: dest\n";
+}
+
 mixed main(
   /** @type {STD_PLAYER} */ object _tp,
   string str

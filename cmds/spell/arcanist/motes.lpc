@@ -23,11 +23,11 @@ void setup() {
   ]);
 
   usage_text = "motes <target>";
-  help_text = sprintf(
-"Summon motes of light to strike a target. This spell costs "
-"%.1f SP and has a cooldown of %d seconds.",
-    evaluate(sp_cost), evaluate(cooldowns["motes"][1])
-  );
+  help_text =
+    "Summon motes of light to strike a target. This spell costs "
+    `${evaluate(sp_cost)} SP and has a cooldown of `
+    `${evaluate(cooldowns["motes"][1])} seconds.`
+  ;
 }
 
 mixed use(/** @type {STD_BODY} */ object tp, string arg) {

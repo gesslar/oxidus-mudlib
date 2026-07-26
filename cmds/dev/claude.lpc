@@ -20,10 +20,10 @@ inherit STD_CMD;
 void setup() {
   usage_text = "claude <description of activity>";
   help_text =
-  "Logs a timestamped, one-line description of what the Claude agent is "
-  "about to do to the 'claude' log file, and notifies any online admins. "
-  "Intended for automated telnet sessions so agent activity is auditable "
-  "and visible in real time.";
+    "Logs a timestamped, one-line description of what the Claude agent is "
+    "about to do to the 'claude' log file, and notifies any online admins. "
+    "Intended for automated telnet sessions so agent activity is auditable "
+    "and visible in real time.";
 }
 
 mixed main(object tp, string arg) {

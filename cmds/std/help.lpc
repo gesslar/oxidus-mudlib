@@ -19,9 +19,10 @@ private mixed get_file_help(object tp, string topic);
 void setup() {
   usage_text = "help <topic>";
   help_text =
-"Looks up help on a topic. If the topic names a command on your command path, "
-"that command's own help is shown; otherwise the help files are searched for a "
-"matching topic. With no topic, a brief reminder of the syntax is shown.";
+    "Looks up help on a topic. If the topic names a command on your command "
+    "path, that command's own help is shown; otherwise the help files are "
+    "searched for a matching topic. With no topic, a brief reminder of the "
+    "syntax is shown.";
 }
 
 mixed main(

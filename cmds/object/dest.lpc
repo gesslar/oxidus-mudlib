@@ -14,6 +14,17 @@ inherit STD_CMD;
 
 void setup() {
   usage_text = "dest <target|file>";
+  help_text =
+    "Destructs an object. The argument may be a file path, in which case the "
+    "loaded object for that file is destructed if one exists, or the name of "
+    "something in your inventory or in the room. Paths are resolved against "
+    "your current working directory, and a path that names a file which is "
+    "not loaded is reported rather than loaded just to destruct it.\n"
+    "\n"
+    "Destructing a player requires admin standing, and only an owner may "
+    "destruct another owner.\n"
+    "\n"
+    "See also: clean, update\n";
 }
 
 private int can_destruct(object tp, object ob);

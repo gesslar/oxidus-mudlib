@@ -14,22 +14,27 @@ inherit STD_CMD;
 
 void setup() {
   usage_text =
-  "set - view your current preferences\n"
-  "set <preference> - delete a preference\n"
-  "set <preference> <value> - set a preference\n"
-  "set <preference>_colour prompt - prompt for a colour\n"
-;
+    "set - view your current preferences\n"
+    "set <preference> - delete a preference\n"
+    "set <preference> <value> - set a preference\n"
+    "set <preference>_colour prompt - prompt for a colour\n"
+  ;
 
   help_text =
-"This command allows you, the user, to setup, modify, or delete preferences "
-"for your player object.\n\n"
-"To set a preference, you would type 'set preference value'. If you omit "
-"the second argument and a preference with a name matching the first argument "
-"exists, then that preference will be deleted.\n\n"
-"If the preference name ends with '_colour', and the value is 'prompt', then "
-"you will be prompted to select a colour from the available colours.\n\n"
-"See also: preferences, colour\n\n"
-"View {{ul1}}help preferences{{ul0}} for available preferences.";
+    "This command allows you, the user, to setup, modify, or delete "
+    "preferences for your player object.\n"
+    "\n"
+    "To set a preference, you would type 'set preference value'. If you omit "
+    "the second argument and a preference with a name matching the first "
+    "argument exists, then that preference will be deleted.\n"
+    "\n"
+    "If the preference name ends with '_colour', and the value is 'prompt', "
+    "then you will be prompted to select a colour from the available "
+    "colours.\n"
+    "\n"
+    "See also: preferences, colour\n"
+    "\n"
+    "View {{ul1}}help preferences{{ul0}} for available preferences.";
 }
 
 private void prompt_colour_result(string input, object tp, string variable);

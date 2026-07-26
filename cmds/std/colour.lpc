@@ -18,17 +18,17 @@ void setup() {
   usage_text = "colour [<on>|<off>|list|show [#]]";
 
   help_text =
-"With no arguments, this command will tell you if you currently have "
-"colour enabled or disabled. You can also toggle colour by providing the "
-"arguments {{ul1}}on{{ul0}} to enable or {{ul1}}off{{ul0}} to disable.\n"
-"\n"
-"Use the {{ul1}}list{{ul0}} argument to list all the available colours.\n"
-"\n"
-"Use the {{ul1}}show{{ul0}} argument to see how a specific colour code "
-"will appear in the foreground and background. The argument must be a "
-"number between 0 and 255.\n"
-"\n"
-"See also: set";
+    "With no arguments, this command will tell you if you currently have "
+    "colour enabled or disabled. You can also toggle colour by providing the "
+    "arguments {{ul1}}on{{ul0}} to enable or {{ul1}}off{{ul0}} to disable.\n"
+    "\n"
+    "Use the {{ul1}}list{{ul0}} argument to list all the available colours.\n"
+    "\n"
+    "Use the {{ul1}}show{{ul0}} argument to see how a specific colour code "
+    "will appear in the foreground and background. The argument must be a "
+    "number between 0 and 255.\n"
+    "\n"
+    "See also: set";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string str) {

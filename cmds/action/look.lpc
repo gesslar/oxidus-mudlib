@@ -12,6 +12,19 @@
 
 inherit STD_ACT;
 
+void setup() {
+  help_text =
+    "Describes your surroundings, or something in particular. On its own it "
+    "shows the room you are standing in, the ways out of it, and everything "
+    "you can see there. Name a target — 'look at sword' or just "
+    "'look sword' — to examine that instead, or 'look me' to examine "
+    "yourself. 'look in <container>' lists what a container holds. Targets "
+    "are searched for in your inventory first and then in the room; adding "
+    "'here' to the end skips your inventory and looks only at the room.\n"
+    "\n"
+    "See also: inventory\n";
+}
+
 mixed identify_filename(object ob, int vm);
 mixed describe_environment(object tp);
 mixed describe_object(object tp, object ob);

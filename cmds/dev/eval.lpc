@@ -16,9 +16,9 @@ inherit STD_CMD;
 void setup() {
   usage_text = "eval <lpc-statements>";
   help_text =
-"This command allows you to execute stand-alone lpc statements. Everything "
-"executed is done as {{bl1}}you{{bl0}}, so care should be taken that what you run "
-"is intended.";
+    "This command allows you to execute stand-alone lpc statements. "
+    "Everything executed is done as {{bl1}}you{{bl0}}, so care should be "
+    "taken that what you run is intended.";
 }
 
 mixed main(/** @type {STD_PLAYER} */ object caller, string arg) {

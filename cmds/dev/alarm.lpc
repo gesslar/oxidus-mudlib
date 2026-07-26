@@ -90,25 +90,25 @@ void setup() {
   "      (any unambiguous prefix; boot is config-file only)\n";
 
   help_text =
-  "This command inspects, adds, removes, and rehashes alarms registered "
-  "with the central alarm daemon (ALARM_D).\n\n"
-  "Recurring alarms (hourly/daily/weekly/monthly/yearly) and boot alarms "
-  "typically live in the configured ALARMS_PATH and are rehashed "
-  "automatically at boot. One-shot (\"once\") alarms added at runtime via "
-  "\"alarm add once\" persist across reboots.\n\n"
-  "\"alarm rehash\" rereads all config files and discards any runtime-added "
-  "alarms.\n\n"
-  "Only an admin may add an alarm with root permissions or rehash the "
-  "alarm daemon.\n\n"
-  "PATTERNS BY TYPE:\n"
-  "  once     YY-MM-DD@HH:MM\n"
-  "  hourly   MM\n"
-  "  daily    HH:MM\n"
-  "  weekly   D@HH:MM     (D = day-of-week, Sunday = 0)\n"
-  "  monthly  D@HH:MM     (D = day-of-month)\n"
-  "  yearly   MM-DD@HH:MM\n"
-  "  boot     <seconds after boot> (config-file only)\n";
-}
+    "This command inspects, adds, removes, and rehashes alarms registered "
+    "with the central alarm daemon (ALARM_D).\n\n"
+    "Recurring alarms (hourly/daily/weekly/monthly/yearly) and boot alarms "
+    "typically live in the configured ALARMS_PATH and are rehashed "
+    "automatically at boot. One-shot (\"once\") alarms added at runtime via "
+    "\"alarm add once\" persist across reboots.\n\n"
+    "\"alarm rehash\" rereads all config files and discards any runtime-added "
+    "alarms.\n\n"
+    "Only an admin may add an alarm with root permissions or rehash the "
+    "alarm daemon.\n\n"
+    "PATTERNS BY TYPE:\n"
+    "  once     YY-MM-DD@HH:MM\n"
+    "  hourly   MM\n"
+    "  daily    HH:MM\n"
+    "  weekly   D@HH:MM     (D = day-of-week, Sunday = 0)\n"
+    "  monthly  D@HH:MM     (D = day-of-month)\n"
+    "  yearly   MM-DD@HH:MM\n"
+    "  boot     <seconds after boot> (config-file only)\n";
+  }
 
 mixed main(object tp, string arg) {
   string type;

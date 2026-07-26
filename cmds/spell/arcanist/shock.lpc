@@ -24,13 +24,12 @@ void setup() {
   ]);
 
   usage_text = "shock <target>";
-  help_text = sprintf(
-"Loose a bolt of lightning at a target. The bolt strikes "
-"immediately with no incantation — paid for in SP and a "
-"longer cooldown. This spell costs %.2f SP and has a cooldown "
-"of %d seconds.",
-    evaluate(sp_cost), evaluate(cooldowns["shock"][1])
-  );
+  help_text =
+    "Loose a bolt of lightning at a target. The bolt strikes immediately "
+    "with no incantation — paid for in SP and a longer cooldown. This "
+    `spell costs ${evaluate(sp_cost)} SP and has a cooldown of `
+    `${evaluate(cooldowns["shock"][1])} seconds.`
+  ;
 }
 
 mixed use(

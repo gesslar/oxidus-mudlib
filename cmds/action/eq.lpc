@@ -17,7 +17,8 @@ void setup() {
   help_text =
     "This command will list all the items you currently have equipped, "
     "including the clothing and armour you are wearing and the weapons you "
-    "are wielding, organised by the slot each occupies.\n\n"
+    "are wielding, organised by the slot each occupies."
+    "\n\n"
     "See also: remove, wear, wield, unwield";
 }
 

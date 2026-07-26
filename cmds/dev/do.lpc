@@ -23,11 +23,11 @@ void setup() {
   "  been executed 2, 2, 3 times.\n";
 
   help_text =
-  "Executes a list of commands and/or repeatedly. If a number is given, the "
-  "command is executed that many times. If a list of commands is given, each "
-  "command is executed the number of times specified. If the ! is used, all "
-  "commands are executed the number of times specified, repeating as "
-  "necessary to match the number of times specified for each commands.";
+    "Executes a list of commands and/or repeatedly. If a number is given, "
+    "the command is executed that many times. If a list of commands is given, "
+    "each command is executed the number of times specified. If the ! is "
+    "used, all commands are executed the number of times specified, repeating "
+    "as necessary to match the number of times specified for each commands.";
 }
 
 mixed main(

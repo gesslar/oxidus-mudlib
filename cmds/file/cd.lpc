@@ -12,6 +12,16 @@
 
 inherit STD_CMD;
 
+void setup() {
+  help_text =
+    "Changes your working directory — the directory that the other file "
+    "commands resolve relative paths against. The path may be absolute or "
+    "relative to where you already are, and with no path at all you are "
+    "returned to your own home directory.\n"
+    "\n"
+    "See also: ls, pwd\n";
+}
+
 mixed main(
   /** @type {STD_PLAYER} */ object caller,
   string str

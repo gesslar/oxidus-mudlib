@@ -12,6 +12,16 @@
 
 inherit STD_CMD;
 
+void setup() {
+  help_text =
+    "Lists what you are carrying, and how much of your carrying capacity is "
+    "spoken for. Anything you have equipped is marked with an asterisk. "
+    "Give an argument to narrow the list to the items answering to that "
+    "name.\n"
+    "\n"
+    "See also: look, eq, wealth\n";
+}
+
 private string *format_contents(object *obs, int fns);
 
 mixed main(

@@ -12,6 +12,13 @@
 
 inherit STD_CMD;
 
+void setup() {
+  help_text =
+    "Lists everyone currently in the game. Owners are listed first, then "
+    "admins, then developers, then denizens, and names are sorted "
+    "alphabetically within each group. The command takes no arguments.";
+}
+
 int sort_users(object a, object b);
 
 mixed main(

@@ -10,6 +10,16 @@
  * 2026-07-16 - Gesslar - Created
  */
 
+inherit STD_CMD;
+
+void setup() {
+  help_text =
+    "Reports your current working directory — the directory that the other "
+    "file commands resolve relative paths against.\n"
+    "\n"
+    "See also: cd, ls\n";
+}
+
 mixed main(
   /** @type {STD_PLAYER} */ object caller,
   string _str

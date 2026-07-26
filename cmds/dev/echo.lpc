@@ -16,15 +16,15 @@ inherit STD_CMD;
 void setup() {
   usage_text = "echo <message>";
   help_text =
-"This command provides a developer with the ability to print a message to everyone "
-"in the room.\n"
-"\n"
-"* The message is printed as-is\n"
-"* Colour codes are substituted\n"
-"* The message is not wrapped\n"
-"* The message is not echoed to the self, but the echoed message is confirmed\n"
-"\n"
-"Note: This will not print to anybody if you are hidden.";
+    "This command provides a developer with the ability to print a message to "
+    "everyone in the room.\n"
+    "\n"
+    "* The message is printed as-is\n"
+    "* Colour codes are substituted\n"
+    "* The message is not wrapped\n"
+    "* The message is not echoed to the self, but the echoed message is confirmed\n"
+    "\n"
+    "Note: This will not print to anybody if you are hidden.";
 }
 
 mixed main(

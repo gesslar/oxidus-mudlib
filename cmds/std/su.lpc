@@ -28,7 +28,10 @@ void setup() {
     "in use by an interactive connection cannot be possessed.";
 }
 
-mixed main(object user, string arg) {
+mixed main(
+  /** @type {STD_BODY} */ object user,
+  string arg
+) {
   object
   /** @type {STD_BODY} */     dest,
   /** @type {STD_BODY} */     su_body,

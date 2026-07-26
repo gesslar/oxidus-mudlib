@@ -12,6 +12,29 @@
 
 inherit STD_CMD;
 
+void setup() {
+  usage_text =
+    "update [<file|object>]\n"
+    "update -r [<file|object>]\n"
+    "update -R [<file|object>]\n"
+  ;
+
+  help_text =
+    "Reloads an object from source, putting any players who were inside it "
+    "back afterwards. The target may be a file path or something you can "
+    "name in your inventory or the room; with no target at all, your current "
+    "working file is used, which is whatever you updated last.\n"
+    "\n"
+    "'-r' also reloads the object's immediate inheritables, and '-R' walks "
+    "the whole inheritance tree beneath it. Virtual objects are reloaded "
+    "through their virtual master.\n"
+    "\n"
+    "This command cannot update itself — destruct it instead and it will "
+    "reload on next use.\n"
+    "\n"
+    "See also: dest, showtree\n";
+}
+
 private nomask mapping resolve_target(mixed target, string kind);
 private nomask void generate_graph(mapping target, string kind);
 private nomask mixed reload_it(mixed target);
