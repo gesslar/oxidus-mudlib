@@ -103,6 +103,7 @@ varargs string tail(string path, int line_count);
 varargs string temp_file(mixed arg);
 varargs void implode_file(string file, string *lines, int overwrite);
 varargs mixed load_lpml(string file, string root);
+mixed load_json(string file);
 void assure_file(string file);
 string source_file(string path_and_file);
 mapping as_directory(string str);

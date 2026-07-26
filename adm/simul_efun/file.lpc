@@ -270,13 +270,45 @@ varargs mixed load_lpml(string file, string root) {
   string err = catch(contents = read_file(file));
   set_privs(this_object(), old_privs);
 
-  if(err)
+  if(err || !stringp(contents))
     return undefined;
 
   if(stringp(root) && truthy(root))
     return lpml_decode(contents, root);
   else
     return lpml_decode(contents);
+}
+
+/**
+ * Loads and decodes a JSON file.
+ *
+ * Reads the file and parses it via json_decode(). Unlike load_lpml(), JSON
+ * has no include mechanism, so there is no base path to resolve against.
+ *
+ * @param {string} file - Path to the JSON file to load
+ * @returns {mixed} Decoded JSON value, "" if the file is missing or empty, or
+ *  undefined if it could not be read
+ * @errors If file is not a non-zero length string
+ * @example
+ * mapping cfg = load_json("/d/village/spawn.json");
+ */
+mixed load_json(string file) {
+  string contents, old_privs;
+
+  assert_arg(stringp(file) && truthy(file), 1, "File must be a non-zero length string.");
+
+  if(!file_exists(file) || file_size(file) == 0)
+    return "";
+
+  old_privs = query_privs();
+  set_privs(this_object(), query_privs(previous_object()));
+  string err = catch(contents = read_file(file));
+  set_privs(this_object(), old_privs);
+
+  if(err || !stringp(contents))
+    return undefined;
+
+  return json_decode(contents);
 }
 
 /**
