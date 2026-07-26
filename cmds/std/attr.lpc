@@ -14,26 +14,26 @@
 inherit STD_CMD;
 
 void setup() {
-    usage_text = "attr";
-    help_text =
-        "Displays your character's attributes and their current values. Each "
-        "of the game's configured attributes is listed on its own line with "
-        "its name and numeric value. The command takes no arguments.";
+  usage_text = "attr";
+  help_text =
+    "Displays your character's attributes and their current values. Each "
+    "of the game's configured attributes is listed on its own line with "
+    "its name and numeric value. The command takes no arguments.";
 }
 
 mixed main(/** @type {STD_BODY} */ object tp,
-    string _str) {
-    string *attrs, attr;
-    string out = "";
+  string _str) {
+  string *attrs, attr;
+  string out = "";
 
-    attrs = mud_config("ATTRIBUTES");
+  attrs = mud_config("ATTRIBUTES");
 
-    foreach(attr in attrs) {
-        out += sprintf("%-15s: %d\n",
-            capitalize(attr),
-            tp->get_attribute(attr)
-        );
-    }
+  foreach(attr in attrs) {
+    out += sprintf("%-15s: %d\n",
+      capitalize(attr),
+      tp->get_attribute(attr)
+    );
+  }
 
-    return out;
+  return out;
 }

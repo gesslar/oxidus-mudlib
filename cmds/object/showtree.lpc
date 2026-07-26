@@ -19,9 +19,9 @@ void setup() {
     "showtree <func> in <file>\n";
   help_text =
     "In its first version, shows you the full inheritance tree for the named "
-    "object. In its second form, it shows you all files in the inheritance tree "
-    "which contain the function you name, specifically noting those objects which "
-    "have definitions for the function."
+    "object. In its second form, it shows you all files in the inheritance "
+    "tree which contain the function you name, specifically noting those "
+    "objects which have definitions for the function."
   ;
 }
 

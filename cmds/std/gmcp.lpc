@@ -20,20 +20,20 @@ private void gmcp_gui_result(mapping response, object tp);
 
 void setup() {
     usage_text =
-"gmcp - Displays your current GMCP status.\n"
-"gmcp <on/off> - Enables or disables GMCP.\n"
-"gmcp gui - Requests the Mudlet GUI install from the server.\n";
+      "gmcp - Displays your current GMCP status.\n"
+      "gmcp <on/off> - Enables or disables GMCP.\n"
+      "gmcp gui - Requests the Mudlet GUI install from the server.\n";
 
     help_text =
-"Displays your current GMCP status or enables/disables GMCP. GMCP is a "
-"protocol that allows the server to send information to the client. This "
-"information can be used to enhance the user interface and provide additional "
-"information to the player. GMCP is only available if the client supports it "
-"and it is enabled in the client and the server.\n"
-"\n"
-"You can also use the 'gui' option to request the Mudlet GUI information from "
-"the server. This will automatically install the latest version of the GUI "
-"for the "+mud_name()+" client.\n";
+      "Displays your current GMCP status or enables/disables GMCP. GMCP is a "
+      "protocol that allows the server to send information to the client. "
+      "This information can be used to enhance the user interface and provide "
+      "additional information to the player. GMCP is only available if the "
+      "client supports it and it is enabled in the client and the server.\n"
+      "\n"
+      "You can also use the 'gui' option to request the Mudlet GUI "
+      "information from the server. This will automatically install the "
+      `latest version of the GUI for the ${mud_name()} client.`;
 }
 
 mixed main(/** @type {STD_PLAYER} */ object tp, string arg) {
@@ -83,7 +83,7 @@ mixed main(/** @type {STD_PLAYER} */ object tp, string arg) {
     return "Syntax: gmcp OR gmcp [on|off]";
 }
 
-private mixed gmcp_status(object tp) {
+private mixed gmcp_status(/** @type {STD_PLAYER} */ object tp) {
     if(tp->gmcp_enabled())
         return "GMCP is currently enabled.";
 

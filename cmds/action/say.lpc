@@ -15,7 +15,7 @@ inherit STD_ACT;
 void setup() {
     usage_text = "say <message>";
     help_text =
-"This command enables you to speak to the room.";
+      "This command enables you to speak to the room.";
 }
 
 mixed main(

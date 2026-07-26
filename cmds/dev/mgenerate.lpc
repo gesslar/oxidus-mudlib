@@ -14,15 +14,15 @@ inherit STD_CMD;
 inherit EXT_LOG;
 
 void setup() {
-    usage_text = "mgenerate <area name> <area type> <width> <height>\n";
-    help_text =
-        "Procedurally generates an area map file and writes it to your home "
-        "directory as <area name>.map. The area type controls the terrain "
-        "distribution: 'forest' (mostly forest with clearings), 'mountain' "
-        "(mostly mountain with hills), or 'desert' (mostly sand with the odd "
-        "oasis); any other type falls back to plains. Each cell is assigned a "
-        "smoothed elevation value alongside its terrain glyph. Width and "
-        "height are capped at 100 each.";
+  usage_text = "mgenerate <area name> <area type> <width> <height>\n";
+  help_text =
+    "Procedurally generates an area map file and writes it to your home "
+    "directory as <area name>.map. The area type controls the terrain "
+    "distribution: 'forest' (mostly forest with clearings), 'mountain' "
+    "(mostly mountain with hills), or 'desert' (mostly sand with the odd "
+    "oasis); any other type falls back to plains. Each cell is assigned a "
+    "smoothed elevation value alongside its terrain glyph. Width and "
+    "height are capped at 100 each.";
 }
 
 private string generate_cell(string area_type, int x, int y, int width, int ref *elevation_map, int ref terrain_seed);

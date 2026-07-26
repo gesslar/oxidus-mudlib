@@ -14,6 +14,11 @@ inherit STD_CMD;
 
 void setup() {
   usage_text = "wall <text>";
+  help_text =
+    "Broadcasts a message to every player currently in the game, stamped "
+    "with the server time and your name. There is no way for anyone to opt "
+    "out of receiving it, so keep it for announcements that genuinely "
+    "concern everybody.";
 }
 
 mixed main(

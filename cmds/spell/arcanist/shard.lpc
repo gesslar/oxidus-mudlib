@@ -24,13 +24,12 @@ void setup() {
   ]);
 
   usage_text = "shard <target>";
-  help_text = sprintf(
-"Drive a wicked shard of magical ice into a target. The shard "
-"strikes for a small initial wound, then shatters a few seconds "
-"later for a burst of cold damage. This spell costs %.1f SP and "
-"has a cooldown of %d seconds.",
-    evaluate(sp_cost), evaluate(cooldowns["shard"][1])
-  );
+  help_text =
+    "Drive a wicked shard of magical ice into a target. The shard strikes "
+    "for a small initial wound, then shatters a few seconds later for a "
+    `burst of cold damage. This spell costs ${evaluate(sp_cost)} SP and has `
+    `a cooldown of ${evaluate(cooldowns["shard"][1])} seconds.`
+  ;
 }
 
 mixed use(/** @type {STD_BODY} */ object tp, string arg) {

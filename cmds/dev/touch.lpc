@@ -12,11 +12,11 @@
 inherit STD_CMD;
 
 void setup() {
-    usage_text = "touch [-f] <file>";
-    help_text =
-"Creates a new empty file at the specified path. If the path does not exist, "
-"the function will fail to create the file unless the -f flag is used to "
-"force the creation of the necessary directories.";
+  usage_text = "touch [-f] <file>";
+  help_text =
+    "Creates a new empty file at the specified path. If the path does not "
+    "exist, the function will fail to create the file unless the -f flag is "
+    "used to force the creation of the necessary directories.";
 }
 
 mixed main(

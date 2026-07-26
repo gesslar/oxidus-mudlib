@@ -14,21 +14,25 @@ inherit STD_CMD;
 
 void setup() {
   usage_text =
-  "waypoint list - List all waypoints.\n"
-  "waypoint set - Set a waypoint at your current location.\n"
-  "waypoint remove <#> - Remove a waypoint.\n";
+    "waypoint list - List all waypoints.\n"
+    "waypoint set - Set a waypoint at your current location.\n"
+    "waypoint remove <#> - Remove a waypoint.\n";
 
   help_text =
-  "This command allows you to manage waypoints, which are saved locations "
-  "that you can quickly travel to using the `travel` command.\n\n"
-  "To set a waypoint, type `waypoint set`. This will save your current "
-  "location as waypoint 1. You can set additional waypoints by using the "
-  "`waypoint set` command again, which will save your current location as "
-  "waypoint 2, and so on.\n\n"
-  "To remove a waypoint, type `waypoint remove <#>`, replacing <#> with the "
-  "number of the waypoint you want to remove.\n\n"
-  "To use a waypoint, type: `travel <waypoint #>`.\n\n"
-  "You must have GMCP enabled to use this command.";
+    "This command allows you to manage waypoints, which are saved locations "
+    "that you can quickly travel to using the `travel` command.\n"
+    "\n"
+    "To set a waypoint, type `waypoint set`. This will save your current "
+    "location as waypoint 1. You can set additional waypoints by using the "
+    "`waypoint set` command again, which will save your current location as "
+    "waypoint 2, and so on.\n"
+    "\n"
+    "To remove a waypoint, type `waypoint remove <#>`, replacing <#> with the "
+    "number of the waypoint you want to remove.\n"
+    "\n"
+    "To use a waypoint, type: `travel <waypoint #>`.\n"
+    "\n"
+    "You must have GMCP enabled to use this command.";
 }
 
 private mixed list_waypoints(object tp);
@@ -36,9 +40,6 @@ private mixed set_waypoint(object tp);
 private mixed remove_waypoint(object tp, int num);
 
 mixed main(object tp, string str) {
-  string name = query_privs(tp);
-  string file = user_data_directory(name) + "waypoints.txt";
-  string *lines = ({});
   int num;
 
   if(!str)
@@ -94,9 +95,8 @@ private mixed set_waypoint(object tp) {
   mixed *wps;
   string *wp;
   int i, num;
-  string result = "";
   int max_waypoints = mud_config("WAYPOINTS_MAX");
-  object room = environment(tp);
+  /** @type {STD_ROOM} */ object room = environment(tp);
   string room_file = base_name(room);
   string room_short = room->query_short();
 

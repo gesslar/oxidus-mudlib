@@ -21,9 +21,9 @@ void setup() {
   help_text =
     "Views and toggles driver debug levels. With no argument, it lists every "
     "known debug level with an on/off indicator showing its current state. "
-    "Give a valid <level> name to toggle that level: if it is currently off it "
-    "is enabled, and if it is currently on it is disabled. After toggling, the "
-    "updated list of debug levels is displayed.";
+    "Give a valid <level> name to toggle that level: if it is currently off "
+    "it is enabled, and if it is currently on it is disabled. After toggling, "
+    "the updated list of debug levels is displayed.";
 }
 
 varargs mixed main(object tp, string str) {

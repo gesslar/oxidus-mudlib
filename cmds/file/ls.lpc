@@ -14,6 +14,24 @@
 
 inherit STD_CMD;
 
+void setup() {
+  help_text =
+    "Lists the contents of a directory, or a single entry if you name a "
+    "file. With no path it lists your current working directory. Wildcards "
+    "('*' and '?') are matched against the directory they appear in.\n"
+    "\n"
+    "Entries are coloured by kind — directories, source, headers, data, and "
+    "save files — and loaded objects are marked with an asterisk. Each "
+    "colour is a preference of its own — 'ls_directory', 'ls_source', "
+    "'ls_loaded', 'ls_header', 'ls_data', 'ls_save', and 'ls_other' — so "
+    "'set ls_source 6cf' will recolour source files.\n"
+    "\n"
+    "The '-l' flag switches to a long listing, adding each entry's size and "
+    "the date it was last modified.\n"
+    "\n"
+    "See also: cd, pwd, cat\n";
+}
+
 private mixed perform_ls(string target, string *flags);
 private mapping resolve_entry(string dir, mixed *entry);
 private mapping decorate_entry(mapping entry);

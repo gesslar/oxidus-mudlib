@@ -24,11 +24,11 @@ void setup() {
   ]);
 
   usage_text = "punch <target>";
-  help_text = sprintf(
-"Use your fist to punch a target. This ability costs %.1f MP and has a "
-"cooldown of %d seconds.",
-  evaluate(mp_cost), evaluate(cooldowns["punch"][1])
-  );
+  help_text =
+    `Use your fist to punch a target. This ability costs ${evaluate(mp_cost)} `
+    `\n\n`
+    `MP and has a cooldown of ${evaluate(cooldowns["punch"][1])} seconds.`
+  ;
 }
 
 mixed use(/** @type {STD_BODY} */ object tp, string arg) {

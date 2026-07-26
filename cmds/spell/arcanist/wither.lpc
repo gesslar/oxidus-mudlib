@@ -24,12 +24,11 @@ void setup() {
   ]);
 
   usage_text = "wither <target>";
-  help_text = sprintf(
-"Weave grasping shadow that clings to a target and weakens "
-"their defenses for a time. This spell costs %.1f SP and has "
-"a cooldown of %d seconds.",
-    evaluate(sp_cost), evaluate(cooldowns["wither"][1])
-  );
+  help_text =
+    "Weave grasping shadow that clings to a target and weakens their "
+    `defences for a time. This spell costs ${evaluate(sp_cost)} SP and has `
+    `a cooldown of ${evaluate(cooldowns["wither"][1])} seconds.`
+  ;
 }
 
 mixed use(/** @type {STD_BODY} */ object tp, string arg) {

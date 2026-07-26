@@ -22,15 +22,15 @@ void setup() {
   ]);
 
   usage_text = "strike <object 1> with <object 2> [> <object3>]";
-  help_text = sprintf(
-"Use one object against another quickly, usually to perform an effect. "
-"Sometimes, you can direct the effect of your strike at a third object. "
-"Such as when building a fire, you can strike your firesteel with your flint "
-"and target some kindling."
-"\n"
-"This ability costs %.1f MP and has a cooldown of %d seconds.",
-  evaluate(mp_cost), evaluate(cooldowns["strike"][1])
-  );
+  help_text =
+    `Use one object against another quickly, usually to perform an effect. `
+    `Sometimes, you can direct the effect of your strike at a third object. `
+    `Such as when building a fire, you can strike your firesteel with your `
+    `flint and target some kindling.`
+    `\n\n`
+    `This ability costs ${evaluate(mp_cost)} MP and has a cooldown of `
+    `${evaluate(cooldowns["strike"][1])} seconds.`
+  ;
 }
 
 mixed use(/** @type {STD_BODY} */ object tp, string arg) {

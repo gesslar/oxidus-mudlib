@@ -14,10 +14,12 @@ inherit STD_CMD;
 void setup() {
   usage_text = "summon <user>";
   help_text =
-"This command allows you to move a user to your environment. You cannot "
-"summon admins, and if you are a developer you cannot summon other "
-"developers.\n\n"
-"Use this command with care, as it can be disruptive to the game experience.";
+    "This command allows you to move a user to your environment. You cannot "
+    "summon admins, and if you are a developer you cannot summon other "
+    "developers.\n"
+    "\n"
+    "Use this command with care, as it can be disruptive to the game "
+    "experience.";
 }
 
 mixed main(

@@ -27,8 +27,8 @@ void setup() {
     "get all from <container>\n"
     "get all <object> from <container>\n";
   help_text =
-    "This command picks things up off the ground or out of a container. Name a "
-    "single object to get just that one, or use 'all' to get everything (or "
+    "This command picks things up off the ground or out of a container. Name "
+    "a single object to get just that one, or use 'all' to get everything (or "
     "everything of a given type). With 'from <container>', it takes from the "
     "named container instead of the room.\n"
     "\n"

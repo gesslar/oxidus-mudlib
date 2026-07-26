@@ -17,16 +17,16 @@
 inherit STD_REPORTER;
 
 void setup() {
-    set_report_type(query_file_name());
-    set_git_hub_label("enhancement");
+  set_report_type(query_file_name());
+  set_git_hub_label("enhancement");
 
-    usage_text = "idea [<subject>]";
-    help_text =
-        "Submits an idea or enhancement suggestion to the game's maintainers. "
-        "If you supply a subject on the command line it is used directly; "
-        "otherwise you are prompted to enter one. You are then placed in the "
-        "editor to describe your idea in detail. When you finish editing, the "
-        "report is written to the local idea log and, where GitHub reporting "
-        "is configured, filed as an enhancement issue. Leaving the subject "
-        "empty or exiting the editor without content aborts the report.";
+  usage_text = "idea [<subject>]";
+  help_text =
+    "Submits an idea or enhancement suggestion to the game's maintainers. "
+    "If you supply a subject on the command line it is used directly; "
+    "otherwise you are prompted to enter one. You are then placed in the "
+    "editor to describe your idea in detail. When you finish editing, the "
+    "report is written to the local idea log and, where GitHub reporting "
+    "is configured, filed as an enhancement issue. Leaving the subject "
+    "empty or exiting the editor without content aborts the report.";
 }

@@ -16,8 +16,8 @@ inherit STD_CMD;
 void setup() {
   usage_text = "gauge <command>";
   help_text =
-  "The gauge command will execute the given command, and will tell you how "
-  "many milliseconds of CPU the command took.";
+    "The gauge command will execute the given command, and will tell you how "
+    "many milliseconds of CPU the command took.";
 }
 
 mixed main(

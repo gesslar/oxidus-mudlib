@@ -27,15 +27,15 @@ void setup() {
     "trace <file|object>\n"
     "trace -d <file|object>";
   help_text =
-    "Finds every loaded object matching <file|object> - the master (blueprint) "
-    "and all of its clones.\n"
+    "Finds every loaded object matching <file|object> - the master "
+    "(blueprint) and all of its clones.\n"
     "\n"
     "<file|object> may be a file path (absolute or relative to your current "
     "working directory) or an object reference ('me', 'here', something in "
     "your inventory or room, or a living by name), whose blueprint is used.\n"
     "\n"
-    "With -d, the matching clones are destructed. If a blueprint has no clones, "
-    "the master copy itself is destructed instead.\n"
+    "With -d, the matching clones are destructed. If a blueprint has no "
+    "clones, the master copy itself is destructed instead.\n"
     "\n"
     "See also: clone, dest, update";
 }

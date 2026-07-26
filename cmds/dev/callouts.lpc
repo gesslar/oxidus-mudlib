@@ -37,20 +37,23 @@ void setup() {
   "                            name matches <pattern>\n";
 
   help_text =
-  "This command inspects the driver's pending call_out() queue "
-  "(call_out_info). Each entry shows the object, the function that will run, "
-  "and the time remaining before it fires, soonest first. The remaining time "
-  "is coloured by urgency.\n\n"
-  "This is a read-only diagnostic. A call_out belongs to the object that "
-  "scheduled it and can only be removed by that object, so this command does "
-  "not remove call_outs - it is for seeing what is scheduled and, via "
-  "\"callouts count\", where they are piling up. A leak shows up as a large "
-  "count against one object (clones collapsed to their base) or one "
-  "function.\n\n"
-  "\"callouts time\" shows absolute fire times instead of countdowns. A bare "
-  "argument other than \"time\" or \"count\" is treated as a filter matched "
-  "against both the object name and the function name.\n\n"
-  "See also: alarm\n";
+    "This command inspects the driver's pending call_out() queue "
+    "(call_out_info). Each entry shows the object, the function that will "
+    "run, and the time remaining before it fires, soonest first. The "
+    "remaining time is coloured by urgency.\n"
+    "\n"
+    "This is a read-only diagnostic. A call_out belongs to the object that "
+    "scheduled it and can only be removed by that object, so this command "
+    "does not remove call_outs - it is for seeing what is scheduled and, via "
+    "\"callouts count\", where they are piling up. A leak shows up as a large "
+    "count against one object (clones collapsed to their base) or one "
+    "function.\n"
+    "\n"
+    "\"callouts time\" shows absolute fire times instead of countdowns. A "
+    "bare argument other than \"time\" or \"count\" is treated as a filter "
+    "matched against both the object name and the function name.\n"
+    "\n"
+    "See also: alarm\n";
 }
 
 mixed main(object tp, string arg) {
