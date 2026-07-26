@@ -47,7 +47,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
   if(!ob1)
     return 1;
 
-  /** @type {OBJ_STRIKER} */ object ob2 = carried_or_local_target(tp, id2);
+  /** @type {LIB_STRIKER} */ object ob2 = carried_or_local_target(tp, id2);
   if(!ob2)
     return 1;
 

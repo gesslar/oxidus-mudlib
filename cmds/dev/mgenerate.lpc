@@ -80,7 +80,7 @@ private string generate_terrain(string area_type, mixed seed) {
     }
 }
 
-string generate_area(string area_name, string area_type, int width, int height) {
+string generate_area(string _area_name, string area_type, int width, int height) {
     string *map;
     int y, x, seed, terrain_seed;
     string line;

@@ -91,12 +91,20 @@ private mixed do_trace(object caller, string spec, int del) {
   return out;
 }
 
+/**
+ * 
+ * @param caller 
+ * @param blueprint 
+ * @param {STD_OBJECT} master_ob 
+ * @param clone_list 
+ */
 private mixed delete_matches(object caller, string blueprint, object master_ob,
                              object *clone_list) {
   int done;
 
+  /** @type {STD_OBJECT} */ object ob;
   if(sizeof(clone_list)) {
-    foreach(object ob in clone_list) {
+    foreach(ob in clone_list) {
       if(!objectp(ob))
         continue;
 
@@ -124,6 +132,11 @@ private mixed delete_matches(object caller, string blueprint, object master_ob,
   return _info(caller, "No loaded objects match %s.", blueprint);
 }
 
+/**
+ * 
+ * @param {STD_PLAYER} caller 
+ * @param spec 
+ */
 private string resolve_blueprint(object caller, string spec) {
   // A file path takes precedence, so an object reference never shadows a real
   // file you named. get_object() only loads real paths, and we've already
