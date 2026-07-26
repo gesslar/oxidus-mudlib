@@ -395,10 +395,10 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
 ```
 
 This lets the LSP resolve `call_other` methods (e.g.,
-`caller->set_env(...)`) that exist on the typed object. Use the
-most specific `STD_*` macro whose interface matches the methods
-called on that parameter. See the **lpc-coding-style** skill for
-full guidance.
+`caller->set_env(...)`) that exist on the typed object. Pick the
+macro by what the object is known to be, per **Named Objects**
+below — not by the methods this function happens to call. See the
+**lpc-coding-style** skill for full guidance.
 
 ### `@var`
 
@@ -743,22 +743,30 @@ If no macro exists, fall back to a full path:
 {"/path/to/object.lpc"}
 ```
 
-**Choosing the right macro:** Pick the most specific macro whose interface
-matches how the object is actually used within the function — not what the
-object might be at runtime. Look at which methods the function calls on the
-object, and choose the macro that defines those methods.
+**Choosing the right macro:** Go **shallowest first** — pick the shallowest
+type the object is *known* to be, the one you can get the most out of. Shallow
+and deep are used here in the inherit-traversal sense, as in
+`deep_inherit_list()`: parents are deeper, so `STD_PLAYER` is shallower than
+`STD_BODY`, which is shallower than `STD_OBJECT`. Descending toward
+`STD_OBJECT` only hides members you are entitled to call.
 
-- If the function calls methods specific to players (e.g. account operations),
-  use `{STD_PLAYER}`.
-- If it calls methods shared by players and NPCs (e.g. combat, vitals), use
+Reason from where the object comes from, not from which methods this function
+calls today:
+
+- It arrives as a command's `caller`/`tp`, or from `this_body()` on a command
+  path, and the command lives under `cmds/adm/` or `cmds/dev/` — no NPC walks
+  that path, so it is a player: `{STD_PLAYER}`.
+- It could be a player or an NPC (combat, vitals, anything a mob reaches) —
   `{STD_BODY}`.
-- If it only uses container operations (capacity, inventory) and the object
-  could be a bag, a room, or a body, use `{STD_CONTAINER}`.
-- If it only calls base object methods (e.g. query_id, move), use
-  `{STD_OBJECT}`.
+- It could genuinely be a bag, a room, or a body — `{STD_CONTAINER}`, or
+  `{STD_OBJECT}` if even that is more than the facts support.
 
-In short: the type should reflect the **interface the function depends on**,
-not the concrete type the caller is likely to pass.
+Descend only as far as the uncertainty actually forces, and fall back to bare
+`{object}` only when the type is genuinely unknowable at that point.
+
+In short: the type should reflect **what the object provably is**, not the
+minimum interface the function currently touches. Having to move the annotation
+shallower later, because a new call needs it, is churn it should have avoided.
 
 ### Class/Struct Types
 

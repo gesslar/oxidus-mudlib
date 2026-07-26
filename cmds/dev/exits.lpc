@@ -17,12 +17,12 @@ void setup() {
 "Shows all the exits in the current room and where they lead.";
 }
 
-mixed main(object tp, string args) {
+mixed main(object tp, string _args) {
   string *exits;
   string str;
   int i;
   mapping x;
-  object room = environment(tp);
+  /** @type {STD_ROOM} */ object room = environment(tp);
 
   exits = keys(room->query_exits());
   if(!sizeof(exits)) {

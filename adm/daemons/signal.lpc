@@ -148,7 +148,7 @@ private nomask void invalidate_slots() {
  * other handlers.
  *
  * @param {mixed} sig - The signal identifier to dispatch
- * @param {mixed} arg... - Arguments to pass to the signal handlers
+ * @param {mixed...} arg - Arguments to pass to the signal handlers
  */
 public nomask void dispatch_signal(string sig, mixed arg...) {
   mapping sig_slot;

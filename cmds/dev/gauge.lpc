@@ -20,9 +20,11 @@ void setup() {
   "many milliseconds of CPU the command took.";
 }
 
-mixed main(object tp, string cmd) {
+mixed main(
+  /** @type {STD_PLAYER} */ object tp,
+  string cmd
+) {
   mapping before, after;
-  int start_cost, end_cost;
   int stime, usertime, eval_cost;
 
   if(!cmd)

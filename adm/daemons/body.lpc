@@ -47,8 +47,7 @@ object create_body(string name) {
   body->set_name(name);
   set_privs(body, name);
   body->restore_body();
-  body->mudlib_setup();
-
+  body->std_setup();
 
   return body;
 }

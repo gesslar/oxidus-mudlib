@@ -27,7 +27,7 @@ void setup() {
 }
 
 void handle_pstatus(mapping request, mapping response, object tp);
-void handle_gstatus(mapping request, mapping response, object tp);
+void handle_gstatus(mapping request, mixed response, object tp, string game);
 
 mixed main(object tp, string str) {
   string cmd, arg;
@@ -73,7 +73,7 @@ void handle_pstatus(mapping request, mixed response, object tp) {
   }
 }
 
-void handle_gstatus(mapping request, mixed response, object tp, string game) {
+void handle_gstatus(mapping _request, mixed response, object tp, string _game) {
   if(!tp) {
     return;
   }

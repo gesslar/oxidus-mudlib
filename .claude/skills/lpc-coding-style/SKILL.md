@@ -360,11 +360,15 @@ mixed main(/** @type {STD_PLAYER} */ object caller, string str) {
 }
 ```
 
-Use the most specific `STD_*` macro whose interface matches the
-methods actually called on that parameter — the same principle as
-LPCDoc `@param` type selection (see the lpcdoc skill). Common
-macros: `STD_PLAYER`, `STD_BODY`, `STD_NPC`, `STD_OBJECT`,
-`STD_ROOM`, `STD_CONTAINER`.
+Go shallowest first — pick the shallowest macro the object is known
+to be (shallow in the inherit-traversal sense: `STD_PLAYER` is
+shallower than `STD_BODY` is shallower than `STD_OBJECT`). Reason
+from where the object comes from, not from the methods this function
+happens to call: a parameter fed by `main()` in a `cmds/adm/` or
+`cmds/dev/` command is a player, whatever the body does with it.
+Same principle as LPCDoc `@param` type selection (see the lpcdoc
+skill). Common macros: `STD_PLAYER`, `STD_BODY`, `STD_NPC`,
+`STD_OBJECT`, `STD_ROOM`, `STD_CONTAINER`.
 
 This annotation is a comment and has no effect on compilation — it
 exists solely to give the LSP enough information to validate

@@ -69,7 +69,7 @@ void setup() {
  * @returns {int} A feedback result (always 1) sent to the invoking operator.
  */
 public int request(int how, string arg) {
-  object who = this_body();
+  /** @type {STD_PLAYER} */ object who = this_body();
   string first, rest, junk;
   int minutes;
 
@@ -111,7 +111,7 @@ public int request(int how, string arg) {
  * announcement, and arms the countdown warnings plus the final fire. A zero
  * delay fires at once.
  *
- * @param {object} who - The operator scheduling it.
+ * @param {STD_PLAYER} who - The operator scheduling it.
  * @param {int} how - SYS_SHUTDOWN or SYS_REBOOT.
  * @param {int} minutes - Delay in minutes; 0 means immediately.
  * @param {string} why - The reason, possibly empty.
@@ -158,7 +158,7 @@ private int schedule(object who, int how, int minutes, string why) {
  * Cancels a pending shutdown/reboot, clears the armed call_outs, announces
  * the cancellation, and emits the matching cancel signal.
  *
- * @param {object} who - The operator cancelling it.
+ * @param {STD_PLAYER} who - The operator cancelling it.
  * @returns {int} A feedback result for the operator.
  */
 private int do_halt(object who) {
@@ -186,7 +186,7 @@ private int do_halt(object who) {
 /**
  * Reports the current shutdown/reboot status to the operator.
  *
- * @param {object} who - The operator asking.
+ * @param {STD_PLAYER} who - The operator asking.
  * @returns {int} A feedback result for the operator.
  */
 private int report_status(object who) {

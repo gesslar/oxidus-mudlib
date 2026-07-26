@@ -20,7 +20,10 @@ void setup() {
 "Use this command with care, as it can be disruptive to the game experience.";
 }
 
-mixed main(object tp, string arg) {
+mixed main(
+  /** @type {STD_PLAYER} */ object tp,
+  string arg
+) {
   object target, env, tenv;
   string name, tname;
 

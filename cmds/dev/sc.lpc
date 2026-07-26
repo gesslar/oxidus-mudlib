@@ -42,7 +42,7 @@ mixed main(object tp, string arg) {
   return str;
 }
 
-string deep_scan(object tp, object *inv, int indent) {
+string deep_scan(object _tp, object *inv, int indent) {
   object ob;
   string str;
 
