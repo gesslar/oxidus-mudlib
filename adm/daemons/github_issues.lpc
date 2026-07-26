@@ -18,7 +18,7 @@ inherit STD_HTTP_CLIENT;
 
 private nomask int is_setup();
 private nomask void check_token();
-nomask void process_backlog();
+private nomask void process_backlog();
 private nomask void process_next(string *files);
 private nomask void execute_callback(mapping request, mapping response);
 
@@ -168,7 +168,7 @@ void execute_callback(mapping request, mapping response) {
  * Process the backlog of requests in the /data/github/issues/pending directory.
  * Passes a list of files to process_next() to process each request.
  */
-public nomask void process_backlog() {
+private nomask void process_backlog() {
   string *files = get_dir(`${pending_dir}/*.txt`);
   files = map(files, (: `${pending_dir}/${$1}` :));
 
