@@ -271,16 +271,17 @@ mixed call_back(mixed cb, mixed new_arg...) {
 /**
  * Safely calls a function on an object if it exists.
  *
- * Attempts to call the named function, returning null if function doesn't
- * exist instead of throwing an error.
+ * Attempts to call the named function, returning undefined if function doesn't
+ * exist.
  *
- * IMPORTANT: function_exists() requires that the needle function have public
- * visibility.
+ * If a function being reached for is private or protected and the caller is
+ * the same object as passed, `call_if()` will bind to the object, ensuring
+ * that it is callable.
  *
  * @param {object|string} ob - Target object or filename
  * @param {string} func - Function name to call
  * @param {...mixed} [arg] - Arguments to pass to function
- * @returns {mixed} Function result or null if function doesn't exist
+ * @returns {mixed} Function result or undefined if function doesn't exist
  * @errors If ob or func arguments are invalid types
  * @see function_exists
  * @see call_back
@@ -303,13 +304,30 @@ varargs mixed call_if(mixed ob, string func, mixed arg...) {
   if(stringp(ob))
     ob = load_object(ob);
 
-  if(function_exists(func, ob))
-    if(sizeof(arg))
-      return call_other(ob, func, arg...);
-    else
-      return call_other(ob, func);
+  if(!objectp(ob))
+    return undefined;
 
-  return null;
+  int self = ob == previous_object();
+  int bind_to_object = 0;
+
+  if(self) {
+    if(!function_exists(func, ob, 1))
+      return undefined;
+
+    bind_to_object = !function_exists(func, ob);
+  } else {
+    if(!function_exists(func, ob))
+      return undefined;
+  }
+
+  function f;
+
+  if(bind_to_object)
+    f = bind((: call_other, ob, func, arg... :), ob);
+  else
+    f = (: call_other, ob, func, arg... :);
+
+  return evaluate(f);
 }
 
 /**
