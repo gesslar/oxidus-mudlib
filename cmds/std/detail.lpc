@@ -21,9 +21,7 @@ void setup() {
 
   help_text =
     "Fills in the descriptive details of your character. Name the feature "
-    "you want to work on and an editor opens for it — 'detail description' "
-    "sets the long description others read when they look at you, and is "
-    "limited to 800 characters.\n"
+    "you want to work on and an editor opens for it."
     "\n"
     "See also: look, score\n";
 }
@@ -37,9 +35,14 @@ mixed main(
   if(!str)
     return _usage(tp);
 
-  result = call_if(this_object(), sprintf("detail_%s", str), tp);
+  result = call_if(this_object(), `detail_${str}`, tp);
 
   return result || "Unknown feature.";
+}
+
+private mixed detail_features(object _tp) {
+  return "description - 800 character limit for your long description\n"
+  "\n";
 }
 
 private void finish_description(int status, string file, string temp_file, object tp);
@@ -59,8 +62,8 @@ private mixed detail_description(/** @type {STD_PLAYER} */ object tp) {
 
 private void finish_description(
   int status,
+  string _edit_file,
   string temp_file,
-  string _file,
   /** @type {STD_PLAYER} */ object tp
 ) {
   string text;
