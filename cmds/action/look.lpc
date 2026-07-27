@@ -4,10 +4,12 @@
  * Command to look at things and the room and stuff.
  *
  * @created 2026-07-13 - Gesslar
- * @last_modified 2026-07-13 - Gesslar
+ * @last_modified 2026-07-27 - Gesslar
  *
  * @history
  * 2026-07-13 - Gesslar - Created
+ * 2026-07-27 - Gesslar - Show equipped and wielded items when looking at a
+ *                        living
  */
 
 inherit STD_ACT;
@@ -243,7 +245,31 @@ mixed describe_living(
   string *vitals = ob->query_condition_string();
   if(pointerp(vitals)) {
     if(strlen(result))
-      result += `${sub} ${verb} ${vitals[0]}.`;
+      result += `${sub} ${verb} ${vitals[0]}.\n`;
+  }
+
+  // Copied from eq.lpc. kekela
+  mapping eq, wielded;
+  string slot, *slots;
+  string out = "";
+  int max;
+
+  eq = ob->query_equipped();
+  wielded = ob->query_wielded();
+
+  if(sizeof(eq) || sizeof(wielded)) {
+    slots = keys(wielded);
+    slots += keys(eq);
+
+    max = max(map(slots, (: strlen :)));
+
+    foreach(slot in slots) {
+      object item = wielded[slot] || eq[slot];
+      out += sprintf("%*s : %s\n", max, capitalize(slot), get_short(item));
+    }
+
+    if(strlen(out))
+      result += `\n${out}`;
   }
 
   return result;
