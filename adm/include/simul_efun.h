@@ -202,8 +202,9 @@ string ob_short(object ob);
 string ob_long(object ob);
 
 // File: predicates.c
-int roomp(object ob);
 int alarmp(object ob);
+int errorp(mixed input);
+int roomp(object ob);
 
 // File: prompt.c
 varargs void prompt_colour(object body, mixed *cb, string prompt);
