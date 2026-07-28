@@ -104,7 +104,7 @@ varargs string save_to_string(int recursep) {
  *
  * @param {mixed} value - String representation or mapping of object state
  * @param {int} recurse - Recursion level (used internally)
- * @throws If object creation fails
+ * @errors If object creation fails
  */
 void load_from_string(mixed value, int recurse) {
   mixed data;
@@ -138,7 +138,7 @@ void load_from_string(mixed value, int recurse) {
       if(intp(result) && result == 0)
         ob->load_from_string(val, recurse + 1);
       else
-        throw(result);
+        error((string)result);
     }
   }
 

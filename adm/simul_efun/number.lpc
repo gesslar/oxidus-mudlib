@@ -104,8 +104,8 @@ int sum(int *arr) {
  * @param {int} number - The number to evaluate.
  * @param {string} condition - The condition to evaluate against.
  * @returns {int} 1 if the condition evaluates to true, 0 otherwise.
- * @throws If an invalid operator is provided.
- * @throws If the condition format is invalid.
+ * @errors If an invalid operator is provided.
+ * @errors If the condition format is invalid.
  */
 private int evaluate_simple_condition(int number, string condition) {
   string operator;
@@ -295,7 +295,7 @@ private int evaluate_or_expr(int number, string condition) {
  * @param {int} number - The number to evaluate.
  * @param {string} condition - The condition to evaluate against.
  * @returns {int} 1 if the condition evaluates to true, 0 otherwise.
- * @throws If the condition contains invalid syntax or operators.
+ * @errors If the condition contains invalid syntax or operators.
  */
 int evaluate_number(int number, string condition) {
   // Strip all spaces and normalise operator case before parsing.
