@@ -44,31 +44,31 @@ int valid_function(mixed f) {
  * the first one that exists.
  *
  * @param {object} ob - The object to check.
- * @param {string|string*} function_names - Function name(s) to look for `(string|string*)`
- * @returns {string|null} The filename where a function is defined, or null
- *                        if none found or if ob is not an object.
+ * @param {string | string*} function_names - Function name(s) to look for `(string | string*)`
+ * @returns {string | undefined} The filename where a function is defined, or
+ *  undefined if none found or if ob is not an object.
  * @example
  * has(player, "query_level");  // Returns "/std/body.c" if exists
  * has(item, ({ "is_weapon", "is_armour" }));  // Returns filename of first existing function
  */
 string has(object ob, mixed function_names) {
   if(!objectp(ob))
-    return null;
+    return undefined;
 
   if(stringp(function_names))
     return function_exists(function_names, ob);
   if(pointerp(function_names) && uniformp(function_names, T_STRING))
     return eval_first(function_names, (: function_exists($1, $(ob)) :));
 
-  return null;
+  return undefined;
 }
 
 private nosave string *trace_colours = ({
-  "#0099ff",
-  "#66ff33",
-  "#ff33cc",
-  "#ff6600",
-  "#33cccc",
+  "#09f",
+  "#6c6",
+  "#f9c",
+  "#f96",
+  "#3cc",
   "#ffcc33",
 });
 
@@ -84,23 +84,11 @@ private nosave string *trace_colours = ({
  * debug("Error occurred:\n" + call_trace(1));
  */
 varargs string call_trace(int colour) {
-  string res;
-  int n;
-  object *objects;
-  string *programs;
-  string *functions;
-  string *origins;
-  string *lines;
-  string *colours = colour
-    ? trace_colours
-    : map(trace_colours, (: "" :));
-
-  res = "";
-  programs = call_stack(0);
-  objects = call_stack(1);
-  functions = call_stack(2);
-  origins = call_stack(3);
-  lines = call_stack(4);
+  string *programs = call_stack(0);
+  object *objects = call_stack(1);
+  string *functions = call_stack(2);
+  string *origins = call_stack(3);
+  string *lines = call_stack(4);
 
   // now fix up the lines
   lines = map(lines, function(string line) {
@@ -109,30 +97,32 @@ varargs string call_trace(int colour) {
     return sprintf("%d", num);
   });
 
-  n = sizeof(programs);
-
   object source = this_body();
   function match_body = (: $(source) && objectp($(source)) && living($(source)) && $(source) == $1 :);
 
+  string *colours = colour
+    ? trace_colours
+    : map(trace_colours, (: "" :));
   colours = map(colours, (:"{{"+$1[1..]+"}}":));
 
   // We don't want to include the call_trace() function itself
-  res += reduce(objects[1..],
-    function(string acc, object obj, int index,object *_objs,
-      string *programs, string *lines, string *functions, string *origins, string *cols, function match_body) {
-        return sprintf("%s[%s%s{{res}}] %s%s{{res}}:%s%s{{res}}->%s%s{{res}}() (%s%s{{res}})\n",
-          acc,
-          match_body(obj) ? cols[5] : cols[0],
-          match_body(obj) ? sprintf("%s", file_name(obj)) : sprintf("%O", obj),
-          cols[1],
-          programs[index+1],
-          cols[2],
-          lines[index+1],
-          cols[3],
-          functions[index+1],
-          cols[4],
-          origins[index+1]
-        );
+  string res = reduce(objects[1..],
+    function(string acc, object obj, int index, object *_objs,
+             string *programs, string *lines, string *functions, string *origins,
+             string *cols, function match_body) {
+        int matched = match_body(obj);
+        string matched_colour = matched ? cols[5] : cols[0];
+        string representation = matched
+          ? sprintf("%s", file_name(obj))
+          : sprintf("%O", obj);
+
+        return `${acc}`
+          `[${matched_colour}${representation}{{res}}] `
+          `${cols[1]}${programs[index+1]}{{res}}:`
+          `${cols[2]}${lines[index+1]}{{res}}->`
+          `${cols[3]}${functions[index+1]}{{res}}() `
+          `(${cols[4]}${origins[index+1]}{{res}})\n`
+          ;
     }, "", programs, lines, functions, origins, colours, match_body);
 
   if(!colour)
@@ -165,24 +155,20 @@ varargs string call_trace(int colour) {
  * mixed *cb = assemble_call_back((: do_something :), arg1, arg2);
  */
 mixed *assemble_call_back(mixed arg...) {
-  int sz;
-
   if(!pointerp(arg))
     error("ERROR: Invalid argument passed to assemble_call_back().");
 
-  sz = sizeof(arg);
+  int sz = sizeof(arg);
   if(!sz)
     error("ERROR: No arguments passed to assemble_call_back().");
 
   if(objectp(arg[0])) {
-    object ob;
-    string fun;
-
     if(sz < 2)
       error("ERROR: No function passed to assemble_call_back().");
 
-    ob = arg[0];
-    fun = arg[1];
+    object ob = arg[0];
+    string fun = arg[1];
+
     if(sz > 2)
       arg = arg[2..];
     else
@@ -210,7 +196,7 @@ mixed *assemble_call_back(mixed arg...) {
  *
  * @param {mixed*} cb - Callback array from assemble_call_back()
  * @param {...mixed} new_arg - Additional arguments to prepend
- * @returns {mixed} Result from callback execution
+ * @returns {mixed|undefined} Result from callback execution
  * @errors If callback structure is invalid
  * @see assemble_call_back
  * @see valid_function
@@ -218,27 +204,25 @@ mixed *assemble_call_back(mixed arg...) {
  * mixed *cb = assemble_call_back(player, "tell", "Hello!");
  * call_back(cb);  // Calls player->tell("Hello!")
  */
-mixed call_back(mixed cb, mixed new_arg...) {
-  int sz;
-  function fun;
-  mixed final_arg = ({});
-
+mixed call_back(mixed *cb, mixed new_arg...) {
   if(!pointerp(cb))
     error("ERROR: Invalid argument passed to call_back().");
 
-  sz = sizeof(cb);
+  int sz = sizeof(cb);
   if(!sz)
     error("ERROR: No arguments passed to call_back().");
 
+  function fun;
+  mixed *final_arg = ({});
+
   if(objectp(cb[0])) {
-    object cb_ob = cb[0];
-    string cb_fun;
     mixed *curr;
 
     if(sz < 2)
       error("ERROR: No function passed to call_back().");
 
-    cb_fun = cb[1];
+    object cb_ob = cb[0];
+    string cb_fun = cb[1];
 
     if(sz > 2)
       curr = cb[2..];
@@ -248,7 +232,7 @@ mixed call_back(mixed cb, mixed new_arg...) {
     if(!function_exists(cb_fun, cb_ob))
       error("ERROR: Function does not exist in object passed to call_back().");
 
-    final_arg = ({ new_arg... }) + curr;
+    final_arg = new_arg + curr;
 
     fun = (: call_other, cb_ob, cb_fun :);
   } else if(valid_function(cb[0])) {
@@ -261,9 +245,9 @@ mixed call_back(mixed cb, mixed new_arg...) {
       curr = ({});
 
     fun = cb_fun;
-    final_arg = ({ new_arg... }) + curr;
+    final_arg = new_arg + curr;
   } else
-    return null;
+    return undefined;
 
   return catch(fun(final_arg...));
 }
@@ -339,18 +323,19 @@ varargs mixed call_if(mixed ob, string func, mixed arg...) {
  * @param {string} act - Action description
  * @param {float} delay - Time to wait before execution
  * @param {mixed*} [cb] - Callback to execute after delay
- * @returns {int} Action ID or 0 if already acting
+ * @returns {int | 0 | undefined} Action ID, 0 if already acting, or undefined
+ *  if no this_body() or missing arguments.
  * @example
  * delay_act("casting", 3.0, assemble_call_back(this_object(), "cast_spell"));
  */
 varargs int delay_act(string act, float delay, mixed *cb) {
-  object user = /** @type {STD_BODY} */ (this_body());
+  /** @type {STD_BODY} */ object user =  this_body();
 
   if(!user)
-    return null;
+    return undefined;
 
   if(!act || !delay || !cb)
-    return null;
+    return undefined;
 
   if(user->is_acting())
     return 0;
@@ -366,7 +351,7 @@ varargs int delay_act(string act, float delay, mixed *cb) {
  *
  * @param {mixed} condition - Condition to verify
  * @param {string} [message="Assertion failed"] - Error message if condition fails
- * @throws If statement evaluates to false or null
+ * @errors If statement evaluates to false or undefined
  * @example
  * assert(hp > 0, "Health cannot be negative");
  */
@@ -403,7 +388,7 @@ varargs void assert(mixed condition, string message) {
  * @param {mixed} condition - Condition to verify
  * @param {int} arg_num - Parameter position number
  * @param {string} message - Error message prefix
- * @throws If condition is false, with formatted argument number
+ * @errors If condition is false, with formatted argument number
  * @example
  * assert_arg(stringp(name), 1, "Expected string");
  */
