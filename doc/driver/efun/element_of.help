@@ -1,6 +1,6 @@
 ### NAME
 
-    element_of() - returns random elememt of given array
+    element_of() - Return an element randomly from the array
 
 ### SYNOPSIS
 
@@ -8,4 +8,4 @@
 
 ### DESCRIPTION
 
-    returns random elememt of given array
+    Returns a random element from an array.
