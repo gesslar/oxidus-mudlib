@@ -124,7 +124,6 @@ void rehash_alarms() {
  * @param {...mixed} args - Optional trailing arguments handed to the
  *     target function when the alarm fires.
  * @returns {int} 1 on success, 0 if the alarm failed validation.
- * @throws If any of master, pattern, file, or func is null.
  */
 varargs int add_once(string master, string pattern, string file,
                      string func, mixed args...) {
@@ -151,7 +150,7 @@ varargs int add_once(string master, string pattern, string file,
  * @param {...mixed} args - Optional trailing arguments handed to the
  *     target function when the alarm fires.
  * @returns {int} 1 on success, 0 if the alarm failed validation.
- * @throws If any of type, master, pattern, file, or func is null.
+ * @errors If any of type, master, pattern, file, or func is undefined.
  */
 varargs int add_alarm(string type, string master, string pattern,
                       string file, string func, mixed args...) {
@@ -615,8 +614,6 @@ private int next_minute_start() {
  *
  * Only processes alarms of type "B" (Boot), scheduling them to execute
  * after their specified delay in seconds.
- *
- * @throws If called by anything other than the signal daemon
  */
 void execute_boot_alarms() {
   class Alarm *boot_alarms, boot_alarm;
@@ -652,7 +649,7 @@ void execute_boot_alarms() {
  * @param {class Alarm} alarm - The alarm to validate
  * @param {int} silent - Whether to throw errors (0) or log them (1)
  * @returns {int} 1 if valid, 0 if invalid
- * @throws If validation fails and silent is 0
+ * @errors If validation fails and silent is 0
  */
 int validate_alarm(class Alarm alarm, int silent) {
   mixed err;
@@ -662,7 +659,7 @@ int validate_alarm(class Alarm alarm, int silent) {
     log_file("system/alarm", "[%s] File %s does not exist\n%O",
       ldatetime(), alarm.file, alarm);
     if(!silent)
-      throw("File does not exist");
+      error("File does not exist");
     return 0;
   }
 
@@ -670,7 +667,7 @@ int validate_alarm(class Alarm alarm, int silent) {
     log_file("system/alarm", "[%s] Unable to load file %s: %O\n%O",
       ldatetime(), alarm.file, err, alarm);
     if(!silent)
-      throw("Unable to load file");
+      error("Unable to load file");
     return 0;
   }
 
@@ -679,7 +676,7 @@ int validate_alarm(class Alarm alarm, int silent) {
       "[%s] Function %s does not exist in file %s\n%O",
       ldatetime(), alarm.func, alarm.file, alarm);
     if(!silent)
-      throw("Function does not exist");
+      error("Function does not exist");
     return 0;
   }
 
@@ -690,7 +687,7 @@ int validate_alarm(class Alarm alarm, int silent) {
       log_file("system/alarm", "[%s] Time is in the past\n%O",
         ldatetime(), alarm);
       if(!silent)
-        throw("Time is in the past");
+        error("Time is in the past");
       return 0;
     }
   }
