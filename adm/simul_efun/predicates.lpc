@@ -25,3 +25,15 @@ int roomp(object ob) {
 int alarmp(object ob) {
   return objectp(ob) && file_name(ob) == ALARM_D;
 }
+
+/**
+ * Does duck-type checking to see if the input matches an error format. error()
+ * prepends string messages with '*'.
+ *
+ * @param {mixed} [input] - The value to test.
+ * @returns {int} 1 if it looks like an error string, 0 otherwise.
+ */
+int errorp(mixed input) {
+  return stringp(input) && input[0] == '*';
+
+}
