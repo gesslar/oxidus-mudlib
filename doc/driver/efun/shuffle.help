@@ -1,6 +1,6 @@
 ### NAME
 
-    shuffle
+    shuffle() - Rearrange the elements in the array in random order
 
 ### SYNOPSIS
 
@@ -8,4 +8,4 @@
 
 ### DESCRIPTION
 
-    randomly reorders the elements of the given array (changes original!!!)
+    Shuffle the array and return.
