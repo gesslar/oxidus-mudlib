@@ -1,7 +1,11 @@
 [
   {
-    "path": "CLAUDE.md",
-    "description": "Project overview, LPC language notes, directory layout, and conventions for the Oxidus mudlib."
+    "path": ".claude/skills/lpc-review/SKILL.md",
+    "description": "The review standard for this repository: scope rules, what qualifies as a finding, evidence requirements, and LPC/FluffOS semantics that are commonly mistaken for defects. Read before reviewing anything."
+  },
+  {
+    "path": "AGENTS.md",
+    "description": "Project overview, LPC language notes, directory layout, and conventions for the Oxidus mudlib. Also carries the condensed Code Review Rules."
   },
   {
     "path": "lpc-config.json",
