@@ -21,16 +21,13 @@
 
 ### PARAMETERS
 
-    ob              (object)
-                    The object to check.
-
-    function_names  (string|string*)
-                    Function name(s) to look for `(string|string*)`
+    ob  (object)
+        The object to check.
 
 ### RETURN VALUES
 
-    (string|null) The filename where a function is defined, or null if none
-    found or if ob is not an object.
+    (string | undefined) The filename where a function is defined, or
+    undefined if none found or if ob is not an object.
 
 ### EXAMPLE
 

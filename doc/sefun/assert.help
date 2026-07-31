@@ -5,18 +5,11 @@
 ---
 ### NAME
 
-    assert() - Verifies a condition, throwing an error if false.
+    assert()
 
 ### SYNOPSIS
 
     varargs void assert( mixed condition, string message );
-
-### DESCRIPTION
-
-    Verifies a condition, throwing an error if false.
-
-    Enhanced assertion checking with custom error messages and evaluation of
-    complex conditions.
 
 ### PARAMETERS
 
@@ -28,7 +21,7 @@
 
 ### ERRORS
 
-    If statement evaluates to false or null
+    If statement evaluates to false or undefined
 
 ### EXAMPLE
 
