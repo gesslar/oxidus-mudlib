@@ -48,7 +48,7 @@ void bite(object attacker, object defender) {
       "{{555}}$P $o strikes $t viciously, biting deep into $p1 flesh.{{res}}",
       defender, this_object());
 
-    attacker->deliver_damage(defender, damage, "piercing");
+    attacker->deliver_mundane_damage(defender, damage, "piercing");
     attacker->use_skill("combat.melee.piercing");
   } else {
     attacker->targetted_action("$N $vswing $p $o wildly, missing $t.",

@@ -64,7 +64,7 @@ int expire_obj(int expired) {
   );
 
   if(objectp(__caster))
-    __caster->deliver_damage(victim, __burst, "cold");
+    __caster->deliver_magic_damage(victim, __burst, "cold");
 
   return 1;
 }

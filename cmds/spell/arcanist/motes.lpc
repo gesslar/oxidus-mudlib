@@ -55,7 +55,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
           "{{"+COLOUR_D->random_bright_hex()+"}}Motes of light strike $t!{{res}}",
           victim
         );
-        tp->deliver_damage(victim, damage, "light");
+        tp->deliver_magic_damage(victim, damage, "light");
         tp->use_skill("arcane.discipline.light", 1.15);
       } else {
         tp->simple_action("The motes of light disperse harmlessly.");

@@ -53,7 +53,7 @@ mixed use(/** @type {STD_BODY} */ object tp, string arg) {
         float damage = percent_of(25.0, tp->query_damage());
 
         tp->targetted_action("$N $vpunch $t!", victim);
-        tp->deliver_damage(victim, damage, "bludgeoning");
+        tp->deliver_mundane_damage(victim, damage, "bludgeoning");
         tp->use_skill("combat.melee.unarmed");
       } else {
         tp->targetted_action("$N $vtry to punch $t, but $vmiss.", victim);

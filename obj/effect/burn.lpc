@@ -66,7 +66,7 @@ void tick() {
   victim->simple_action(
     "{{fc0}}$N $vwrithe as the flames sear $p flesh.{{res}}"
   );
-  __caster->deliver_damage(victim, __per_tick, "fire");
+  __caster->deliver_magic_damage(victim, __per_tick, "fire");
 
   if(--__remaining > 0) {
     call_out("tick", 2.5);

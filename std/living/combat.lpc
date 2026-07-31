@@ -373,7 +373,7 @@ void strike_enemy(object enemy, object weapon, int off_hand) {
   tell(enemy, messes[1], MSG_COMBAT_HIT);
   tell_down(environment(), messes[2], MSG_COMBAT_HIT, ({ this_object(), enemy }));
 
-  deliver_damage(enemy, dam, wtype);
+  deliver_mundane_damage(enemy, dam, wtype);
   adjust_mp(-random_float(5.0));
   add_threat(enemy, dam);
   add_seen_threat(enemy, dam);

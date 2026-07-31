@@ -51,7 +51,7 @@ mixed use(
       "{{ff8}}$N $vcrackle as a bolt of lightning leaps to $t!{{res}}",
       victim
     );
-    tp->deliver_damage(victim, damage, "lightning");
+    tp->deliver_magic_damage(victim, damage, "lightning");
     tp->use_skill("arcane.discipline.lightning", 1.15);
   } else {
     tp->simple_action("The bolt of lightning fizzles harmlessly.");
