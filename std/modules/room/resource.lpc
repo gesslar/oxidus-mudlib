@@ -26,7 +26,6 @@ int start_module(mapping c) {
   return 1;
 }
 
-
 void stop_module() {
   RESOURCE_D->clean_up_obj(owner);
   RESOURCE_D->unregister_obj(owner);
