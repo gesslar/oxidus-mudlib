@@ -34,4 +34,4 @@
 
 ### EXAMPLE
 
-    {{di1}}log_file("system.log", "Server started at %s", ctime());{{di0}}
+    {{di1}}log_file("system.log", "Server started at %s", ldatetime());{{di0}}

@@ -15,11 +15,12 @@
 
     Safely calls a function on an object if it exists.
 
-    Attempts to call the named function, returning null if function doesn't
-    exist instead of throwing an error.
+    Attempts to call the named function, returning undefined if function
+    doesn't exist.
 
-    IMPORTANT: function_exists() requires that the needle function have
-    public visibility.
+    If a function being reached for is private or protected and the caller
+    is the same object as passed, `call_if()` will bind to the object,
+    ensuring that it is callable.
 
 ### PARAMETERS
 
@@ -31,7 +32,7 @@
 
 ### RETURN VALUES
 
-    (mixed) Function result or null if function doesn't exist
+    (mixed) Function result or undefined if function doesn't exist
 
 ### ERRORS
 

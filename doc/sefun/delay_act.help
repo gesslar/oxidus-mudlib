@@ -31,7 +31,8 @@
 
 ### RETURN VALUES
 
-    (int) Action ID or 0 if already acting
+    (int | 0 | undefined) Action ID, 0 if already acting, or undefined if no
+    this_body() or missing arguments.
 
 ### EXAMPLE
 

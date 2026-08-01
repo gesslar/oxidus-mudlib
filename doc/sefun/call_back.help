@@ -9,7 +9,7 @@
 
 ### SYNOPSIS
 
-    mixed call_back( mixed cb, mixed new_arg... );
+    mixed call_back( mixed *cb, mixed new_arg... );
 
 ### DESCRIPTION
 
@@ -25,7 +25,7 @@
 
 ### RETURN VALUES
 
-    (mixed) Result from callback execution
+    (mixed|undefined) Result from callback execution
 
 ### ERRORS
 
