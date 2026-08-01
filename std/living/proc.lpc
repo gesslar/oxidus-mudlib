@@ -165,7 +165,8 @@ private void perform_simple_proc(string tag, mapping proc) {
   float raw = calculate_damage(enemy, skill_name);
   float damage = adjust_damage_by_severity(raw, proc.severity);
 
-  deliver_damage(enemy, damage, proc.damage_type);
+  // for now use mundane damage until we have defences sorted out
+  deliver_mundane_damage(enemy, damage, proc.damage_type);
 
   __npc_proc_cooldowns[tag] = time();
 }
