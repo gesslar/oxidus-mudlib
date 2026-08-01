@@ -20,7 +20,7 @@
 #include <vitals.h>
 #include <runtime_config.h>
 #include <boon.h>
-#include <module.h>
+#include "/std/object/include/module.h"
 #include <combat.h>
 
 private nomask float __hp, __max_hp, __sp, __max_sp, __mp, __max_mp;
