@@ -105,7 +105,7 @@ varargs void implode_file(string file, string *lines, int overwrite);
 varargs mixed load_lpml(string file, string root);
 mixed load_json(string file);
 void assure_file(string file);
-string source_file(string path_and_file);
+varargs string source_file(string path_and_file, string relative_to);
 mapping as_directory(string str);
 mapping as_file(string str);
 varargs mapping read_directory(string directory, string pattern);
