@@ -10,7 +10,7 @@
  */
 
 #include <race.h>
-#include <module.h>
+#include "/std/object/include/module.h"
 
 private nosave string racial_bodies = DIR_STD_MODULES "race/";
 private nomask nosave string __race;

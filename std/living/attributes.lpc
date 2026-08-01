@@ -16,7 +16,7 @@
 
 #include <attributes.h>
 #include <boon.h>
-#include <module.h>
+#include "/std/object/include/module.h"
 
 /**
  * The canonical set of attribute names, sourced from the

@@ -19,7 +19,7 @@
 #include <body.h>
 #include <equipment.h>
 #include <gmcp_defines.h>
-#include <module.h>
+#include "/std/object/include/module.h"
 #include <skills.h>
 #include <vitals.h>
 #include "/std/object/include/object.h"
