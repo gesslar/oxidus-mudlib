@@ -140,17 +140,17 @@ int ghostp(object ob) {
  * @returns {ob is STD_PLAYER} 1 if the object is a player, otherwise 0.
  */
 int pcp(object ob) {
-  return ob->is_pc();
+  return objectp(ob) && ob->is_pc();
 }
 
 /**
  * Returns 1 if the object is an npc, 0 if not.
  *
  * @param {STD_NPC} ob - The object to check.
- * @returns {ob is STD_PLAYER} 1 if the object is an npc, otherwise 0.
+ * @returns {ob is STD_NPC} 1 if the object is an npc, otherwise 0.
  */
 int npcp(object ob) {
-  return ob->is_npc();
+  return objectp(ob) && ob->is_npc();
 }
 
 /**
