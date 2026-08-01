@@ -509,7 +509,7 @@ varargs string source_file(string path_and_file, string relative_to) {
     path_and_file = path_and_file[0..<3];
 
   if(stringp(relative_to) && truthy(relative_to))
-    temp = resolve_file(relative_to, temp);
+    temp = resolve_file(relative_to, path_and_file);
 
   temp = append(path_and_file, ".lpc");
   temp = resolve_file(relative_to, temp);
