@@ -24,6 +24,7 @@
 #include <damage.h>
 #include <skills.h>
 #include <vitals.h>
+#include "/std/object/include/module.h"
 
 /**
  * Deliver a damage event to a victim. Validates inputs and routes the call to
@@ -169,6 +170,15 @@ public float receive_damage(object attacker, float damage, string type) {
 
   if(new_damage < 0.0)
     new_damage = 0.0;
+
+  float *reduced = module("shielding", "mitigate_damage", new_damage, type);
+  if(!nullp(reduced)) {
+    float all_reduced = sum(reduced);
+    if(all_reduced < 0.0)
+      all_reduced = 0.0;
+
+    new_damage -= all_reduced;
+  }
 
   // Take the damage
   adjust_hp(-new_damage);

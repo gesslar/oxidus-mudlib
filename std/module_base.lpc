@@ -18,8 +18,6 @@ inherit STD_ITEM;
 protected nosave object owner;
 protected nosave string module_name;
 
-private void stop_module();
-
 void mudlib_setup() {
   module_name = "module";
 }

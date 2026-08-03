@@ -8,6 +8,7 @@ private void detach_and_destruct(object mod);
 public varargs object add_module(string module_file, mixed args...);
 public mixed query_module(string module_name);
 public int remove_module(string module_name);
+public varargs int remove_module_instance(object mod);
 public mapping query_modules();
 public varargs mixed module(string module_name, string function_name, mixed args...);
 public void remove_all_modules();
