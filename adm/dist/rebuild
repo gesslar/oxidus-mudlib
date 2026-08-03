@@ -15,8 +15,8 @@ cd "$(dirname "$0")"
 # Check if config.mud exists
 config_file="$(pwd)/config.mud"
 if [[ ! -f "$config_file" ]]; then
-    echo -e "${red}[ERROR]${reset} ${config_file} does not exist."
-    exit 1
+  echo -e "${red}[ERROR]${reset} ${config_file} does not exist."
+  exit 1
 fi
 
 # Record the top of the repository directory
@@ -27,11 +27,10 @@ driver="${repo_root}/adm/dist/bin/driver"
 
 # Pull FluffOS
 
-
 # Ensure the FluffOS driver source is present and tracking master
 if [ ! -d "fluffos" ] || [ -z "$(ls -A fluffos)" ]; then
-    # fluffos/ doesn't exist or is empty - clone it fresh
-    git clone https://github.com/fluffos/fluffos.git fluffos 1>/dev/null
+  # fluffos/ doesn't exist or is empty - clone it fresh
+  git clone https://github.com/fluffos/fluffos.git fluffos 1>/dev/null
 fi
 
 cd fluffos
@@ -52,26 +51,26 @@ cd build
 # not — nothing here depends on it.
 ccache_args=()
 if command -v ccache >/dev/null 2>&1; then
-    ccache_args=(
-        -DCMAKE_C_COMPILER_LAUNCHER=ccache
-        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-    )
-    echo -e "${gold}[INFO]${reset} ccache found - using it to speed up compilation."
+  ccache_args=(
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+  )
+  echo -e "${gold}[INFO]${reset} ccache found - using it to speed up compilation."
 else
-    echo -e "${gold}[INFO]${reset} ccache not found - compiling without it."
+  echo -e "${gold}[INFO]${reset} ccache not found - compiling without it."
 fi
 
 # OXIDUS_CMAKE_EXTRA lets callers append cmake flags without editing this script.
 # It is empty by default (local builds stay -march=native). The Docker build sets
 # it to "-DMARCH_NATIVE=OFF" so the published driver runs on any x86-64 CPU.
- cmake .. \
-     -DPACKAGE_MUDLIB_STATS=OFF \
-     -DPACKAGE_DB_MYSQL=0 \
-     -DPACKAGE_DB=1 \
-     -DPACKAGE_DB_SQLITE=3 \
-     -DPACKAGE_UIDS=OFF \
-     "${ccache_args[@]}" \
-     ${OXIDUS_CMAKE_EXTRA:-}
+cmake .. \
+  -DPACKAGE_MUDLIB_STATS=OFF \
+  -DPACKAGE_DB_MYSQL=0 \
+  -DPACKAGE_DB=1 \
+  -DPACKAGE_DB_SQLITE=3 \
+  -DPACKAGE_UIDS=OFF \
+  "${ccache_args[@]}" \
+  ${OXIDUS_CMAKE_EXTRA:-}
 
 make -j "$(nproc)" install
 
