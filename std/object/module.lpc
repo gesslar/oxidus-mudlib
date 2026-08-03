@@ -132,7 +132,6 @@ public varargs object add_module(string module_file, mixed args...) {
   mixed existing = __modules[name];
 
   if(!mod->allows_multi() && !nullp(existing)) {
-    _debug("removing because existing");
     mod->remove();
     return 0;
   }
@@ -141,14 +140,12 @@ public varargs object add_module(string module_file, mixed args...) {
     int result = mod->attach(this_object(), args...);
 
     if(result == 0) {
-      _debug("removing because unable to attach");
       mod->remove();
       return 0;
     }
   };
 
   if(e) {
-    _debug("removing because error");
     mod->remove();
     return 0;
   }
