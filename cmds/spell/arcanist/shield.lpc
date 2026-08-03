@@ -20,9 +20,8 @@ void setup() {
 
   usage_text = "shield";
   help_text =
-    "Loose a bolt of lightning at a target. The bolt strikes immediately "
-    "with no incantation — paid for in SP and a longer cooldown. This "
-    `spell costs ${evaluate(sp_cost)} SP.`
+    "Surround yourself with inertial shielding that absorbs a portion of incoming damage until it dissipates. "
+    `This spell costs ${evaluate(sp_cost)} SP.`
   ;
 }
 
