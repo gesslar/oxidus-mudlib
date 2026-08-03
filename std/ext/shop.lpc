@@ -9,11 +9,12 @@
  * each reset.
  *
  * @created 2024-08-01 - Gesslar
- * @last_modified 2026-05-03 - Gesslar
+ * @last_modified 2026-08-03 - Gesslar
  *
  * @history
  * 2024-08-01 - Gesslar - Created
  * 2026-05-03 - Gesslar - Added LPCDoc documentation
+ * 2026-08-03 - Gesslar - Added `!` suffix to sell for searching containers
  */
 
 #include <classes.h>
@@ -297,24 +298,114 @@ mixed cmd_buy(object tp, string str) {
 }
 
 /**
- * Implements the `sell` command. Accepts a single target, "all",
- * or "all <id>". For each matching item the seller is paid via
- * least_coins() based on query_cost(..., "sell"), the item is
- * moved into storage, and the seller's wealth is adjusted per
- * denomination. Equipped items and items the shop refuses to
- * value (cost == null) are skipped, as are items that would
- * overburden the seller when USE_MASS is enabled.
+ * Collects the containers a deep sell should search. Returns the
+ * source itself followed by every accessible container nested
+ * within it, so each can be searched in turn. Closed containers
+ * and anything carried by a living are left alone.
+ *
+ * @param {STD_BODY | STD_CONTAINER} source - The container to walk.
+ * @returns {object*} The source and every accessible container
+ *                    nested within it.
+ */
+private object *sell_sources(object source) {
+  object *sources = ({ source });
+  /** @type {STD_CONTAINER} */ object ob;
+
+  foreach(ob in all_inventory(source)) {
+    if(living(ob))
+      continue;
+
+    if(!ob->is_container() || !ob->inventory_accessible())
+      continue;
+
+    sources += sell_sources(ob);
+  }
+
+  return sources;
+}
+
+/**
+ * Finds every item a sell command should consider. A shallow
+ * search looks only at the seller's own inventory; a deep search
+ * also descends into each accessible container they are carrying.
+ *
+ * @param {STD_BODY} tp - The seller.
+ * @param {string} id - The identifier to match, or null to match
+ *                      everything.
+ * @param {int} deep - Whether to descend into carried containers.
+ * @returns {STD_ITEM*} The matching items.
+ */
+private object *find_sell_targets(object tp, string id, int deep) {
+  object *obs = ({});
+  object source;
+
+  if(!deep)
+    return find_targets(tp, id, tp);
+
+  foreach(source in sell_sources(tp))
+    obs += find_targets(tp, id, source);
+
+  return obs;
+}
+
+/**
+ * Finds a single item a sell command should consider, honouring a
+ * trailing ordinal in the identifier ("dagger 2"). A shallow
+ * search defers to find_target(); a deep search applies the same
+ * ordinal rules across the carried containers as well.
+ *
+ * @param {STD_BODY} tp - The seller.
+ * @param {string} id - The identifier to match.
+ * @param {int} deep - Whether to descend into carried containers.
+ * @returns {STD_ITEM} The matching item, or 0 if there is none.
+ */
+private object find_sell_target(object tp, string id, int deep) {
+  object *obs;
+  string base_id;
+  int num, sz;
+
+  if(!deep)
+    return find_target(tp, id, tp);
+
+  if(sscanf(id, "%s %d", base_id, num) != 2)
+    base_id = id;
+
+  obs = find_sell_targets(tp, base_id, 1);
+
+  if(!sz = sizeof(obs))
+    return 0;
+
+  if(!num)
+    return obs[0];
+
+  if(num < 1 || num > sz)
+    return 0;
+
+  return obs[num - 1];
+}
+
+/**
+ * Implements the `sell` command. Accepts a single target, "all", or
+ * "all <id>". A trailing `!` on the argument ("all gem!") makes the search
+ * descend into the accessible containers the seller is carrying, rather than
+ * only their own inventory.
+ *
+ * For each matching item the seller is paid via least_coins() based on
+ * query_cost(..., "sell"), the item is moved into storage, and the seller's
+ * wealth is adjusted per denomination. Equipped items, coins, containers, and
+ * items the shop refuses to value (cost == null) are skipped, as are items
+ * that would overburden the seller when USE_MASS is enabled.
  *
  * @param {STD_BODY} tp - The seller.
  * @param {string} str - The argument identifying items to sell.
- * @returns {int | string} 1 if at least one item was sold, 0 if
- *                         the seller is an NPC and NPCs are not
- *                         allowed, or an error message on failure.
+ * @returns {int | string} 1 if at least one item was sold, 0 if the seller is
+ *  an NPC and NPCs are not allowed, or an error message on failure.
  */
 mixed cmd_sell(object tp, string str) {
   object ob;
   /** @type {STD_ITEM*} */ object *obs;
-  int sz;
+  int deep = 0;
+  int sold = 0;
   int use_mass = mud_config("USE_MASS");
 
   create_storage();
@@ -331,32 +422,52 @@ mixed cmd_sell(object tp, string str) {
   if(!str)
     return "Sell what?";
 
+  str = trim(str);
+
+  if(strlen(str) && str[<1] == '!') {
+    deep = 1;
+    str = trim(chop(str, "!"));
+  }
+
+  if(!strlen(str))
+    return "Sell what?";
+
   if(sscanf(str, "all %s", str))
-    obs = find_targets(tp, str, tp);
+    obs = find_sell_targets(tp, str, deep);
   else if(str == "all")
-    obs = find_targets(tp, 0, tp);
+    obs = find_sell_targets(tp, 0, deep);
   else {
-    if(ob = find_target(tp, str, tp))
+    if(ob = find_sell_target(tp, str, deep))
       obs = ({ ob });
     else
       return "You don't have that item.";
   }
 
-  if(!sz = sizeof(obs))
+  if(!sizeof(obs))
     return "You don't have any such items to sell.";
 
   foreach(ob in obs) {
-    int cost = query_cost(tp, ob, "sell");
-    string short = get_short(ob);
-    int item_mass = ob->query_mass();
-    mapping value = least_coins(cost);
-    int coins = sum(values(value));
+    int cost;
+    string short;
+    int item_mass;
+    mapping value;
+    int coins;
     string mess, *list;
 
     if(/** @type {STD_ARMOUR | STD_CLOTHING | STD_WEAPON} */ (ob)->equipped())
       continue;
     if(/** @type {STD_CONTAINER} */ (ob)->is_container())
       continue;
+    // Coins report their value as ({ num, type }), which query_cost()
+    // cannot price, and the shop has no interest in buying money.
+    if(/** @type {LIB_COIN} */ (ob)->is_coin())
+      continue;
+
+    cost = query_cost(tp, ob, "sell");
+    short = get_short(ob);
+    item_mass = ob->query_mass();
+    value = least_coins(cost);
+    coins = sum(values(value));
 
     if(!cost) {
       tell(tp, "The shop refuses to buy your " + short + ".\n");
@@ -387,11 +498,11 @@ mixed cmd_sell(object tp, string str) {
     tp->other_action("$N $vsell $o.", short);
     mess = "You $vsell $o for $o1.\n";
     tp->my_action(mess, short, simple_list(list));
+
+    sold++;
   }
 
-  obs = filter(obs, (: objectp($1) && present($1, $(tp)) :));
-
-  if(sz == sizeof(obs))
+  if(!sold)
     return "You didn't sell anything.";
 
   return 1;
