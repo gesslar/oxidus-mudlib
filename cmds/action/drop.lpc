@@ -101,7 +101,9 @@ private mixed drop_all(
       ? `You are not carrying any ${ob_id}.`
       : "You are not carrying anything.";
 
-  foreach(/** @type {STD_ITEM} */ object ob in obs) {
+  /** @type {STD_ITEM} */ object ob;
+
+  foreach(ob in obs) {
     if(call_if(ob, "prevent_drop", tp))
       continue;
 
