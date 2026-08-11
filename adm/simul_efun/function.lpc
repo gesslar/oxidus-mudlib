@@ -101,9 +101,8 @@ varargs string call_trace(int colour) {
   function match_body = (: $(source) && objectp($(source)) && living($(source)) && $(source) == $1 :);
 
   string *colours = colour
-    ? trace_colours
+    ? map(trace_colours, (:"{{"+$1[1..]+"}}":))
     : map(trace_colours, (: "" :));
-  colours = map(colours, (:"{{"+$1[1..]+"}}":));
 
   // We don't want to include the call_trace() function itself
   string res = reduce(objects[1..],
