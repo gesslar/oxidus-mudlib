@@ -205,9 +205,8 @@ public resolve_alias(string input, object who) {
 
   who ??= this_body();
 
-  mixed *input_parts = explode(input, " ");
-
-  string to_try = shift(ref input_parts);
+  string *input_parts = explode(input, " ");
+  string  to_try = shift(ref input_parts);
   string *found =
     find_personal_alias(who, to_try) ?? find_global_alias(to_try, who);
 
@@ -223,14 +222,14 @@ public resolve_alias(string input, object who) {
 
   // Now un-re-assemble so we can have everything word-separating. Not a
   // straightforward explode, because maybe sections of contiguous spaces.
-  input_parts = pcre_assoc(
+  mixed *assoc = pcre_assoc(
     input,
     ({ "\\s+"}),
     ({ INPUT_SPACES }),
     INPUT_WORD,
   );
-  string *input_words = input_parts[0];
-  int *input_matches = input_parts[1];
+  string *input_words = assoc[0];
+  int *input_matches = assoc[1];
 
   string alias = found[0];
   mixed *alias_parts = pcre_assoc(
@@ -318,7 +317,6 @@ public resolve_alias(string input, object who) {
     result = result[0 .. final_gobble_position-1];
     result += gobbled;
     result += positional_tokens[final_gobble_position+1..];
-
   }
 
   return trim(implode(result, ""));
