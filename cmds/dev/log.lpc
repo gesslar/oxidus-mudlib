@@ -13,24 +13,25 @@
 inherit STD_CMD;
 
 void setup() {
-  usage_text = "log <file>";
+  usage_text = "log [file]";
   help_text =
     "This command shows the last few lines of a log file, like tail. The "
     "number of lines shown is determined by your 'morelines' preference.\n"
     "\n"
-    "If <file> does not begin with a slash, it is looked up relative to the "
+    "If [file] does not begin with a slash, it is looked up relative to the "
     "log directory (" + log_dir() + "). Otherwise it is treated as an "
     "absolute path.\n"
+    "\n"
+    "If no file is provided, the default will be `/log/compile`."
     "\n"
     "See also: more, cat";
 }
 
 mixed main(
   /** @type {STD_PLAYER} */ object caller,
-  string str
+  /** @type {string?} */    string str
 ) {
-  if(!str)
-    return _usage(caller);
+  str ??= "compile";
 
   string file;
 
