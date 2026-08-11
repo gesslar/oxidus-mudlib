@@ -1,41 +1,61 @@
 /**
  * @file /std/living/act.lpc
+ *
  * Call-out based action module
  *
+ * Tracks delayed actions ("acts") on a living. Each act is a `class Act`
+ * holding the walltime call-out id, a uuid, the action label, an assembled
+ * callback, and the object that requested it. The callback fires with `true`
+ * when the act runs to completion, and with `false` when it is cancelled.
+ *
  * @created 2024-08-08 - Gesslar
- * @last_modified 2024-08-08 - Gesslar
+ * @last_modified 2026-08-07 - Gesslar
  *
  * @history
  * 2024-08-08 - Gesslar - Created
+ * 2026-08-07 - Gesslar - Refactored lookups onto find_index, documented
  */
 
+#include <act.h>
 #include <classes.h>
 
 inherit CLASS_ACT;
 
-private nomask nosave class Act *_acts = ({});
+/** @type {class Act *} */
+private nomask nosave class Act *__acts = ({});
 
-int act(string action, float delay, mixed *cb) {
-  int id;
-  string uuid;
-  class Act act;
-  object po;
-
+/**
+ * Begins a delayed action on this living.
+ *
+ * Schedules a walltime call-out for `delay` seconds and records the act so it
+ * can be found, cancelled, or reported on. The requesting object is captured
+ * from the call chain, hopping past the simul_efun object when the call
+ * arrived through `delay_act()`.
+ *
+ * @param {string} action - The action label, e.g. "casting".
+ * @param {float} delay - Seconds to wait before firing the callback.
+ * @param {mixed*} cb - Callback array from assemble_call_back().
+ * @returns {int|undefined} The call-out id, or undefined if any argument is
+ *                          missing.
+ * @see delay_act
+ */
+public int act(string action, float delay, mixed *cb) {
   if(!action || !delay || !cb)
-    return null;
+    return undefined;
 
   if(intp(delay))
     delay = to_float(delay);
 
-  uuid = generate_uuid();
-  id = call_out_walltime("finish_act", delay, uuid);
+  string uuid = generate_uuid();
+  int id = call_out_walltime("finish_act", delay, uuid);
 
+  object po;
   if(caller_is(SIMUL_OB))
     po = previous_object(1);
   else
     po = previous_object();
 
-  act = new(class Act,
+  class Act act = new(class Act,
     id: id,
     uuid: uuid,
     action: action,
@@ -43,39 +63,69 @@ int act(string action, float delay, mixed *cb) {
     prev: po
   );
 
-  _acts += ({ act });
+  push(ref __acts, act);
 
   return id;
 }
 
-class Act find_act(mixed id) {
-  int sz;
+/**
+ * Looks up a pending act without removing it.
+ *
+ * A string id is matched against the act's uuid, an int id against its
+ * call-out id.
+ *
+ * @param {mixed} id - The uuid or call-out id to look for.
+ * @returns {class Act|undefined} The matching act, or undefined if there is
+ *                                none.
+ */
+public class Act find_act(mixed id) {
+  int index = -1;
 
-  sz = sizeof(_acts);
   if(stringp(id))
-    while(sz--) {
-      if(_acts[sz].uuid == id)
-        return _acts[sz];
-    } else if(intp(id))
-       while(sz--) {
-         if(_acts[sz].id == id)
-          return _acts[sz];
-    }
+    index = find_index(__acts, (: $1.uuid == $(id) :));
+  else if(!nullp(id) && intp(id))
+    index = find_index(__acts, (: $1.id == $(id) :));
 
-  return null;
+  if(index == -1)
+    return undefined;
+
+  return __acts[index];
 }
 
-varargs class Act pop_act(mixed id) {
-  int sz;
+/**
+ * Removes a pending act from the list and returns it.
+ *
+ * Given an id, removes the act matching it. Given nothing, removes the most
+ * recently added act, which is how cancel_acts() drains the list. Removal
+ * neither cancels the call-out nor fires the callback; the caller decides
+ * what happens next.
+ *
+ * @param {mixed} [id] - The uuid or call-out id to remove.
+ * @returns {class Act|undefined} The removed act, or undefined if there was
+ *                                no match.
+ */
+public varargs class Act pop_act(mixed id) {
+  if(nullp(id))
+    return sizeof(__acts) ? pop(ref __acts) : undefined;
 
-  sz = sizeof(_acts);
-  if(!sz)
-    return null;
+  class Act act = find_act(id);
 
-  return pop(ref _acts);
+  if(!act)
+    return undefined;
+
+  eject_value(ref __acts, act);
+
+  return act;
 }
 
-void finish_act(string action, string uuid) {
+/**
+ * Call-out target that completes an act.
+ *
+ * Fires the act's callback with `true` to signal that it ran to completion.
+ *
+ * @param {string} uuid - The uuid of the act that has elapsed.
+ */
+public void finish_act(string uuid) {
   class Act act;
 
   if(!classp(act = pop_act(uuid)))
@@ -84,7 +134,12 @@ void finish_act(string action, string uuid) {
   catch(call_back(act.cb, true));
 }
 
-void cancel_acts() {
+/**
+ * Cancels every pending act on this living.
+ *
+ * Each act has its call-out removed and its callback fired with `false`.
+ */
+public void cancel_acts() {
   class Act act;
 
   while(classp(act = pop_act())) {
@@ -93,7 +148,15 @@ void cancel_acts() {
   }
 }
 
-int cancel_act(mixed action) {
+/**
+ * Cancels a single pending act.
+ *
+ * The act's call-out is removed and its callback fired with `false`.
+ *
+ * @param {mixed} action - The uuid or call-out id of the act to cancel.
+ * @returns {int} 1 if an act was cancelled, 0 if there was no match.
+ */
+public int cancel_act(mixed action) {
   class Act act;
 
   if(!classp(act = pop_act(action)))
@@ -105,20 +168,33 @@ int cancel_act(mixed action) {
   return 1;
 }
 
-mapping query_acts() {
+/**
+ * Returns every pending act, keyed by uuid.
+ *
+ * @returns {mapping} Mapping of uuid to `class Act`.
+ */
+public mapping query_acts() {
   mapping acts = ([ ]);
-  int sz;
 
-  sz = sizeof(_acts);
+  int sz = sizeof(__acts);
   while(sz--)
-    acts[_acts[sz].uuid] = _acts[sz];
+    acts[__acts[sz].uuid] = __acts[sz];
 
   return acts;
 }
 
-varargs int is_acting(string action) {
+/**
+ * Reports whether this living is busy.
+ *
+ * Given an action label, reports whether that particular action is pending.
+ * Given nothing, reports whether any act is pending at all.
+ *
+ * @param {string} [action] - The action label to look for.
+ * @returns {int} 1 if a matching act is pending, 0 if not.
+ */
+public varargs int is_acting(string action) {
   if(!action)
-    return sizeof(_acts) > 0;
+    return sizeof(__acts) > 0;
 
-  return sizeof(filter(_acts, (: $1.action == $(action) :))) > 0;
+  return find_index(__acts, (: $1.action == $(action) :)) > -1;
 }
