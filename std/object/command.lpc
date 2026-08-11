@@ -317,7 +317,7 @@ public int rem_path(string path) {
   __command_paths ??= ({});
 
   path = append(path, "/");
-  
+
   if(!includes(__command_paths, path))
     return 0;
 
@@ -328,7 +328,7 @@ public int rem_path(string path) {
 
 /**
  * Returns 1 if the body has access to the specified path. If not, 0.
- * 
+ *
  * @param {string} path - The file path to check.
  * @returns {int} 1 if has the path, 0 otherwise.
  */
@@ -444,22 +444,25 @@ public int command_hook(string arg) {
 
   verb = query_verb();
 
-  if(arg == "")
-    arg = 0;
+  if(falsy(arg))
+    arg = undefined;
 
   verb = lower_case(verb);
 
-  if(arg)
+  if(truthy(arg))
     complete = sprintf("%s %s", verb, arg);
   else
     complete = verb;
 
   string aliased = ALIAS_D->resolve_alias(complete, this_object());
 
-  if(aliased) {
-    arg = 0;
-
-    sscanf(aliased, "%s %s", verb, arg) || verb = aliased;
+  // If the alias resolved (it is different from what we typed), we need to
+  // split it out again.
+  if(aliased != complete) {
+    if(sscanf(aliased, "%s %s", verb, arg) != 2) {
+      verb = aliased;
+      arg = undefined;
+    }
   }
 
   obs = all_inventory();
