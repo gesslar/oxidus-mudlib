@@ -2,6 +2,7 @@
 #define __ACT_H__
 
 public int act(string action, float delay, mixed *cb);
+public async int async_act(string action, float delay);
 public mixed find_act(mixed id);          // Returns class Act, but cannot specify in a header file
 public varargs mixed pop_act(mixed id);   // Returns class Act, but cannot specify in a header file
 public void finish_act(string uuid);

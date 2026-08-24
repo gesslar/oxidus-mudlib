@@ -69,6 +69,38 @@ public int act(string action, float delay, mixed *cb) {
 }
 
 /**
+ * Begins a delayed action on this living, delivering its outcome through a
+ * promise.
+ *
+ * The async counterpart to act(). The act is registered exactly as act()
+ * registers it, so is_acting() reports it and cancel_act()/cancel_acts() still
+ * interrupt it; what changes is how the outcome arrives. Rather than taking an
+ * assembled callback, the returned promise settles when the act resolves:
+ * fulfilled with 1 if it ran to completion, or 0 if it was cancelled.
+ *
+ * Await it from inside an async function rather than calling it for its value.
+ *
+ * @param {string} action - The action label, e.g. "casting".
+ * @param {float} delay - Seconds to wait before the act completes.
+ * @returns {promise<int>} A promise for 1 if the act ran to completion, or 0
+ *                         if it was cancelled or could not be scheduled.
+ * @see act
+ * @see is_acting
+ * @example
+ * if(!await tp->async_act("punch", 2.0))
+ *   return;                                // interrupted
+ */
+public async int async_act(string action, float delay) {
+  promise p = promise_create();
+  mixed id = act(action, delay, assemble_call_back((: promise_resolve($(p), $1) :)));
+
+  if(nullp(id))
+    return 0;
+
+  return await p;
+}
+
+/**
  * Looks up a pending act without removing it.
  *
  * A string id is matched against the act's uuid, an int id against its
