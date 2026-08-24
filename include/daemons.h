@@ -18,6 +18,7 @@
 #define CONFIG_D        DIR_DAEMONS "config"
 #define COORD_D         DIR_DAEMONS "coord"
 #define CRASH_D         DIR_DAEMONS "crash"
+#define CRAWLER_D       DIR_DAEMONS "crawler"
 #define CURRENCY_D      DIR_DAEMONS "currency"
 #define DB_D            DIR_DAEMONS "db"
 #define DEATH_D         DIR_DAEMONS "death"
