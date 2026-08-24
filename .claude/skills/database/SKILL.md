@@ -347,3 +347,43 @@ mixed v = DB_D->sqliteVersion("bank");        // ({ "3","39","0" })
 - **`escapeValue()` only handles strings and numbers.** Passing arrays, mappings, or objects into a REST `data` mapping or as a query-string value will produce malformed SQL.
 - **`lazyQuery` callback shape differs from `query`** — see the lazy section above.
 - **No automatic schema migration.** Editing a `.tbl` line for an existing table does nothing on reboot. Migrations are manual via `ALTER TABLE` / `CREATE TABLE ... INSERT SELECT ... DROP ... RENAME`.
+
+## Async Callbacks and DB_D
+
+`DB_D` fires query callbacks through the `call_back()` sefun. That sefun is
+**not async-aware**: it returns `catch(fun(...))`, so if the callback is an
+`async` function it reports success the moment the body parks — before the
+callback has done anything — and discards the promise it returned. A rejection
+then surfaces only as an unhandled-rejection line in the debug log.
+
+So a callback handed to `DB_D` must be an ordinary synchronous function. If it
+needs to await something, keep the callback sync and have it call an async
+helper fire-and-forget:
+
+```lpc
+void handle_rows(mixed *rows) {          // the callback DB_D fires
+  process_rows(rows);                    // async helper, deliberately not awaited
+}
+
+private async void process_rows(mixed *rows) {
+  mixed err = acatch {
+    foreach(mixed *row in rows)
+      cache_entry(row);
+
+    await async_write(REPORT_FILE, render(rows), 0);
+  };
+
+  if(err)
+    debug_message(`db report: ${err}\n`);
+}
+```
+
+Note the `foreach` in that helper contains no `await` — an `await` cannot
+suspend inside a `foreach` **body**, so use an indexed `for` if the loop body
+itself must await. Awaiting in the header is fine (`foreach(mixed *row in await
+fetch())`), since it is evaluated before the loop pins anything.
+
+`async_call_back()` is the async-aware sibling of `call_back()`: it delivers the
+callback's actual return value through a promise, adopting the callback's own
+promise when it is async. It is available for new code that wants to await a
+callback's completion; `DB_D` itself still uses `call_back()`.

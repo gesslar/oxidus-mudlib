@@ -445,3 +445,50 @@ Actual interval per round = `_attack_speed + random_float(1.5)` seconds.
 5. **`setLevel()` on NPCs wipes skills**: `npc.lpc::setLevel()` calls `adjust_skills_by_npc_level()` which resets all stored skill levels to near-zero.
 6. **Proc `_proc_chance` field is maintained but not rolled against** in `can_proc()` — the actual selection uses per-proc cooldowns and `element_of_weighted`.
 7. **Threat is accumulated damage**, not an abstract aggro value. `highest_threat()` targets whoever has dealt the most damage to this living.
+
+## Timed Abilities: async_act
+
+Abilities with a wind-up use `async_act()` on the body — the async counterpart
+of `act()` in `std/living/act.lpc`. It registers an ordinary act, so
+`is_acting()` reports it and `cancel_act()` / `cancel_acts()` still interrupt
+it; what changes is that the outcome arrives as a promise rather than a
+callback:
+
+```lpc
+private async void strike(object tp, object victim) {
+  mixed err = acatch {
+    if(!await tp->async_act("punch", 2.0))
+      return;                                   // interrupted
+
+    if(!same_env_check(tp, victim))
+      return;
+
+    if(tp->can_strike(victim)) {
+      float damage = percent_of(25.0, tp->query_damage());
+
+      tp->targetted_action("$N $vpunch $t!", victim);
+      tp->deliver_mundane_damage(victim, damage, "bludgeoning");
+      tp->use_skill("combat.melee.unarmed");
+    } else {
+      tp->targetted_action("$N $vtry to punch $t, but $vmiss.", victim);
+      victim->use_skill("combat.defence.dodge");
+    }
+
+    victim->start_attack(tp);
+  };
+
+  if(err)
+    debug_message(`punch: ${err}\n`);
+}
+```
+
+The promise fulfils with **1** if the act ran to completion and **0** if it was
+cancelled — which is what makes walking out of the room abandon the blow, since
+`move()` calls `cancel_acts()`. Treat a `0` as "silently abandon", not as a
+failure to report.
+
+`cmds/ability/punch.lpc` is the worked example. `use()` must stay synchronous
+and call the helper without awaiting — see the `command-creation` skill for why.
+The older `delay_act(action, delay, assemble_call_back(...))` form still works
+and several spells use it; the difference is that the async form keeps `tp` and
+`victim` in lexical scope instead of threading them through the callback array.

@@ -93,7 +93,9 @@ reviewer working on the author's machine and to nobody else. Reviewers without
 it use the public `fluffos/fluffos` tree instead. Either is a semantics
 reference; neither is under review.
 
-Oxidus tracks upstream HEAD, so current driver behaviour is authoritative.
+There is no pinned driver version — the image is built from whatever
+upstream FluffOS was at build time — so the driver in front of you is
+authoritative.
 Recent efuns, recent semantics, and language extensions added since the 2019
 line are all fair to rely on, and code using them is not suspect for that
 reason.
@@ -198,3 +200,56 @@ harmed by the swallowed signal, named alongside the concrete outcome.
 Dormant-by-design scaffolding is likewise intended: unused configuration keys,
 partially-wired APIs, and pinned procedural-generation seeds, which exist to
 make reboots reproducible.
+
+## Async, await, and promises
+
+The async surface has several behaviours that read like defects and are not,
+and a few genuine defects that produce no error at all. Both directions cost
+review rounds, so check against this list before writing the finding.
+
+### Not defects
+
+- **Fire-and-forget async is idiomatic.** A sync function calling an `async`
+  helper and discarding the promise — `strike(tp, victim); return 1;` — is the
+  normal shape, not a leaked promise. Command entry points and applies *cannot*
+  be async (the driver reads their return immediately), so the chain is
+  required to terminate somewhere. In MUD code the async work is usually a side
+  effect on the world, not a value for the caller.
+- **`acatch` wrapping a whole async body** is usually deliberate: it guarantees
+  a floated promise cannot reject, since an unobserved rejection is reported to
+  the debug log at deallocation.
+- **`@returns {promise<T>}` above a function declared `async T`** is correct.
+  The declared type is the payload; the driver supplies the wrapper.
+- **An `async` function that never awaits** is legal. It returns an
+  already-fulfilled promise.
+- **A rejection appearing in `/log/catch`** is documented driver behaviour — an
+  async body's uncaught error is reported like a caught error — not something
+  the mudlib code added.
+
+### Genuine defects that are silent
+
+Each of these compiles cleanly, passes a live smoke test, and reports nothing.
+
+- **`await` on a non-promise** passes the value straight through with no
+  suspension. `await call_out("fn", 1)` returns the int handle instantly; only
+  the delay-only `call_out(delay)` form yields a promise. Likewise
+  `await ob->missing_fn()` awaits the `0` that call_other returns.
+- **A `private` call_out target declared in an inherited file never fires.**
+  Name-based dispatch does not cross the inherit boundary for privates, and
+  there is no error — the chain simply stops. Chain steps in anything
+  inheritable must be at least `protected`.
+- **`call_back()` discards an async callback's promise.** It returns
+  `catch(fun(...))`, so it reports success the moment the callback parks, before
+  it has done anything. `async_call_back()` is the async-aware sibling.
+- **An apply or entry point that merely *returns* the result of an async call**
+  is not caught by the compiler's `async`-on-apply check. Consumers treat a
+  returned promise as "no": `check_valid_path()` denies, master approval gates
+  deny, the parser treats a verb function as having declined the command.
+
+### Evidence required
+
+Do not assert that a promise leaks, a frame never resumes, or a settle races
+without tracing it. Suspension state is inspectable at runtime — `async_info()`
+lists every parked frame with what it awaits, and awaited timers appear in
+`call_out_info()` with `"<timer>"` in the function slot. Prefer that over
+reasoning about the scheduler.
