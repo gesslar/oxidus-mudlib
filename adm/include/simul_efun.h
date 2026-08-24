@@ -124,6 +124,7 @@ varargs string query_directory(object ob);
 int valid_function(mixed f);
 mixed *assemble_call_back(mixed arg...);
 mixed call_back(mixed *cb, mixed new_arg...);
+async mixed async_call_back(mixed *cb, mixed new_arg...);
 varargs mixed call_if(mixed ob, string func, mixed arg);
 varargs int delay_act(string act, float delay, mixed *cb);
 varargs string call_trace(int colour);

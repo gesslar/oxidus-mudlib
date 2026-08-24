@@ -188,15 +188,73 @@ mixed *assemble_call_back(mixed arg...) {
 }
 
 /**
+ * Resolves a callback array into the function to invoke and its final
+ * argument list.
+ *
+ * Shared by call_back() and async_call_back() so both apply identical
+ * validation and argument ordering.
+ *
+ * @param {mixed*} cb - Callback array from assemble_call_back().
+ * @param {mixed*} new_arg - Arguments to prepend to the stored ones.
+ * @param {string} caller - Name of the calling sefun, for error messages.
+ * @returns {mixed*|undefined} A two-element array of the resolved function
+ *  and its arguments, or undefined if cb does not describe a callable.
+ * @errors If the callback structure is malformed.
+ */
+private mixed *prepare_call_back(mixed *cb, mixed *new_arg, string caller) {
+  int sz;
+
+  if(!pointerp(cb))
+    error(`ERROR: Invalid argument passed to ${caller}().`);
+
+  sz = sizeof(cb);
+
+  if(!sz)
+    error(`ERROR: No arguments passed to ${caller}().`);
+
+  if(objectp(cb[0])) {
+    object cb_ob = cb[0];
+    string cb_fun;
+    mixed *curr;
+
+    if(sz < 2)
+      error(`ERROR: No function passed to ${caller}().`);
+
+    cb_fun = cb[1];
+    curr = sz > 2 ? cb[2..] : ({});
+
+    if(!function_exists(cb_fun, cb_ob))
+      error(`ERROR: Function does not exist in object passed to ${caller}().`);
+
+    return ({ (: call_other, cb_ob, cb_fun :), new_arg + curr });
+  } else if(valid_function(cb[0])) {
+    mixed *curr = sz > 1 ? cb[1..] : ({});
+
+    return ({ cb[0], new_arg + curr });
+  }
+
+  return undefined;
+}
+
+/**
  * Executes a previously assembled callback.
  *
  * Takes a callback structure created by assemble_call_back() and executes it,
  * optionally with new arguments prepended to the stored ones.
  *
+ * The callback is invoked inside a catch, so this reports whether it errored
+ * rather than what it returned. It is therefore not async-aware: an async
+ * callback returns a promise the moment its body parks, which is discarded
+ * here, so this reports success before the callback has done anything. Use
+ * async_call_back() when the callback may be async or its result matters.
+ *
  * @param {mixed*} cb - Callback array from assemble_call_back()
  * @param {...mixed} new_arg - Additional arguments to prepend
- * @returns {mixed|undefined} Result from callback execution
+ * @returns {string|int|undefined} 0 if the callback ran without error, the
+ *  error message if it threw, or undefined if cb does not describe a
+ *  callable.
  * @errors If callback structure is invalid
+ * @see async_call_back
  * @see assemble_call_back
  * @see valid_function
  * @example
@@ -204,51 +262,57 @@ mixed *assemble_call_back(mixed arg...) {
  * call_back(cb);  // Calls player->tell("Hello!")
  */
 mixed call_back(mixed *cb, mixed new_arg...) {
-  if(!pointerp(cb))
-    error("ERROR: Invalid argument passed to call_back().");
-
-  int sz = sizeof(cb);
-  if(!sz)
-    error("ERROR: No arguments passed to call_back().");
-
+  mixed *prepared = prepare_call_back(cb, new_arg, "call_back");
   function fun;
-  mixed *final_arg = ({});
+  mixed *final_arg;
 
-  if(objectp(cb[0])) {
-    mixed *curr;
-
-    if(sz < 2)
-      error("ERROR: No function passed to call_back().");
-
-    object cb_ob = cb[0];
-    string cb_fun = cb[1];
-
-    if(sz > 2)
-      curr = cb[2..];
-    else
-      curr = ({});
-
-    if(!function_exists(cb_fun, cb_ob))
-      error("ERROR: Function does not exist in object passed to call_back().");
-
-    final_arg = new_arg + curr;
-
-    fun = (: call_other, cb_ob, cb_fun :);
-  } else if(valid_function(cb[0])) {
-    function cb_fun = cb[0];
-    mixed *curr;
-
-    if(sz > 1)
-      curr = cb[1..];
-    else
-      curr = ({});
-
-    fun = cb_fun;
-    final_arg = new_arg + curr;
-  } else
+  if(!pointerp(prepared))
     return undefined;
 
+  fun = prepared[0];
+  final_arg = prepared[1];
+
   return catch(fun(final_arg...));
+}
+
+/**
+ * Executes a previously assembled callback, delivering its result through a
+ * promise.
+ *
+ * The async-aware counterpart to call_back(). Where call_back() reports only
+ * whether the callback errored, this delivers what it actually returned, and
+ * waits for it: if the callback is an async function, the promise adopts its
+ * promise and settles only once the callback has genuinely finished. An error
+ * in the callback, or a malformed callback structure, rejects instead.
+ *
+ * Await it inside an async function, or attach promise_then() outside one. A
+ * rejection that is never observed is reported to the debug log, so do not
+ * call this and discard the result.
+ *
+ * @param {mixed*} cb - Callback array from assemble_call_back()
+ * @param {...mixed} new_arg - Additional arguments to prepend
+ * @returns {promise<mixed>} A promise for the callback's return value, or for
+ *  undefined if cb does not describe a callable.
+ * @errors If the callback structure is invalid, or the callback itself
+ *  errors; either rejects the returned promise.
+ * @see call_back
+ * @see assemble_call_back
+ * @example
+ * mixed *cb = assemble_call_back(ob, "fetch_record", "gesslar");
+ * mapping record = await async_call_back(cb);
+ */
+async mixed async_call_back(mixed *cb, mixed new_arg...) {
+  mixed *prepared = prepare_call_back(cb, new_arg, "async_call_back");
+  function fun;
+  mixed *final_arg;
+
+  if(!pointerp(prepared))
+    return undefined;
+
+  fun = prepared[0];
+  final_arg = prepared[1];
+
+  return fun(final_arg...);
 }
 
 /**
@@ -260,6 +324,10 @@ mixed call_back(mixed *cb, mixed new_arg...) {
  * If a function being reached for is private or protected and the caller is
  * the same object as passed, `call_if()` will bind to the object, ensuring
  * that it is callable.
+ *
+ * The result is returned unwrapped, so an async target's promise passes
+ * straight through and `await call_if(ob, "fetch")` works without any async
+ * variant of this sefun.
  *
  * @param {object|string} ob - Target object or filename
  * @param {string} func - Function name to call
