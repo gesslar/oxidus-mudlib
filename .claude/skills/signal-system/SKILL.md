@@ -352,3 +352,27 @@ However, prefer adding defines to `signal.h` for signals used across multiple fi
 - **Auto-cleanup**: Dead objects are pruned every 60 heartbeats. No manual cleanup needed.
 - **Persistent**: Slots survive reboots via SWAP_D. Objects that reload get their slots restored.
 - **Security**: Only simul_efun can call the daemon directly (`nomask` + caller check).
+
+## Async Signal Handlers
+
+A slotted handler may be `async`. `dispatch_signal()` invokes handlers with
+`catch(call_other(ob, func, arg...))` and discards the return value, so an async
+handler's promise is simply dropped and the handler runs fire-and-forget. That
+is a legitimate pattern — `CRAWLER_D->crawl()` is slotted on `SIG_SYS_BOOT` and
+is an async function.
+
+Two consequences follow from the promise being discarded:
+
+- **The dispatcher's `catch` no longer protects you.** An async body behaves as
+  if implicitly caught, so any error after the first `await` rejects the
+  handler's promise instead of propagating. Nothing observes that promise, so
+  the failure surfaces only as an unhandled-rejection line in the debug log, far
+  from the cause. Wrap the body in `acatch` and log deliberately.
+- **The signal returns before the work finishes.** `emit()` completes once every
+  handler has run *to its first await*. Do not slot an async handler where the
+  emitter needs the work done by the time `emit()` returns — nothing in the
+  signal system waits.
+
+Everything a handler registers before its first `await` is in place by the time
+`emit()` returns, so synchronous setup at the top of an async handler is still
+ordered as you would expect.

@@ -228,6 +228,29 @@ union type.
  */
 ```
 
+#### Async Functions
+
+An `async` function declares its **payload** type, and the driver wraps it:
+`async int f()` is typed `promise<int>` at every call site, while `int` is
+what `return` statements inside the body are checked against.
+
+Document the **wrapper**, `@returns {promise<T>}` — not the bare payload. The
+tag is read by someone standing at the call site, where the value genuinely is
+a promise, and `promise<T>` carries both facts where `{T}` carries only one.
+This matters most for `mixed`: `@returns {mixed}` is indistinguishable from a
+non-async function that happens to return a promise.
+
+```c
+/**
+ * @returns {promise<int>} A promise for 1 if the act ran to completion, or 0
+ *                         if it was cancelled.
+ */
+public async int async_act(string action, float delay) {
+```
+
+Bare `promise` means `promise<mixed>` and accepts any payload; use it when the
+function invokes arbitrary caller-supplied code and cannot know the type.
+
 #### Type Predicates
 
 A special form of `@returns` enables **type narrowing** in conditional

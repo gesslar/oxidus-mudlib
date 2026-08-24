@@ -295,3 +295,35 @@ Repeated here because it bites repeatedly: `ASSERT_EQ(({1,2,3}), ({3,2,1}))` **p
 - **Calling `run()` directly without going through a runner** — works (returns `({passed, failed, failures, pendings})`) but no formatted output, no test-mode suppression for sad-path tests.
 - **Long-running test sweeps** — `reset_eval_cost()` is called per file, but if a single test file's tests collectively exceed eval cost, that file fails. Split into multiple test files.
 - **Mutating shared state in tests** — each test file is cloned fresh, but tests within one file share an instance. Use separate `test()` entries for state isolation, or build setup/teardown into the test function itself.
+
+## Async Code in Tests
+
+**Test functions and `run()` must stay synchronous.** The area runner does
+`results = ob->run();` (`std/test/runner.lpc`) and uses the value immediately,
+and individual test bodies are invoked as functionals — `(*f)();` in
+`std/test/test.lpc`. Both close the door on `async`:
+
+- An `async run()` would hand the runner a promise instead of a results array
+  the moment it parked. Same failure class as an async apply.
+- `await` is illegal inside a `(: :)` functional or an anonymous function, so a
+  test body cannot await even if you wanted it to.
+
+That means an async function under test cannot be awaited from a test. Test what
+you can reach synchronously, and treat the rest as a boundary:
+
+- **Test the synchronous prefix.** An async body runs to its first `await`
+  before returning, so anything it registers first — a queue entry, an act, a
+  lock — is observable the instant the call returns. `tp->async_act("x", 2.0);`
+  followed by `assert(tp->is_acting())` is a valid synchronous assertion.
+- **Test the pieces, not the suspension.** Factor the decision logic out of the
+  async function into ordinary functions and test those directly.
+- **Assert on promise state, not on delivery.** `promise_status(p)` returns 0
+  pending / 1 fulfilled / 2 rejected without suspending, and `async_info()`
+  lists parked frames. Reading `promise_result(p)` on a *pending* promise is an
+  error, so guard it with `promise_status()`.
+- **Use `pending()` for the rest.** Behaviour that only exists after a
+  suspension resumes is a known-untestable boundary in this framework, not a
+  test to fake with a call_out.
+
+Do not reach for `call_out` in a test to "wait" for async work — the runner has
+already collected results and destructed the test object by the time it fires.

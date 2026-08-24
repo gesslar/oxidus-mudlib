@@ -447,5 +447,79 @@ needs without adding a redundant doc comment.
 - Avoid expensive operations in frequently called functions.
 - Cache results of expensive calculations where appropriate.
 - Be mindful of eval cost limits for complex operations.
-- Use call_out, or call_out_walltime for delayed execution rather than busy loops.
+- Use call_out, or call_out_walltime for delayed execution rather than busy
+  loops. For work that must be broken into pieces — a crawl, a sweep, a long
+  build — prefer an `async` function with `await async_yield()` over a chain
+  of call_outs that re-arm themselves; see **Async, await, acatch** below.
 - Prefer filter/map/member_array over manual iteration where appropriate.
+
+## Async, await, acatch
+
+`async` is a function modifier and goes where any other modifier goes. It does
+not change the declared return type — `async int f()` still checks `return 1;`
+against `int` — but every call site receives `promise<int>` instead.
+
+```lpc
+private async void collect_dir();          // prototype must agree about async
+public async int async_act(string action, float delay) {
+```
+
+`await` is a prefix unary expression, so it takes a space after it like `return`
+does, and binds tighter than binary operators — `await a + b` is `(await a) + b`.
+Parenthesise when that is not what you mean.
+
+```lpc
+int completed = await tp->async_act("punch", 2.0);
+```
+
+`acatch` is `catch` for code that may suspend, with the same value convention
+(`0` on success, the error otherwise). It takes an expression or a block; the
+block form ends with a semicolon because it is an expression:
+
+```lpc
+mixed err = acatch {
+  paths = await async_getdir(current);
+};
+
+mixed err = acatch(await tp->async_act("punch", 2.0));
+```
+
+### Rules the compiler enforces
+
+- `await` and `acatch` are legal **only directly inside an `async` body** —
+  never in a `(: :)` functional or an anonymous function, even one written
+  inside an async function.
+- `await` is not allowed inside `catch(...)` or `time_expression(...)`. Use
+  `acatch`.
+- **An apply must not be `async`.** Have the apply call an async function
+  instead. This extends past the compiler's check to anything whose return
+  value a caller reads immediately — command entry points, verb functions,
+  test functions.
+
+### Rules the runtime enforces
+
+- An `await` cannot suspend inside a **`foreach` body** (the loop pins an
+  lvalue slot for its variable). Use an indexed `for` or a `while` when the
+  body suspends. Compound assignment is fine — `arr[i] += await p` parks
+  normally.
+- The `foreach` **header** is fine, because it is evaluated before the loop
+  pins anything — `foreach(int n in await make_list())` works (verified,
+  not merely permitted by the docs).
+
+### Choosing the delay
+
+```lpc
+await async_yield();              // zero delay; let the event loop have a pass
+await call_out_walltime(0.05);    // real elapsed time; rate limiting
+await call_out(2);                // same, quantised to the gametick
+```
+
+`async_yield()` is the cooperative preemption point: it costs no wall-clock
+time but lets the driver serve players between iterations, and each resumption
+is metered with a fresh evaluation-cost budget. Reach for the `call_out` forms
+only when you want an actual delay.
+
+Note the callback forms are **not** awaitable. `call_out("fn", 1)` still
+returns an int handle, and `await` of a non-promise passes the value through
+with no suspension — so `await call_out("fn", 1)` compiles, returns instantly,
+and does nothing. Only the delay-only forms return a promise.

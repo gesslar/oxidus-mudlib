@@ -347,3 +347,58 @@ mixed main(object tp, string args) {
     return 1;
 }
 ```
+
+## Delayed Work: the async Boundary
+
+A command entry point **cannot be `async`**. `main()`'s return value is the
+command's feedback — `1`, `0`, or a string — and `STD_ACT` passes `use()`'s
+return straight out of `main()` (`std/cmd/act.lpc`). An async function returns a
+promise the instant its body parks, and the command layer reads a returned
+promise as *declining the command*: it moves on to the next sentence on that
+verb and, failing that, calls `notify_no_command()`. The player gets "What?"
+while your work runs anyway.
+
+So the entry point stays synchronous and calls an async helper without awaiting
+it:
+
+```lpc
+mixed use(object tp, string arg) {
+  object victim;
+
+  if(!victim = local_target(tp, arg, (: living($1) && $1 != $(tp) :)))
+    return 1;
+
+  apply_cost(tp, arg);
+  apply_cooldown(tp, arg);
+
+  tp->simple_action("$N $vpull back a fist...");
+
+  strike(tp, victim);        // async, deliberately not awaited
+
+  return 1;
+}
+```
+
+Three things make this safe:
+
+- **The helper's prefix runs synchronously.** An async body runs to its first
+  `await` before returning its promise, so anything it registers — an act, a
+  lock, a queue entry — is already in place by the time `use()` returns. That is
+  what keeps `condition_check()`'s `is_acting()` test correct against a second
+  command on the same tick.
+- **Wrap the helper's body in `acatch`.** Nothing observes the discarded
+  promise, so an uncaught error would surface only as an unhandled-rejection
+  line in the debug log.
+- **Locals stay in scope.** The helper is a real function, so `tp` and `victim`
+  are simply visible in it — no `assemble_call_back(fn, tp, victim)` threading,
+  which existed only because functionals do not capture.
+
+For a timed wind-up, `await tp->async_act(action, delay)` is the idiom: it
+registers a proper act (so `is_acting()` and `cancel_acts()` still work) and
+resolves with 1 on completion or 0 if interrupted. Do not substitute a bare
+`await call_out_walltime(delay)` — that registers no act, so the player could
+stack abilities and walking away would not interrupt.
+
+Note `condition_check()` in `STD_ACT` already rejects `is_acting()` with "You
+are already doing something." before `use()` runs, so do not repeat that check
+in your command.

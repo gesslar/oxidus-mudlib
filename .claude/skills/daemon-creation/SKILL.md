@@ -381,3 +381,57 @@ When creating a new daemon:
 6. Use `nosave` for runtime-only variables
 7. Implement `unsetup()` if cleanup is needed (call_outs, sockets, etc.)
 8. Guard signal callbacks with `if(previous_object() != signal_d()) return;`
+
+## Replacing a call_out Chain with async/await
+
+A daemon that processes a work queue in slices — a crawl, a sweep, a rebuild —
+was traditionally written as a self-re-arming call_out chain: a function that
+does one unit of work then schedules itself again, plus a separate "are we
+finished?" check that every step has to call. That shape exists to escape the
+evaluation-cost limit, not because anyone wanted it.
+
+An `async` function expresses the same thing as an ordinary loop, because
+resuming from an `await` starts a **new delivery with a fresh evaluation-cost
+budget** — the same escape, without the wall-clock tax or the plumbing:
+
+```lpc
+public async void crawl() {
+  todo = ({ start });
+
+  while(sizeof(todo)) {
+    await async_yield();       // yield first: see the guard note below
+
+    string next = todo[0];
+
+    todo = todo[1..];
+    process(next);
+  }
+
+  publish();
+}
+```
+
+What disappears: the call_out handles, the delay constants, the "is a step
+already scheduled?" guard, and the termination check — the loop condition *is*
+the termination check.
+
+Points that matter in practice:
+
+- **Yield at the top of the loop, not the bottom.** The condition has just
+  proved the queue non-empty, so you never suspend holding an empty queue. That
+  is what lets `sizeof(queue)` stand in for "a run is in flight" without a
+  separate boolean, and it also means the first item gets its own budget rather
+  than riding on the caller's.
+- **Wrap the body in `acatch`.** An async body behaves as if implicitly caught,
+  so an error after the first `await` no longer reaches the caller's `catch` —
+  without `acatch` it silently rejects a promise nobody holds.
+- **Clear the queue on the error path.** If `sizeof(queue)` is your in-flight
+  guard, a crashed run that leaves the queue populated locks out every future
+  run.
+- **A boot-slotted daemon function may be async.** `dispatch_signal()` discards
+  handler return values, so the promise is simply dropped — which is fine as
+  long as the body cannot reject.
+
+Use `await call_out_walltime(n)` instead of `async_yield()` only when you want
+a genuine delay (rate limiting an external service). `async_yield()` costs no
+wall-clock time and still lets the driver serve players between iterations.

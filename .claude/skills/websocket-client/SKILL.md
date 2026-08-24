@@ -333,3 +333,37 @@ Discord gateway WebSocket client. Handles identify, heartbeat loop, and channel-
 ### WebSocket Echo Test (`adm/daemons/websocket_echo.lpc`)
 
 Simple test client that connects to an echo server, sends periodic messages, and verifies responses.
+
+## Async Handlers
+
+The client dispatches its lifecycle handlers with `call_if(this_object(), ...)`,
+which returns the result unwrapped. That means an `async` handler works — it is
+invoked, runs to its first `await`, and the promise it returns is simply
+discarded by the client, which is ordinary fire-and-forget.
+
+Two things follow:
+
+- **Nothing observes the promise**, so an uncaught error inside the handler
+  surfaces only as an unhandled-rejection line in the debug log, at
+  deallocation, far from the cause. Wrap an async handler's body in `acatch`
+  and log deliberately.
+- **The client does not wait.** The connection proceeds as soon as the handler
+  parks, so anything that must happen before the next lifecycle step has to be
+  done *before* the first `await` — an async body runs synchronously up to that
+  point.
+
+```lpc
+protected async void http_handle_response(object server, mapping response) {
+  mixed err = acatch {
+    await async_write(CACHE_FILE, response["body"], 0);
+    note_cached(response["url"]);
+  };
+
+  if(err)
+    debug_message(`http cache: ${err}\n`);
+}
+```
+
+If a handler only needs a delay rather than real async work, `await
+call_out_walltime(n)` inside it is the non-blocking pause; do not use a
+callback-form `call_out`, which is not awaitable.

@@ -114,6 +114,12 @@ this driver and preferred where they read better:
   differ only on `0`
 - **Default-argument closures** — `varargs int f(int x: (: 1 :))`; the closure is
   resolved at the call boundary, the body sees the value
+- **async / await / acatch and `promise`** — `async int f()` is typed
+  `promise<int>` at every call site; `await` suspends without blocking the
+  driver, `acatch` is the suspension-safe `catch`. Applies and command entry
+  points must **not** be async — the driver reads their return immediately, so
+  a sync entry point calls an async helper without awaiting it. See the
+  `/lpc-coding-style` skill
 
 ### Common LPC Data Types
 
@@ -500,8 +506,10 @@ restated so they hold even when that file is not read.
 - **Ground driver claims in the driver source.** Any claim that FluffOS will
   raise an error, fail to resolve a call, crash, truncate, coerce, or reject a
   path is a claim about `fluffos/fluffos` — read the implementing code rather
-  than assuming C defaults. Oxidus tracks upstream HEAD, so current driver
-  behaviour is authoritative and recent efuns are not suspect for being recent.
+  than assuming C defaults. There is no pinned driver version — the image is
+  built from whatever upstream FluffOS was at build time — so the driver in
+  front of you is authoritative and recent efuns are not suspect for being
+  recent.
 
 ## Additional Resources
 
