@@ -18,7 +18,7 @@
 #include <rooms.h>
 #include <runtime_config.h>
 #include <signal.h>
-#include <type.h>
+#include <driver/type.h>
 #include <custom_type.h>
 #include <etc.h>
 
