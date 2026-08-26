@@ -16,6 +16,25 @@
     one whose fate is already committed to a pending adoption (see
     promise_resolve(3)).
 
+    It is likewise an error to settle a promise returned by an `async`
+    function. That promise is the function body's result channel: the body
+    settles it when it returns or fails, and letting anything else settle it
+    first would silently discard whatever the body goes on to return. It
+    would not stop the body either — it keeps running to completion — so it
+    is not a cancellation primitive.
+
+    That refusal applies to `async` function promises only. The promises the
+    driver hands out for a pending operation — `call_out(delay)`,
+    async_read(3)/async_write(3)/async_getdir(3), and the promise
+    promise_then(3) returns — stay settleable, which is what makes a
+    consumer-side timeout possible (the wrapper idiom is in
+    [the async execution model](../../concepts/general/async)). Settling one of those first
+    does mean the driver's own result is dropped when it arrives, silently:
+    a pre-settled async_read(3) promise discards the file contents, and a
+    pre-resolved one turns a read failure into an apparent success. Settle a
+    promise you did not create only when you mean to stop caring about its
+    result.
+
     A rejected promise whose rejection is never observed (no handler
     attached, result never read) is reported to the debug log when it is
     deallocated. The report names where the promise was REJECTED --
