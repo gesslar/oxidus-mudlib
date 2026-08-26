@@ -22,5 +22,9 @@
     `promise_resolve(p, ...)` or `promise_reject(p, ...)` errors even
     though `p` itself has not settled yet.
 
+    It is likewise an error to settle a promise returned by an `async`
+    function — that promise belongs to the function body. See
+    promise_reject(3).
+
 ### SEE ALSO
     promise_create(3), promise_reject(3), promise_then(3)
