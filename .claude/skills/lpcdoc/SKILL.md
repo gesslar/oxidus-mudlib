@@ -340,6 +340,32 @@ macros as the target type:
 int is_user(object ob);
 ```
 
+#### Predicates are what narrow a documented union
+
+A `mixed` parameter whose real contract is a union should be annotated
+as that union, even though the signature says `mixed`:
+
+```c
+/**
+ * @param {string | buffer} str - The header bytes or text.
+ */
+protected nomask mapping parse_headers(mixed str, int keep_remainder) {
+  if(bufferp(str))
+    str = to_string(str);
+```
+
+The annotation is the whole reason the language server can check the
+body at all, and it is worth writing. What collapses the union back to
+a single type afterwards is the *guard* — narrowing flows from the
+predicate on `bufferp`, not from the annotation. Both the guarded
+branch and the code after the `if` depend on it.
+
+So if an honest union annotation makes a function's own body start
+reporting errors, suspect the guard efun's declaration before you
+weaken the annotation. Widening to `{mixed}` silences the report by
+discarding the contract, which is the wrong trade — the fix belongs in
+the efun stub that is missing its `@returns {arg is type}`.
+
 ### `@throws`
 
 Documents conditions that cause a `throw()`. A `throw()` is a soft
@@ -844,6 +870,10 @@ For values that could be multiple types:
 
 Example: `{int | string}` for int or string
 
+A union member may be a literal rather than a type. For the "or 0 on
+failure" idiom, that distinction decides whether callers type-check —
+see [Null (`0`)](#null-0).
+
 ### Function Types
 
 For function references with signature:
@@ -878,6 +908,43 @@ multiple possible return types:
 
 ```c
 @returns {int | undefined} The score, or undefined if not found.
+```
+
+#### Null (`0`)
+
+`0` is the null value of every reference type in LPC — a function
+declared `mapping` signals failure by returning `0`, because the
+language has no separate null literal. Document that with the literal
+type `0`, never with `int`:
+
+```c
+@returns {mapping | 0} The parsed headers, or 0 if invalid.
+```
+
+The literal is load-bearing. `{mapping | int}` says "a mapping or any
+integer", so every caller that stores the result is flagged — `int` is
+not assignable to `mapping`. `{mapping | 0}` type-checks, because
+literal `0` *is* assignable to the reference types. Only `0` is:
+`{mapping | 5}` is rejected exactly like `{mapping | int}`.
+
+Parameters that accept an absent value take the same form:
+
+```c
+@param {string | 0} addr - The resolved address, or 0 on failure.
+```
+
+Pick between `0` and [`undefined`](#undefined) by what the function
+literally does. `return 0;` is `0`; `return undefined;` — or `null` or
+`nullzilla`, all three being `([])[0]` from `<global.h>` — is
+`undefined`. `nullp()` tells the two apart at runtime, so a caller that
+tests with `nullp()` behaves differently depending on which one the
+function actually returns. The spellings are not interchangeable.
+
+Reserve plain `int` for values that are genuinely numeric across their
+whole range, including sentinels that are real integers:
+
+```c
+@returns {int} The marker offset, or -1 when absent.
 ```
 
 #### Any Type (`*`)
