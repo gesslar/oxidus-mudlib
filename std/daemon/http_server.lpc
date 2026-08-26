@@ -19,6 +19,9 @@
 inherit STD_DAEMON;
 inherit EXT_HTTP;
 
+#define MAX_REQUEST_BYTES 1048576
+#define REQUEST_TIMEOUT 30
+
 // Prototypes
 protected nomask void send_http_response(int fd, mapping client);
 protected nomask void close_client_connection(int fd);
@@ -134,6 +137,7 @@ protected nomask void on_socket_listen(int fd) {
         "request": ([ ]),
         "response": ([ ]),
     ]),
+    "timeout": call_out("socket_shutdown", REQUEST_TIMEOUT, client_fd),
   ]);
 
   _log(2, "New connection from %s %d", client_host, client_port);
@@ -211,6 +215,7 @@ private nomask void remove_client(int fd) {
   if(!client)
     return;
 
+  remove_call_out(client["timeout"]);
   map_delete(clients, fd);
   call_if(this_object(), "http_handle_shutdown", client);
 }
@@ -235,6 +240,17 @@ protected nomask void socket_read(int fd, buffer incoming) {
 
   if(!client) {
     _log(0, "Unknown client: %d", fd);
+    return;
+  }
+
+  if(sizeof(incoming) + sizeof(client["buffer"] || "") > MAX_REQUEST_BYTES) {
+    _log(1, "Request on socket %d exceeded %d bytes", fd, MAX_REQUEST_BYTES);
+    client["http"]["request"] = ([ "headers": ([ ]) ]);
+    client["http"]["response"] = ([
+      "status": HTTP_STATUS_CONTENT_TOO_LARGE,
+      "content-type": CONTENT_TYPE_TEXT_PLAIN,
+    ]);
+    send_http_response(fd, client);
     return;
   }
 
@@ -341,6 +357,7 @@ protected nomask void send_http_response(int fd, mapping client) {
       case HTTP_STATUS_FORBIDDEN:
       case HTTP_STATUS_NOT_FOUND:
       case HTTP_STATUS_METHOD_NOT_ALLOWED:
+      case HTTP_STATUS_CONTENT_TOO_LARGE:
       case HTTP_STATUS_INTERNAL_SERVER_ERROR:
       case HTTP_STATUS_NOT_IMPLEMENTED:
       case HTTP_STATUS_BAD_GATEWAY:
