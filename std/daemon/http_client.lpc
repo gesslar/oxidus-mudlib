@@ -1,12 +1,10 @@
 /**
  * @file /std/daemon/http_client.lpc
- * This is a base HTTP client daemon that is intended to be
- * inherited by other objects to create a custom HTTP client. It
- * provides the ability to send HTTP requests to a server and
- * receive responses.
+ * Inheritable asynchronous HTTP client with DNS resolution, TLS, redirects,
+ * response framing, temporary body caching, and lifecycle callbacks.
  *
  * @created 2024-07-05 - Gesslar
- * @last_modified 2024-12-07 - Gesslar
+ * @last_modified 2026-08-26 - Gesslar
  *
  * @history
  * 2024-07-05 - Gesslar - Created
@@ -16,6 +14,7 @@
  *                        chunked transfer encoding and content-length
  *                        scenarios. Cleaned up response processing logic for
  *                        better clarity and reliability.
+ * 2026-08-26 - Gesslar - Hardened request lifecycles and documented the API.
  */
 
 // This is a base HTTP client daemon that is intended to be inherited by other
@@ -39,6 +38,7 @@ inherit EXT_HTTP;
 varargs private nomask void http_connect(mapping request);
 private nomask void process_redirect(int fd, mapping server);
 private nomask void process_response(int fd, mapping server);
+private nomask string decode_chunked_body(string body);
 private nomask mixed send_http_request(int fd, mapping server);
 protected nomask void shutdown_socket(int fd);
 private nomask void socket_resolve(string host, string addr, int key);
@@ -48,6 +48,7 @@ private nosave mapping servers = ([ ]);
 private nosave mapping resolve_keys = ([ ]);
 private nosave int max_redirects = 5;
 private nosave mapping default_headers;
+private nosave int request_serial;
 
 void mudlib_setup() {
   set_log_level(0);
@@ -70,9 +71,20 @@ void post_setup_1() {
   if(get_option("deflate"))
     default_headers["Accept-Encoding"] = "deflate";
   else
-    default_headers["Accept-Encoding"] = "identify";
+    default_headers["Accept-Encoding"] = "identity";
 }
 
+/**
+ * Starts an asynchronous HTTP request.
+ *
+ * @param {string} url - The absolute HTTP or HTTPS URL.
+ * @param {string} method - The HTTP request method.
+ * @param {mapping} [headers] - Additional request headers.
+ * @param {string} [body] - The optional request body.
+ * @returns {mapping | undefined} A copy of the request state, or undefined if
+ *                                the URL cannot be parsed.
+ * @errors If the URL or method is not a string.
+ */
 varargs nomask mapping http_request(string url, string method, mapping headers, string body) {
   mapping parsed_url;
   float now = time_frac();
@@ -93,12 +105,18 @@ varargs nomask mapping http_request(string url, string method, mapping headers, 
   parsed_url["headers"] = headers;
   parsed_url["body"] = body;
   parsed_url["start_time"] = now;
+  parsed_url["id"] = ++request_serial;
 
   call_out_walltime((: http_connect, parsed_url :), 0.01);
 
   return copy(parsed_url);
 }
 
+/**
+ * Creates a socket and begins resolving a request host.
+ *
+ * @param {mapping} request - The prepared request state.
+ */
 varargs private nomask void http_connect(mapping request) {
   int fd, key;
   string host;
@@ -116,6 +134,15 @@ varargs private nomask void http_connect(mapping request) {
 
   if(fd < 0) {
     _log(0, "Unable to create socket: %s", socket_error(fd));
+    server = ([
+      "state": HTTP_STATE_ERROR,
+      "error": socket_error(fd),
+      "request": request,
+      "redirects": request["redirects"] || 0,
+      "response": ([]),
+    ]);
+    call_if(this_object(), "http_handle_connection_error", server);
+    call_if(this_object(), "http_handle_shutdown", server);
     return;
   }
 
@@ -127,7 +154,7 @@ varargs private nomask void http_connect(mapping request) {
   server = ([
     "state" : HTTP_STATE_RESOLVING,
     "request" : request,
-    "redirects" : 0,
+    "redirects" : request["redirects"] || 0,
   ]);
 
   _log(4, "Server after creating socket and options: %O", server);
@@ -140,6 +167,13 @@ varargs private nomask void http_connect(mapping request) {
   _log(2, "Resolving host: %s", host);
 }
 
+/**
+ * Handles completion of an asynchronous hostname lookup.
+ *
+ * @param {string} host - The requested hostname.
+ * @param {string | 0} addr - The resolved address, or 0 on failure.
+ * @param {int} key - The resolver request key.
+ */
 nomask void socket_resolve(string host, string addr, int key) {
   int fd, port, result;
   mapping server;
@@ -208,6 +242,11 @@ nomask void socket_resolve(string host, string addr, int key) {
   call_if(this_object(), "http_handle_connected", server);
 }
 
+/**
+ * Handles a socket closed by its remote peer.
+ *
+ * @param {int} fd - The closed socket descriptor.
+ */
 nomask void socket_closed(int fd) {
   mapping server = servers[fd];
 
@@ -223,6 +262,11 @@ nomask void socket_closed(int fd) {
   shutdown_socket(fd);
 }
 
+/**
+ * Finalises response processing, closes a socket, and dispatches shutdown.
+ *
+ * @param {int} fd - The socket descriptor to shut down.
+ */
 nomask void shutdown_socket(int fd) {
   mapping server = servers[fd];
   int result;
@@ -239,16 +283,29 @@ nomask void shutdown_socket(int fd) {
     return;
 
   cache_file = server["cache"];
-  fs = file_size(cache_file);
+  fs = stringp(cache_file) ? file_size(cache_file) : -1;
   if(fs == -1) {
     _log(2, "Cache file does not exist: %s", cache_file);
+    server["response"] = server["response"] || ([]);
+    server["response"]["body"] = "";
+    if(server["state"] != HTTP_STATE_ERROR)
+      server["state"] = HTTP_STATE_COMPLETE;
   } else if(fs == 0) {
     _log(2, "Cache file is empty: %s", cache_file);
+    server["response"]["body"] = "";
+    if(server["state"] != HTTP_STATE_ERROR)
+      server["state"] = HTTP_STATE_COMPLETE;
   } else {
     _log(2, "Total received: %d", server["received_total"]);
     _log(2, "Body received: %d", server["received_body"]);
 
-    catch(process_response(fd, server));
+    string err = catch(process_response(fd, server));
+    if(err) {
+      server["state"] = HTTP_STATE_ERROR;
+      server["error"] = err;
+      servers[fd] = server;
+      _log(0, "Unable to process response: %O", err);
+    }
   }
 
   now = time_frac();
@@ -256,7 +313,7 @@ nomask void shutdown_socket(int fd) {
   duration = (now - started);
 
   received_total = to_float(server["received_total"]);
-  speed = received_total / duration;
+  speed = duration > 0.0 ? received_total / duration : 0.0;
 
   _log(3, "Transfer size: %d bytes", server["received_total"]);
   _log(3, "Transfer time: %.2f seconds", duration);
@@ -273,6 +330,15 @@ nomask void shutdown_socket(int fd) {
   map_delete(servers, fd);
 }
 
+/**
+ * Consumes response bytes received from a connected server.
+ *
+ * The method incrementally parses the status line and headers, follows
+ * redirects, and caches entity-body bytes for processing at shutdown.
+ *
+ * @param {int} fd - The server socket descriptor.
+ * @param {buffer} incoming - The newly received response bytes.
+ */
 nomask void socket_read(int fd, buffer incoming) {
   mapping server = servers[fd];
   int status_code;
@@ -293,7 +359,7 @@ nomask void socket_read(int fd, buffer incoming) {
   } else
     buf = incoming;
 
-  server["received_total"] += sizeof(buf);
+  server["received_total"] += sizeof(incoming);
   // Process headers if not done yet
   server["response"] = server["response"] || ([]);
   _log(4, "Server[response]: %O", server["response"]);
@@ -375,6 +441,11 @@ nomask void socket_read(int fd, buffer incoming) {
   cache_response(server["cache"], buf);
 }
 
+/**
+ * Handles a socket becoming ready for request transmission.
+ *
+ * @param {int} fd - The ready socket descriptor.
+ */
 protected nomask void socket_ready(int fd) {
   mapping server = servers[fd];
   mixed result;
@@ -406,13 +477,18 @@ protected nomask void socket_ready(int fd) {
   }
 }
 
+/**
+ * Decodes and stores the cached response entity body.
+ *
+ * @param {int} fd - The server socket descriptor.
+ * @param {mapping} server - The connection state.
+ */
 private nomask void process_response(int fd, mapping server) {
   string file = server["cache"];
   mixed response = "";
   string err;
   buffer cache;
   string buf;
-  string rn = "\\r\\n", capture = "("+rn+")", replace = "";
 
   _log(2, "Processing response: %s", file);
 
@@ -424,79 +500,21 @@ private nomask void process_response(int fd, mapping server) {
   _log(3, "Last 10 bytes of converted cache: %O", identify(buf[<10..]));
 
   // Chunked transfer encoding
-  if(server["response"]["headers"]["transfer-encoding"] == "chunked") {
-    mixed *assoc;
-    string *parts;
-    int *indices;
-    int i, sz;
-    int end_found;
-    int total_size;
-
-    _log(2, "Chunked transfer encoding found");
-
-    assoc = pcre_assoc(buf, ({
-      "(\\r\\n0\\r\\n\\r\\n)",      // End of chunked transfer encoding
-      "([0-9a-fA-F]+\\r\\n)",       // Chunk size
-      "(\\r\\n)"                    // New line between chunks
-    }), ({ 1, 2, 3 }));
-
-    parts = assoc[0];
-    indices = assoc[1];
-
-    total_size = 0;
-    for(i = 0, sz = sizeof(parts); i < sz; i++) {
-      // Regular old stuff. Nothing to see here.
-      if(indices[i] == 0)
-        continue;
-
-      switch(indices[i]) {
-        case 1: // End of chunked transfer encoding
-          end_found = 1 ; // We done here.
-          break;
-        case 2: { // Get the chunk size and add it to the total size
-          int chunk_size;
-          sscanf(parts[i], "%x", chunk_size);
-          total_size += chunk_size;
-          break;
-        }
-        case 3: // New line between chunks
-          break ; // will be replaced with "" after this switch
-      }
-
-      parts[i] = "";
-    }
-
-    response = implode(parts, "");
-
-    _log(3, "Total size of chunked response: %d", total_size);
-    _log(3, "Size of response: %d", sizeof(buf));
-  }
+  if(server["response"]["headers"]["transfer-encoding"] == "chunked")
+    response = decode_chunked_body(buf);
   // Content-Length
   else if(server["response"]["headers"]["content-length"]) {
     int expected = server["response"]["headers"]["content-length"];
-    int sz;
-
     _log(2, "Content-Length: %d", expected);
 
-    cache = read_cache(file);
-    buf = to_string(cache);
-    sz = sizeof(cache);
-
-    _log(3, "Do we have any new lines to strip? %d", pcre_match(buf, rn));
-    if(pcre_match(buf, rn)) {
-      _log(2, "Size of response before removing new lines: %d", sz);
-      while(pcre_match(buf, rn)) {
-        _log(2, "> Substituting new line with empty string");
-        buf = pcre_replace(buf, capture, ({ replace }));
-      }
+    if(sizeof(cache) != expected) {
+      server["state"] = HTTP_STATE_ERROR;
+      server["error"] = sprintf(
+        "Response body size %d does not match Content-Length %d",
+        sizeof(cache), expected,
+      );
+      _log(0, "%s", server["error"]);
     }
-
-    if(sz == expected) {
-      _log(2, "Content-Length: %d", expected);
-      _log(2, "Size of response after removing new lines: %d", sizeof(cache));
-      call_if(this_object(), "http_handle_response", server);
-    } else
-      _log(2, "Size of response (%d) does not match Content-Length (%d)", sizeof(buf), expected);
 
     response = buf;
   }
@@ -520,22 +538,88 @@ private nomask void process_response(int fd, mapping server) {
     }
   };
 
-  server["response"]["body"] = response;
+  server["response"]["body"] = parse_body(
+    response,
+    server["response"]["headers"]["content-type"],
+  );
+  server["state"] = server["state"] == HTTP_STATE_ERROR
+    ? HTTP_STATE_ERROR
+    : HTTP_STATE_COMPLETE;
   servers[fd] = server;
+  call_if(this_object(), "http_handle_response", server);
 }
 
+/**
+ * Decodes an HTTP chunked-transfer body.
+ *
+ * @param {string} body - The encoded body.
+ * @returns {string} The decoded entity body.
+ * @throws If the chunk framing is incomplete or malformed.
+ */
+private nomask string decode_chunked_body(string body) {
+  string decoded = "";
+  int cursor;
+
+  while(1) {
+    int line_end = find_marker(body[cursor..], "\r\n");
+    int chunk_size;
+    string size_line;
+
+    if(line_end == -1)
+      throw("Incomplete chunk size line.");
+
+    line_end += cursor;
+    size_line = body[cursor..line_end-1];
+    if(sscanf(size_line, "%x", chunk_size) != 1 || chunk_size < 0)
+      throw("Invalid chunk size.");
+
+    cursor = line_end + 2;
+    if(chunk_size == 0)
+      return decoded;
+
+    if(cursor + chunk_size + 2 > sizeof(body) ||
+       body[cursor+chunk_size..cursor+chunk_size+1] != "\r\n")
+      throw("Incomplete chunk data.");
+
+    decoded += body[cursor..cursor+chunk_size-1];
+    cursor += chunk_size + 2;
+  }
+}
+
+/**
+ * Follows a redirect while preserving the original request identity.
+ *
+ * Authentication is removed when the redirect changes origin, and a 303
+ * response is converted to a bodyless GET request.
+ *
+ * @param {int} fd - The redirecting socket descriptor.
+ * @param {mapping} server - The current connection state.
+ */
 private nomask void process_redirect(int fd, mapping server) {
   mapping processed_url;
   string location;
-  mapping headers;
+  mapping request;
+  int status_code;
 
   _log(2, "Processing redirect");
 
   location = server["response"]["headers"]["location"];
   if(!stringp(location) || !strlen(location)) {
     _log(0, "No location header found in redirect response");
+    server["state"] = HTTP_STATE_ERROR;
+    server["error"] = "Redirect response did not include a Location header.";
+    servers[fd] = server;
+    shutdown_socket(fd);
     return;
   }
+
+  if(location[0] == '/')
+    location = sprintf("%s://%s:%d%s",
+      server["request"]["protocol"],
+      server["request"]["host"],
+      server["request"]["port"],
+      location,
+    );
 
   processed_url = parse_url(location);
 
@@ -545,24 +629,53 @@ private nomask void process_redirect(int fd, mapping server) {
     return;
   }
 
-  shutdown_socket(fd);
+  if(server["redirects"] >= max_redirects) {
+    server["state"] = HTTP_STATE_ERROR;
+    server["error"] = "Maximum redirect count exceeded.";
+    servers[fd] = server;
+    shutdown_socket(fd);
+    return;
+  }
+
+  socket_close(fd);
+  map_delete(servers, fd);
 
   _log(1, "Redirecting to: %s", location);
 
-  headers = server["headers"];
-  if(!headers)
-    headers = ([]);
+  request = copy(server["request"]);
+  foreach(string key, mixed value in processed_url)
+    request[key] = value;
 
-  headers["X-Redirect-Count"] = server["redirects"] + 1;
+  request["url"] = location;
+  request["redirects"] = server["redirects"] + 1;
+  request["headers"] = copy(server["request"]["headers"] || ([]));
+  if(processed_url["host"] != server["request"]["host"] ||
+     processed_url["port"] != server["request"]["port"] ||
+     processed_url["secure"] != server["request"]["secure"]) {
+    foreach(string key in keys(request["headers"])) {
+      if(lower_case(key) == "authorization")
+        map_delete(request["headers"], key);
+    }
+  }
 
-  http_request(
-    location,
-    server["request"]["method"],
-    headers,
-    server["request"]["body"],
-  );
+  request["headers"]["X-Redirect-Count"] = request["redirects"];
+
+  status_code = server["response"]["status"]["code"];
+  if(status_code == 303) {
+    request["method"] = "GET";
+    request["body"] = 0;
+  }
+
+  call_out_walltime((: http_connect, request :), 0.01);
 }
 
+/**
+ * Serialises and writes an HTTP/1.1 request to a connected socket.
+ *
+ * @param {int} fd - The connected socket descriptor.
+ * @param {mapping} server - The connection and request state.
+ * @returns {int | string} The socket result code, or an error message.
+ */
 private nomask mixed send_http_request(int fd, mapping server) {
   string request, body;
   mapping headers = server["request"]["headers"];
@@ -583,10 +696,17 @@ private nomask mixed send_http_request(int fd, mapping server) {
   method = upper_case(method);
 
   request = method + " " + path + " HTTP/1.1\r\n";
-  request += "Host: " + host + "\r\n";
+  request += "Host: " + host;
+  if(server["request"]["port"] != (server["request"]["secure"] ? 443 : 80))
+    request += ":" + server["request"]["port"];
 
-  headers = headers || ([ ]);
-  headers += default_headers;
+  request += "\r\n";
+
+  headers = copy(headers || ([]));
+  foreach(string key, string value in default_headers) {
+    if(nullp(headers[key]))
+      headers[key] = value;
+  }
 
   foreach(string key, string value in headers) {
     if(key != "Content-Type" && key != "Content-Length")
@@ -596,7 +716,7 @@ private nomask mixed send_http_request(int fd, mapping server) {
   body = server["request"]["body"];
 
   if(body) {
-    request += "Content-Length: " + strlen(body) + "\r\n";
+    request += "Content-Length: " + sizeof(to_binary(body)) + "\r\n";
     if(headers["Content-Type"]) {
       string content_type = headers["Content-Type"];
       string *matches, type, subtype, charset;
@@ -645,11 +765,22 @@ private nomask mixed send_http_request(int fd, mapping server) {
   return result;
 }
 
+/**
+ * Sets the maximum number of redirects followed for a request.
+ *
+ * @param {int} max - The redirect limit.
+ * @returns {int} The configured redirect limit.
+ */
 public nomask int set_max_redirects(int max) {
   max_redirects = max;
   return max_redirects;
 }
 
+/**
+ * Queries the maximum number of redirects followed for a request.
+ *
+ * @returns {int} The configured redirect limit.
+ */
 public nomask int query_max_redirects() {
   return max_redirects;
 }

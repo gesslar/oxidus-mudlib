@@ -1,3 +1,10 @@
+/**
+ * @file /include/http.h
+ *
+ * Defines shared HTTP response statuses, connection states, redirect codes,
+ * and media types used by the HTTP client and server implementations.
+ */
+
 #ifndef HTTP_CONSTANTS_H
 #define HTTP_CONSTANTS_H
 
