@@ -30,6 +30,8 @@ Consult when the work touches them:
 - **`/lpml`** — LPML data-file format (`.lpml`)
 - **`/driver-overrides`** — Efuns Oxidus overrides (`this_body`, `exec`,
   `set_privs`, `typeof`, …) — read before assuming stock FluffOS behaviour
+- **`/async-promises`** — `async`/`await`/`acatch`, the `promise` type, the
+  combinators, cancellation, scheduling — read before writing anything `async`
 - **`/testing`** — Writing and running tests under `/tests/`
 - **`/mud-telnet`** — Connecting to the running MUD for in-game verification
 - **`/lpc-review`** — The review standard: scope, what qualifies as a finding,
@@ -112,14 +114,16 @@ this driver and preferred where they read better:
 - **Optional chaining** — `?.` is read-only (illegal as an lvalue)
 - **Nullish coalescing** — `??` / `??=` fire on genuine undefined; `||` and `??`
   differ only on `0`
-- **Default-argument closures** — `varargs int f(int x: (: 1 :))`; the closure is
-  resolved at the call boundary, the body sees the value
+- **Default-argument functionals** — `varargs int f(int x: (: 1 :))`; the
+  functional is resolved at the call boundary, the body sees the value
 - **async / await / acatch and `promise`** — `async int f()` is typed
   `promise<int>` at every call site; `await` suspends without blocking the
   driver, `acatch` is the suspension-safe `catch`. Applies and command entry
   points must **not** be async — the driver reads their return immediately, so
-  a sync entry point calls an async helper without awaiting it. See the
-  `/lpc-coding-style` skill
+  a sync entry point calls an async helper without awaiting it. Promises are
+  first-class and combinable (`promise_all`, `promise_race`, …) and an async
+  body can be asked to give up with `promise_cancel()`. Sync is the default,
+  not the fallback. See the `/async-promises` skill
 
 ### Common LPC Data Types
 
@@ -453,7 +457,7 @@ classes require `inherit`. For shared constants, expose a daemon getter.
 - Tests assert the ideal and fail loudly on real defects — cleanup helpers must
   not paper over bugs
 - See the `/testing` skill before writing tests; LPC quirks (`0` vs `undefined`,
-  lambda capture limits) bite here
+  functional binding limits) bite here
 
 ### Common Commands (for reference)
 
@@ -558,10 +562,11 @@ no longer a reference for how Oxidus is built. LPUniversity is available from
     never valid variable names
 13. **Prefer `pointerp()`** over `arrayp()` — aliases, but `pointerp` is the
     project convention
-14. **Guard closures with `valid_function()`**, not bare `functionp()`, which is
-    truthy on owner-destructed closures
-15. **Closure captures**: in `(: :)`, `$N` is a call-time positional argument
-    while `$(EXPR)` is a lexical capture at creation — `$(2)` ≠ `$2`
+14. **Guard functionals with `valid_function()`**, not bare `functionp()`, which
+    is truthy on owner-destructed functionals
+15. **Functional bindings**: FluffOS has functionals, not closures — nothing
+    captures the enclosing scope. In `(: :)`, `$N` is a call-time positional
+    argument while `$(EXPR)` is a value bound at creation — `$(2)` ≠ `$2`
 
 ## Verification
 

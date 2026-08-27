@@ -492,3 +492,9 @@ and call the helper without awaiting — see the `command-creation` skill for wh
 The older `delay_act(action, delay, assemble_call_back(...))` form still works
 and several spells use it; the difference is that the async form keeps `tp` and
 `victim` in lexical scope instead of threading them through the callback array.
+
+Two interruptions exist and they are not interchangeable. `cancel_act()`
+interrupts **the act**, fulfilling the promise with `0` so the awaiting body
+handles it normally — that is the one the game world uses. `promise_cancel()`
+interrupts **the awaiting body**, raising at its next `await`. See the
+`async-promises` skill.

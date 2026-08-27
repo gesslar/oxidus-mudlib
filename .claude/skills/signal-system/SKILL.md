@@ -376,3 +376,6 @@ Two consequences follow from the promise being discarded:
 Everything a handler registers before its first `await` is in place by the time
 `emit()` returns, so synchronous setup at the top of an async handler is still
 ordered as you would expect.
+
+See the `async-promises` skill for the model behind this — the entry-point
+boundary, unhandled rejections, and how to break long handler work into pieces.

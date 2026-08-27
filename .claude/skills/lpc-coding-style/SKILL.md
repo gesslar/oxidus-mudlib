@@ -316,10 +316,36 @@ int query_value() {
 
 ## Error Handling
 
-- Use `catch` blocks for error handling where appropriate.
-- Consider returning error messages or error codes rather than throwing errors when possible.
-- Use `error()` for fatal conditions that should stop execution.
-- Log errors with appropriate information for later debugging.
+Prefer returning a value — a message, `undefined`, `0` — when the condition is
+ordinary control flow. When you must raise, LPC has two mechanisms and they are
+not interchangeable. Choose by whether the condition is a **bug** or an
+**outcome**.
+
+- **`error()` — a hard error.** Contract violations and impossible states: a
+  bad argument, a missing object the caller promised. Prefer `assert_arg()` for
+  argument validation; it is a hard error too. Document with `@errors`.
+- **`throw(value)` — a soft error.** Conditions the caller is expected to
+  handle: a lookup that misses, a timeout, a race you meant to lose. It carries
+  an arbitrary value rather than a message, so **that value is part of your
+  API** — prefer a `#define`d constant over a prose string a caller would have
+  to match on. Document with `@throws`.
+
+Two consequences decide most cases:
+
+- **A hard error is loud even when caught.** The driver builds a full stack
+  trace and hands it to the master's `error_handler()` with `caught = 1`, and
+  Oxidus writes it to `/log/catch` *and* notifies every online developer. A
+  caught `throw()` never reaches `error_handler()` at all. Raising a routine,
+  handled outcome with `error()` therefore pages the whole team.
+- **The `*` prefix belongs to the driver.** It prepends one to every `error()`
+  — `simulate.cc`, "all system errors get a * at the start" — so a leading `*`
+  means *this came from the error machinery*. Never hand-write one onto a
+  thrown value; it misrepresents a soft error as a system fault.
+
+Use `catch` to handle either, or `acatch` in code that may suspend, and log with
+enough information to debug from. See the `async-promises` skill for how this
+plays out across a promise boundary, where the choice is made in the body and
+the caller cannot change it.
 
 ## Type Handling
 
@@ -450,14 +476,20 @@ needs without adding a redundant doc comment.
 - Use call_out, or call_out_walltime for delayed execution rather than busy
   loops. For work that must be broken into pieces — a crawl, a sweep, a long
   build — prefer an `async` function with `await async_yield()` over a chain
-  of call_outs that re-arm themselves; see **Async, await, acatch** below.
+  of call_outs that re-arm themselves; see the `async-promises` skill.
 - Prefer filter/map/member_array over manual iteration where appropriate.
 
 ## Async, await, acatch
 
+The full model — promises, the combinators, cancellation, scheduling and the
+ways async code fails — lives in the `async-promises` skill. What follows is
+only how it is *written*.
+
 `async` is a function modifier and goes where any other modifier goes. It does
 not change the declared return type — `async int f()` still checks `return 1;`
-against `int` — but every call site receives `promise<int>` instead.
+against `int` — but every call site receives `promise<int>` instead. A prototype
+must agree with its definition about `async`, and an override with the function
+it overrides.
 
 ```lpc
 private async void collect_dir();          // prototype must agree about async
@@ -484,42 +516,13 @@ mixed err = acatch {
 mixed err = acatch(await tp->async_act("punch", 2.0));
 ```
 
-### Rules the compiler enforces
+`await` and `acatch` are legal **only directly inside an `async` body** — never
+in a `(: :)` functional or an anonymous function, and never inside `catch(...)`
+or `time_expression(...)`. An apply, a command entry point, a verb function or
+anything else whose return value a caller reads immediately must **not** be
+`async`; have it call an async function instead.
 
-- `await` and `acatch` are legal **only directly inside an `async` body** —
-  never in a `(: :)` functional or an anonymous function, even one written
-  inside an async function.
-- `await` is not allowed inside `catch(...)` or `time_expression(...)`. Use
-  `acatch`.
-- **An apply must not be `async`.** Have the apply call an async function
-  instead. This extends past the compiler's check to anything whose return
-  value a caller reads immediately — command entry points, verb functions,
-  test functions.
-
-### Rules the runtime enforces
-
-- An `await` cannot suspend inside a **`foreach` body** (the loop pins an
-  lvalue slot for its variable). Use an indexed `for` or a `while` when the
-  body suspends. Compound assignment is fine — `arr[i] += await p` parks
-  normally.
-- The `foreach` **header** is fine, because it is evaluated before the loop
-  pins anything — `foreach(int n in await make_list())` works (verified,
-  not merely permitted by the docs).
-
-### Choosing the delay
-
-```lpc
-await async_yield();              // zero delay; let the event loop have a pass
-await call_out_walltime(0.05);    // real elapsed time; rate limiting
-await call_out(2);                // same, quantised to the gametick
-```
-
-`async_yield()` is the cooperative preemption point: it costs no wall-clock
-time but lets the driver serve players between iterations, and each resumption
-is metered with a fresh evaluation-cost budget. Reach for the `call_out` forms
-only when you want an actual delay.
-
-Note the callback forms are **not** awaitable. `call_out("fn", 1)` still
-returns an int handle, and `await` of a non-promise passes the value through
-with no suspension — so `await call_out("fn", 1)` compiles, returns instantly,
-and does nothing. Only the delay-only forms return a promise.
+Reach for `async` when a function must suspend without blocking the driver, or
+when long work needs a fresh evaluation-cost budget per piece. Sync is the
+default, not the fallback — see the `async-promises` skill before writing
+either.
