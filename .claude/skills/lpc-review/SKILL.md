@@ -55,7 +55,7 @@ Findings are defects in behaviour, traced to a specific path:
   cannot be reached.
 - A dereference of null (`nullp`) or a destructed object on a path that
   actually occurs.
-- Invocation of a closure that may be invalid — see `valid_function()` below.
+- Invocation of a functional that may be invalid — see `valid_function()` below.
 - A caller whose contract this change broke.
 - Missing permission or input validation ahead of a sensitive operation.
 - A reserved type word (`buffer`, `function`, `class`, `mapping`, `object`,
@@ -162,10 +162,11 @@ Duck-typed calls across mixed inventories are a normal idiom, so an unguarded
 `->` is not a crash. A `function_exists()` guard is meaningful only where the
 code must distinguish "absent" from a legitimately returned `0`.
 
-**Closures.** In `(: :)`, `$N` is a call-time positional argument and `$(EXPR)`
-is a value captured lexically at creation; `$(2)` is not `$2`. Guard invocation
+**Functionals.** FluffOS has functionals, not closures — nothing captures the
+enclosing scope. In `(: :)`, `$N` is a call-time positional argument and
+`$(EXPR)` is a value bound at creation; `$(2)` is not `$2`. Guard invocation
 with `valid_function()` rather than bare `functionp()`, which stays truthy for
-closures whose owner has been destructed.
+functionals whose owner has been destructed.
 
 **Truthiness.** `""` and `0.0` are truthy in LPC; only `0`, null, and undefined
 are falsy. `if(!str)` does not catch an empty string. The `truthy()` / `falsy()`

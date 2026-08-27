@@ -117,7 +117,7 @@ varargs int use_skill(string skill, mixed mod_adjust) {
 
 `improve_skill(string skill, mixed potential_progress)`:
 
-1. Coerces `potential_progress` to a float — accepts omitted/null (defaults to 0.01 via FluffOS's `(: 0.01 :)` default-closure syntax, resolved at the call boundary), `float` (as-is), `int` (promoted), or a closure (evaluated against `this_object()`).
+1. Coerces `potential_progress` to a float — accepts omitted/null (defaults to 0.01 via FluffOS's `(: 0.01 :)` default-functional syntax, resolved at the call boundary), `float` (as-is), `int` (promoted), or a functional (evaluated against `this_object()`).
 2. Builds the dot-path's `chances` mapping: each node's weight is `(depth+1)*3`. For a 3-segment path: leaf 50%, middle 33%, root 17%.
 3. Picks one node via `element_of_weighted(chances)`.
 4. Applies `random_float(progress)` to that node's level.
@@ -296,4 +296,4 @@ NPCs interact with the skill system through the same code paths as players — n
 6. **`mod_adjust` is shared by every node on the path.** Bubble-up doesn't tighten the cap; the weighted pick alone biases toward leaves. Pick caps that are fine for parents too.
 7. **Boons apply to `query_skill` / `query_skill_level`, not the `_raw_` variants.** A boon on `"combat.melee.slashing"` changes what `query_skill_level` and `query_skill` return but never mutates the stored value.
 8. **Attributes are currently independent of skills.** They have their own boon class (`"attribute"`) and don't directly modify skill checks — they're tracked but not yet wired into formulas.
-9. **`(: 0.01 :)` default-arg closure is resolved at the call boundary.** When `improve_skill` is invoked without the second arg, the body sees `potential_progress = 0.01` (a float), not a closure. The `valid_function()` branch only fires when a caller explicitly passes a closure.
+9. **`(: 0.01 :)` default-arg functional is resolved at the call boundary.** When `improve_skill` is invoked without the second arg, the body sees `potential_progress = 0.01` (a float), not a functional. The `valid_function()` branch only fires when a caller explicitly passes a functional.

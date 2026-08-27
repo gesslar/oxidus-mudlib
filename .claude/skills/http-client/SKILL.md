@@ -325,3 +325,7 @@ protected async void http_handle_response(object server, mapping response) {
 If a handler only needs a delay rather than real async work, `await
 call_out_walltime(n)` inside it is the non-blocking pause; do not use a
 callback-form `call_out`, which is not awaitable.
+
+To fan several requests out and collect them, `promise_all_settled()` reports
+each outcome without one failure spoiling the rest. See the `async-promises`
+skill.

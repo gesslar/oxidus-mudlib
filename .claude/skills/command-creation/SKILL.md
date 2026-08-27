@@ -402,3 +402,7 @@ stack abilities and walking away would not interrupt.
 Note `condition_check()` in `STD_ACT` already rejects `is_acting()` with "You
 are already doing something." before `use()` runs, so do not repeat that check
 in your command.
+
+The `async-promises` skill covers the rest of the model — why the consumers, not
+the compiler, are what actually enforce this boundary, and everything a helper
+can do once it has suspended.

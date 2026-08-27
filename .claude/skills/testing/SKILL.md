@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Write and run unit tests for Oxidus. Covers the STD_TEST framework, test file layout under /tests/, area runners (STD_TEST_RUNNER), the runtests developer command, assertion macros, deep-equality via same(), sad-path testing via master test-mode suppression, pending() tests for known-broken boundaries, the @lpc-nocheck directive, and LPC quirks that bite tests (0 vs undefined, lambda capture limits, loose array compare).
+description: Write and run unit tests for Oxidus. Covers the STD_TEST framework, test file layout under /tests/, area runners (STD_TEST_RUNNER), the runtests developer command, assertion macros, deep-equality via same(), sad-path testing via master test-mode suppression, pending() tests for known-broken boundaries, the @lpc-nocheck directive, and LPC quirks that bite tests (0 vs undefined, functional binding limits, loose array compare).
 ---
 
 # Testing
@@ -255,18 +255,42 @@ ASSERT_NE(0, err);
 
 When describing return values in tests, comments, or docs, use **"returns undefined"** when that's what the function actually does — not "returns 0". They're both falsy but they're not interchangeable, and the precision matters when callers do `if(nullp(result))` vs `if(!result)`.
 
-### LPC's `function(...) {...}` is a lambda, not a closure
+### A functional cannot see an enclosing local at all
 
-The terminology in this project (and these docs) is **lambda**, not closure. The reason isn't pedantry — `function(...) {...}` literals in FluffOS LPC do **not** capture mutable outer locals for write. They're closer to lambdas: read-access to outer scope works, but you cannot assign to an outer local from inside the body.
+FluffOS has **functionals** and **anonymous functions**, not closures, and the difference is not pedantry — a closure captures its enclosing environment, and these capture nothing whatsoever. Not read-only, not by value: an enclosing local is simply **not in scope**, and touching one is a **compile error**, not a runtime surprise.
 
 ```c
-// Will NOT work — `count` cannot be written from inside the lambda
+// None of these compile:
 int count = 0;
 each(({ 1, 2, 3 }), function(int n) { count++; });
-ASSERT_EQ(3, count);  // count is still 0
+//                                    ^ Undefined variable 'count' + Illegal lvalue
+
+int x = 42;
+function f = function(int n) { return n + x; };  // Undefined variable 'x'
+function g = (: $1 + x :);                       // Illegal to use local variable in functional.
 ```
 
-**Workaround:** for accumulators, use `private nosave` file-level variables that you reset at the start of each test:
+Anything a functional needs must be **bound into it explicitly** — `$(EXPR)` at creation, or an argument at call time:
+
+```c
+int x = 42;
+
+f = (: $1 + $(x) :);                 // bound at creation
+evaluate(function(int n, int v) { return n + v; }, 1, x);   // bound as an argument
+```
+
+`$(EXPR)` is evaluated once, where the `(: :)` is written, and its **result** is stored in the functional. It is not a link to the variable: reassigning the local afterwards is invisible to the functional. It follows ordinary LPC assignment from there — **scalars are copied, containers are shared** — which decides how you accumulate.
+
+**Accumulating:** a bound `int` cannot work, because the copy is what gets incremented. A bound array or mapping can, because the functional holds the same structure the caller does:
+
+```c
+int *acc = ({ 0 });
+
+each(({ 1, 2, 3 }), (: $(acc)[0]++ :));
+ASSERT_EQ(3, acc[0]);                       // works -- shared structure
+```
+
+That keeps the accumulator local to the test. The alternative is a `private nosave` file-level variable reset at the top of each test, which is what to use when several tests or helpers need to see it:
 
 ```c
 private nosave int _count;
@@ -282,7 +306,7 @@ void setup() {
 }
 ```
 
-The arrow form `(: ... :)` is also a lambda with the same constraint, but it's terser for one-liners. Use whichever reads better.
+The arrow form `(: ... :)` has the same constraint but is terser for one-liners. Use whichever reads better.
 
 ### `ASSERT_EQ` arrays compare loosely by default
 
