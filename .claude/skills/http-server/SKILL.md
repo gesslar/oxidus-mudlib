@@ -240,10 +240,14 @@ Two things to know:
 
 - **The request timeout still applies.** A request has `REQUEST_TIMEOUT`
   seconds to be answered however long the handler suspends for, and when it
-  expires the connection is shut down out from under the handler. Guard the
-  post-`await` half of a slow handler — `send_http_response()` ignores an `fd`
-  whose connection has gone, but anything else you do there should not assume
-  the client is still there.
+  expires the connection is shut down out from under the handler.
+- **A late response is dropped, not misdelivered.** Every accepted connection
+  carries a serial, and `send_http_response()` checks it before writing, so a
+  handler that comes back after its client has gone cannot deliver its answer
+  to whoever now holds that descriptor. The same check guards the automatic
+  500. You still should not assume post-`await` that the client is there —
+  anything *else* the handler does is its own business — but the response
+  write itself is safe by construction rather than by discipline.
 - **`async` is a decision, not an upgrade.** A handler that only reads state
   already in memory should stay synchronous. See the `async-promises` skill.
 
