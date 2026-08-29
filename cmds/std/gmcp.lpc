@@ -123,7 +123,15 @@ private async void request_gui(/** @type {STD_PLAYER} */ object tp) {
             return;
         }
 
-        data = json_decode(response["body"]);
+        // The client decodes an application/json body already; this is the
+        // release mapping, not the text of one.
+        data = response["body"];
+
+        if(!mapp(data)) {
+            tell(tp, "Error fetching version information.\n");
+            return;
+        }
+
         version = data["tag_name"];
         foreach(mapping value in data["assets"]) {
             if(pcre_match(value["name"], "\\.mpackage")) {
