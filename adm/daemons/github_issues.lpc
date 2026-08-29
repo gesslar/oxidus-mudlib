@@ -198,7 +198,8 @@ void execute_callback(mapping request, mapping response) {
 }
 
 /**
- * Process the backlog of requests in the /data/github/issues/pending directory.
+ * Process the backlog of requests in the pending directory.
+ *
  * Passes a list of files to process_next() to process each request.
  */
 private nomask void process_backlog() {
