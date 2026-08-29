@@ -154,9 +154,14 @@ varargs nomask promise<mapping> http_request(string url, string method, mapping 
  * Two things have to happen and they are not the same thing. Aborting stops
  * the transfer, which is what reclaims the socket and the cache file; the
  * race this loses to releases the caller. They are kept separate because a
- * request can time out before it has a socket to abort — during the brief
- * window before http_connect() runs — and the caller must be released either
- * way.
+ * request can time out while it has no socket to abort — before the first
+ * http_connect() runs, or in the hop between two redirects — and the caller
+ * must be released either way.
+ *
+ * Note that aborting stops the *transfer*, not whatever the far end already
+ * did with it. A request that timed out after its bytes went out may well
+ * have succeeded remotely, so a caller must not treat a timeout as proof of
+ * failure and retry a non-idempotent request on the strength of it.
  *
  * @param {float} seconds - The configured request timeout.
  * @param {int} id - The request serial.
@@ -199,9 +204,11 @@ private nomask void abort_request(int id, string reason) {
     return;
   }
 
-  // No socket to tear down: the request has not reached http_connect() yet.
-  // Drop the promise so a late arrival cannot settle what the race already
-  // answered, and let the connection attempt run itself out.
+  // No socket to tear down. The request is between a scheduled http_connect()
+  // and the socket it will open — either the first one, or the hop between two
+  // redirects. Dropping the promise both stops a late arrival settling what
+  // the race already answered and tells that queued http_connect() not to
+  // bother.
   map_delete(promises, id);
 }
 
@@ -243,6 +250,13 @@ varargs private nomask void http_connect(mapping request) {
   string host;
   mapping server;
   int secure;
+
+  // Connecting is deferred by a call_out, and so is the hop between one
+  // redirect and the next. A request whose promise has gone in the meantime
+  // was aborted — or has already settled — while this was queued, and must
+  // not go on to open a socket nobody is waiting on.
+  if(nullp(promises[request["id"]]))
+    return;
 
   host = request["host"];
 

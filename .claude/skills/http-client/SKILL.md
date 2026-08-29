@@ -230,6 +230,14 @@ matters if you touch this code:
 A losing input to a race keeps running, so the race alone would bound the
 wait but not the transfer. That is why the abort exists alongside it.
 
+**A timeout is not a failure, it is an unknown.** Aborting stops the transfer,
+not whatever the far end already did with it: a request that timed out after
+its bytes went out may have succeeded remotely. So do not retry a
+non-idempotent request on the strength of a timeout without deciding what a
+duplicate costs you. `GH_ISSUES_D` retries anyway and says why in
+`submit_issue()` — a duplicate issue is cheaper than a dropped bug report —
+but that is a judgement about *that* request, not a default to copy.
+
 ## Redirect Handling
 
 Redirects (301, 302, 303, 307, 308) are followed automatically up to `max_redirects` (default 5). The `http_handle_redirect` callback fires before each redirect. An `X-Redirect-Count` header tracks the count.
