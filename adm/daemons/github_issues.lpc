@@ -109,6 +109,15 @@ varargs mixed create_issue(string type, string title, string body, mixed *callba
  * is not a 201 — is written to the pending directory for the backlog to
  * retry later.
  *
+ * That includes a request that timed out, which is a deliberate choice rather
+ * than an oversight. A timeout means the outcome is *unknown*, not that the
+ * request failed: the POST may well have reached GitHub and created the issue
+ * before the client gave up on waiting, in which case the retry files it
+ * twice. Retrying anyway is still the better trade here — a duplicate issue
+ * takes seconds to close, while a report dropped on the assumption that it
+ * failed is invisible to everyone. Anything that cannot afford the duplicate
+ * needs an idempotency key, which the GitHub issues API does not offer.
+ *
  * @param {mapping} request - The issue being submitted
  * @param {string} url - The GitHub issues endpoint
  * @param {mapping} headers - The request headers, including authorisation
@@ -138,6 +147,7 @@ private nomask async void submit_issue(mapping request, string url, mapping head
   };
 
   if(err) {
+    // A timeout lands here too, and may have succeeded remotely. See above.
     _log(2, "Failed to submit issue: %O", err);
 
     save_pending(request);
