@@ -79,6 +79,12 @@ mixed main(/** @type {STD_PLAYER} */ object tp, string arg) {
     return "Syntax: gmcp OR gmcp [on|off]";
 }
 
+/**
+ * Describes the player's current GMCP status.
+ *
+ * @param {STD_PLAYER} tp - The player asking
+ * @returns {mixed} The status message
+ */
 private mixed gmcp_status(/** @type {STD_PLAYER} */ object tp) {
     if(tp->gmcp_enabled())
         return "GMCP is currently enabled.";

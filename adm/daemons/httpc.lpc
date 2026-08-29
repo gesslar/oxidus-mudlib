@@ -10,8 +10,8 @@
  * @history
  * 2024-07-06 - Gesslar - Created
  * 2026-08-26 - Gesslar - Stabilised request identities and documented the API.
- * 2026-08-29 - Gesslar - Replaced the callback-and-serial API with an awaitable
- *                        fetch().
+ * 2026-08-29 - Gesslar - Replaced the callback-and-serial API with an
+ *                        awaitable fetch().
  */
 
 inherit STD_HTTP_CLIENT;

@@ -21,9 +21,9 @@
  *                        scenarios. Cleaned up response processing logic for
  *                        better clarity and reliability.
  * 2026-08-26 - Gesslar - Hardened request lifecycles and documented the API.
- * 2026-08-29 - Gesslar - Requests now return a promise instead of correlating
- *                        completions through the shutdown hook, and are bounded
- *                        by a request timeout.
+ * 2026-08-29 - Gesslar - Requests now return a promise instead of
+ *                        correlating completions through the shutdown hook,
+ *                        and are bounded by a request timeout.
  */
 
 // This is a base HTTP client daemon that is intended to be inherited by other
@@ -299,7 +299,7 @@ varargs private nomask void http_connect(mapping request) {
   servers[fd] = server;
 
   key = resolve(host, (: socket_resolve :));
-  resolve_keys[key] = fd;
+  resolve_keys[key] = ({ fd, request["id"] });
 
   _log(2, "Resolving host: %s", host);
 }
@@ -312,15 +312,18 @@ varargs private nomask void http_connect(mapping request) {
  * @param {int} key - The resolver request key.
  */
 nomask void socket_resolve(string host, string addr, int key) {
-  int fd, port, result;
+  int fd, id, port, result;
+  mixed *entry;
   mapping server;
 
   _log(2, "Validating resolution for %s", host);
 
-  if(nullp(resolve_keys[key]))
+  entry = resolve_keys[key];
+  if(!pointerp(entry))
     return;
 
-  fd = resolve_keys[key];
+  fd = entry[0];
+  id = entry[1];
   map_delete(resolve_keys, key);
 
   server = servers[fd];
@@ -328,6 +331,17 @@ nomask void socket_resolve(string host, string addr, int key) {
 
   if(!server)
     return;
+
+  // A lookup outlives the request that started it if that request was torn
+  // down mid-resolve — a timeout is the way that happens. The descriptor is
+  // then free to be reused, so arriving here says nothing about whose socket
+  // this now is. Applying a stale address would point a later request at the
+  // wrong host and send its headers there.
+  if(server["request"]["id"] != id) {
+    _log(2, "Discarding stale resolution for %s on a reused socket", host);
+
+    return;
+  }
 
   port = server["request"]["port"];
 
@@ -413,6 +427,7 @@ nomask void shutdown_socket(int fd) {
   float now, started;
   float received_total;
   int fs;
+  int *stale = ({ });
 
   _log(3, "Shutting down socket: %d", fd);
 
@@ -461,6 +476,17 @@ nomask void shutdown_socket(int fd) {
     _log(2, "Error closing socket: %s", socket_error(result));
   else
     _log(3, "Socket removed: %s %d", server["host"], server["port"]);
+
+  // Drop any hostname lookup still outstanding for this socket. Without this
+  // the entry outlives the descriptor and the next request to be handed the
+  // same one inherits it.
+  foreach(int resolving, mixed *entry in resolve_keys) {
+    if(entry[0] == fd)
+      stale += ({ resolving });
+  }
+
+  foreach(int resolving in stale)
+    map_delete(resolve_keys, resolving);
 
   call_if(this_object(), "http_handle_shutdown", server);
 
