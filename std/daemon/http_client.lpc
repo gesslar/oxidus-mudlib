@@ -3,8 +3,14 @@
  * Inheritable asynchronous HTTP client with DNS resolution, TLS, redirects,
  * response framing, temporary body caching, and lifecycle callbacks.
  *
+ * `http_request()` returns a `promise<mapping>` that settles once, when the
+ * request reaches its end — after any redirect chain — so callers correlate a
+ * response with its request by awaiting it rather than by matching identities
+ * in the `http_handle_shutdown` hook. The lifecycle hooks remain available for
+ * observation.
+ *
  * @created 2024-07-05 - Gesslar
- * @last_modified 2026-08-26 - Gesslar
+ * @last_modified 2026-08-29 - Gesslar
  *
  * @history
  * 2024-07-05 - Gesslar - Created
@@ -15,6 +21,9 @@
  *                        scenarios. Cleaned up response processing logic for
  *                        better clarity and reliability.
  * 2026-08-26 - Gesslar - Hardened request lifecycles and documented the API.
+ * 2026-08-29 - Gesslar - Requests now return a promise instead of correlating
+ *                        completions through the shutdown hook, and are bounded
+ *                        by a request timeout.
  */
 
 // This is a base HTTP client daemon that is intended to be inherited by other
@@ -38,15 +47,20 @@ inherit EXT_HTTP;
 varargs private nomask void http_connect(mapping request);
 private nomask void process_redirect(int fd, mapping server);
 private nomask void process_response(int fd, mapping server);
-private nomask string decode_chunked_body(string body);
+private nomask string decode_chunked_body(buffer body);
 private nomask mixed send_http_request(int fd, mapping server);
 protected nomask void shutdown_socket(int fd);
 private nomask void socket_resolve(string host, string addr, int key);
+private nomask void settle_request(mapping server);
+private nomask void abort_request(int id, string reason);
+private async mapping request_deadline(float seconds, int id, string url);
 
 // Variables
 private nosave mapping servers = ([ ]);
 private nosave mapping resolve_keys = ([ ]);
+private nosave mapping promises = ([ ]);
 private nosave int max_redirects = 5;
+private nosave float request_timeout = 30.0;
 private nosave mapping default_headers;
 private nosave int request_serial;
 
@@ -77,27 +91,41 @@ void post_setup_1() {
 /**
  * Starts an asynchronous HTTP request.
  *
+ * The returned promise settles once the request reaches its end, after any
+ * redirects it followed. It is fulfilled with the final connection state —
+ * the same mapping the `http_handle_shutdown` hook receives — for every
+ * response the server produced, whatever its status code, and is rejected
+ * only when no response was obtained at all: an unparseable URL, a failed
+ * hostname lookup, a refused connection, a socket failure, or a malformed
+ * response body. A 404 is an answer, so it fulfils.
+ *
  * @param {string} url - The absolute HTTP or HTTPS URL.
  * @param {string} method - The HTTP request method.
  * @param {mapping} [headers] - Additional request headers.
  * @param {string} [body] - The optional request body.
- * @returns {mapping | undefined} A copy of the request state, or undefined if
- *                                the URL cannot be parsed.
+ * A request that has not settled within the configured timeout is abandoned:
+ * its socket is torn down and the promise rejects. See set_request_timeout().
+ *
+ * @returns {promise<mapping>} The eventual connection state, carrying the
+ *                             "request", "response", and "state" keys.
  * @errors If the URL or method is not a string.
  */
-varargs nomask mapping http_request(string url, string method, mapping headers, string body) {
+varargs nomask promise<mapping> http_request(string url, string method, mapping headers, string body) {
   mapping parsed_url;
+  promise p = promise_create();
   float now = time_frac();
 
   _log(2, "Url: %s, Method: %s, Headers: %O, Body: %s", url, method, headers, body);
 
-  if(!stringp(url) || !stringp(method))
-    error("Invalid URL, method, or headers specified.");
+  assert_arg(stringp(url), 1, "Invalid URL specified.");
+  assert_arg(stringp(method), 2, "Invalid method specified.");
 
   parsed_url = parse_url(url);
   if(!parsed_url) {
     _log(2, "Failed to parse URL: %s", url);
-    return null;
+    promise_reject(p, "Failed to parse URL: " + url);
+
+    return p;
   }
 
   parsed_url["url"] = url;
@@ -107,9 +135,102 @@ varargs nomask mapping http_request(string url, string method, mapping headers, 
   parsed_url["start_time"] = now;
   parsed_url["id"] = ++request_serial;
 
+  promises[parsed_url["id"]] = p;
+
   call_out_walltime((: http_connect, parsed_url :), 0.01);
 
-  return copy(parsed_url);
+  if(request_timeout <= 0.0)
+    return p;
+
+  return promise_race(({
+    p,
+    request_deadline(request_timeout, parsed_url["id"], url),
+  }));
+}
+
+/**
+ * Rejects a request that outlived its timeout.
+ *
+ * Two things have to happen and they are not the same thing. Aborting stops
+ * the transfer, which is what reclaims the socket and the cache file; the
+ * race this loses to releases the caller. They are kept separate because a
+ * request can time out before it has a socket to abort — during the brief
+ * window before http_connect() runs — and the caller must be released either
+ * way.
+ *
+ * @param {float} seconds - The configured request timeout.
+ * @param {int} id - The request serial.
+ * @param {string} url - The requested URL, for the rejection reason.
+ * @returns {mapping} Nothing meaningful; the deadline either loses the race
+ *                    or rejects it.
+ */
+private async mapping request_deadline(float seconds, int id, string url) {
+  await call_out_walltime(seconds);
+
+  // The request very likely finished while this was parked.
+  if(nullp(promises[id]))
+    return 0;
+
+  _log(1, "Request %d timed out after %g seconds: %s", id, seconds, url);
+
+  abort_request(id, `Request timed out after ${seconds} seconds.`);
+
+  throw(`Request timed out after ${seconds} seconds: ${url}`);
+}
+
+/**
+ * Tears down an in-flight request.
+ *
+ * @param {int} id - The request serial.
+ * @param {string} reason - The error recorded against the connection.
+ */
+private nomask void abort_request(int id, string reason) {
+  foreach(int fd, mapping server in servers) {
+    if(server["request"]["id"] != id)
+      continue;
+
+    server["state"] = HTTP_STATE_ERROR;
+    server["error"] = reason;
+    servers[fd] = server;
+
+    // Funnels through the shutdown hook and settles the promise.
+    shutdown_socket(fd);
+
+    return;
+  }
+
+  // No socket to tear down: the request has not reached http_connect() yet.
+  // Drop the promise so a late arrival cannot settle what the race already
+  // answered, and let the connection attempt run itself out.
+  map_delete(promises, id);
+}
+
+/**
+ * Settles the promise belonging to a finished request.
+ *
+ * A request that produced a response fulfils with the final connection state;
+ * one that never got that far rejects with the recorded error. The rejection
+ * is raised with `promise_reject()` rather than `error()`, so a caller that
+ * handles it does not also page the dev team through the error handler.
+ *
+ * @param {mapping} server - The final connection state.
+ */
+private nomask void settle_request(mapping server) {
+  int id = server["request"]["id"];
+  promise p = promises[id];
+
+  if(!promisep(p))
+    return;
+
+  map_delete(promises, id);
+
+  if(promise_status(p) != 0)
+    return;
+
+  if(server["state"] == HTTP_STATE_ERROR)
+    promise_reject(p, server["error"] || "The HTTP request failed.");
+  else
+    promise_resolve(p, server);
 }
 
 /**
@@ -143,6 +264,8 @@ varargs private nomask void http_connect(mapping request) {
     ]);
     call_if(this_object(), "http_handle_connection_error", server);
     call_if(this_object(), "http_handle_shutdown", server);
+    settle_request(server);
+
     return;
   }
 
@@ -328,6 +451,8 @@ nomask void shutdown_socket(int fd) {
   call_if(this_object(), "http_handle_shutdown", server);
 
   map_delete(servers, fd);
+
+  settle_request(server);
 }
 
 /**
@@ -391,7 +516,7 @@ nomask void socket_read(int fd, buffer incoming) {
   if(sizeof(buf) && !server["response"]["headers"]) {
     mapping headers;
 
-    headers = parse_headers(to_string(buf), 1);
+    headers = parse_headers(buf, 1);
 
     if(!headers) {
       server["buffer"] = buf;
@@ -501,7 +626,7 @@ private nomask void process_response(int fd, mapping server) {
 
   // Chunked transfer encoding
   if(server["response"]["headers"]["transfer-encoding"] == "chunked")
-    response = decode_chunked_body(buf);
+    response = decode_chunked_body(cache);
   // Content-Length
   else if(server["response"]["headers"]["content-length"]) {
     int expected = server["response"]["headers"]["content-length"];
@@ -552,12 +677,17 @@ private nomask void process_response(int fd, mapping server) {
 /**
  * Decodes an HTTP chunked-transfer body.
  *
- * @param {string} body - The encoded body.
+ * Framing stays in buffer space throughout: a chunk size is a count of bytes
+ * and each delimiter is two bytes, neither of which can be measured against a
+ * decoded string, where a CRLF is a single character. Only the chunk-size
+ * lines and the assembled body are decoded.
+ *
+ * @param {buffer} body - The encoded body bytes.
  * @returns {string} The decoded entity body.
  * @throws If the chunk framing is incomplete or malformed.
  */
-private nomask string decode_chunked_body(string body) {
-  string decoded = "";
+private nomask string decode_chunked_body(buffer body) {
+  buffer decoded = to_binary("");
   int cursor;
 
   while(1) {
@@ -569,16 +699,17 @@ private nomask string decode_chunked_body(string body) {
       throw("Incomplete chunk size line.");
 
     line_end += cursor;
-    size_line = body[cursor..line_end-1];
+    size_line = to_string(body[cursor..line_end-1]);
     if(sscanf(size_line, "%x", chunk_size) != 1 || chunk_size < 0)
       throw("Invalid chunk size.");
 
     cursor = line_end + 2;
     if(chunk_size == 0)
-      return decoded;
+      return to_string(decoded);
 
     if(cursor + chunk_size + 2 > sizeof(body) ||
-       body[cursor+chunk_size..cursor+chunk_size+1] != "\r\n")
+       body[cursor+chunk_size] != '\r' ||
+       body[cursor+chunk_size+1] != '\n')
       throw("Incomplete chunk data.");
 
     decoded += body[cursor..cursor+chunk_size-1];
@@ -783,4 +914,29 @@ public nomask int set_max_redirects(int max) {
  */
 public nomask int query_max_redirects() {
   return max_redirects;
+}
+
+/**
+ * Sets how long a request may run before it is abandoned.
+ *
+ * The timeout covers the whole request, redirects included, not each hop.
+ * Zero or less disables it, leaving a request to run until the peer or the
+ * network ends it.
+ *
+ * @param {float} seconds - The timeout in seconds.
+ * @returns {float} The configured timeout.
+ */
+public nomask float set_request_timeout(float seconds) {
+  request_timeout = seconds;
+
+  return request_timeout;
+}
+
+/**
+ * Queries how long a request may run before it is abandoned.
+ *
+ * @returns {float} The configured timeout in seconds, or 0.0 when disabled.
+ */
+public nomask float query_request_timeout() {
+  return request_timeout;
 }
