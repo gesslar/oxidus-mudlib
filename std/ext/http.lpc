@@ -44,7 +44,7 @@ protected nomask string to_string(buffer buf);
 protected nomask varargs int find_marker(mixed buf, mixed marker);
 protected nomask varargs int bufsrch(buffer buf, mixed str);
 protected nomask void cache_response(string file, mixed response);
-protected nomask mixed read_cache(string file);
+protected nomask buffer read_cache(string file);
 protected nomask void set_option(string key, mixed value);
 protected nomask mixed get_option(string key);
 
@@ -711,13 +711,16 @@ private nomask int integrity_check(string file, buffer response) {
 /**
  * Reads a complete cached response into a buffer.
  *
+ * An empty cache file is a legitimate empty entity body and yields a
+ * zero-length buffer, which is truthy. Only a genuine failure to read the
+ * body returns 0, so a caller distinguishes the two with a plain truth test.
+ *
  * @param {string} file - The cache file path.
- * @returns {buffer | string | 0} The cached bytes, an empty string when the
- *                                file is absent or empty, or 0 when it is
- *                                larger than the driver string limit.
+ * @returns {buffer} The cached bytes, a zero-length buffer when the file is
+ *                   empty, or 0 when the file is absent or is larger than the
+ *                   driver string limit.
  */
-protected nomask mixed read_cache(string file) {
-  mixed response = "";
+protected nomask buffer read_cache(string file) {
   int chunk_size = (int)get_config(__MAX_BYTE_TRANSFER__);
   int max = (int)get_config(__MAX_STRING_LENGTH__);
   buffer total;
@@ -729,20 +732,22 @@ protected nomask mixed read_cache(string file) {
 
   if(sz == -1) {
     _log(2, "Cache file does not exist: %s", file);
-    return response;
+
+    return 0;
   } else if(sz == 0) {
     _log(2, "Cache file is empty: %s", file);
-    return response;
+
+    return allocate_buffer(0);
   }
 
   tail = tail(file, 5);
   _log(3, "Tail of file (5 lines): %O", tail);
 
-  if(sz < 1)
-    return response;
+  if(sz > max) {
+    _log(0, "Cache file %s is %d bytes, over the %d byte limit", file, sz, max);
 
-  if(sz > max)
     return 0;
+  }
 
   total = allocate_buffer(sz);
 
