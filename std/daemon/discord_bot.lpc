@@ -148,7 +148,6 @@ private async void connect_gateway() {
  *                             body carries the "url" to connect to.
  */
 void initiate_discord(mapping response) {
-    string err;
     mixed payload;
     string url, host;
     string *matches;
@@ -162,17 +161,13 @@ void initiate_discord(mapping response) {
     _log(3, "headers: %O", response["headers"]);
     _log(3, "bot: %O", response["bot"]);
 
-    err = catch(payload = parse_body(response["body"], response["headers"]["content-type"]));
-    if(err) {
-        _log(1, "Failed to parse response body: %O", err);
-        call_back(response["pending"]["callback"], ([ "fd": -1, "error": "Failed to parse response body" ]));
-        // TODO: We can't cos we don't have the FD yet 🤷‍♂️
-        shutdown_websocket();
-        return;
-    }
+    // The client decodes an application/json body already, so this is the
+    // gateway mapping itself. Anything else means the endpoint answered with
+    // something other than the JSON it is supposed to.
+    payload = response["body"];
 
-    if(stringp(payload)) {
-        _log(3, "Response body was not JSON");
+    if(!mapp(payload)) {
+        _log(1, "Gateway response body was not JSON: %O", payload);
         return;
     }
 
