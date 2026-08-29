@@ -661,35 +661,46 @@ private nomask void process_response(int fd, mapping server) {
     server["response"]["body"] = 0;
 
   cache = read_cache(file);
-  buf = to_string(cache);
-  _log(3, "Last 10 bytes of converted cache: %O", identify(buf[<10..]));
 
-  // Chunked transfer encoding
-  if(server["response"]["headers"]["transfer-encoding"] == "chunked")
-    response = decode_chunked_body(cache);
-  // Content-Length
-  else if(server["response"]["headers"]["content-length"]) {
-    int expected = server["response"]["headers"]["content-length"];
-    _log(2, "Content-Length: %d", expected);
+  // A zero-length buffer is an empty entity body and decodes normally. Only a
+  // body that could not be read at all lands here, and there is nothing to
+  // decode; the response is left empty and the promise rejects on the error
+  // state.
+  if(!cache) {
+    server["state"] = HTTP_STATE_ERROR;
+    server["error"] = "Could not read the cached response body.";
+    _log(0, "%s", server["error"]);
+  } else {
+    buf = to_string(cache);
+    _log(3, "Last 10 bytes of converted cache: %O", identify(buf[<10..]));
 
-    if(sizeof(cache) != expected) {
-      server["state"] = HTTP_STATE_ERROR;
-      server["error"] = sprintf(
-        "Response body size %d does not match Content-Length %d",
-        sizeof(cache), expected,
-      );
-      _log(0, "%s", server["error"]);
+    // Chunked transfer encoding
+    if(server["response"]["headers"]["transfer-encoding"] == "chunked")
+      response = decode_chunked_body(cache);
+    // Content-Length
+    else if(server["response"]["headers"]["content-length"]) {
+      int expected = server["response"]["headers"]["content-length"];
+      _log(2, "Content-Length: %d", expected);
+
+      if(sizeof(cache) != expected) {
+        server["state"] = HTTP_STATE_ERROR;
+        server["error"] = sprintf(
+          "Response body size %d does not match Content-Length %d",
+          sizeof(cache), expected,
+        );
+        _log(0, "%s", server["error"]);
+      }
+
+      response = buf;
     }
+    // No content-length or chunked transfer encoding found. What is it???
+    // If someone identifies the format, please update this!
+    else {
+      _log(2, "No content-length or chunked transfer encoding found. "
+        "Therefore, assuming the response is the entire body. 🤷🏻");
 
-    response = buf;
-  }
-  // No content-length or chunked transfer encoding found. What is it???
-  // If someone identifies the format, please update this!
-  else {
-    _log(2, "No content-length or chunked transfer encoding found. "
-      "Therefore, assuming the response is the entire body. 🤷🏻");
-
-    response = buf;
+      response = buf;
+    }
   }
 
   _log(2, "Removing cache file: %s", file);
