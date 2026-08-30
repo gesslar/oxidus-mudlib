@@ -4,17 +4,21 @@
  * A command to update objects! Neat, huh?
  *
  * @created 2026-07-13 - Gesslar
- * @last_modified 2026-07-13 - Gesslar
+ * @last_modified 2026-08-30 - Gesslar
  *
  * @history
  * 2026-07-13 - Gesslar - Created
+ * 2026-08-30 - Gesslar - Added smart updating (-s)
  */
+
+#include <stat.h>
 
 inherit STD_CMD;
 
 void setup() {
   usage_text =
     "update [<file|object>]\n"
+    "update -s [<file|object>]\n"
     "update -r [<file|object>]\n"
     "update -R [<file|object>]\n"
   ;
@@ -29,6 +33,12 @@ void setup() {
     "the whole inheritance tree beneath it. Virtual objects are reloaded "
     "through their virtual master.\n"
     "\n"
+    "'-s' is the smart form of '-R': it walks the same tree but reloads only "
+    "the files that have actually moved on since the object was loaded — "
+    "those whose source has been edited, and those that have been updated "
+    "out from under it, along with anything that inherits one of those. The "
+    "object itself is always reloaded.\n"
+    "\n"
     "This command cannot update itself — destruct it instead and it will "
     "reload on next use.\n"
     "\n"
@@ -37,6 +47,10 @@ void setup() {
 
 private nomask mapping resolve_target(mixed target, string kind);
 private nomask void generate_graph(mapping target, string kind);
+private nomask void prune_graph(mapping target);
+private nomask int reference_time(mapping target);
+private nomask int newer_than(string file, int since);
+private nomask int inherits_newer(string file, mapping newer);
 private nomask mixed reload_it(mixed target);
 private nomask mixed perform_update(object tp, mapping target);
 
@@ -57,6 +71,10 @@ mixed main(
     to_update = resolve_target(tp->query_env("cwf"), "deep");
   else if(sscanf(arg, "-R %s", target) == 1)
     to_update = resolve_target(target, "deep");
+  else if(arg == "-s")
+    to_update = resolve_target(tp->query_env("cwf"), "smart");
+  else if(sscanf(arg, "-s %s", target) == 1)
+    to_update = resolve_target(target, "smart");
   else
     to_update = resolve_target(arg, "single");
 
@@ -130,7 +148,7 @@ private nomask void generate_graph(mapping target, string kind) {
   if(kind != "single") {
     if(kind == "shallow")
       process_leaf(target["object"], ref target["graph"], 0);
-    if(kind == "deep")
+    if(kind == "deep" || kind == "smart")
       process_leaf(target["object"], ref target["graph"], 1);
   }
 
@@ -139,7 +157,115 @@ private nomask void generate_graph(mapping target, string kind) {
   else
     push(ref target["graph"], ({target.file}));
 
-  target["graph"] = flatten(target["graph"]);
+  target["graph"] = uniq_array(flatten(target["graph"]));
+
+  if(kind == "smart")
+    prune_graph(target);
+}
+
+/**
+ * Reduces a target's graph to the files that have moved on since the target
+ * was loaded, plus everything that inherits one of them, keeping the target
+ * itself in every case. Records the number of entries dropped in the target's
+ * "pruned" key.
+ *
+ * If the reference time cannot be established the graph is left alone, so a
+ * smart update degrades to a full deep update rather than skipping work it
+ * cannot reason about.
+ *
+ * @param {mapping} target - A target mapping whose graph has been generated
+ */
+private nomask void prune_graph(mapping target) {
+  int since = reference_time(target);
+
+  if(!since)
+    return;
+
+  string anchor = target.virtual ? target.virtual_master : target.file;
+  mapping newer = ([]);
+  string *pruned = ({});
+
+  foreach(string file in target["graph"]) {
+    if(file != anchor && !newer_than(file, since) && !inherits_newer(file, newer))
+      continue;
+
+    newer[source_file(file)] = 1;
+    pruned += ({ file });
+  }
+
+  target["pruned"] = sizeof(target["graph"]) - sizeof(pruned);
+  target["graph"] = pruned;
+}
+
+/**
+ * Reports whether any of a file's immediate inheritables has already been
+ * marked newer. A file that inherits something newer must be recompiled too,
+ * because its program has the old copy of that inheritable baked into it.
+ *
+ * The graph is walked deepest-first, so every inheritable of a file has
+ * already been decided by the time the file itself is reached — checking the
+ * immediate list is enough to carry the whole chain upwards.
+ *
+ * @param {string} file - A file from the target's graph
+ * @param {mapping} newer - Source paths marked newer so far, as a set
+ * @returns {int} 1 if the file inherits something newer, otherwise 0
+ */
+private nomask int inherits_newer(string file, mapping newer) {
+  object ob = find_object(file);
+
+  if(!objectp(ob))
+    return 0;
+
+  foreach(string parent in inherit_list(ob))
+    if(newer[source_file(parent)])
+      return 1;
+
+  return 0;
+}
+
+/**
+ * Returns the time the target's own program was last loaded, which is the
+ * reference the rest of the graph is measured against. Anything that has
+ * changed on disk or been reloaded since then is newer than what the target
+ * is currently running against.
+ *
+ * @param {mapping} target - A target mapping from resolve_target()
+ * @returns {int} The target's load time, or 0 if it cannot be determined
+ */
+private nomask int reference_time(mapping target) {
+  string file = target.virtual ? target.virtual_master : target.file;
+  mixed *info = stat(source_file(file));
+
+  if(!pointerp(info) || sizeof(info) != 4)
+    return 0;
+
+  if(!intp(info[STAT_TIME_OBJECT_LOADED]))
+    return 0;
+
+  return info[STAT_TIME_OBJECT_LOADED];
+}
+
+/**
+ * Reports whether a file in the graph is newer than a reference time, either
+ * because its source has been edited since or because its program has been
+ * reloaded since. A file whose source cannot be stat'd counts as newer, so
+ * that nothing is silently skipped.
+ *
+ * @param {string} file - A file from the target's graph
+ * @param {int} since - The reference time to measure against
+ * @returns {int} 1 if the file is newer than since, otherwise 0
+ */
+private nomask int newer_than(string file, int since) {
+  mixed *info = stat(source_file(file));
+
+  if(!pointerp(info) || sizeof(info) != 4)
+    return 1;
+
+  if(!intp(info[STAT_LAST_MODIFIED]))
+    return 1;
+
+  return info[STAT_LAST_MODIFIED] > since ||
+         info[STAT_TIME_OBJECT_LOADED] > since;
 }
 
 private nomask mixed reload_it(mixed target) {
@@ -163,6 +289,10 @@ private nomask mixed reload_it(mixed target) {
 }
 
 private nomask mixed perform_update(object tp, mapping target) {
+  if(target["pruned"])
+    _info(tp, "Skipping %d unchanged %s in the graph.", target["pruned"],
+          target["pruned"] == 1 ? "file" : "files");
+
   foreach(string file in target.graph) {
     string err = reload_it(file);
     if(err) {
