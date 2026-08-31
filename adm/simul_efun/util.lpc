@@ -85,3 +85,49 @@ int truthy(mixed val) {
 int falsy(mixed val) {
   return !truthy(val);
 }
+
+/**
+ * Determines whether a response to a prompt is an acceptance.
+ *
+ * Case is ignored, so "Y" and "Yes" answer as readily as their lowercase
+ * forms. Anything else is not an acceptance, including the empty string a
+ * bare enter arrives as.
+ *
+ * @param {string} str - The response to test.
+ * @returns {int} 1 if the response accepts, 0 if not.
+ *
+ * @example
+ * ```c
+ * accept_prompt("Yes") // 1
+ * accept_prompt("no")  // 0
+ * accept_prompt("wat") // 0
+ * ```
+ */
+int accept_prompt(string str) {
+  if(falsy(str))
+    return 0;
+
+  return of(lower_case(str), ({ "y", "yes" }));
+}
+
+/**
+ * Determines whether a response to a prompt is a refusal.
+ *
+ * Case is ignored, as with `accept_prompt()`.
+ *
+ * @param {string} str - The response to test.
+ * @returns {int} 1 if the response refuses, 0 if not.
+ *
+ * @example
+ * ```c
+ * reject_prompt("No")  // 1
+ * reject_prompt("yes") // 0
+ * reject_prompt("wat") // 0
+ * ```
+ */
+int reject_prompt(string str) {
+  if(falsy(str))
+    return 0;
+
+  return of(lower_case(str), ({ "n", "no" }));
+}
