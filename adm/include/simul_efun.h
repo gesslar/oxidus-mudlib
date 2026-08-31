@@ -205,7 +205,11 @@ string ob_long(object ob);
 // File: predicates.c
 int alarmp(object ob);
 int errorp(mixed input);
+int pendingp(promise p);
+int rejectedp(promise p);
+int resolvedp(promise p);
 int roomp(object ob);
+int settledp(promise p);
 
 // File: prompt.c
 varargs void prompt_colour(object body, mixed *cb, string prompt);
