@@ -53,7 +53,7 @@ protected nomask void shutdown_socket(int fd);
 private nomask void socket_resolve(string host, string addr, int key);
 private nomask void settle_request(mapping server);
 private nomask void abort_request(int id, string reason);
-private async mapping request_deadline(float seconds, int id, string url);
+private async void request_deadline(float seconds, int id, string url);
 
 // Variables
 private nosave mapping servers = ([ ]);
@@ -166,15 +166,16 @@ varargs nomask promise<mapping> http_request(string url, string method, mapping 
  * @param {float} seconds - The configured request timeout.
  * @param {int} id - The request serial.
  * @param {string} url - The requested URL, for the rejection reason.
- * @returns {mapping} Nothing meaningful; the deadline either loses the race
- *                    or rejects it.
+ * @returns {promise<void>} Never fulfils meaningfully; the deadline either
+ *                          loses the race or rejects it.
+ * @throws If the timeout elapses with the request still outstanding.
  */
-private async mapping request_deadline(float seconds, int id, string url) {
+private async void request_deadline(float seconds, int id, string url) {
   await call_out_walltime(seconds);
 
   // The request very likely finished while this was parked.
   if(nullp(promises[id]))
-    return 0;
+    return;
 
   _log(1, "Request %d timed out after %g seconds: %s", id, seconds, url);
 
