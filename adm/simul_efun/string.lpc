@@ -665,3 +665,59 @@ varargs string safe_string(string str, string replacement) {
 
   return str;
 }
+
+private nosave nomask string token_pattern = "\\$\\{[a-zA-Z_][a-zA-Z0-9_]*\\}";
+
+/**
+ * Substitutes ${token} placeholders in a string with values from a mapping.
+ *
+ * Keys are bare names, without the ${ } around them: a key of "mud_name"
+ * answers the placeholder ${mud_name}. Values may be of any type and are
+ * rendered through stringify(), so an int token needs no conversion at the
+ * call site.
+ *
+ * The whole string is resolved in a single pass, which is the point of
+ * doing this rather than a chain of replace_string() calls. A value that
+ * itself contains ${...} lands as literal text instead of being expanded
+ * by a later key, so this is safe to point at names and other text the mud
+ * did not write.
+ *
+ * A placeholder with no matching key is left where it is, so an unresolved
+ * token shows up in the output rather than silently becoming nothing.
+ *
+ * @param {string} text - The text to substitute into.
+ * @param {mapping} tokens - Bare token names mapped to their values.
+ * @returns {string} The text with every known placeholder replaced.
+ * @errors If text is not a string.
+ * @errors If tokens is not a mapping.
+ */
+string substitute_tokens(string text, mapping tokens) {
+  mixed *parts;
+  string *tags;
+  int *matches;
+  int sz;
+
+  assert_arg(stringp(text), 1, "Bad argument 1 to substitute_tokens(). Expected string, got "+typeof(text));
+  assert_arg(mapp(tokens), 2, "Bad argument 2 to substitute_tokens(). Expected mapping, got "+typeof(tokens));
+
+  parts = pcre_assoc(text, ({ token_pattern }), ({ 1 }), 0);
+  tags = parts[0];
+  matches = parts[1];
+  sz = sizeof(matches);
+
+  while(sz--) {
+    mixed value;
+
+    if(!matches[sz])
+      continue;
+
+    value = tokens[tags[sz][2..<2]];
+
+    if(nullp(value))
+      continue;
+
+    tags[sz] = stringify(value);
+  }
+
+  return implode(tags, "");
+}
