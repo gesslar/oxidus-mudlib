@@ -314,7 +314,7 @@ mixed call_back(mixed *cb, mixed new_arg...) {
  *
  * @param {mixed*} cb - Callback array from assemble_call_back()
  * @param {...mixed} new_arg - Additional arguments to prepend
- * @returns {promise<mixed>} A promise for the callback's return value, or for
+ * @returns {mixed} A promise for the callback's return value, or for
  *  undefined if cb does not describe a callable.
  * @errors If the callback structure is invalid, or the callback itself
  *  errors; either rejects the returned promise.

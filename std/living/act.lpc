@@ -82,8 +82,8 @@ public int act(string action, float delay, mixed *cb) {
  *
  * @param {string} action - The action label, e.g. "casting".
  * @param {float} delay - Seconds to wait before the act completes.
- * @returns {promise<int>} A promise for 1 if the act ran to completion, or 0
- *                         if it was cancelled or could not be scheduled.
+ * @returns {int} A promise for 1 if the act ran to completion, or 0
+ *                if it was cancelled or could not be scheduled.
  * @see act
  * @see is_acting
  * @example

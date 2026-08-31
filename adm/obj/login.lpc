@@ -143,11 +143,12 @@ private async void login_flow() {
     ([ "type" : ({ "password-credentials" }) ])
   );
 
-  if(acatch(await gmcp_await(GMCP_PKG_CHAR_LOGIN_CREDENTIALS, 1.0)))
-    return greet();
+  acatch(await gmcp_await(GMCP_PKG_CHAR_LOGIN_CREDENTIALS, 1.0));
 
   // The credentials arrived and the Char handler has already acted on them:
   // it either called gmcp_authenticated() or told us why not and removed us.
+  if(!body)
+    return greet();
 }
 
 /**
@@ -160,7 +161,7 @@ private async void login_flow() {
  * waiting. If it says yes this probe has nothing useful to contribute, so it
  * sleeps past the window it is racing and can only ever lose.
  *
- * @returns {promise<void>} Never fulfils.
+ * @returns {void} Never fulfils.
  * @throws Always -- once the answer is known to be no, or harmlessly after
  *  the race it belongs to has already been decided.
  */
