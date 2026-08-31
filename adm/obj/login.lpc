@@ -5,13 +5,13 @@
  * authentication, character selection, character creation, and
  * transitioning the player into the game world.
  *
- * @created 2005-04-04 - Tacitus
- * @last_modified 2025-03-30 - Gesslar
+ * @created 2021-09-29 - Gesslar
+ * @last_modified 2026-08-31 - Gesslar
  *
  * @history
- * 2005-04-04 - Tacitus - Created
- * 2005-10-07 - Tacitus - Recoded
- * 2006-10-06 - Tacitus - Last edited
+ * 2021-09-29 - Gesslar - Created
+ * 2026-08-30 - Gesslar - Promise-driven GMCP login handshake
+ * 2026-08-31 - Gesslar - Account, character and password flow rewritten
  */
 
 #include <daemons.h>
