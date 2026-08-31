@@ -106,8 +106,8 @@ void post_setup_1() {
  * A request that has not settled within the configured timeout is abandoned:
  * its socket is torn down and the promise rejects. See set_request_timeout().
  *
- * @returns {promise<mapping>} The eventual connection state, carrying the
- *                             "request", "response", and "state" keys.
+ * @returns {mapping} The eventual connection state, carrying the
+ *                    "request", "response", and "state" keys.
  * @errors If the URL or method is not a string.
  */
 varargs nomask promise<mapping> http_request(string url, string method, mapping headers, string body) {
@@ -166,8 +166,8 @@ varargs nomask promise<mapping> http_request(string url, string method, mapping 
  * @param {float} seconds - The configured request timeout.
  * @param {int} id - The request serial.
  * @param {string} url - The requested URL, for the rejection reason.
- * @returns {promise<void>} Never fulfils meaningfully; the deadline either
- *                          loses the race or rejects it.
+ * @returns {void} Never fulfils meaningfully; the deadline either
+ *                 loses the race or rejects it.
  * @throws If the timeout elapses with the request still outstanding.
  */
 private async void request_deadline(float seconds, int id, string url) {

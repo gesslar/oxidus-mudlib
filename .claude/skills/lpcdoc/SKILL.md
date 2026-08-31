@@ -234,22 +234,35 @@ An `async` function declares its **payload** type, and the driver wraps it:
 `async int f()` is typed `promise<int>` at every call site, while `int` is
 what `return` statements inside the body are checked against.
 
-Document the **wrapper**, `@returns {promise<T>}` — not the bare payload. The
-tag is read by someone standing at the call site, where the value genuinely is
-a promise, and `promise<T>` carries both facts where `{T}` carries only one.
-This matters most for `mixed`: `@returns {mixed}` is indistinguishable from a
-non-async function that happens to return a promise.
+Document the **payload**, not the wrapper — `@returns {int}`, never
+`@returns {promise<int>}`. LPCDoc unwraps the promise itself, so writing the
+wrapper wraps it twice. The same applies to `@param`: annotate what the
+promise carries, not that it is one.
 
 ```c
 /**
- * @returns {promise<int>} A promise for 1 if the act ran to completion, or 0
- *                         if it was cancelled.
+ * @returns {int} 1 if the act ran to completion, or 0 if it was cancelled.
  */
 public async int async_act(string action, float delay) {
 ```
 
-Bare `promise` means `promise<mixed>` and accepts any payload; use it when the
-function invokes arbitrary caller-supplied code and cannot know the type.
+Say in the prose what the payload alone cannot: that the value arrives later,
+what a rejection means, and — for a function whose every path throws — that it
+never fulfils at all. That last case is `{void}`, and its `@throws` carries
+the real information.
+
+```c
+/**
+ * @returns {void} Never fulfils.
+ * @throws Always -- once the answer is known to be no.
+ */
+private async void no_gmcp_probe() {
+```
+
+That is about the tag, not the declaration. In the code itself, a bare
+`promise` return type means `promise<mixed>` and accepts any payload; declare
+it that way when the function invokes arbitrary caller-supplied code and
+cannot know the type.
 
 #### Type Predicates
 

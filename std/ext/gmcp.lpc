@@ -39,7 +39,7 @@ private nosave mapping gmcp_waiting = ([ ]);
  * @param {float} [seconds] - How long to wait before giving up. Non-positive
  *  waits indefinitely, which only makes sense for something the client is
  *  certain to send.
- * @returns {promise<mixed>} The message payload, or a rejection once the
+ * @returns {mixed} The message payload, or a rejection once the
  *  wait has gone unanswered for `seconds`.
  */
 varargs promise gmcp_await(string name, float seconds) {
@@ -62,7 +62,7 @@ varargs promise gmcp_await(string name, float seconds) {
  *
  * @param {string} name - The package name being waited on.
  * @param {float} seconds - The window to wait out before giving up.
- * @returns {promise<void>} Never fulfils, except as a no-op when the message
+ * @returns {void} Never fulfils, except as a no-op when the message
  *  arrived while this was parked.
  * @throws If the window elapses with the message still outstanding.
  */
