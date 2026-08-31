@@ -16,11 +16,67 @@ inherit CLASS_GMCP;
 // Functions
 public int gmcp_enabled();
 private mixed gmcp_stringify(mixed data);
+varargs promise gmcp_await(string name, float seconds);
+private async void gmcp_deadline(string name, float seconds);
 
 // Functions from other objects
 varargs void _log(mixed args...);
 
 private nosave mapping gmcp_data = ([ ]);
+
+// Messages this connection is currently waiting on, keyed by the full dotted
+// package name. The apply below resolves and removes an entry as the message
+// arrives; the removal is also what tells a pending deadline to bow out.
+private nosave mapping gmcp_waiting = ([ ]);
+
+/**
+ * Waits for the next GMCP message of a given name from this client.
+ *
+ * One outstanding wait per package name -- a second call replaces the first,
+ * which is then never settled by anything but its own deadline.
+ *
+ * @param {string} name - Full dotted package name, e.g. "Core.Supports.Set".
+ * @param {float} [seconds] - How long to wait before giving up. Non-positive
+ *  waits indefinitely, which only makes sense for something the client is
+ *  certain to send.
+ * @returns {promise<mixed>} The message payload, or a rejection once the
+ *  wait has gone unanswered for `seconds`.
+ */
+varargs promise gmcp_await(string name, float seconds) {
+  promise p = promise_create();
+
+  gmcp_waiting[name] = p;
+
+  if(seconds <= 0.0)
+    return p;
+
+  return promise_race(({ p, gmcp_deadline(name, seconds) }));
+}
+
+/**
+ * Rejects a wait that outlived its window.
+ *
+ * Loses the race harmlessly if the message already arrived, which is why
+ * nothing here has to ask whether the promise it is racing has settled --
+ * the waiting entry having been cleared is the whole signal.
+ *
+ * @param {string} name - The package name being waited on.
+ * @param {float} seconds - The window to wait out before giving up.
+ * @returns {promise<void>} Never fulfils, except as a no-op when the message
+ *  arrived while this was parked.
+ * @throws If the window elapses with the message still outstanding.
+ */
+private async void gmcp_deadline(string name, float seconds) {
+  await call_out_walltime(seconds);
+
+  // The message very likely arrived while this was parked.
+  if(nullp(gmcp_waiting[name]))
+    return;
+
+  map_delete(gmcp_waiting, name);
+
+  throw(`No ${name} from client after ${seconds} seconds.`);
+}
 
 // This apply receives the GMCP messages from the client. We parse out the
 // information into what package, subpackage, command, and payload. We then
@@ -45,6 +101,19 @@ void gmcp(string message) {
 
     if(gmcp.package == null || gmcp.module == null)
         return;
+
+
+    // Wake anything awaiting this message. Done before the handler lookup
+    // below, which returns early when a package has no handler file -- a
+    // message we are only waiting on does not need one. The waiter does not
+    // resume here: promise deliveries are drained after this call returns,
+    // so the handler dispatched below still runs first.
+    if(gmcp_waiting[gmcp.name]) {
+        promise waiting = gmcp_waiting[gmcp.name];
+
+        map_delete(gmcp_waiting, gmcp.name);
+        promise_resolve(waiting, gmcp.payload);
+    }
 
     gmcp_module = DIR_STD_HANDLERS "gmcp/" + gmcp.package + ".lpc";
     if(!file_exists(gmcp_module)) {

@@ -6,6 +6,7 @@
 #define GMCP_PKG_CORE_HELLO                 GMCP_PKG_CORE".Hello"
 #define GMCP_PKG_CORE_PING                  GMCP_PKG_CORE".Ping"
 #define GMCP_PKG_CORE_SUPPORTS              GMCP_PKG_CORE".Supports"
+#define GMCP_PKG_CORE_SUPPORTS_SET          GMCP_PKG_CORE_SUPPORTS".Set"
 
 #define GMCP_PKG_CHAR                       "Char"
 #define GMCP_PKG_CHAR_LOGIN                 GMCP_PKG_CHAR".Login"

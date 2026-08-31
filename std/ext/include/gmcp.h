@@ -2,6 +2,7 @@
 #define __GMCP_H__
 
 void gmcp(string message) ;
+varargs promise gmcp_await(string name, float seconds) ;
 varargs void do_gmcp(string package, mixed data) ;
 mixed gmcp_stringify(mixed data) ;
 void clear_gmcp_data() ;
