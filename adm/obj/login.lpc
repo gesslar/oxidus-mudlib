@@ -27,8 +27,9 @@ inherit EXT_GMCP;
 inherit EXT_LOG;
 
 private void get_account(string str);
-private void get_password(string str, int i);
-private void verify_password(string str, int i);
+private void get_password(string str);
+private void create_password(string str);
+private void confirm_password(string str);
 private void new_account(string str, string name);
 private void auto_destruct();
 private void reconnect(string str, string name);
@@ -241,105 +242,102 @@ private void get_account(string str) {
   }
 
   if(!__account["password"]) {
-    _info("Your account has no password. All accounts must have a password.\n");
-    _question("Please enter a new password: ");
-    input_to("get_password", 1, 2);
-    return;
+    _error("Your account is missing its password.");
+    _info("Please contact an admin for assistance.");
+    return dest_me();
   }
 
   _question("Please enter your password: ");
-  input_to("get_password", 1, 0);
+  input_to("get_password", 1);
 }
 
 /**
- * Processes password input for both login verification and new
- * password creation. When i is 0, verifies against the stored
- * password. When i is non-zero, sets a new password.
+ * Verifies a login attempt against the stored account password.
+ *
+ * Three failures end the connection. A success retires the login timeout
+ * and hands off to character selection, going straight to the character
+ * named as character@account when the account prompt supplied one.
  *
  * @param {string} str - The password entered by the user
- * @param {int} i - 0 for login verification, non-zero for new
- *                  password creation
  */
-private void get_password(string str, int i) {
-  string pass;
-  string curr;
+private void get_password(string str) {
+  string curr = __account["password"];
 
-  if(!i) {
-    curr = __account["password"];
-    pass = crypt(str, curr);
-    if(pass != curr) {
-      if(++__attempts >= 3) {
-        _error("Too many failed login attempts.");
-        _ok("Goodbye.");
-        return dest_me();
-      }
-
-      _error("That password is incorrect.");
-      _question("Please enter your password: ");
-      input_to("get_password", 1, i);
-      return;
-    } else {
-      int char_index = __character
-        ? member_array(__character, __account["characters"])
-        : null;
-      remove_call_out(__call_out_id);
-      __call_out_id = null;
-
-      if(!__character)
-        character_menu();
-      else
-        character_menu_input(sprintf("%d", char_index + 1), null);
-
-      return;
-    }
-  } else {
-    if(!str) {
-      _error("Your account must have a password.");
-      _question("Please enter a password: ");
-      input_to("get_password", 1, i);
-      return;
+  if(crypt(str, curr) != curr) {
+    if(++__attempts >= 3) {
+      _error("Too many failed login attempts.");
+      _ok("Goodbye.");
+      return dest_me();
     }
 
-    if(!valid_account(__account["name"])) {
-      if(!ACCOUNT_D->create_account(__account["name"], crypt(str, 0))) {
-        _error("There was a problem creating your account.");
-        return dest_me();
-      }
-
-      __account = ACCOUNT_D->load_account(__account["name"]);
-    }
-
-    _question("Please enter your password again to verify: ");
-    input_to("verify_password", 1, i);
+    _error("Incorrect password.");
+    _question("Please enter your password: ");
+    input_to("get_password", 1);
     return;
   }
+
+  remove_call_out(__call_out_id);
+  __call_out_id = null;
+
+  if(!__character) {
+    character_menu();
+    return;
+  }
+
+  character_menu_input(
+    sprintf("%d", member_array(__character, __account["characters"]) + 1),
+    null
+  );
 }
 
 /**
- * Verifies that the re-entered password matches the one just
- * set during account creation. Removes the account and restarts
- * if passwords do not match.
+ * Takes the initial password for an account being created, and creates the
+ * account with it.
  *
- * @param {string} str - The password entered for verification
- * @param {int} i - Passed through to get_password on mismatch
+ * @param {string} str - The password chosen by the user
  */
-private void verify_password(string str, int i) {
-  string curr;
-
-  curr = __account["password"];
-  str = crypt(str, curr);
-  if(str != curr) {
-    ACCOUNT_D->remove_account(__account["name"]);
-    _error("Your passwords do not match.");
-    _question("Please enter your password: ");
-    input_to("get_password", 1, i);
-    return;
-  } else {
-    _ok("You may now login with the password you have just set.");
-    _question("Please enter your password: ");
-    input_to("get_password", 1, 0);
+private void create_password(string str) {
+  if(falsy(str)) {
+    _error("Your account must have a password.");
+    _question("Please enter a password: ");
+    input_to("create_password", 1);
     return;
   }
+
+  if(!ACCOUNT_D->create_account(__account["name"], crypt(str, 0))) {
+    _error("There was a problem creating your account.");
+    return dest_me();
+  }
+
+  __account = ACCOUNT_D->load_account(__account["name"]);
+
+  _question("Confirm your password: ");
+  input_to("confirm_password", 1);
+}
+
+/**
+ * Confirms the password just chosen for a newly created account.
+ *
+ * A mismatch discards the account and starts the choice over. That is safe
+ * to do here, and necessary: the account is seconds old and has no
+ * characters, and create_account() refuses a name that already exists.
+ *
+ * @param {string} str - The password entered for confirmation
+ */
+private void confirm_password(string str) {
+  string curr = __account["password"];
+
+  if(crypt(str, curr) != curr) {
+    ACCOUNT_D->remove_account(__account["name"]);
+    _error("Those passwords do not match.");
+    _question("Please enter a password for your account: ");
+    input_to("create_password", 1);
+    return;
+  }
+
+  _ok("Your account is ready.");
+  _question("Please enter your password: ");
+  input_to("get_password", 1);
 }
 
 /**
@@ -351,14 +349,13 @@ private void verify_password(string str, int i) {
  * @param {string} name - The account name to create
  */
 private void new_account(string str, string name) {
-  if(str == "y" || str == "yes" || str == "yup"
-    || str == "sure" || str == "indeed") {
+  if(accept_prompt(str)) {
     __account = ([
       "name" : name,
     ]);
 
     _question("Please enter a password for your account: ");
-    input_to("get_password", 1, 1);
+    input_to("create_password", 1);
     return;
   }
 
@@ -561,13 +558,7 @@ private void first_admin_login() {
  * @param {string} name - The character name to reconnect
  */
 private void reconnect(string str, string name) {
-  str = lower_case(str);
-
-  if(str == "y"
-    || str == "yes"
-    || str == "yup"
-    || str == "sure"
-    || str == "indeed") {
+  if(accept_prompt(str)) {
     write_file(
       log_dir() + LOG_LOGIN,
       capitalize(body->query_real_name()) + " reconnected from " +
@@ -736,32 +727,19 @@ public string query_real_name() {
 }
 
 /**
- * Replaces placeholder tokens in the login message text with
- * live values such as mud name, user count, date, and version
- * information.
+ * Substitutes the login screen tokens with their live values.
  *
- * @param {string} text - The raw login message with %tokens
- * @returns {string} The message with tokens replaced
+ * The screens are plain text data files, so ${...} in them is a literal for
+ * substitute_tokens() to resolve rather than a driver template literal. The
+ * spelling is shared deliberately, so that both read the same way.
+ *
+ * @param {string} text - The raw screen text.
+ * @returns {string} The text with its tokens replaced.
  */
 private string parse_tokens(string text) {
-  catch {
-    text = replace_string(text, "%mud_name", mud_name());
-    text = replace_string(text, "%users", implode(
-      filter(users()->query_name(), (: $1 != "login" :))[0..<2], ", ") +
-      ", and " + filter(users()->query_name(),
-      (: $1 != "login" :))[<1]);
-    text = replace_string(text, "%user_count", "" + sizeof(users()));
-    text = replace_string(text, "%date", ldatetime());
-    text = replace_string(text, "%open_status", open_status());
-    text = replace_string(text, "%email", admin_email());
-    text = replace_string(text, "%lib_name", lib_name());
-    text = replace_string(text, "%lib_version", lib_version());
-    text = replace_string(text, "%baselib_version", baselib_version());
-    text = replace_string(text, "%cap_mud_name", upper_case(mud_name()));
-    text = replace_string(text, "%driver_version", driver_version());
-  };
-
-  return text;
+  return substitute_tokens(text, ([
+    "mud_name" : mud_name(),
+  ]));
 }
 
 /**

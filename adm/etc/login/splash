@@ -1,5 +1,5 @@
 
-Hello, and welcome to %mud_name.
+Hello, and welcome to ${mud_name}.
 
 This is an effort to create an opinionated base mudlib. The goal is to provide
 a modern and feature-rich codebase for the LPMud community.
