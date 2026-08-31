@@ -174,7 +174,7 @@ varargs string substr(string str, string sub, int reverse) {
  * @returns {mixed} The LPC value represented by the string.
  */
 varargs mixed from_string(string str, int flag) {
-    mixed *ret = ({ 0, "" });
+    mixed *ret = ({ (mixed)0, "" });
 
     if(!str || !sizeof(str) || str == "")
         return 0;
