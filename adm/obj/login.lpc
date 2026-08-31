@@ -36,6 +36,8 @@ private void enter_world(string name, int reconnecting);
 private object create_body(string name);
 private string parse_tokens(string text);
 private void greet();
+private async void login_flow();
+private async void no_gmcp_probe();
 private void character_menu();
 private void character_menu_input(string str, string prompt);
 private void first_admin_login();
@@ -48,8 +50,6 @@ private nosave string __name, __character;
 private nosave string __logo = parse_tokens(read_file(mud_config("LOGO")));
 private nosave string __login_message = parse_tokens(read_file(mud_config("LOGIN_MSG")));
 private nosave int __call_out_id;
-private nosave int __gmcp_login_status = 0;
-private nosave int __greet_call;
 private nosave int __attempts = 0;
 
 /**
@@ -71,24 +71,26 @@ public void setup() {
 
 /**
  * Called when the connection is established. Displays the login
- * message and schedules the greeting prompt.
+ * message and starts the login flow.
  */
 private void logon() {
-
   tell(this_object(), __logo);
   tell(this_object(), __login_message);
 
-  __greet_call = call_out_walltime((:greet:), 0.2);
+  // The flow spends most of its life parked on the client. If the connection
+  // goes away underneath it -- a disconnect, or remove() after a failed GMCP
+  // login -- the driver abandons the frame and rejects it with
+  // PROMISE_REASON_DESTRUCTED. That is the expected end of a login that did
+  // not finish, not a fault, so take the rejection rather than let it be
+  // reported as unhandled.
+  promise_catch(login_flow(), ignore_rejection());
 }
 
 /**
- * Displays the account login prompt. Skipped if GMCP
- * authentication has already completed.
+ * Displays the account login prompt. Reached only from login_flow(),
+ * once it has given a GMCP client its chance to authenticate.
  */
 private void greet() {
-  if(__gmcp_login_status && find_call_out(__gmcp_login_status) == -1)
-    return;
-
   tell(this_object(),
     "\n"
     "You can login as your account or as character@account.\n"
@@ -96,6 +98,79 @@ private void greet() {
   );
 
   input_to("get_account");
+}
+
+/**
+ * Decides how this connection logs in, top to bottom.
+ *
+ * A GMCP client gets a brief window to announce what it supports and, if
+ * that includes Char.Login, a second window to send its credentials. Either
+ * window closing without an answer -- and a client with no GMCP at all --
+ * falls through to the ordinary account prompt.
+ *
+ * Nothing here has to reconcile timer handles: the waits release themselves,
+ * and if the connection drops mid-wait the driver abandons this frame along
+ * with the object.
+ */
+private async void login_flow() {
+  promise supports_arrived;
+  mapping supports;
+
+  // Armed before anything else, because a client answers the GMCP
+  // negotiation faster than we can ask whether it did: Mudlet's Core.Hello
+  // and Core.Supports.Set land in the same tick as the connection. A mailbox
+  // that is not open yet loses the message, and the wait then times out
+  // having missed the very thing it was waiting for.
+  supports_arrived = gmcp_await(GMCP_PKG_CORE_SUPPORTS_SET, 1.0);
+
+  // Raced against a probe rather than awaited behind a fixed delay: pausing
+  // to let has_gmcp() become answerable would make every GMCP client pay for
+  // the one case where the answer is no. Whichever settles first decides --
+  // the supports message if the client is talking, the probe if it is not.
+  if(acatch(await promise_race(({ supports_arrived, no_gmcp_probe() }))))
+    return greet();
+
+  // The Core handler ran before this resumed, so the parsed mapping is
+  // already stored -- what we awaited was the arrival, not the payload.
+  supports = query_gmcp_supports();
+
+  if(!supports?.Char?.modules?.Login)
+    return greet();
+
+  _info(this_object(), "\n[" + mud_name() + "] GMCP Authentication available.");
+
+  GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_LOGIN_DEFAULT,
+    ([ "type" : ({ "password-credentials" }) ])
+  );
+
+  if(acatch(await gmcp_await(GMCP_PKG_CHAR_LOGIN_CREDENTIALS, 1.0)))
+    return greet();
+
+  // The credentials arrived and the Char handler has already acted on them:
+  // it either called gmcp_authenticated() or told us why not and removed us.
+}
+
+/**
+ * Reports that this connection is not speaking GMCP, as a promise to race
+ * against something that is waiting for it to speak.
+ *
+ * The telnet WILL/DO GMCP exchange is still in flight when logon() runs, so
+ * has_gmcp() cannot be asked immediately -- it needs a beat. Once it can be
+ * asked and says no, there is nothing to wait for and the caller should stop
+ * waiting. If it says yes this probe has nothing useful to contribute, so it
+ * sleeps past the window it is racing and can only ever lose.
+ *
+ * @returns {promise<void>} Never fulfils.
+ * @throws Always -- once the answer is known to be no, or harmlessly after
+ *  the race it belongs to has already been decided.
+ */
+private async void no_gmcp_probe() {
+  await call_out_walltime(0.2);
+
+  if(has_gmcp(this_object()))
+    await call_out_walltime(1.0);
+
+  throw("connection is not using GMCP");
 }
 
 /**
@@ -708,28 +783,13 @@ public mapping query_gmcp_client() {
 }
 
 /**
- * Stores the GMCP supported packages mapping. If the client
- * supports Char.Login, initiates GMCP authentication and
- * delays the normal greeting prompt.
+ * Stores the GMCP supported packages mapping. What is done about it is
+ * login_flow()'s decision, made when its wait on Core.Supports.Set wakes.
  *
  * @param {mapping} supports - The supported GMCP packages
  */
 public void set_gmcp_supports(mapping supports) {
   __login_gmcp_data["supports"] = supports;
-
-  if(!__gmcp_login_status) {
-    if(of("Char", supports) &&
-       of("modules", supports["Char"]) &&
-       of("Login", supports["Char"]["modules"])) {
-      mapping payload = ([ "type" : ({ "password-credentials" }) ]);
-
-      _info(this_object(), "\n[" + mud_name() + "] GMCP Authentication available.");
-
-      GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_LOGIN_DEFAULT, payload);
-
-      __gmcp_login_status = call_out_walltime((: greet :), 1.0);
-    }
-  }
 }
 
 /**
