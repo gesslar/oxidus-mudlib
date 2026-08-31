@@ -46,7 +46,7 @@ private void password_confirmed(int status, object tp) {
 }
 
 private void new_password(string str, object tp) {
-  if(!str || str == "") {
+  if(falsy(str)) {
     _error("Password cannot be empty.");
     return;
   }
@@ -56,17 +56,35 @@ private void new_password(string str, object tp) {
 }
 
 /**
+ * Confirms the re-entered password and writes it to the player's account.
  *
- * @param str
- * @param pass
- * @param {STD_PLAYER} tp
+ * The password lives on the account, not the character, so the character
+ * name has to be resolved to its account before the write.
+ *
+ * @param {string} str - The re-entered password.
+ * @param {string} pass - The password being confirmed against.
+ * @param {STD_PLAYER} tp - The player changing their password.
  */
 private void confirm_password(string str, string pass, object tp) {
-  if(str == pass) {
-    _ok("Password accepted.");
-    ACCOUNT_D->write_account(tp->query_real_name(), "password", crypt(str, 0));
-    _ok("Password changed.");
-  } else {
-    _error("Passwords do not match.");
+  string account;
+
+  if(str != pass) {
+    _error("Those passwords do not match.");
+    return;
   }
+
+  account = ACCOUNT_D->character_account(tp->query_real_name());
+
+  if(!account) {
+    _error("Could not find the account for your character.");
+    _info("Please contact an admin for assistance.");
+    return;
+  }
+
+  if(!ACCOUNT_D->write_account(account, "password", crypt(str, 0))) {
+    _error("Your password could not be changed.");
+    return;
+  }
+
+  _ok("Password changed.");
 }

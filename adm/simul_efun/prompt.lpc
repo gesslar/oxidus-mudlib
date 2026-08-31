@@ -33,8 +33,9 @@
  */
 private nomask void _password(string input, object body, int attempts, int count, mixed *cb) {
   string current_password;
+  string account;
 
-  if(!input || input == "") {
+  if(falsy(input)) {
     _error(body, "Password cannot be empty.");
     if(++count > attempts) {
       call_back(cb, 0);
@@ -51,7 +52,18 @@ private nomask void _password(string input, object body, int attempts, int count
     return;
   }
 
-  current_password = ACCOUNT_D->read_account(body->query_real_name(), "password");
+  account = ACCOUNT_D->character_account(body->query_real_name());
+
+  if(account)
+    current_password = ACCOUNT_D->read_account(account, "password");
+
+  if(!current_password) {
+    _error(body, "Could not read the password for your account.");
+    _info(body, "Please contact an admin for assistance.");
+    call_back(cb, 0);
+    return;
+  }
+
   if(crypt(input, current_password) != current_password) {
     _error(body, "Incorrect password.");
     if(++count > attempts) {

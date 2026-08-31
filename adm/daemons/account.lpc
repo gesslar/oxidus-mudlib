@@ -205,6 +205,12 @@ int valid_manip(string name) {
   if(adminp(caller))
     return true;
 
+  // A character manipulates the account it belongs to. Its privs carry the
+  // character name, which is not the account name, so the comparisons below
+  // cannot see the relationship on their own.
+  if(caller && character_account(query_privs(caller)) == name)
+    return true;
+
   if(!has_role(query_privs(prev), "admin")
       && query_privs(prev) != name
       && base_name(previous_object()) != H_GMCP_CHAR
