@@ -268,6 +268,7 @@ int starts_with(string str, string starting_string);
 int ends_with(string str, string ending_string);
 string sanitize_regex(string msg);
 varargs string safe_string(string str, string replacement);
+string substitute_tokens(string text, mapping tokens);
 
 // File: system.c
 int port();
