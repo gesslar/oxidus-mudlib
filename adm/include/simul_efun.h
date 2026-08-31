@@ -318,5 +318,7 @@ string generate_uuid();
 int of(mixed needle, mixed haystack);
 int truthy(mixed val);
 int falsy(mixed val);
+int accept_prompt(string str);
+int reject_prompt(string str);
 
 #endif // __SIMUL_EFUN_H__
