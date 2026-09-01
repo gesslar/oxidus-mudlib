@@ -1,11 +1,11 @@
 ---
 name: driver-overrides
-description: Document driver efun overrides in Oxidus that change default FluffOS behavior. Covers exec, shutdown, set_privs, userp, query_num, ctime, element_of, debug_message, this_body, and this_caller — what they change and why, to prevent wrong assumptions about driver behavior.
+description: Document driver efun overrides in Oxidus that change default FluffOS behaviour. Covers exec, shutdown, set_privs, userp, query_num, ctime, element_of, debug_message, this_body, and this_caller — what they change and why, to prevent wrong assumptions about driver behaviour.
 ---
 
 # Driver Overrides Skill
 
-This skill documents all driver efun overrides in Oxidus. These are simul_efun functions that **replace** standard FluffOS efuns with modified behavior. Knowing what's overridden prevents wrong assumptions.
+This skill documents all driver efun overrides in Oxidus. These are simul_efun functions that **replace** standard FluffOS efuns with modified behaviour. Knowing what's overridden prevents wrong assumptions.
 
 ## Override Summary
 

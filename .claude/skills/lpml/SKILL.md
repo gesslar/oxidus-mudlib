@@ -248,10 +248,10 @@ LPC-specific constants that support sign prefixes (`+`/`-`):
 
 ```lpml
 {
-  maxInt: MAX_INT,
-  minInt: -MAX_INT,
-  maxFloat: MAX_FLOAT,
-  minFloat: -MAX_FLOAT,
+  max_int: MAX_INT,
+  min_int: -MAX_INT,
+  max_float: MAX_FLOAT,
+  min_float: -MAX_FLOAT,
 }
 ```
 

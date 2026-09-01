@@ -1,6 +1,6 @@
 ---
 name: messaging
-description: Understand and use the messaging system for Oxidus. Covers tell functions (tell, tell_up, tell_down, tell_all, tell_me, tell_them), the containment hierarchy, message reception and processing (EXT_MESSAGING), action messages (simple_action, targetted_action, etc.), system feedback (_ok, _error, _warn, _info), message type flags, and color/accessibility handling.
+description: Understand and use the messaging system for Oxidus. Covers tell functions (tell, tell_up, tell_down, tell_all, tell_me, tell_them), the containment hierarchy, message reception and processing (EXT_MESSAGING), action messages (simple_action, targetted_action, etc.), system feedback (_ok, _error, _warn, _info), message type flags, and colour/accessibility handling.
 ---
 
 # Messaging Skill
@@ -21,9 +21,9 @@ EXT_MESSAGING receive functions          <- std/ext/messaging.lpc
        |
        v
 do_receive()                           <- core message processor
-  +- color preference check
-  +- COLOUR_D->bodyColourReplace()     <- body-specific color substitution
-  +- COLOUR_D->substituteColour()      <- color code encoding
+  +- colour preference check
+  +- COLOUR_D->bod_colour_replace()     <- body-specific colour substitution
+  +- COLOUR_D->substitute_colour()      <- colour code encoding
   +- LINES_D->substitute_lines()       <- line-drawing char substitution
   +- receive(message)                  <- driver efun, sends to connection
   +- event("message", ...)             <- fires message event
@@ -139,7 +139,7 @@ Defined in `include/messaging.h`. Combined with bitwise OR.
 | `UP_MSG` | `1<<1` | Upward propagation |
 | `DOWN_MSG` | `1<<2` | Downward propagation |
 | `ALL_MSG` | `1<<3` | All-direction propagation |
-| `NO_COLOUR` | `1<<10` | Disable color substitution |
+| `NO_COLOUR` | `1<<10` | Disable colour substitution |
 | `MSG_PROMPT` | `1<<11` | Send telnet go-ahead after message |
 | `MSG_COMBAT_HIT` | `1<<20` | Combat hit message |
 | `MSG_COMBAT_MISS` | `1<<21` | Combat miss message |
@@ -168,9 +168,9 @@ query_environment_can_hear()       // Default: 1
 
 Every message ultimately reaches `do_receive(message, message_type)` which:
 
-1. Checks user color preference (`query_pref("colour")`)
-2. If color is on: applies body-specific color replacements via `COLOUR_D->bodyColourReplace()`
-3. Applies color encoding via `COLOUR_D->substituteColour()` (or strips colors if off)
+1. Checks user colour preference (`query_pref("colour")`)
+2. If colour is on: applies body-specific colour replacements via `COLOUR_D->bod_colour_replace()`
+3. Applies colour encoding via `COLOUR_D->substitute_colour()` (or strips colours if off)
 4. Handles accessibility: screen reader mode, UTF-8/ASCII line-drawing substitution
 5. Calls `receive(message)` — the driver efun that sends bytes to the connection
 6. Fires a `"message"` event if body exists
@@ -284,7 +284,7 @@ return _error("You can't do that.");  // Returns 1, displays error
 
 ### Symbols and Colors
 
-| Function | Symbol (Unicode) | Symbol (ASCII) | Color |
+| Function | Symbol (Unicode) | Symbol (ASCII) | Colour |
 |---|---|---|---|
 | `_ok` | `\u2022` (bullet) | `o` | `{{009966}}` (teal) |
 | `_error` | `\u25CF` (circle) | `o` | `{{CC0000}}` (red) |
@@ -294,7 +294,7 @@ return _error("You can't do that.");  // Returns 1, displays error
 | `_debug` | `\u25A1` (hollow square) | `o` | `{{CC00CC}}` (magenta) |
 
 Accessibility handling:
-- Screen reader users: color only, no symbols
+- Screen reader users: colour only, no symbols
 - Unicode-capable: Unicode symbols
 - ASCII fallback: `o` character
 - Non-interactive recipients: falls back to `debug()` log
@@ -337,4 +337,4 @@ tell(tp, "Continue? [y/n] ", MSG_PROMPT);
 - **Containment-aware**: `tell_up`, `tell_down`, `tell_all` propagate through the object containment tree. Objects can opt out via `set_contents_can_hear(0)` or `set_environment_can_hear(0)`.
 - **Duplicate prevention**: `receive_all` maintains an exclude list to prevent objects from receiving the same message twice during propagation.
 - **Action messages are called on the actor**: `tp->simple_action(...)`, not `simple_action(tp, ...)`. The daemon uses `previous_object()` to identify the actor.
-- **Color is opt-in**: Messages pass through `COLOUR_D` but colors are stripped for users with colour preference off, non-interactive objects, or when `NO_COLOUR` flag is set.
+- **Colour is opt-in**: Messages pass through `COLOUR_D` but colours are stripped for users with colour preference off, non-interactive objects, or when `NO_COLOUR` flag is set.

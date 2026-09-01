@@ -124,7 +124,7 @@ Inherits `EXT_USES`. Adds drink/sip mechanics. Mirrors EXT_EDIBLE's structure.
 
 Inherits `STD_ITEM` + `EXT_EDIBLE`. Ready-to-use food inheritable.
 
-**Automatic behavior:**
+**Automatic behaviour:**
 - Calls `set_edible(1)` in `mudlib_setup()`
 - Marks `_uses`, `_max_uses`, `_use_status_message` for persistence via `save_var()`
 - Auto-adds `"food"` to IDs when `set_id()` is called
@@ -150,7 +150,7 @@ Inherits `STD_ITEM` + `EXT_EDIBLE`. Ready-to-use food inheritable.
 
 Inherits `STD_ITEM` + `EXT_POTABLE`. Ready-to-use drink inheritable.
 
-**Automatic behavior:**
+**Automatic behaviour:**
 - Calls `set_potable(1)` in `mudlib_setup()`
 - Marks `_uses`, `_max_uses`, `_use_status_message` for persistence via `save_var()`
 - Auto-adds `"drink"` to IDs when `set_id()` is called

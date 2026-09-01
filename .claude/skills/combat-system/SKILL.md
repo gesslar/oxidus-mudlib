@@ -1,6 +1,6 @@
 ---
 name: combat-system
-description: Understand and work with the combat system in Oxidus. Covers the attack loop, hit-chance formula, damage pipeline, threat tracking, defense/AC, procs, vitals/regen, death sequence, XP/advancement, NPC combat behavior, and combat memory.
+description: Understand and work with the combat system in Oxidus. Covers the attack loop, hit-chance formula, damage pipeline, threat tracking, defence/AC, procs, vitals/regen, death sequence, XP/advancement, NPC combat behaviour, and combat memory.
 ---
 
 # Combat System Skill
@@ -11,16 +11,16 @@ You are helping work with the Oxidus combat system. Follow the `lpc-coding-style
 
 ```
 body.lpc
-  └── combat.lpc          — attack loop, threat, hit chance, AC, defense
+  └── combat.lpc          — attack loop, threat, hit chance, AC, defence
         └── damage.lpc     — deliver/receive damage formulas
 
 vitals.lpc                 — HP/SP/MP, regen, condition strings
 advancement.lpc            — per-living XP/level state
-npc.lpc                    — NPC heartbeat, death detection, setLevel override
+npc.lpc                    — NPC heartbeat, death detection, set_level override
 proc.lpc (module)          — weapon proc system
 combat_memory.lpc (module) — NPC "remember and attack on sight"
 
-advance.lpc (daemon)       — TNL formula, killXp, earnXp, advance
+advance.lpc (daemon)       — TNL formula, kill_xp, earn_xp, advance
 death.lpc (daemon)         — signal listener for SIG_PLAYER_DIED/REVIVED
 ```
 
@@ -61,7 +61,7 @@ MP is checked before each swing — if `query_mp() <= 0.0`, the attacker is "too
 ## Hit Chance Formula — `can_strike()`
 
 ```lpc
-float chance = mudConfig("DEFAULT_HIT_CHANCE");   // 65.0
+float chance = mud_config("COMBAT.DEFAULT_HIT_CHANCE");
 
 if(enemy->query_mp() < 0.0)
     chance += 25.0;    // exhausted enemies are easier to hit
@@ -69,11 +69,11 @@ if(enemy->query_mp() < 0.0)
 chance = chance
     + (attacker_level - defender_level)          // effective levels
     + attacker_skill_level                       // weapon skill (query_skill_level)
-    - (defender_ac * 2.0)                        // armor class doubled
-    - defender_defense_skill_level;              // dodge or evade skill
+    - (defender_ac * 2.0)                        // armour class doubled
+    - defender_defence_skill_level;              // dodge or evade skill
 
 result = random_float(100.0);
-enemy->use_skill(defense_skill);   // defender trains defense on every attempt
+enemy->use_skill(defence_skill);   // defender trains defence on every attempt
 return result < chance;
 ```
 
@@ -81,9 +81,9 @@ return result < chance;
 
 | Weapon | Attacker Skill | Defender AC | Defender Skill |
 |--------|---------------|-------------|----------------|
-| Object or unarmed | `"combat.melee.<damage_type>"` | `query_ac()` | `"combat.defense.dodge"` |
-| Spell (string contains `".spell."`) | spell skill name | `query_spell_ac()` | `"combat.defense.evade"` |
-| Other string skill | skill name | `query_spell_ac()` | `"combat.defense.dodge"` |
+| Object or unarmed | `"combat.melee.<damage_type>"` | `query_ac()` | `"combat.defence.dodge"` |
+| Spell (string contains `".spell."`) | spell skill name | `query_spell_ac()` | `"combat.defence.evade"` |
+| Other string skill | skill name | `query_spell_ac()` | `"combat.defence.dodge"` |
 
 ## Damage Formula — `strike_enemy()`
 
@@ -100,8 +100,8 @@ dam = base
     + query_effective_level()                          // attacker level
     - enemy->query_effective_level()                   // defender level
     + skill                                            // attacker weapon skill level
-    - enemy->query_defense_amount(weapon_type)         // type-specific armor reduction
-    - enemy->query_skill_level("combat.defense");      // generic defense skill
+    - enemy->query_defence_amount(weapon_type)         // type-specific armour reduction
+    - enemy->query_skill_level("combat.defence");      // generic defence skill
 
 if(dam < 0.0) dam = 1.0;   // minimum 1 damage
 ```
@@ -116,13 +116,13 @@ After calculating damage:
 ## Damage Reception — `receive_damage()`
 
 ```lpc
-def = query_defense_amount(type);         // type-specific armor value
+def = query_defence_amount(type);         // type-specific armour value
 red = percent_of(def, damage);            // def% of damage is reduced
 
-mod = mudConfig("DAMAGE_LEVEL_MODIFIER"); // 25
+mod = mud_config("COMBAT.DAMAGE_LEVEL_MODIFIER");
 level_difference = attacker_level - defender_level;
 mod = mod * level_difference;
-red -= percent_of(mod, damage);           // level gap reduces/increases armor effectiveness
+red -= percent_of(mod, damage);           // level gap reduces/increases armour effectiveness
 
 damage -= red;
 if(damage < 0.0) damage = 0.0;
@@ -130,7 +130,7 @@ if(damage < 0.0) damage = 0.0;
 
 Then applies `adjust_hp(-damage)` and sets `last_damaged_by` / `killed_by` as appropriate.
 
-**Level modifier effect:** Higher-level attackers reduce the defender's armor effectiveness. Lower-level attackers increase it.
+**Level modifier effect:** Higher-level attackers reduce the defender's armour effectiveness. Lower-level attackers increase it.
 
 ## Threat System
 
@@ -145,14 +145,14 @@ Threat values start at `1.0` on `start_attack()` and grow by damage dealt.
 
 `_current_enemies` is the active combat mapping. `_seen_enemies` tracks all-time threat.
 
-## Defense / AC System — `adjust_protection()`
+## Defence / AC System — `adjust_protection()`
 
-Called whenever equipment changes. Rebuilds `_defense` and `_ac` from all equipped items:
+Called whenever equipment changes. Rebuilds `__defence` and `__ac` from all equipped items:
 
 ```lpc
 mapping adjust_protection() {
     // iterates query_equipped() values
-    // sums ob->query_defense() mappings into _defense per damage type
+    // sums ob->query_defence() mappings into __defence per damage type
     // sums ob->query_ac() into _ac
 }
 ```
@@ -160,9 +160,9 @@ mapping adjust_protection() {
 | Function | Description |
 |---|---|
 | `query_ac()` | Returns aggregated `_ac` float |
-| `query_defense_amount(string type)` | Returns `_defense[type]` for a specific damage type |
-| `set_defense(mapping)` | Directly sets `_defense` |
-| `add_defense(string type, float amount)` | Adds a single type entry |
+| `query_defence_amount(string type)` | Returns `__defence[type]` for a specific damage type |
+| `set_defence(mapping)` | Directly sets `__defence` |
+| `add_defence(string type, float amount)` | Adds a single type entry |
 
 ## Starting and Stopping Combat
 
@@ -193,7 +193,7 @@ Used when the NPC has no wielded weapon object:
 
 | Function | Default | Description |
 |---|---|---|
-| `set_damage(float)` | `0.0` | Base damage. If `<= 0`, uses `random_float(queryLevel() * 2.0)` |
+| `set_damage(float)` | `0.0` | Base damage. If `<= 0`, uses `random_float(query_level() * 2.0)` |
 | `set_weapon_name(string)` | `"fist"` | Display name for combat messages |
 | `set_weapon_type(string)` | `"bludgeoning"` | Damage type string |
 
@@ -299,7 +299,7 @@ if(!is_dead() && query_hp() <= 0.0) {
 10. Move all wealth to corpse (converted to coin objects)
 11. Move corpse to room
 12. **Player path:** `BODY_D->create_ghost(privs)`, `exec(ghost, self)`, move ghost to room
-13. **NPC path:** `ADVANCE_D->killXp(killed_by(), self)` — award XP to killer
+13. **NPC path:** `ADVANCE_D->kill_xp(killed_by(), self)` — award XP to killer
 14. `remove()` — destroy this object
 
 ## XP and Advancement — `adm/daemons/advance.lpc`
@@ -307,7 +307,7 @@ if(!is_dead() && query_hp() <= 0.0) {
 ### TNL Formula
 
 ```lpc
-toNextLevel(level) = to_int(baseTnl * pow(tnlRate, level - 1.0))
+to_next_level(level) = to_int(BASE_TNL * pow(TNL_RATE, level - 1.0))
 // Default: to_int(100 * 1.25^(level-1))
 ```
 
@@ -322,7 +322,7 @@ toNextLevel(level) = to_int(baseTnl * pow(tnlRate, level - 1.0))
 ### Kill XP Formula
 
 ```lpc
-xp       = toNextLevel(killed_level) / 10;    // 10% of killed NPC's TNL
+xp       = to_next_level(killed_level) / 10;  // 10% of killed NPC's TNL
 variance = xp / 10;
 xp       = xp - variance + random(variance);  // +/- 10% random
 
@@ -342,20 +342,23 @@ If `PLAYER_AUTOLEVEL` is true (default), `advance()` is called immediately after
 
 | Key | Default | Used In |
 |---|---|---|
-| `DEFAULT_HIT_CHANCE` | `65` | `can_strike()` |
-| `DAMAGE_LEVEL_MODIFIER` | `25` | `receive_damage()` |
-| `BASE_TNL` | `100` | `toNextLevel()` |
-| `TNL_RATE` | `1.25` | `toNextLevel()` |
-| `OVERLEVEL_THRESHOLD` | `5` | `killXp()` |
-| `OVERLEVEL_XP_PUNISH` | `0.05` | `killXp()` |
-| `UNDERLEVEL_THRESHOLD` | `0` | `killXp()` |
-| `UNDERLEVEL_XP_BONUS` | `0.05` | `killXp()` |
-| `PLAYER_AUTOLEVEL` | `true` | `earnXp()` |
+| `COMBAT.DEFAULT_HIT_CHANCE` | `can_strike()` |
+| `COMBAT.DAMAGE_LEVEL_MODIFIER` | `receive_damage()` |
+| `COMBAT.NPC_SKILL_MULTIPLIER` | `query_skill_level()` on NPCs, `adjust_skills_by_npc_level()` |
+| `BASE_TNL` | `to_next_level()` |
+| `TNL_RATE` | `to_next_level()` |
+| `OVERLEVEL_THRESHOLD` | `kill_xp()` |
+| `OVERLEVEL_XP_PUNISH` | `kill_xp()` |
+| `UNDERLEVEL_THRESHOLD` | `kill_xp()` |
+| `UNDERLEVEL_XP_BONUS` | `kill_xp()` |
+
+Values live in `adm/etc/default.lpml`. Read them with `mud_config()`; do not restate them here or in code.
+| `PLAYER_AUTOLEVEL` | `true` | `earn_xp()` |
 | `HEART_PULSE` | `2000` | regen interval |
 | `HEARTBEATS_TO_REGEN` | `5` | regen interval |
 | `DEFAULT_HEART_RATE` | `10` | NPC heartbeat |
 
-## NPC Combat Behavior — `std/living/npc.lpc`
+## NPC Combat Behaviour — `std/living/npc.lpc`
 
 ### Heartbeat
 
@@ -364,7 +367,7 @@ NPCs only tick when players are present:
 ```lpc
 void start_heart_beat() {
     if(player_check())
-        set_heart_beat(mudConfig("DEFAULT_HEART_RATE"));
+        set_heart_beat(mud_config("DEFAULT_HEART_RATE"));
 }
 
 void stop_heart_beat() {
@@ -422,9 +425,9 @@ if(!userp())
 | `"combat.melee"` | Multi-strike chance in `swing()` |
 | `"combat.melee.<type>"` | Hit/damage formulas (`can_strike`, `strike_enemy`) |
 | `"combat.melee.unarmed"` | Unarmed fallback |
-| `"combat.defense.dodge"` | Melee defense in `can_strike()` |
-| `"combat.defense.evade"` | Spell defense in `can_strike()` |
-| `"combat.defense"` | Generic defense reduction in `strike_enemy()` |
+| `"combat.defence.dodge"` | Melee defence in `can_strike()` |
+| `"combat.defence.evade"` | Spell defence in `can_strike()` |
+| `"combat.defence"` | Generic defence reduction in `strike_enemy()` |
 
 ## Attack Speed
 
@@ -440,9 +443,9 @@ Actual interval per round = `_attack_speed + random_float(1.5)` seconds.
 
 1. **Death is detected in heartbeat, not in `receive_damage`**. The `dead` flag is set in `npc.lpc::heart_beat()` when `query_hp() <= 0.0`. There can be a brief window between HP hitting zero and `die()` firing.
 2. **No regen during combat.** `heal_tick()` returns immediately if `in_combat()`.
-3. **NPCs stop ticking in empty rooms.** No heartbeat = no regen, no boon processing, no AI. Developers expecting continuous background behavior need to understand this.
-4. **`query_skill()` vs `query_skill_level()`**: For NPCs, `query_skill()` returns `queryLevel() * 3.0` (shortcut), but `query_skill_level()` reads stored values. Combat formulas use `query_skill_level()`.
-5. **`setLevel()` on NPCs wipes skills**: `npc.lpc::setLevel()` calls `adjust_skills_by_npc_level()` which resets all stored skill levels to near-zero.
+3. **NPCs stop ticking in empty rooms.** No heartbeat = no regen, no boon processing, no AI. Developers expecting continuous background behaviour need to understand this.
+4. **`query_skill()` vs `query_skill_level()`**: For NPCs, `query_skill()` returns `query_level() * 3.0` (shortcut), but `query_skill_level()` reads stored values. Combat formulas use `query_skill_level()`.
+5. **`set_level()` on NPCs wipes skills**: `npc.lpc::set_level()` calls `adjust_skills_by_npc_level()` which resets all stored skill levels to near-zero.
 6. **Proc `_proc_chance` field is maintained but not rolled against** in `can_proc()` — the actual selection uses per-proc cooldowns and `element_of_weighted`.
 7. **Threat is accumulated damage**, not an abstract aggro value. `highest_threat()` targets whoever has dealt the most damage to this living.
 

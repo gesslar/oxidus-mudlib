@@ -95,10 +95,10 @@ inherit STD_VIRTUAL_SERVER;
 private mapping area_map = ([]);
 
 void setup() {
-    loadMap();
+    load_map();
 }
 
-private void loadMap() {
+private void load_map() {
     string *lines = explode(read_file(__DIR__ "area_map.txt"), "\n");
     int y = 0, z = 0;
     for(int i = 0; i < sizeof(lines); i += 2) {
@@ -140,9 +140,9 @@ inherit STD_ROOM;
 
 void repopulate();
 
-private nosave string *mobFiles = ({});
+private nosave string *mob_files = ({});
 private nosave object *mobs = ({});
-private nosave float spawnChance = 10.0;
+private nosave float spawn_chance = 10.0;
 
 void setup() {
     set_light(1);
@@ -160,7 +160,7 @@ void virtual_setup(mixed args...) {
 
     add_reset((: repopulate :));
 
-    mobFiles = ({
+    mob_files = ({
         "/mob/wolf",
         "/mob/bear",
     });
@@ -175,8 +175,8 @@ void repopulate() {
         }
     }
 
-    if(random_float(100.0) < spawnChance) {
-        mobs += ({ add_inventory(element_of(mobFiles)) });
+    if(random_float(100.0) < spawn_chance) {
+        mobs += ({ add_inventory(element_of(mob_files)) });
     }
 }
 ```
@@ -188,26 +188,26 @@ void repopulate() {
 ```lpc
 inherit STD_VIRTUAL_MAP;
 
-private nosave string *areaShorts;
-private nosave string *areaLongs;
-private nosave string clearingLong;
+private nosave string *area_shorts;
+private nosave string *area_longs;
+private nosave string clearing_long;
 
 void setup() {
     apply_map_file(__DIR__ "area_map.txt");
-    setupShorts();
-    setupLongs();
+    setup_shorts();
+    setup_longs();
 }
 
-private void setupShorts() {
-    areaShorts = ({
+private void setup_shorts() {
+    area_shorts = ({
         "Dense Woodland",
         "Shadowy Forest",
         "Thick Forest",
     });
 }
 
-private void setupLongs() {
-    areaLongs = ({
+private void setup_longs() {
+    area_longs = ({
         "You are surrounded by tall trees, their branches intertwining "
         "above you to form a thick canopy.",
 
@@ -215,7 +215,7 @@ private void setupLongs() {
         "Shafts of sunlight filter through the leaves.",
     });
 
-    clearingLong =
+    clearing_long =
     "You've stumbled upon a small clearing in the dense forest. "
     "Sunlight streams down, illuminating wildflowers and soft grass.";
 }
@@ -223,23 +223,23 @@ private void setupLongs() {
 public void setup_short(object room, string file) {
     int *coords = room->get_virtual_coordinates();
     int x = coords[2], y = coords[1], z = coords[0];
-    string roomType = get_room_type(z, y, x);
+    string room_type = get_room_type(z, y, x);
 
-    if(roomType == "X")
+    if(room_type == "X")
         room->set_short("Forest Clearing");
     else
-        room->set_short(element_of(areaShorts));
+        room->set_short(element_of(area_shorts));
 }
 
 public void setup_long(object room, string file) {
     int *coords = room->get_virtual_coordinates();
     int x = coords[2], y = coords[1], z = coords[0];
-    string roomType = get_room_type(z, y, x);
+    string room_type = get_room_type(z, y, x);
 
-    if(roomType == "X")
-        room->set_long(clearingLong);
+    if(room_type == "X")
+        room->set_long(clearing_long);
     else
-        room->set_long(element_of(areaLongs));
+        room->set_long(element_of(area_longs));
 }
 
 public void setup_exits(object room, string file) {
@@ -283,10 +283,10 @@ For areas that don't use file-based maps (e.g., noise-generated terrain):
 inherit STD_VIRTUAL_MAP;
 
 void setup() {
-    apply_map_generator((: generateMap :));
+    apply_map_generator((: generate_map :));
 }
 
-private mixed *generateMap() {
+private mixed *generate_map() {
     // Return 3D array of room data
     // Use simplex noise, cellular automata, etc.
 }

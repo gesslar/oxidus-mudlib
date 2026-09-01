@@ -15,7 +15,7 @@ Three tightly coupled subsystems handle physical object constraints:
 2. **Contents** (`std/object/contents.lpc`) — capacity/fill tracking per container
 3. **Container** (`std/object/container.lpc`) — open/close/lock states, access control
 
-All three are config-gated: they only enforce constraints when `mudConfig("USE_MASS")` is true.
+All three are config-gated: they only enforce constraints when `mud_config("USE_MASS")` is true.
 
 ## Mass System — `std/object/weight.lpc`
 

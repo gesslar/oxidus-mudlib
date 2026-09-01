@@ -1,6 +1,6 @@
 ---
 name: equipment
-description: Understand and work with the equipment system in Oxidus. Covers weapons (hands, damage coefficient, damage type), armour (AC, defense mappings), clothing, body slots, the equip/unequip dispatch, combat integration, and creating new equipment items.
+description: Understand and work with the equipment system in Oxidus. Covers weapons (hands, damage coefficient, damage type), armour (AC, defence mappings), clothing, body slots, the equip/unequip dispatch, combat integration, and creating new equipment items.
 ---
 
 # Equipment Skill
@@ -43,11 +43,11 @@ Inherits `STD_ITEM`.
 
 | Property | Type | Default | Purpose |
 |---|---|---|---|
-| `_hands` | `int` | `1` | Hands required (1 or 2) |
-| `_dc` | `mixed` | `1.0` | Damage coefficient — float or function |
-| `_damage_type` | `string` | `"bludgeoning"` | Damage type (matches defense types) |
-| `_equipped` | `int` | `0` | Current equipped state |
-| `_slot` | `string` | | Preferred weapon slot |
+| `__hands` | `int` | `1` | Hands required (1 or 2) |
+| `__dc` | `mixed` | `1.0` | Damage coefficient — float or function |
+| `__damage_type` | `string` | `"bludgeoning"` | Damage type (matches defence types) |
+| `__equipped` | `int` | `0` | Current equipped state |
+| `__slot` | `string` | | Preferred weapon slot |
 
 ### Functions
 
@@ -87,8 +87,8 @@ Base class for all worn items. Inherits `STD_ITEM`.
 
 | Property | Type | Purpose |
 |---|---|---|
-| `_slot` | `string` | Body slot this item occupies |
-| `_equipped` | `int` | Current equipped state |
+| `__slot` | `string` | Body slot this item occupies |
+| `__equipped` | `int` | Current equipped state |
 
 ### Functions
 
@@ -117,23 +117,23 @@ Inherits `STD_CLOTHING`. Adds defensive properties.
 
 | Property | Type | Default | Purpose |
 |---|---|---|---|
-| `_defense` | `mapping` | `([])` | Damage type to defense factor mapping |
-| `_ac` | `float` | `0.0` | Armor class rating |
+| `__defence` | `mapping` | `([])` | Damage type to defence factor mapping |
+| `__ac` | `float` | `0.0` | Armour class rating |
 
 ### Functions
 
 | Function | Signature | Purpose |
 |---|---|---|
-| `set_defense` | `void set_defense(mapping def)` | Set full defense mapping |
-| `add_defense` | `void add_defense(string type, float amount)` | Add/set defense for one damage type |
-| `query_defense` | `mapping query_defense()` | Get defense mapping |
-| `query_defense_amount` | `float query_defense_amount(string type)` | Get defense for specific type |
-| `set_ac` | `void set_ac(float ac)` | Set armor class |
-| `query_ac` | `float query_ac()` | Get armor class |
-| `add_ac` | `float add_ac(float ac)` | Increment armor class |
+| `set_defence` | `void set_defence(mapping def)` | Set full defence mapping |
+| `add_defence` | `void add_defence(string type, float amount)` | Add/set defence for one damage type |
+| `query_defence` | `mapping query_defence()` | Get defence mapping |
+| `query_defence_amount` | `float query_defence_amount(string type)` | Get defence for specific type |
+| `set_ac` | `void set_ac(float ac)` | Set armour class |
+| `query_ac` | `float query_ac()` | Get armour class |
+| `add_ac` | `float add_ac(float ac)` | Increment armour class |
 | `is_armour` | `int is_armour()` | Identity — returns 1 |
 
-When armour is equipped or unequipped, it calls `tp->adjust_protection()` to recalculate the living's total defenses.
+When armour is equipped or unequipped, it calls `tp->adjust_protection()` to recalculate the living's total defences.
 
 ## Equipment Manager — `std/living/equipment.lpc`
 
@@ -160,16 +160,16 @@ Called when armour is equipped or unequipped. Iterates all equipped items and ag
 
 ```lpc
 mapping adjust_protection() {
-  // Sum _defense mappings from all equipped armour
+  // Sum __defence mappings from all equipped armour
   // Sum _ac from all equipped items
-  // Store in living's _defense and _ac
+  // Store in living's __defence and __ac
 }
 ```
 
 ### Combat Use
 
 - **Hit chance**: `chance -= (ac * 2.0)` — AC reduces hit probability
-- **Damage reduction**: `damage -= defense[damage_type]` — type-specific defense subtracted from damage
+- **Damage reduction**: `damage -= defence[damage_type]` — type-specific defence subtracted from damage
 - **Weapon damage**: `dc` (damage coefficient) scales attack damage
 
 ## Creating Equipment
@@ -202,7 +202,7 @@ void setup() {
   set_long("A well-made jerkin of thick leather.");
   set_slot("torso");
   set_ac(2.0);
-  set_defense(([
+  set_defence(([
     "slashing"   : 2.0,
     "piercing"   : 1.0,
     "bludgeoning": 1.0,
@@ -251,8 +251,8 @@ mixed equip_check(object tp) {
 
 - Each body slot holds one item. Equipping to an occupied slot requires unequipping first.
 - Multi-handed weapons fill consecutive weapon slots automatically.
-- `_dc` can be a function for dynamic damage (e.g., scaling with level).
-- Defense is type-matched — `"slashing"` defense only reduces `"slashing"` damage.
+- `__dc` can be a function for dynamic damage (e.g., scaling with level).
+- Defence is type-matched — `"slashing"` defence only reduces `"slashing"` damage.
 - Auto-unequip happens if an equipped item is moved out of the living's inventory.
 - GMCP updates (`GMCP_PKG_CHAR_ITEMS_UPDATE`) fire on all equip/unequip events.
-- Equipment state (`_equipped`) is `nosave` on the item — it's re-established from the living's equipment mapping on restore.
+- Equipment state (`__equipped`) is `nosave` on the item — it's re-established from the living's equipment mapping on restore.
