@@ -12,7 +12,7 @@
  * for a chance to hand progress to improve_skill().
  *
  * @created 2024-07-31 - Gesslar
- * @last_modified 2026-07-19 - Gesslar
+ * @last_modified 2026-08-31 - Gesslar
  *
  * @history
  * 2024-07-31 - Gesslar - Created
@@ -21,6 +21,9 @@
  *                        gained mod_adjust; extracted find_skill_node.
  * 2026-07-19 - Gesslar - Doc pass: removed restated internals and
  *                        corrected stale claims.
+ * 2026-08-31 - Gesslar - Documented clamp_improvement, and clamped it
+ *                        against the skill cap rather than the next level
+ *                        boundary so use-based gains roll over.
  */
 
 #include <skills.h>
@@ -306,28 +309,40 @@ void set_skills(mapping s) {
 }
 
 /**
- * Invoke a skill, rolling for a chance to improve it. The chance
- * scales with the skill's current level. An unknown skill is
- * created instead, with no roll this call.
+ * Invoke a skill, rolling for a chance to improve it. The chance scales with
+ * the skill's current level. An unknown skill is created instead, with no roll
+ * this call.
  *
  * @param {string} skill - The dot-path of the skill being used.
- * @param {mixed} [mod_adjust] - Progress bound, passed through to
- *                               improve_skill(). Omit for its
- *                               default.
- * @returns {int | undefined} 1 if the roll fired this call, 0
- *                            otherwise, or null on invalid input.
+ * @param {mixed} [improvement] - Progress bound, passed through to
+ *  improve_skill(). Omitted, SKILLS.default_gain is used.
+ * @returns {int | undefined} 1 if progress was applied this call, 0 otherwise,
+ *  or undefined on invalid input.
  */
-varargs int use_skill(string skill, mixed mod_adjust) {
+varargs int use_skill(string skill, mixed improvement) {
   if(!stringp(skill))
-    return null;
+    return undefined;
 
   float raw = query_raw_skill(skill);
+  float cap_factor = mud_config("SKILLS.cap_factor");
+
+  mapping improve_chance = mud_config("SKILLS.improve_chance");
 
   if(!nullp(raw)) {
-    float chance_to_improve = 5.0+dim_hyperbolic(raw, 20.0);
+    float chance_to_improve = improve_chance.floor + dim_hyperbolic(raw, improve_chance.ceiling);
+
+    float default_gain = mud_config("SKILLS.default_gain");
+
+    improvement ??= default_gain;
 
     if(random_float(100.0) < chance_to_improve) {
-      improve_skill(skill, mod_adjust);
+      string to_improve = determine_skill_to_improve(skill, query_level() * cap_factor);
+
+      if(!to_improve)
+        return 0;
+
+      float modified_improvement = clamp_improvement(to_improve, improvement);
+      improve_skill(to_improve, modified_improvement);
       return 1;
     }
   } else {
@@ -335,6 +350,29 @@ varargs int use_skill(string skill, mixed mod_adjust) {
   }
 
   return 0;
+}
+
+/**
+ * Cap a pending skill improvement so it cannot carry the node past its
+ * skill cap.
+ *
+ * The cap is the living's level multiplied by SKILLS.cap_factor; a node
+ * already at or above it gains nothing. Otherwise the gain is clamped to
+ * the distance remaining to the cap, so progress rolls over intervening
+ * level boundaries freely and only the cap itself halts it.
+ *
+ * @param {string} skill_name - The dot-path of the node being improved.
+ * @param {float} improvement - The proposed gain.
+ * @returns {float} The gain to actually award, never less than 0.0.
+ */
+private float clamp_improvement(string skill_name, float improvement) {
+  float skill_points = query_raw_skill(skill_name);
+  float max_skill_level = query_level() * mud_config("SKILLS.cap_factor");
+
+  if(skill_points >= max_skill_level)
+    return 0.0;
+
+  return clamp(improvement, 0.0, max_skill_level - skill_points);
 }
 
 /**
@@ -348,34 +386,69 @@ string *query_skill_path(string skill) {
 }
 
 /**
- * Apply progress to a skill, with weighted bubble-up.
+ * Choose which node along a skill's dot-path receives this improvement.
  *
- * A target node is chosen from the skill's dot-path via a weighted
- * draw favouring leaves over roots, so parents grow alongside the
- * children that are used, but more slowly. The node then gains a
- * random amount of progress, bounded by potential_progress, and
- * the living object is told if that crosses a level.
+ * The skill itself and every ancestor of it are candidates. Any node already
+ * at or above the cap is dropped, and one of the survivors is drawn at random
+ * with weights favouring leaves over roots, so parents grow alongside the
+ * children that are used, but more slowly.
  *
- * @param {string} skill - The dot-path used to seed the weighted
- *                         walk.
- * @param {mixed} [potential_progress=0.01] - Upper bound for the
- *                            random roll, not the amount applied.
- *                            A float, an int, or a closure
- *                            evaluated against this_object().
- * @returns {float} The chosen node's new level, 0 if an
- *                  intermediate is missing, or null on invalid
- *                  input.
+ * @param {string} skill_name - The dot-path of the skill being used.
+ * @param {float} skill_cap - Raw level at or above which a node is ineligible.
+ * @returns {string | undefined} The dot-path to improve, or undefined if every
+ *  candidate is capped.
  */
-varargs float improve_skill(string skill, mixed potential_progress: (: 0.01 :)) {
-  if(!stringp(skill))
-    return null;
+private string determine_skill_to_improve(string skill_name, float skill_cap) {
+  string *path = explode(skill_name, ".");
+  string *candidates = (string*)reduce(path, function(string *acc, string curr, int idx, string *arr) {
+    if(!sizeof(acc))
+      return ({ curr });
 
-  string *path = explode(skill, ".");
+    return acc + ({ `${implode(arr[0..idx-1], ".")}.${curr}` });
+  }, ({}));
+  string *can_improve = filter(candidates, (: query_raw_skill($1) < $(skill_cap) :));
+
+  mapping chances = ([]);
+  int sz = sizeof(can_improve);
+  int i = sz;
+
+  while(i--) {
+    string candidate = can_improve[i];
+    string *parts = explode(candidate, ".");
+    int n = sizeof(parts);
+
+    chances[candidate] = (n + 1) * 3;
+  }
+
+  if(!sizeof(chances))
+    return undefined;
+
+  return element_of_weighted(chances);
+}
+
+/**
+ * Apply progress to a single skill node.
+ *
+ * The node gains a random amount of progress, bounded by potential_progress,
+ * and the living object is told if that crosses a level. Choosing which node
+ * along a dot-path to hand to this is determine_skill_to_improve()'s job.
+ *
+ * @param {string} skill_name - The dot-path of the node to improve.
+ * @param {mixed} [potential_progress] - Upper bound for the random roll, not
+ *  the amount applied. A float, an int, or a functional evaluated against
+ *  this_object(). Omitted, SKILLS.default_gain is used.
+ * @returns {float | undefined} The node's new level, 0 if the node is missing,
+ *  or undefined on invalid input.
+ */
+varargs float improve_skill(string skill_name, mixed potential_progress) {
+  if(!stringp(skill_name))
+    return undefined;
+
+  potential_progress ??= mud_config("SKILLS.default_gain");
+
   float progress;
 
-  if(nullp(potential_progress))
-    progress = 0.01;
-  else if(valid_function(potential_progress))
+  if(valid_function(potential_progress))
     progress = evaluate(potential_progress, this_object());
   else if(intp(potential_progress))
     progress = to_float(potential_progress);
@@ -383,30 +456,19 @@ varargs float improve_skill(string skill, mixed potential_progress: (: 0.01 :)) 
     progress = potential_progress;
 
   if(!floatp(progress))
-    return null;
+    return undefined;
 
-  mapping chances = ([]);
-  int sz = sizeof(path);
-  int i = sz;
+  mapping node = find_skill_node(skill_name);
 
-  while(i--) {
-    string n = implode(path[0..i], ".");
-
-    chances[n] = (i + 1) * 3;
-  }
-
-  string chosen = element_of_weighted(chances);
-
-  mapping node = find_skill_node(chosen);
   if(!node)
     return 0;
 
-  float level = query_raw_skill(chosen);
+  float skill_points = query_raw_skill(skill_name);
   node["level"] += random_float(progress);
-  float new_level = query_raw_skill(chosen);
+  float new_level = query_raw_skill(skill_name);
 
-  if(floor(new_level) > floor(level))
-    tell(this_object(), "{{9c6}}You have improved your {{re1}}" + chosen + "{{re0}} skill.{{res}}\n");
+  if(floor(new_level) > floor(skill_points))
+    tell(this_object(), `{{9c6}}You have improved your {{re1}}${skill_name}{{re0}} skill.{{res}}\n`);
 
   return node["level"];
 }
