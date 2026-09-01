@@ -82,34 +82,42 @@
     "/cmds/file/rm",
   ],
   SKILLS: {
-    combat: {
-      defense: [
-        "dodge",
-        "parry",
+    learnable: {
+      combat: {
+        defence: [
+          "dodge",
+          "parry",
+        ],
+        melee: [
+          "attack",
+          "bludgeoning",
+          "piercing",
+          "slashing",
+          "unarmed",
+        ],
+      },
+      social: [
+        "barter",
+        "charm",
+        "intimidate",
+        "persuade",
       ],
-      melee: [
-        "attack",
-        "bludgeoning",
-        "piercing",
-        "slashing",
-        "unarmed",
+      general: [
+        "appraise",
+        "hide",
+        "jump",
+        "listen",
+        "search",
+        "spot",
+        "swim",
       ],
     },
-    social: [
-      "barter",
-      "charm",
-      "intimidate",
-      "persuade",
-    ],
-    general: [
-      "appraise",
-      "hide",
-      "jump",
-      "listen",
-      "search",
-      "spot",
-      "swim",
-    ],
+    improve_chance: {
+      floor: 5.0,
+      ceiling: 20.0,
+    },
+    default_gain: 0.5,
+    cap_factor: 2.0,
   },
   ATTRIBUTES: [
     "strength",

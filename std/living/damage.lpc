@@ -51,9 +51,7 @@ public float deliver_damage(object victim, float damage, string type) {
 
   float received = victim->receive_damage(this_object(), damage, type);
 
-#if 0
-  tell(this_object(), sprintf("delivering %O %O damage => %O\n", damage, type, received));
-#endif
+  // tell(this_object(), `{{cc3}}[[DELIVER]] {{fc0}}${damage} ${type}{{res}} => {{fc0}}${received}{{res}}\n`);
 
   return received;
 }
@@ -80,6 +78,8 @@ public float deliver_mundane_damage(object victim, float damage, string type) {
 
   float received = victim->receive_mundane_damage(this_object(), damage, type);
 
+  // tell(this_object(), `{{cc3}}[[DELIVER]] {{fc0}}${damage} ${type}{{res}} => {{fc0}}${received}{{res}}\n`);
+
   return received;
 }
 
@@ -104,6 +104,8 @@ public float deliver_magic_damage(object victim, float damage, string type) {
     return 0;
 
   float received = victim->receive_magic_damage(this_object(), damage, type);
+
+  // tell(this_object(), `{{cc3}}[[DELIVER]] {{fc0}}${damage} ${type}{{res}} => {{fc0}}${received}{{res}}\n`);
 
   return received;
 }
@@ -139,9 +141,7 @@ public float receive_damage(object attacker, float damage, string type) {
   float new_damage = damage;
 
   if(damage < 0.0) {
-#if 0
-    tell(this_object(), sprintf("receiving %O %O damage => %O\n", damage, type, new_damage));
-#endif
+    // tell(this_object(), sprintf("receiving %O %O damage => %O\n", damage, type, new_damage));
     return 0.0;
   }
 
@@ -164,9 +164,7 @@ public float receive_damage(object attacker, float damage, string type) {
   // The damage is reduced by the level modifier
   new_damage -= red;
 
-#if 0
-  tell(this_object(), sprintf("receiving %O %O damage => %O\n", damage, type, new_damage));
-#endif
+  // tell(this_object(), `{{900}}[[RECEIVE]]{{res}} {{f00}}${damage} ${type}{{res}} => {{f00}}${new_damage}{{res}}\n`);
 
   if(new_damage < 0.0)
     new_damage = 0.0;
@@ -289,15 +287,14 @@ public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
     - enemy->query_skill_level(defence_skill)
   ;
 
-#if 0
-  false && _debug("base %O + wbase %O + skill %O - enemy skill %O = %O",
-    base,
-    wbase,
-    (skill + query_skill_level("combat") / 2.0),
-    enemy->query_skill_level(defence_skill),
-    dam
+/*
+  tell(this_object(),
+    `{{693}}[[DAM]]{{res}} `
+    `base {{6c6}}${base}{{res}} + `
+    `wbase {{6c6}}${wbase}{{res}} + skill {{6c6}}${(skill + query_skill_level("combat") / 2.0)}{{res}} - `
+    `enemy skill {{c63}}${enemy->query_skill_level(defence_skill)}{{res}} = {{6c6}}${dam}{{res}}\n`
   );
-#endif
+*/
 
   return dam;
 }
