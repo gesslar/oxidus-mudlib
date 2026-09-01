@@ -57,7 +57,7 @@ int slot(string sig, string func)
 
 ```lpc
 // In setup() or mudlib_setup():
-slot(SIG_USER_LOGIN, "onPlayerLogin");
+slot(SIG_USER_LOGIN, "on_player_login");
 ```
 
 ### emit(sig, args...)
@@ -235,9 +235,9 @@ Note: `SIG_USER_ENV_CHANGED` and `SIG_USER_PREF_CHANGED` use the `SIG_PLAYER` pr
 | `adm/daemons/grapevine.lpc` | `SIG_USER_LINK_RESTORE` | `grapevine_send_event_players_sign_in` | Notify Grapevine of reconnect |
 | `adm/daemons/grapevine.lpc` | `SIG_USER_LOGOUT` | `grapevine_send_event_players_sign_out` | Notify Grapevine network |
 | `adm/daemons/grapevine.lpc` | `SIG_USER_LINKDEAD` | `grapevine_send_event_players_sign_out` | Notify Grapevine of linkdead |
-| `adm/daemons/modules/channel/channel.lpc` | `SIG_CHANNEL_MESSAGE` | `incomingTransmission` | Route channel messages to modules |
-| `adm/daemons/modules/channel/herald.lpc` | `SIG_USER_LOGIN` | `heraldArrival` | Announce player login |
-| `adm/daemons/modules/channel/herald.lpc` | `SIG_USER_LOGOUT` | `heraldDeparture` | Announce player logout |
+| `adm/daemons/modules/channel/channel.lpc` | `SIG_CHANNEL_MESSAGE` | `incoming_transmission` | Route channel messages to modules |
+| `adm/daemons/modules/channel/herald.lpc` | `SIG_USER_LOGIN` | `herald_arrival` | Announce player login |
+| `adm/daemons/modules/channel/herald.lpc` | `SIG_USER_LOGOUT` | `herald_departure` | Announce player logout |
 | `adm/daemons/modules/channel/herald.lpc` | `SIG_SYS_CRAWL_COMPLETE` | `announce_crawl_complete` | Announce crawler done |
 | `std/living/player.lpc` | `SIG_SYS_CRASH` | `on_crash` | Save player data on crash |
 | `std/living/player.lpc` | `SIG_PLAYER_ADVANCED` | `on_advance` | Handle level advancement |
@@ -265,15 +265,15 @@ Register in `setup()` or `mudlib_setup()` — these run when the object loads:
 inherit STD_DAEMON;
 
 void setup() {
-  slot(SIG_USER_LOGIN, "onLogin");
-  slot(SIG_USER_LOGOUT, "onLogout");
+  slot(SIG_USER_LOGIN, "on_login");
+  slot(SIG_USER_LOGOUT, "on_logout");
 }
 
-void onLogin(object user) {
+void on_login(object user) {
   // Handle login...
 }
 
-void onLogout(object user) {
+void on_logout(object user) {
   // Handle logout...
 }
 ```
@@ -295,12 +295,12 @@ Handler functions receive the variadic args passed to `emit()`. Use `mixed arg..
 
 ```lpc
 // For SIG_PLAYER_DIED which emits (object player, object killer):
-void onPlayerDied(object player, object killer) {
+void on_player_died(object player, object killer) {
   // Specific typed parameters
 }
 
 // Or for signals where args may vary:
-void onBoot(mixed arg...) {
+void on_boot(mixed arg...) {
   // Flexible
 }
 ```
@@ -327,7 +327,7 @@ emit(SIG_PLAYER_RESPAWNED, player, respawn_location);
 
 3. Register handlers in any objects that need to respond:
 ```lpc
-slot(SIG_PLAYER_RESPAWNED, "onRespawn");
+slot(SIG_PLAYER_RESPAWNED, "on_respawn");
 ```
 
 No daemon changes needed — the signal daemon handles any string signal dynamically.

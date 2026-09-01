@@ -20,7 +20,7 @@ race.lpc (std/living/race.lpc)               — race module loader
 race/race.lpc (std/modules/race/race.lpc)   — body parts, equipment slots, regen rates
 race/human.lpc, race/ghost.lpc, etc.         — specific race implementations
 
-decision.lpc (std/living/decision.lpc)       — utility-AI for NPC behavior
+decision.lpc (std/living/decision.lpc)       — utility-AI for NPC behaviour
 combat_memory.lpc (mob module)             — remember and attack on sight
 
 EXT_LOOT (std/ext/loot.lpc)                — loot/coin table definitions
@@ -137,7 +137,7 @@ NPCs only tick when players are present:
 ```lpc
 void start_heart_beat() {
     if(player_check())
-        set_heart_beat(mudConfig("DEFAULT_HEART_RATE"));  // 10
+        set_heart_beat(mud_config("DEFAULT_HEART_RATE"));  // 10
 }
 
 void stop_heart_beat() {
@@ -181,7 +181,7 @@ Full sequence each tick: `clean_up_enemies()` → `cooldown()` → net-dead chec
 
 Called when cloning from LPML data. `args[0]` must be a mapping.
 
-| Key | Type | Behavior |
+| Key | Type | Behaviour |
 |---|---|---|
 | `"name"` | string | `set_name()` |
 | `"short"` | string | `set_short()` |
@@ -220,7 +220,7 @@ inherit STD_MONSTER;
 void monster_setup(mapping data) {
     // Called after virtual_setup processes all standard keys
     set_race("skeleton");
-    // Apply undead-specific behavior
+    // Apply undead-specific behaviour
 }
 ```
 
@@ -423,7 +423,7 @@ if(valid_function(result["func"]))
 
 Automatically added to all NPCs in `npc.lpc::mudlib_setup()`.
 
-### Behavior
+### Behaviour
 
 - Stores enemy **names** (strings) in `combat_memory` array (nosave).
 - Registers `attack_on_sight` as an init hook.
@@ -442,7 +442,7 @@ void attack_on_sight(object target) {
 
 Memory is populated from `combat.lpc::start_attack()` for NPC combatants. Resets when the NPC is reloaded/recloned.
 
-## NPC Skill Behavior
+## NPC Skill Behaviour
 
 NPCs interact with the skill system differently from players:
 
@@ -460,12 +460,15 @@ NPCs interact with the skill system differently from players:
 
 ## Config Constants
 
-| Key | Default | Used In |
-|---|---|---|
-| `DEFAULT_HEART_RATE` | `10` | NPC heartbeat rate |
-| `COIN_VALUE_PER_LEVEL` | `15` | Loot auto-valuation |
-| `COIN_VARIANCE` | `0.25` | Loot value variance |
-| `DEFAULT_RACE` | `"human"` | Default race |
+| Key | Used In |
+|---|---|
+| `DEFAULT_HEART_RATE` | NPC heartbeat rate |
+| `COIN_VALUE_PER_LEVEL` | Loot auto-valuation |
+| `COIN_VARIANCE` | Loot value variance |
+| `DEFAULT_RACE` | Default race |
+| `COMBAT.NPC_SKILL_MULTIPLIER` | Skill level seeded by `set_level()` |
+
+Values live in `adm/etc/default.lpml`. Read them with `mud_config()`; do not restate them here or in code.
 
 ## Gotchas
 

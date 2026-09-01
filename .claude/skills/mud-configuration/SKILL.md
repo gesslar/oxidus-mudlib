@@ -88,13 +88,18 @@ All keys live in the top-level mapping of the LPML files. Keys are uppercase by 
 - `USE_MASS` — use mass system (true) vs. weight
 - `DEFAULT_RACE` — default player race
 - `ATTRIBUTES` — array of attribute names
-- `SKILLS` — nested mapping of skill categories and skill names
+- `SKILLS.learnable` — nested mapping of skill categories and skill names
+- `SKILLS.improve_chance.floor`, `SKILLS.improve_chance.ceiling` — `use_skill` roll chance
+- `SKILLS.default_gain` — default per-call skill progress bound
+- `SKILLS.cap_factor` — multiplied by level to get the per-node skill cap
 - `CURRENCY` — array of `[name, value]` pairs for the currency system
 - `COIN_VALUE_PER_LEVEL`, `COIN_VARIANCE` — mob coin drop tuning
 
 ### Combat
-- `DAMAGE_LEVEL_MODIFIER` — damage scaling factor
-- `DEFAULT_HIT_CHANCE` — base hit percentage
+- `COMBAT.DAMAGE_LEVEL_MODIFIER` — damage scaling factor
+- `COMBAT.DEFAULT_HIT_CHANCE` — base hit percentage
+- `COMBAT.BASE_DAMAGE`, `COMBAT.DAMAGE_VARIANCE` — damage roll tuning
+- `COMBAT.NPC_SKILL_MULTIPLIER` — multiplied by level for NPC skill levels
 
 ### Leveling
 - `PLAYER_AUTOLEVEL` — auto-level on XP gain
@@ -188,14 +193,14 @@ Prefer dot-paths over manual indexing — the schema stays inside the config lay
 
 ```lpc
 // Preferred:
-string *melee_skills = mud_config("SKILLS.combat.melee");
+string *melee_skills = mud_config("SKILLS.learnable.combat.melee");
 
 // Avoid (exposes structure to every caller):
 mapping skills = mud_config("SKILLS");
-string *melee_skills = skills["combat"]["melee"];
+string *melee_skills = skills["learnable"]["combat"]["melee"];
 ```
 
-The dotted form errors with `"Invalid key: SKILLS.combat.melee."` if any hop fails, matching the flat-key error shape. Reach for the explicit form only when you actually need the whole sub-mapping (e.g. iterating its keys).
+The dotted form errors with `"Invalid key: SKILLS.learnable.combat.melee."` if any hop fails, matching the flat-key error shape. Reach for the explicit form only when you actually need the whole sub-mapping (e.g. iterating its keys).
 
 ### Config in simul_efuns
 Several simul_efuns in `/adm/simul_efun/system.lpc` wrap specific config keys for convenience:

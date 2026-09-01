@@ -1,6 +1,6 @@
 ---
 name: daemon-creation
-description: Create and modify daemons for Oxidus. Covers inheriting STD_DAEMON, the setup chain, persistence (setPersistent/saveData/restore_data), preloading, SWAP_D for reload-safe data, logging with EXT_LOG, and the teardown chain.
+description: Create and modify daemons for Oxidus. Covers inheriting STD_DAEMON, the setup chain, persistence (set_persistent/save_data/restore_data), preloading, SWAP_D for reload-safe data, logging with EXT_LOG, and the teardown chain.
 ---
 
 # Daemon Creation Skill
@@ -94,15 +94,15 @@ Implement `unsetup()` if your daemon needs cleanup (e.g., closing sockets, remov
 
 ```c
 void setup() {
-  setPersistent(1);
+  set_persistent(1);
   // ... rest of setup
 }
 ```
 
 ### How it works
 
-1. **`setPersistent(1)`** — Registers the daemon with `PERSIST_D` and sets a default save file path
-2. **`saveData()`** — Saves all non-`nosave` global variables to disk via `save_object()`
+1. **`set_persistent(1)`** — Registers the daemon with `PERSIST_D` and sets a default save file path
+2. **`save_data()`** — Saves all non-`nosave` global variables to disk via `save_object()`
 3. **`restore_data()`** — Called automatically during `setup_chain()` if persistent, restoring saved variables
 4. **`post_restore()`** — Called after `restore_data()` — implement this to act on restored data
 
@@ -141,7 +141,7 @@ private nosave int poll_id;
 void setup() {
   set_log_prefix("(MY DAEMON)");
   set_log_level(1);
-  setPersistent(1);
+  set_persistent(1);
 
   poll_id = call_out("poll", 60);
 }
@@ -154,22 +154,22 @@ void post_restore() {
 void record_event(string type, mixed data) {
   event_count++;
   event_log[type] = data;
-  saveData();  // Save immediately for critical data
+  save_data();  // Save immediately for critical data
 }
 ```
 
 ### Persistence lifecycle
 
 ```
-Load daemon → setup_chain() → setup() → setPersistent(1)
+Load daemon → setup_chain() → setup() → set_persistent(1)
                              → restore_data() → reads save file
                              → post_restore() → act on restored data
 
 During runtime:
-  PERSIST_D heart_beat (every 30 ticks) → saveData() on all registered objects
+  PERSIST_D heart_beat (every 30 ticks) → save_data() on all registered objects
 
 On shutdown/crash:
-  SIG_SYS_CRASH emitted → PERSIST_D → saveData() on all registered objects
+  SIG_SYS_CRASH emitted → PERSIST_D → save_data() on all registered objects
 
 On destruct:
   unsetup_chain() → save_data() + post_save()
@@ -233,7 +233,7 @@ void unsetup() {
 - `swap_out(label)` — Retrieve and **remove** data (one-time retrieval)
 - SWAP_D refuses cleanup while holding data
 
-This is different from persistence — SWAP_D is for temporary, reload-safe storage of `nosave` data. Persistence (`setPersistent`) is for long-term storage across reboots.
+This is different from persistence — SWAP_D is for temporary, reload-safe storage of `nosave` data. Persistence (`set_persistent`) is for long-term storage across reboots.
 
 ## Preloading
 
@@ -255,7 +255,7 @@ Add a line to `/adm/etc/preload`:
 The preload list has critical ordering requirements:
 
 ```
-# CONFIG_D must be FIRST — nothing above it can use mudConfig()
+# CONFIG_D must be FIRST — nothing above it can use mud_config()
 /adm/daemons/config
 
 # SIGNAL_D second — needed for event coordination
@@ -265,7 +265,7 @@ The preload list has critical ordering requirements:
 ```
 
 **Rules:**
-- Nothing before `CONFIG_D` can call `mudConfig()` or use anything that depends on configuration
+- Nothing before `CONFIG_D` can call `mud_config()` or use anything that depends on configuration
 - Nothing before `SIGNAL_D` can use `slot()` or `emit()`
 - If your daemon depends on another daemon, it must come after it in the list
 
@@ -327,7 +327,7 @@ private nosave int check_id;
 void setup() {
   set_log_prefix("(TRACKER)");
   set_log_level(1);
-  setPersistent(1);
+  set_persistent(1);
 
   slot(SIG_SYS_BOOT, "on_boot");
 
@@ -351,7 +351,7 @@ void record(string player, string achievement) {
     achievements[player] = ({});
 
   achievements[player] += ({ achievement });
-  saveData();
+  save_data();
 }
 
 string *query_achievements(string player) {
@@ -375,7 +375,7 @@ When creating a new daemon:
 
 1. Inherit `STD_DAEMON` (and `EXT_LOG` if you need logging)
 2. Implement `setup()` for initialization
-3. Decide if it needs persistence (`setPersistent(1)`)
+3. Decide if it needs persistence (`set_persistent(1)`)
 4. Decide if it needs preloading (add to `/adm/etc/preload`)
 5. Add a `#define` to `include/daemons.h` if other code will reference it
 6. Use `nosave` for runtime-only variables

@@ -76,14 +76,14 @@ Key public functions on `COLOUR_D`:
 
 | Function | Purpose |
 |---|---|
-| `substituteColour(text, mode)` | Parse and replace colour codes. Mode `"on"` converts to ANSI, `"plain"`/`"off"` strips them |
-| `hexToRgb(hex)` | Convert hex string to `({ r, g, b })` array |
-| `rgbToHex(rgb)` | Convert `({ r, g, b })` array to hex string |
-| `rgbToSequence(rgb, mode)` | Convert RGB to ANSI escape sequence |
-| `hextToSequence(hex, mode)` | Convert hex to ANSI escape sequence |
-| `colourToRgb(code)` | Convert 256-colour code to RGB array |
-| `rgbToColour(r, g, b)` | Convert RGB to 256-colour code |
-| `colourToGreyscale(code)` | Convert colour to greyscale |
+| `substitute_colour(text, mode)` | Parse and replace colour codes. Mode `"on"` converts to ANSI, `"plain"`/`"off"` strips them |
+| `hex_to_rgb(hex)` | Convert hex string to `({ r, g, b })` array |
+| `rgb_to_hex(rgb)` | Convert `({ r, g, b })` array to hex string |
+| `rgb_to_sequence(rgb, mode)` | Convert RGB to ANSI escape sequence |
+| `hex_to_sequence(hex, mode)` | Convert hex to ANSI escape sequence |
+| `colour_to_rgb(code)` | Convert 256-colour code to RGB array |
+| `rgb_to_colour(r, g, b)` | Convert RGB to 256-colour code |
+| `colour_to_greyscale(code)` | Convert colour to greyscale |
 | `wrap(str, wrap_at, indent_at)` | Text wrapping that preserves colour |
 | `get_colour_list()` | Display all available colours |
 
@@ -93,13 +93,13 @@ Key public functions on `COLOUR_D`:
 |---|---|---|
 | `gradient_hex(hex, step)` | `adm/simul_efun/colour.lpc` | Create colour gradients |
 | `colourp(str)` | `adm/simul_efun/string.lpc` | Check if string contains colour codes |
-| `no_ansi(str)` | `adm/simul_efun/string.lpc` | Strip all colour codes (uses `substituteColour(str, "plain")`) |
+| `no_ansi(str)` | `adm/simul_efun/string.lpc` | Strip all colour codes (uses `substitute_colour(str, "plain")`) |
 
 ## Accessibility
 
-- **Luminance checking** — `getLuminance()` and `getAccessibleLuminanceMultiplier()` ensure minimum readability
-- **Dark colour substitution** — `substituteTooDark()` brightens colours below readability threshold
-- **Greyscale conversion** — `colourToGreyscale()` for accessibility needs
+- **Luminance checking** — `get_luminance()` and `get_accessible_luminance_multiplier()` ensure minimum readability
+- **Dark colour substitution** — `substitute_too_dark()` brightens colours below readability threshold
+- **Greyscale conversion** — `colour_to_greyscale()` for accessibility needs
 
 ## User Preferences
 

@@ -89,7 +89,7 @@ Example:
  * @returns {int} The calculated damage amount
  * @throws If either value is negative
  */
-int calculateDamage(int attack, int defence) {
+int calculate_damage(int attack, int defence) {
     // Implementation
 }
 ```
@@ -270,9 +270,9 @@ A special form of `@returns` enables **type narrowing** in conditional
 branches. Instead of documenting a return type, it declares that the
 function acts as a type guard for one of its parameters.
 
-**Syntax:** `@returns {paramName is type}`
+**Syntax:** `@returns {param_name is type}`
 
-Where `paramName` is the name of a parameter in the function signature
+Where `param_name` is the name of a parameter in the function signature
 and `type` is the type it should be narrowed to when the function
 returns a truthy value.
 
@@ -1004,14 +1004,14 @@ Complex data structures can use nested type annotations:
  *
  * @param {"/std/container.lpc"} source - The source container
  * @param {"/std/container.lpc"} target - The target container
- * @param {string} itemId - The identifier of the item to transfer
+ * @param {string} item_id - The identifier of the item to transfer
  * @param {int} [count=1] - The number of items to transfer
  * @returns {int} The number of items successfully transferred
  * @throws If either container does not exist
  * @errors If the item cannot be found in the source
  * @errors If the target is full or over weight limit
  * @example
- * int moved = transferItems(player, chest, "gold_coin", 100);
+ * int moved = transfer_items(player, chest, "gold_coin", 100);
  * if(moved < 100) {
  *     write("Could only move " + moved + " coins.");
  * }

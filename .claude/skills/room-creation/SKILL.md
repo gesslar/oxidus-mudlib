@@ -105,9 +105,9 @@ Exit paths are resolved relative to the room's directory — no need for `__DIR_
 
 ```lpc
 // Gate movement in a specific direction
-add_pre_exit_func("north", "checkNorth");
+add_pre_exit_func("north", "check_north");
 
-int checkNorth(object who) {
+int check_north(object who) {
     if(!who->query("has_key")) {
         tell(who, "The gate is locked.\n");
         return 1;  // Block movement
@@ -116,7 +116,7 @@ int checkNorth(object who) {
 }
 
 // Run something after a player uses an exit
-add_post_exit_func("south", "afterSouth");
+add_post_exit_func("south", "after_south");
 ```
 
 ### Doors
@@ -146,7 +146,7 @@ Door functions:
 - `add_door(door)` / `remove_door(direction)`
 - `set_door_open(dir, bool)` / `set_door_locked(dir, bool)`
 - `is_door_open(dir)` / `is_door_locked(dir)`
-- `query_door_status(dir, asNumber)` — string or `1`=open, `2`=closed, `3`=locked
+- `query_door_status(dir, as_number)` — string or `1`=open, `2`=closed, `3`=locked
 - `reset_doors()` — syncs door states with connected rooms (called automatically on reset)
 
 ### Zone

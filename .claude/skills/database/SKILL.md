@@ -14,7 +14,7 @@ FluffOS db package (db_connect/db_exec/db_fetch/db_close efuns)
   └── DB_D — /adm/daemons/db.lpc
         ├── REST API: rest(method, url, data, callback)
         ├── Sync API: query(db, q, callback)
-        └── Async API: lazyQuery(db, q, callback)
+        └── Async API: lazy_query(db, q, callback)
 ```
 
 - One `DB_D` daemon manages **all** databases
@@ -25,14 +25,16 @@ FluffOS db package (db_connect/db_exec/db_fetch/db_close efuns)
 
 ## Configuration Keys
 
-All in `/adm/etc/default.lpml`, overridable in `/adm/etc/config.lpml`. Read via `mudConfig()`. See the `mud-configuration` skill.
+All in `/adm/etc/default.lpml`, overridable in `/adm/etc/config.lpml`. Read via `mud_config()`. See the `mud-configuration` skill.
 
-| Key | Default | Purpose |
-|---|---|---|
-| `DB_PATH` | `/data/db/` | Directory where `.sqlite3` files and `.tbl` definition files live |
-| `DB_SUFFIX` | `.sqlite3` | Extension for the SQLite database file |
-| `DB_TABLE_SUFFIX` | `.tbl` | Extension for table-definition files |
-| `DB_CHUNK_SIZE` | `100` | Rows per chunk for `lazyQuery()` (LIMIT/OFFSET batching) |
+| Key | Purpose |
+|---|---|
+| `DB_PATH` | Directory where the database and table-definition files live |
+| `DB_SUFFIX` | Extension for the SQLite database file |
+| `DB_TABLE_SUFFIX` | Extension for table-definition files |
+| `DB_CHUNK_SIZE` | Rows per chunk for `lazy_query()` (LIMIT/OFFSET batching) |
+
+Read them with `mud_config()`; do not restate the values here or in code.
 
 ## The `.tbl` Definition Format
 
@@ -125,11 +127,11 @@ DB_D->rest("GET", sprintf(
 
 ### Security caveat — REST is NOT prepared statements
 
-`rest()` builds raw SQL by string concatenation. Identifiers (table names, column names, `_order` columns) are quoted via `escapeIdent()` using SQLite's `"..."` form with embedded `"` doubled. Values are escaped via `escapeValue()`: strings get `'...'` with `'` doubled, numbers are coerced via `"" + v`, anything else (arrays, mappings, objects) produces malformed SQL. So:
+`rest()` builds raw SQL by string concatenation. Identifiers (table names, column names, `_order` columns) are quoted via `escape_ident()` using SQLite's `"..."` form with embedded `"` doubled. Values are escaped via `escape_value()`: strings get `'...'` with `'` doubled, numbers are coerced via `"" + v`, anything else (arrays, mappings, objects) produces malformed SQL. So:
 
 - **Values from user input in WHERE/SET are safe** for strings and integers.
 - **Identifiers from user input are quoted** but SQLite still treats `"x"` as a literal column reference, so a malicious column name can't escape syntax — but it can refer to a *real* column the caller didn't intend. If column names come from untrusted input, validate against an explicit whitelist.
-- **Do not pass arrays/mappings/objects as values** — `escapeValue` doesn't handle them.
+- **Do not pass arrays/mappings/objects as values** — `escape_value` doesn't handle them.
 
 ## Direct Query API
 
@@ -157,15 +159,15 @@ Use `query()` directly when REST doesn't fit — joins, aggregates, GROUP BY, co
 
 ### Row collation
 
-DB_D's internal `collateData()` turns `db_fetch()` output (row 0 = column names, rows 1..N = values) into an array of mappings keyed by column name. Callers always get `({ ([ "col": val, ... ]), ... })` — never the raw efun shape.
+DB_D's internal `collate_data()` turns `db_fetch()` output (row 0 = column names, rows 1..N = values) into an array of mappings keyed by column name. Callers always get `({ ([ "col": val, ... ]), ... })` — never the raw efun shape.
 
 ## Lazy (Chunked) Queries
 
 ```lpc
-void lazyQuery(string db, string q, mixed *callback)
+void lazy_query(string db, string q, mixed *callback)
 ```
 
-For large result sets. DB_D appends `LIMIT DB_CHUNK_SIZE OFFSET N` and recursively re-issues via `call_out("executeQuery", 1, ...)` until a partial chunk is returned. Results accumulate in `__handle[queryId]`, then the callback fires once with the full result.
+For large result sets. DB_D appends `LIMIT DB_CHUNK_SIZE OFFSET N` and recursively re-issues via `call_out("execute_query", 1, ...)` until a partial chunk is returned. Results accumulate in `__handle[query_id]`, then the callback fires once with the full result.
 
 **Failure semantics match `query()`** — the callback receives `0` on any failure (connect, exec, fetch, close), all logged to `/log/system/db`. Partial accumulated data is discarded on failure rather than passed up looking complete. Caller checks `pointerp(result)`.
 
@@ -182,21 +184,21 @@ For large result sets. DB_D appends `LIMIT DB_CHUNK_SIZE OFFSET N` and recursive
 })
 ```
 
-If you need column-keyed mappings, you must dedupe headers and apply `collateData`-style post-processing yourself. For result sets that fit in memory, prefer `query()` — it does the collation for you.
+If you need column-keyed mappings, you must dedupe headers and apply `collate_data`-style post-processing yourself. For result sets that fit in memory, prefer `query()` — it does the collation for you.
 
-Don't `lazyQuery` a query that already has its own `LIMIT`/`OFFSET` — DB_D will append a second one and SQLite will reject it.
+Don't `lazy_query` a query that already has its own `LIMIT`/`OFFSET` — DB_D will append a second one and SQLite will reject it.
 
 ## Helper Functions on DB_D
 
 | Function | Purpose |
 |---|---|
-| `validDb(db)` | Is `db` a registered database name? |
-| `validTable(db, table)` | Does `table` exist in `db` (queries `sqlite_master`)? |
-| `sqliteVersion(db)` | Returns version as `({ "3", "39", "0" })` |
-| `allowUpsert(db)` | 1 if SQLite ≥ 3.24 (UPSERT / ON CONFLICT support) |
-| `queryDatabases()` | Mapping of registered db name → file path |
-| `queryTables(db)` | Mapping of table name → its `.tbl` definition string |
-| `statementFromMapping(m)` | Builds `(col1,col2) VALUES (v1,v2)` from a mapping |
+| `valid_db(db)` | Is `db` a registered database name? |
+| `valid_table(db, table)` | Does `table` exist in `db` (queries `sqlite_master`)? |
+| `sqlite_version(db)` | Returns version as `({ "3", "39", "0" })` |
+| `allow_upsert(db)` | 1 if SQLite ≥ 3.24 (UPSERT / ON CONFLICT support) |
+| `query_databases()` | Mapping of registered db name → file path |
+| `query_tables(db)` | Mapping of table name → its `.tbl` definition string |
+| `statement_from_mapping(m)` | Builds `(col1,col2) VALUES (v1,v2)` from a mapping |
 
 ## Common Workflows
 
@@ -226,7 +228,7 @@ DB_D->query("bank", "ALTER TABLE balance ADD COLUMN frozen INTEGER DEFAULT 0");
 
 Then update the `.tbl` file so future fresh installs match. Order: run the `ALTER` first, then sync the `.tbl` file.
 
-For more complex schema changes (rename column, change type, drop column on older SQLite), follow the standard SQLite recipe: create new table, copy data, drop old, rename new. Run each statement as its own `query()` call — `db_exec`'s behavior with multi-statement SQL in one call is not verified, and DB_D opens/closes a connection per call so a `BEGIN`/`COMMIT` won't span calls anyway. Validate carefully after each step.
+For more complex schema changes (rename column, change type, drop column on older SQLite), follow the standard SQLite recipe: create new table, copy data, drop old, rename new. Run each statement as its own `query()` call — `db_exec`'s behaviour with multi-statement SQL in one call is not verified, and DB_D opens/closes a connection per call so a `BEGIN`/`COMMIT` won't span calls anyway. Validate carefully after each step.
 
 ### Drop a database
 
@@ -321,20 +323,20 @@ DB_D->query("bank", "PRAGMA integrity_check");
 
 ### Backups
 
-Each database is a single file at `DB_PATH + dbName + DB_SUFFIX`. Plain file copy is safe **when no writes are in flight**. For consistent online backups, use SQLite's online backup pragma:
+Each database is a single file at `DB_PATH + db_name + DB_SUFFIX`. Plain file copy is safe **when no writes are in flight**. For consistent online backups, use SQLite's online backup pragma:
 
 ```lpc
 DB_D->query("bank", "VACUUM INTO '/data/db/backup/bank-2026-05-02.sqlite3'");
 ```
 
-(`VACUUM INTO` requires SQLite ≥ 3.27 — check with `allowUpsert()` as a rough proxy, or call `sqliteVersion()` directly.)
+(`VACUUM INTO` requires SQLite ≥ 3.27 — check with `allow_upsert()` as a rough proxy, or call `sqlite_version()` directly.)
 
 ### Inspecting state from a developer command
 
 ```lpc
-mapping dbs = DB_D->queryDatabases();         // names → file paths
-mapping tables = DB_D->queryTables("bank");   // table → DDL
-mixed v = DB_D->sqliteVersion("bank");        // ({ "3","39","0" })
+mapping dbs = DB_D->query_databases();         // names → file paths
+mapping tables = DB_D->query_tables("bank");   // table → DDL
+mixed v = DB_D->sqlite_version("bank");        // ({ "3","39","0" })
 ```
 
 ## Gotchas
@@ -344,8 +346,8 @@ mixed v = DB_D->sqliteVersion("bank");        // ({ "3","39","0" })
 - **`__USE_SQLITE3__` and `__PACKAGE_DB__`** — the entire daemon body, including forward declarations, is gated on these compile-time defines. If the FluffOS build was made without `PACKAGE_DB_SQLITE`, none of the DB_D methods exist. Calls like `DB_D->query(...)` return the LPC "undefined" sentinel — distinguishable from an explicit `0` return via `nullp(result)` (true for undefined, false for `0`).
 - **No connection pooling** — every `query()` and `rest()` opens and closes a fresh connection. This means SQLite transactions **cannot span multiple `query()` calls**: a `BEGIN` in one call is implicitly rolled back when the connection closes. Combining `BEGIN; ...; COMMIT;` in a single `query()` *may* work, but `db_exec` semantics around multi-statement SQL are not verified — treat any cross-statement transaction as untested and validate before relying on it.
 - **Foreign keys are off by default in SQLite.** If you declare `FOREIGN KEY` in a `.tbl` and rely on enforcement, run `PRAGMA foreign_keys = ON` per connection — but DB_D opens a fresh connection each query, so the pragma must be issued at the start of every transaction-bearing `query()`.
-- **`escapeValue()` only handles strings and numbers.** Passing arrays, mappings, or objects into a REST `data` mapping or as a query-string value will produce malformed SQL.
-- **`lazyQuery` callback shape differs from `query`** — see the lazy section above.
+- **`escape_value()` only handles strings and numbers.** Passing arrays, mappings, or objects into a REST `data` mapping or as a query-string value will produce malformed SQL.
+- **`lazy_query` callback shape differs from `query`** — see the lazy section above.
 - **No automatic schema migration.** Editing a `.tbl` line for an existing table does nothing on reboot. Migrations are manual via `ALTER TABLE` / `CREATE TABLE ... INSERT SELECT ... DROP ... RENAME`.
 
 ## Async Callbacks and DB_D

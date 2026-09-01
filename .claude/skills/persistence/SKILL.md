@@ -1,6 +1,6 @@
 ---
 name: persistence
-description: Understand and work with the persistence system in Oxidus. Covers save_var() variable marking, save_to_string/load_from_string serialization, the persist_data module (setPersistent/saveData/restore_data), the PERSIST_D daemon, and recursive inventory persistence.
+description: Understand and work with the persistence system in Oxidus. Covers save_var() variable marking, save_to_string/load_from_string serialization, the persist_data module (set_persistent/save_data/restore_data), the PERSIST_D daemon, and recursive inventory persistence.
 ---
 
 # Persistence Skill
@@ -82,7 +82,7 @@ This is a module (mixin) inherited by daemons and objects that need file-based p
 ### Enabling Persistence
 
 ```lpc
-varargs int setPersistent(int x: (: 1 :))
+varargs int set_persistent(int x: (: 1 :))
 ```
 
 - Default argument is 1 (enabled)
@@ -108,7 +108,7 @@ string query_data_file()
 ### Save and Restore
 
 ```lpc
-int saveData()
+int save_data()
 ```
 
 - Calls `save_object(data_file)` — driver function that saves all non-nosave variables
@@ -149,12 +149,12 @@ inherit STD_DAEMON;
 mapping data = ([]);
 
 void setup() {
-  setPersistent(1);
+  set_persistent(1);
 }
 
 void modify_data(string key, mixed value) {
   data[key] = value;
-  saveData();  // Save immediately after modification
+  save_data();  // Save immediately after modification
 }
 ```
 
@@ -245,10 +245,10 @@ The `save_to_string()` output (via `save_variable()`) produces an LPC-encoded st
 
 ## Important Notes
 
-- **save_var vs saveData**: `save_var()` marks variables for `save_to_string()` serialization. `saveData()` uses `save_object()` which saves all non-nosave variables to a `.o` file. They are separate systems.
+- **save_var vs save_data**: `save_var()` marks variables for `save_to_string()` serialization. `save_data()` uses `save_object()` which saves all non-nosave variables to a `.o` file. They are separate systems.
 - **nosave variables** are never persisted by either system.
 - **restore_data()** is called automatically during the setup chain — you don't need to call it manually for daemons.
 - **save_var() is additive** — calling it multiple times accumulates variables, doesn't replace.
 - **load_from_string only restores known vars** — if a variable was removed from `saved_vars`, its stored value is silently ignored.
 - **Events**: Listen for `"saving"` and `"restored"` events on objects if you need pre/post hooks.
-- **PERSIST_D heartbeat** is every 30 ticks — don't rely on it for immediate saves. Call `saveData()` explicitly after critical changes.
+- **PERSIST_D heartbeat** is every 30 ticks — don't rely on it for immediate saves. Call `save_data()` explicitly after critical changes.

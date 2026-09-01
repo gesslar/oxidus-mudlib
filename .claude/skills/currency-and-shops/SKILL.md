@@ -45,12 +45,14 @@ Each entry is `[name, value_in_base_units]`. Copper = 1 is the base denomination
 
 Related config:
 
-| Key | Default | Purpose |
-|---|---|---|
-| `USE_MASS` | `true` | Coins have physical weight |
-| `COIN_VALUE_PER_LEVEL` | `15` | NPC loot coin value scaling |
-| `COIN_VARIANCE` | `0.25` | 25% variance on loot values |
-| `STORAGE_DATA_DIR` | `"/data/storage/"` | Persistent storage file path |
+| Key | Purpose |
+|---|---|
+| `USE_MASS` | Whether coins have physical weight |
+| `COIN_VALUE_PER_LEVEL` | NPC loot coin value scaling |
+| `COIN_VARIANCE` | Variance applied to loot values |
+| `STORAGE_DATA_DIR` | Persistent storage file path |
+
+Values live in `adm/etc/default.lpml`. Read them with `mud_config()`; do not restate them here or in code.
 
 ## Currency Daemon — `adm/daemons/currency.lpc`
 
@@ -273,7 +275,7 @@ class Menu {
 | Items persist between purchases | Yes (storage object) | No (cloned fresh) |
 | Players can sell items back | Yes | No |
 | Items are unique/individual | Yes | No (all identical clones) |
-| Best for | Weapons, armor, gear | Food, drinks, consumables |
+| Best for | Weapons, armour, gear | Food, drinks, consumables |
 | Restocking | Via `reset_shop()` | Infinite (clone on demand) |
 
 ## Bank System
@@ -311,7 +313,7 @@ Commands: `register`, `deposit <num> <type>`, `withdraw <num> <type>`, `balance`
 
 Physical coin items that exist in rooms and containers.
 
-### Behavior
+### Behaviour
 
 - **Moving to a living:** The coin object self-destructs and calls `dest->adjust_wealth(coin_type, coin_num)`. Coins dissolve into the wealth mapping.
 - **Moving to a container:** Merges with existing same-type coin stacks via `adjust_coin_num()`. Different types coexist as separate objects.
