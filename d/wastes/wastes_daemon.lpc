@@ -571,7 +571,7 @@ private nosave mixed *thresholds = ({
  * @returns {string} The terrain-type name, or 0 if out of bounds.
  */
 varargs string determine_room_type(int z, int y, int x) {
-  int value;
+  float value;
   string room_type;
 
   value = get_room_type(z, y, x);
@@ -589,8 +589,8 @@ varargs string determine_room_type(int z, int y, int x) {
   else
     // If it's not part of the river, then we can determine the room type
     // based on the noise value.
-    foreach(mixed threshold in thresholds) {
-      int threshold_value = threshold[0];
+    foreach(mixed *threshold in thresholds) {
+      float threshold_value = threshold[0];
       string terrain_type = threshold[1];
 
       if(value <= threshold_value) {
