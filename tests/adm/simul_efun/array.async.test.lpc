@@ -23,6 +23,8 @@
 
 #include <test.h>
 
+#define FIXTURE_EACH_OWNER "/tests/adm/simul_efun/__fixtures/each_owner"
+
 inherit STD_TEST;
 
 // Side-effect accumulator used by functionals inside tests. Each test
@@ -44,6 +46,7 @@ private async void check_mapping_callback_args();
 private async void check_extra_varargs();
 private async void check_awaits_async_callback();
 private async void check_resolves_when_done();
+private async void check_owner_destructed();
 
 /**
  * Marks a deliberately-rejected promise observed, so it is not reported
@@ -223,6 +226,24 @@ void setup() {
     atest("resolves once every element has been visited",
       (: check_resolves_when_done() :)),
   }));
+
+  describe("each_async (owner lifetime)", ({
+    atest("stops quietly when the callback's owner is destructed",
+      (: check_owner_destructed() :)),
+  }));
+}
+
+/**
+ * Records one element for the owner-lifetime test.
+ *
+ * Public because the fixture's functional reaches it through `->`; it lives on
+ * this object rather than the fixture so the count survives the fixture being
+ * destructed.
+ *
+ * @param {mixed} element - The element the fixture's callback was handed.
+ */
+public void record_tick(mixed element) {
+  __seen += ({ element });
 }
 
 /**
@@ -340,4 +361,58 @@ private async void check_resolves_when_done() {
 
   ASSERT_EQ(1, resolvedp(p));
   ASSERT_EQ(3, __counter);
+}
+
+/**
+ * An iteration whose callback's owner goes away rejects rather than raising a
+ * hard error in the simul_efun object.
+ *
+ * each_async()'s frame lives in the simul_efun object, which outlives every
+ * caller, so an object destructed mid-iteration leaves a parked frame holding
+ * one of its function pointers. Calling that is an error raised in the
+ * simul_efun object, naming an object that no longer exists — as far from its
+ * cause as a traceback gets.
+ *
+ * It rejects rather than fulfilling because the callback's owner and the
+ * awaiter need not be the same object, as they are not here: this test holds
+ * the promise while the fixture that owns the callback is destructed. An
+ * iteration that fulfilled would be telling this frame the collection was
+ * walked when it stopped two elements in.
+ *
+ * The runner reaches this path for real whenever a sweep is stopped part way
+ * through a test file that left an iteration parked: the file's own cleanup
+ * never runs, and the clone is destructed with the frame still live.
+ */
+private async void check_owner_destructed() {
+  object fixture = clone_object(FIXTURE_EACH_OWNER);
+  promise iterating;
+  int reached;
+
+  __seen = ({});
+
+  // Long enough that the iteration cannot finish before the fixture goes.
+  iterating = fixture->start(this_object(), ({ 1, 2, 3, 4, 5, 6, 7, 8 }));
+
+  // Let a couple of elements through, so the frame is genuinely parked
+  // mid-iteration rather than not yet started.
+  await async_yield();
+  await async_yield();
+
+  reached = sizeof(__seen);
+  destruct(fixture);
+
+  // The stop is delivered at the frame's next resumption, not at destruct().
+  await async_yield();
+  await async_yield();
+  await async_yield();
+
+  ASSERT_EQ(1, rejectedp(iterating));
+  ASSERT_EQ(ASYNC_ERR_OWNER_GONE, promise_result(iterating));
+
+  // A rejection, not a cancellation -- nobody asked it to stop.
+  ASSERT_EQ(0, cancelledp(iterating));
+
+  // It genuinely stopped short rather than running the whole array.
+  ASSERT_EQ(reached, sizeof(__seen));
+  ASSERT_EQ(1, sizeof(__seen) < 8);
 }

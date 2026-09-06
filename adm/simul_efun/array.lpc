@@ -972,6 +972,21 @@ varargs void each(mixed src, function fun, mixed extra...) {
  * The callback is awaited, so an async callback runs to completion before the
  * next element begins.
  *
+ * The iteration rejects with ASYNC_ERR_OWNER_GONE if the object owning the
+ * callback is destructed while this is parked. That frame lives in the
+ * simul_efun object, which outlives every caller, so without the check it
+ * would wake up and call a function pointer with a dead owner — a hard error
+ * raised here, naming an object that no longer exists. The check is per
+ * element rather than only on entry, because the owner can go away during any
+ * yield.
+ *
+ * It rejects rather than returning quietly because the callback's owner and
+ * the awaiter need not be the same object: `await each_async(src, f)` where
+ * `f` belongs to something else leaves a caller still waiting for an answer,
+ * and fulfilling would tell it the collection was walked when it was not.
+ * Where the two *are* the same object — the common case — there is nobody left
+ * to hear it, and the rejection costs one debug-log line and no traceback.
+ *
  * Await it from inside an async function. Argument errors reject the returned
  * promise rather than throwing at the call site, so a caller that discards the
  * promise learns nothing about them.
@@ -983,6 +998,8 @@ varargs void each(mixed src, function fun, mixed extra...) {
  *                 has been visited.
  * @errors If src is not an array or mapping, or fun is not a valid function.
  *         Either rejects the returned promise.
+ * @throws ASYNC_ERR_OWNER_GONE if the callback's owner is destructed while the
+ *  iteration is parked.
  * @see each
  * @example
  * await each_async(keys(rooms), (: index_room($1) :));
@@ -996,6 +1013,10 @@ async varargs void each_async(mixed src, function fun, mixed extra...) {
 
     for(i = 0, sz = sizeof(src); i < sz; i++) {
       await async_yield();
+
+      if(!valid_function(fun))
+        throw(ASYNC_ERR_OWNER_GONE);
+
       await fun(src[i], i, src, extra...);
     }
   }
@@ -1005,6 +1026,10 @@ async varargs void each_async(mixed src, function fun, mixed extra...) {
 
     foreach(key, val in src) {
       await async_yield();
+
+      if(!valid_function(fun))
+        throw(ASYNC_ERR_OWNER_GONE);
+
       await fun(key, val, src, extra...);
     }
   }
