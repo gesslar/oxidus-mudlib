@@ -56,9 +56,9 @@ void std_setup() {
 
   enable_commands();
   add_standard_paths();
-  if(adminp())
+  if(adminp(this_object()))
     add_admin_path();
-  else if(devp())
+  else if(devp(this_object()))
     add_dev_path();
 
   if(!query_pref("prompt"))
