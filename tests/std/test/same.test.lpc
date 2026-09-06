@@ -1,0 +1,117 @@
+// @lpc-nocheck
+/**
+ * @file /tests/std/test/same.test.lpc
+ *
+ * Tests for same() in /std/test/test.lpc — the deep-equality
+ * comparator behind ASSERT_EQ and ASSERT_NE.
+ *
+ * Everything else in /tests/ is only as trustworthy as this function,
+ * so its edge cases are worth pinning down: loose array comparison
+ * must ignore order without letting one candidate satisfy two
+ * elements, and 0 must stay distinguishable from undefined.
+ */
+
+#include <test.h>
+
+inherit STD_TEST;
+
+void setup() {
+  describe("same (loose arrays)", ({
+    test("ignores order", function() {
+      ASSERT_EQ(1, same(({ 1, 2, 3 }), ({ 3, 1, 2 }), 1));
+    }),
+    test("equal multisets with duplicates match", function() {
+      ASSERT_EQ(1, same(({ 1, 1, 2 }), ({ 2, 1, 1 }), 1));
+    }),
+    test("a candidate cannot satisfy two elements", function() {
+      // Same size, and every element finds *a* match, but the two 1s
+      // would have to pair off against the single 1 in the other array.
+      ASSERT_EQ(0, same(({ 1, 1 }), ({ 1, 2 }), 1));
+    }),
+    test("duplicate strings are not reused either", function() {
+      ASSERT_EQ(0, same(({ "a", "a", "b" }), ({ "a", "b", "b" }), 1));
+    }),
+    test("a candidate cannot satisfy two nested elements", function() {
+      ASSERT_EQ(0,
+        same(({ ({ 1 }), ({ 1 }) }), ({ ({ 1 }), ({ 2 }) }), 1));
+    }),
+    test("nested arrays match structurally, not by identity", function() {
+      ASSERT_EQ(1,
+        same(({ ({ 1 }), ({ 2 }) }), ({ ({ 2 }), ({ 1 }) }), 1));
+    }),
+    test("differing sizes never match", function() {
+      ASSERT_EQ(0, same(({ 1 }), ({ 1, 2 }), 1));
+    }),
+    test("two empty arrays match", function() {
+      ASSERT_EQ(1, same(({}), ({}), 1));
+    }),
+  }));
+
+  describe("same (strict arrays)", ({
+    test("order matters", function() {
+      ASSERT_EQ(0, same(({ 1, 2, 3 }), ({ 3, 1, 2 }), 0));
+    }),
+    test("positionally equal arrays match", function() {
+      ASSERT_EQ(1, same(({ 1, 2, 3 }), ({ 1, 2, 3 }), 0));
+    }),
+    test("recurses into nested arrays", function() {
+      ASSERT_EQ(1,
+        same(({ ({ "a", 0 }), ({ "b", 1 }) }),
+             ({ ({ "a", 0 }), ({ "b", 1 }) }), 0));
+    }),
+    test("a nested difference fails", function() {
+      ASSERT_EQ(0,
+        same(({ ({ "a", 0 }), ({ "b", 1 }) }),
+             ({ ({ "a", 0 }), ({ "b", 2 }) }), 0));
+    }),
+  }));
+
+  describe("same (mappings)", ({
+    test("pairs each key with its own value", function() {
+      // Comparing keys and values as two separate loose arrays would
+      // call these equal: same keys, same values, mispaired.
+      ASSERT_EQ(0, same(([ "a": 1, "b": 2 ]), ([ "a": 2, "b": 1 ])));
+    }),
+    test("equal mappings match", function() {
+      ASSERT_EQ(1, same(([ "a": 1, "b": 2 ]), ([ "b": 2, "a": 1 ])));
+    }),
+    test("differing sizes never match", function() {
+      ASSERT_EQ(0, same(([ "a": 1 ]), ([ "a": 1, "b": 2 ])));
+    }),
+    test("recurses into nested values", function() {
+      ASSERT_EQ(1,
+        same(([ "a": ({ 1, 2 }) ]), ([ "a": ({ 1, 2 }) ])));
+    }),
+  }));
+
+  describe("same (scalars)", ({
+    test("0 does not match undefined", function() {
+      ASSERT_EQ(0, same(0, undefined));
+    }),
+    test("undefined matches undefined", function() {
+      ASSERT_EQ(1, same(undefined, undefined));
+    }),
+    test("a real 0 matches a real 0", function() {
+      ASSERT_EQ(1, same(0, 0));
+    }),
+    test("differing types never match", function() {
+      ASSERT_EQ(0, same("1", 1));
+    }),
+    test("an empty string is not undefined", function() {
+      ASSERT_EQ(0, same("", undefined));
+    }),
+  }));
+
+  describe("same (promises)", ({
+    test("a promise matches itself", function() {
+      promise p = promise_create();
+
+      ASSERT_EQ(1, same(p, p));
+    }),
+    test("distinct promises do not match", function() {
+      // Identity, not eventual outcome — two promises that will settle
+      // the same way are still different promises.
+      ASSERT_EQ(0, same(promise_create(), promise_create()));
+    }),
+  }));
+}

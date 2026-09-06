@@ -15,7 +15,7 @@
 #include <move.h>
 #include <mudlib.h>
 #include <objects.h>
-#include <promise.h>
+#include <driver/promise.h>
 #include <rooms.h>
 #include <runtime_config.h>
 #include <signal.h>

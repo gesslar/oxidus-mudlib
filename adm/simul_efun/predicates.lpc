@@ -46,7 +46,7 @@ int errorp(mixed input) {
  *  rejected.
  */
 int pendingp(promise p) {
-  return promise_status(p) == PROMISE_IS_PENDING;
+  return promise_status(p) == PROMISE_PENDING;
 }
 
 /**
@@ -57,29 +57,47 @@ int pendingp(promise p) {
  *  has rejected.
  */
 int resolvedp(promise p) {
-  return promise_status(p) == PROMISE_HAS_RESOLVED;
+  return promise_status(p) == PROMISE_FULFILLED;
 }
 
 /**
- * Determine whether a promise has settled with a rejection reason.
+ * Determine whether a promise has settled with a rejection reason. A
+ * cancelled promise is not one of these — see cancelledp().
  *
  * @param {promise} p - The promise to test.
- * @returns {int} 1 if the promise has rejected, 0 if it is still pending or
- *  has resolved.
+ * @returns {int} 1 if the promise has rejected, 0 if it is still pending,
+ *  has resolved, or was cancelled.
  */
 int rejectedp(promise p) {
-  return promise_status(p) == PROMISE_HAS_REJECTED;
+  return promise_status(p) == PROMISE_REJECTED;
+}
+
+/**
+ * Determine whether a promise settled because the body that owned it was
+ * cancelled. A cancellation carries a reason and unwinds like a rejection,
+ * but it is its own settlement, so rejectedp() does not report it.
+ *
+ * The cancellation is delivered to the body's next await, so a promise is
+ * still pending immediately after promise_cancel() returns; this reports 1
+ * only once the body has actually given up.
+ *
+ * @param {promise} p - The promise to test.
+ * @returns {int} 1 if the promise was cancelled, 0 if it is still pending or
+ *  settled any other way.
+ */
+int cancelledp(promise p) {
+  return promise_status(p) == PROMISE_CANCELLED;
 }
 
 /**
  * Determine whether a promise has settled at all, without distinguishing
- * which way it went. Use resolvedp() or rejectedp() when the outcome
- * matters.
+ * which way it went. Use resolvedp(), rejectedp() or cancelledp() when the
+ * outcome matters.
  *
  * @param {promise} p - The promise to test.
- * @returns {int} 1 if the promise has resolved or rejected, 0 if it is still
- *  pending.
+ * @returns {int} 1 if the promise has resolved, rejected or been cancelled,
+ *  0 if it is still pending.
  */
 int settledp(promise p) {
-  return promise_status(p) != PROMISE_IS_PENDING;
+  return promise_status(p) != PROMISE_PENDING;
 }
