@@ -6,51 +6,129 @@
  * invokes /tests/<arg>/runner directly.
  *
  * @created 2024-07-24 - Gesslar
- * @last_modified 2026-07-13 - Gesslar
+ * @last_modified 2026-09-06 - Gesslar
  *
  * @history
  * 2024-07-24 - Gesslar - Created
  * 2026-07-13 - Gesslar - Added help text
+ * 2026-09-06 - Gesslar - Added "runtests stop"
  */
 
 inherit STD_CMD;
 
 /** @typedef {STD_TEST_RUNNER} TestRunner */
 
+private async void sweep(object tp, string runner_path);
 private async void invoke_runner(object tp, string runner_path);
 private async void walk(object tp, string dir);
 
+/**
+ * The sweep each developer currently has in flight, keyed by body. Held so
+ * "runtests stop" has something to cancel, and keyed rather than kept in a
+ * single global so two developers testing at once do not stop each other.
+ *
+ * @type {([ object: promise ])}
+ */
+private nosave mapping __sweeps = ([]);
+
 void setup() {
-  usage_text = "runtests [<area>]\n";
+  usage_text =
+    "runtests [<area>]   - run every suite, or just one area's\n"
+    "runtests stop       - stop the sweep you have running\n";
+
   help_text =
     "Runs unit test suites under /tests/. With no argument, walks /tests/ "
     "recursively and invokes every runner.lpc it finds. With an argument, "
     "invokes /tests/<area>/runner directly, for example: "
-    "runtests adm/simul_efun.";
+    "runtests adm/simul_efun.\n\n"
+    "\"runtests stop\" asks your sweep to give up. It is a request delivered "
+    "at the sweep's next suspension, so the test file in flight finishes "
+    "first and its results are reported; the areas after it are skipped. "
+    "Only your own sweep is stopped.";
 }
 
 // main() stays synchronous: the driver reads a command's return value
 // immediately, so an async entry point would hand it a promise instead of a
 // verdict. The sweep is fired without awaiting, and prints when it finishes.
-mixed main(object tp, string arg) {
-  if(arg && strlen(arg)) {
-    string trimmed = trim(arg);
+mixed main(/** @type {STD_PLAYER} */ object tp, string arg) {
+  string trimmed = arg ? trim(arg) : "";
+
+  if(trimmed == "stop") {
+    promise running = __sweeps[tp];
+
+    if(!promisep(running) || !pendingp(running))
+      return _error(tp, "You have no test sweep running.");
+
+    promise_cancel(running);
+
+    return _ok(tp, "Asked the sweep to stop after the file it is running.");
+  }
+
+  if(promisep(__sweeps[tp]) && pendingp(__sweeps[tp]))
+    return _error(tp, "You already have a sweep running. Use \"runtests "
+                      "stop\" to end it first.");
+
+  if(strlen(trimmed)) {
     string path = "/tests/" + trimmed + "/runner";
 
     if(file_size(path + ".lpc") < 0)
       return _error("No runner found at %s.lpc\n", path);
 
-    invoke_runner(tp, path);
+    __sweeps[tp] = sweep(tp, path);
+
     return 1;
   }
 
   if(file_size("/tests") != -2) {
     tell(tp, "No /tests/ directory found.\n");
+
     return 1;
   }
 
-  walk(tp, "/tests/");
+  __sweeps[tp] = sweep(tp, 0);
+
   return 1;
+}
+
+/**
+ * Runs one sweep to its end and reports how it ended.
+ *
+ * This is the body "runtests stop" cancels, and the top of a chain that has
+ * to hand the request down by itself: cancellation does not propagate,
+ * because an inner body's promise is first-class and may have awaiters this
+ * one knows nothing about. Every level below does the same, so a stop reaches
+ * the test file actually running rather than stopping only the outermost
+ * frame and leaving the sweep grinding on underneath it.
+ *
+ * @param {STD_PLAYER} tp - The developer running the tests.
+ * @param {string} [runner_path] - A single area's runner, or 0 to walk all of
+ *  /tests/.
+ */
+private async void sweep(object tp, string runner_path) {
+  promise inner = runner_path
+                    ? invoke_runner(tp, runner_path)
+                    : walk(tp, "/tests/");
+  mixed err = acatch(await inner);
+  int stopped = err == PROMISE_REASON_CANCELLED;
+
+  if(stopped) {
+    // Wait for the chain below to unwind before saying so, or this lands in
+    // the middle of the summary the interrupted area is still printing.
+    promise_cancel(inner);
+    acatch(await inner);
+  }
+
+  // Cleared only once the chain has actually stopped, never before the unwind
+  // above. Clearing it first would reopen main()'s guard while this frame is
+  // still suspended, and a second sweep started in that window would load the
+  // same runner object this one is about to remove -- and run under a
+  // test-mode window this one is about to clear.
+  map_delete(__sweeps, tp);
+
+  if(stopped)
+    tell(tp, "Test sweep stopped.\n");
+  else if(err)
+    tell(tp, sprintf("Test sweep failed: %s\n", err));
 }
 
 /**
@@ -58,19 +136,26 @@ mixed main(object tp, string arg) {
  *
  * The removal has to wait for the sweep: run_tests() is async, so it hands
  * back a promise the moment it suspends, and removing the runner at that point
- * would destruct it mid-flight and abandon the rest of the run.
+ * would destruct it mid-flight and abandon the rest of the run. That holds for
+ * a stopped run too, which is why the cancellation is handed on and the
+ * removal happens afterwards rather than instead.
  *
  * @param {STD_PLAYER} tp - The developer running the tests.
  * @param {string} runner_path - The Test Runner object.
  */
 private async void invoke_runner(object tp, string runner_path) {
   object runner;
+  mixed run = /** @type {TestRunner} */ (runner_path)->run_tests();
+  mixed err = acatch(await run);
 
-  mixed err = acatch {
-    await /** @type {TestRunner} */ (runner_path)->run_tests();
-  };
-
-  if(err)
+  if(err == PROMISE_REASON_CANCELLED && promisep(run)) {
+    // Hand the request on, then wait for the run to actually give up. The
+    // removal below would otherwise destruct the runner while its body is
+    // still unwinding, which abandons the frame before it can report what it
+    // got through — the same reason the removal waits on the ordinary path.
+    promise_cancel(run);
+    acatch(await run);
+  } else if(err)
     tell(tp, sprintf("Runner %s failed: %s\n", runner_path, err));
 
   if(runner = find_object(runner_path))
@@ -82,6 +167,8 @@ private async void invoke_runner(object tp, string runner_path) {
  *
  * Each area is awaited before the next begins, so output stays in directory
  * order rather than arriving in whatever order the sweeps happen to settle.
+ * That also makes this the level a stop request lands on: the area in flight
+ * is handed the cancellation, and the ones after it are never started.
  *
  * @param {STD_PLAYER} tp - The developer running the tests.
  * @param {string} dir - Directory to walk.
@@ -92,6 +179,8 @@ private async void walk(object tp, string dir) {
   foreach(string entry in entries) {
     string path;
     int sz;
+    promise inner;
+    mixed err;
 
     if(entry == "." || entry == "..")
       continue;
@@ -99,10 +188,26 @@ private async void walk(object tp, string dir) {
     path = dir + entry;
     sz = file_size(path);
 
-    if(sz == -2) {
-      await walk(tp, path + "/");
-    } else if(entry == "runner.lpc") {
-      await invoke_runner(tp, chop(path, ".lpc", -1));
-    }
+    if(sz == -2)
+      inner = walk(tp, path + "/");
+    else if(entry == "runner.lpc")
+      inner = invoke_runner(tp, chop(path, ".lpc", -1));
+    else
+      continue;
+
+    err = acatch(await inner);
+
+    if(!err)
+      continue;
+
+    if(err != PROMISE_REASON_CANCELLED)
+      throw(err);
+
+    // Hand it down and let the area finish giving up before this frame goes,
+    // so the whole chain has stopped by the time the caller is told it has.
+    promise_cancel(inner);
+    acatch(await inner);
+
+    return;
   }
 }

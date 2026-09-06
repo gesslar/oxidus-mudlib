@@ -395,6 +395,14 @@ inside a body, on any individual await you do not trust:
 mixed rows = await with_timeout(SOME_D->fetch(), 3);
 ```
 
+It is a thin wrapper over the `with_deadline()` sefun that supplies the
+framework's default ceiling, so a ceiling that elapses rejects with
+`ASYNC_ERR_TIMEOUT` (`include/async.h`) — compare against that constant, not
+against the message text. A test body that is **cancelled** rather than timed
+out is reported as such: cancellation is its own settlement, and the runner
+tests `cancelledp()` on the body's promise rather than matching the reason
+string, which a `throw()` could forge.
+
 ### What still has to be tested synchronously
 
 An entry point that must not be `async` — a command's `main()`, an apply,

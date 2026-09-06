@@ -21,8 +21,4 @@
 // in a test file that genuinely needs longer.
 #define TEST_ASYNC_TIMEOUT 10
 
-// Rejection reason the timeout arm throws with. No leading '*' — that prefix
-// marks a reason the driver authored, and this one is ours.
-#define TEST_ERR_TIMEOUT "test promise did not settle in time"
-
 #endif

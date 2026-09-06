@@ -40,11 +40,16 @@ private string indent_lines(string text) {
  * settles after a suspension resumes, and the clone must outlive it. Callers
  * get a promise: await it if the object's lifetime depends on the sweep having
  * finished, as cmds/dev/runtests.lpc does before removing this runner.
+ *
+ * Cancelling that promise stops the sweep after the file it is running, whose
+ * results are still reported along with everything before it. The summary is
+ * printed either way; a stopped sweep is a short one, not a failed one.
  */
 async void run_tests() {
   string dir = test_dir();
   string *files = get_dir(dir + "*.test.lpc");
   int total_passed = 0, total_failed = 0, total_pending = 0;
+  int stopped = 0;
   mixed *all_failures = ({});
   mixed *all_pendings = ({});
 
@@ -61,64 +66,94 @@ async void run_tests() {
   // runs.
   master()->set_test_mode(300);
 
-  // acatch, not catch: the sweep awaits, and await is illegal inside catch().
-  acatch {
-    foreach(string file in files) {
-      string path = dir + file;
-      object ob;
-      string err, mark, suffix;
-      mixed *results;
-      int passed, failed, pending_ct;
-      mixed *failures, *pendings;
+  foreach(string file in files) {
+    string path = dir + file;
+    object ob;
+    string err, mark, suffix;
+    mixed run, run_err;
+    mixed *results;
+    int passed, failed, pending_ct;
+    mixed *failures, *pendings;
 
-      reset_eval_cost();
+    reset_eval_cost();
 
-      err = catch(ob = clone_object(path));
-      if(err) {
-        printf(" %s  %s — load failed\n%s\n",
-          cross, file, indent_lines(err));
-        total_failed++;
-        continue;
-      }
-
-      // Await before tearing the clone down. An atest() body's functionals and
-      // accumulators live in this object, so destructing it while its promise
-      // is still outstanding abandons the frame and refuses the callbacks.
-      results = await ob->run();
-      catch(destruct(ob));
-
-      // Destruct the test file's master so the next sweep recompiles
-      // from disk instead of reusing in-memory bytecode. Without this,
-      // edits to the test file (or to the source it tests) wouldn't be
-      // picked up until the next mud restart.
-      object master_ob = find_object(path);
-      if(master_ob)
-        catch(destruct(master_ob));
-
-      passed = results[0];
-      failed = results[1];
-      failures = results[2];
-      pendings = sizeof(results) > 3 ? results[3] : ({});
-      pending_ct = sizeof(pendings);
-
-      total_passed += passed;
-      total_failed += failed;
-      total_pending += pending_ct;
-
-      mark = failed ? cross : check;
-      suffix = failed ? sprintf("%d passed, %d failed", passed, failed)
-                      : sprintf("%d passed", passed);
-      if(pending_ct)
-        suffix += sprintf(", %d pending", pending_ct);
-
-      printf(" %s  %s — %s\n", mark, file, suffix);
-
-      foreach(mixed *fail in failures)
-        all_failures += ({ ({ file, fail[0], fail[1], fail[2] }) });
-      foreach(mixed *pend in pendings)
-        all_pendings += ({ ({ file, pend[0], pend[1], pend[2] }) });
+    err = catch(ob = clone_object(path));
+    if(err) {
+      printf(" %s  %s — load failed\n%s\n",
+        cross, file, indent_lines(err));
+      total_failed++;
+      continue;
     }
-  };
+
+    // Await before tearing the clone down. An atest() body's functionals and
+    // accumulators live in this object, so destructing it while its promise
+    // is still outstanding abandons the frame and refuses the callbacks.
+    //
+    // acatch, not catch: this awaits, and await is illegal inside catch(). It
+    // is per file rather than around the whole loop so one file that fails to
+    // settle costs only its own results instead of ending the sweep.
+    run = ob->run();
+    run_err = acatch(results = await run);
+
+    if(run_err == PROMISE_REASON_CANCELLED && promisep(run)) {
+      // Hand the request on — cancellation does not propagate, so the test
+      // file's own body is still parked on its awaits — and then wait for it
+      // to unwind. Destructing the clone now instead would abandon that frame
+      // and throw away the tests it had already finished, which are the whole
+      // reason for stopping politely rather than pulling the object.
+      promise_cancel(run);
+      run_err = acatch(results = await run);
+      stopped = 1;
+    }
+
+    if(run_err) {
+      printf(" %s  %s — did not settle\n%s\n",
+        cross, file, indent_lines(sprintf("%O", run_err)));
+      catch(destruct(ob));
+      total_failed++;
+
+      if(stopped)
+        break;
+
+      continue;
+    }
+
+    catch(destruct(ob));
+
+    // Destruct the test file's master so the next sweep recompiles
+    // from disk instead of reusing in-memory bytecode. Without this,
+    // edits to the test file (or to the source it tests) wouldn't be
+    // picked up until the next mud restart.
+    object master_ob = find_object(path);
+    if(master_ob)
+      catch(destruct(master_ob));
+
+    passed = results[0];
+    failed = results[1];
+    failures = results[2];
+    pendings = sizeof(results) > 3 ? results[3] : ({});
+    pending_ct = sizeof(pendings);
+
+    total_passed += passed;
+    total_failed += failed;
+    total_pending += pending_ct;
+
+    mark = failed ? cross : check;
+    suffix = failed ? sprintf("%d passed, %d failed", passed, failed)
+                    : sprintf("%d passed", passed);
+    if(pending_ct)
+      suffix += sprintf(", %d pending", pending_ct);
+
+    printf(" %s  %s — %s\n", mark, file, suffix);
+
+    foreach(mixed *fail in failures)
+      all_failures += ({ ({ file, fail[0], fail[1], fail[2] }) });
+    foreach(mixed *pend in pendings)
+      all_pendings += ({ ({ file, pend[0], pend[1], pend[2] }) });
+
+    if(stopped)
+      break;
+  }
 
   master()->clear_test_mode();
 
@@ -137,7 +172,8 @@ async void run_tests() {
         strlen(pend[3]) ? " — " + pend[3] : "");
   }
 
-  printf("\nTotal: %d passed, %d failed%s\n",
+  printf("\nTotal: %d passed, %d failed%s%s\n",
     total_passed, total_failed,
-    total_pending ? sprintf(", %d pending", total_pending) : "");
+    total_pending ? sprintf(", %d pending", total_pending) : "",
+    stopped ? " — stopped early, later files not run" : "");
 }

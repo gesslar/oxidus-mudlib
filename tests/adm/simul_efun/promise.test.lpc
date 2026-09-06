@@ -1,0 +1,492 @@
+// @lpc-nocheck
+/**
+ * @file /tests/adm/simul_efun/promise.test.lpc
+ *
+ * Tests for /adm/simul_efun/promise.lpc — with_deadline() — and for the
+ * fan-out pair map_async() / settle_async() in /adm/simul_efun/array.lpc.
+ *
+ * The resource half matters as much as the outcome half. promise_race() does
+ * not stop its losers, so a ceiling that is not released leaves a timer parked
+ * for the rest of its delay: invisible from the outside, which is why it is
+ * asserted here rather than left to inspection. with_deadline() releases its
+ * timer from a defer(), so the release is asserted on the fulfil, reject and
+ * cancel paths separately — they leave the frame by three different routes.
+ *
+ * The cancellation tests distinguish PROMISE_CANCELLED from PROMISE_REJECTED
+ * throughout. The reason string is the same on both and a body can forge it
+ * with throw(); the status cannot be forged, so it is the assertion that
+ * means anything.
+ */
+
+#include <test.h>
+
+inherit STD_TEST;
+
+private async void never_settles();
+private async void fulfils_quickly();
+private async void rejects_quickly();
+private async int doubled(int n);
+private async int fails_on(int n, int bad);
+
+private async void check_plain_value_passthrough();
+private async void check_no_ceiling_arms_no_timer();
+private async void check_work_wins();
+private async void check_timeout_fires();
+private async void check_release_on_success();
+private async void check_release_on_reject();
+private async void check_release_on_cancel();
+private async void check_rejection_reason_survives();
+
+private async void check_map_positional();
+private async void check_map_mixed_sync();
+private async void check_map_empty();
+private async void check_map_rejects();
+private async void check_map_sync_throw();
+private async void check_settle_reports_each();
+private async void check_settle_reports_cancelled();
+private async void check_settle_sync_throw();
+
+private int sync_fails_on(int n, int bad);
+
+// Held so the promise cannot be collected out from under an await, which
+// would reject with PROMISE_REASON_AWAITED_COLLECTED before anything under
+// test got a chance to decide.
+private nosave promise __stuck;
+
+// Records which elements a synchronous fan-out callback actually reached.
+// Functionals capture no enclosing locals, so a file-global is the sink.
+private nosave mixed *__seen = ({});
+
+void setup() {
+  describe("with_deadline", ({
+    atest("returns a non-promise unchanged, arming no timer",
+      (: check_plain_value_passthrough() :)),
+    atest("arms no timer when the ceiling is non-positive",
+      (: check_no_ceiling_arms_no_timer() :)),
+    atest("fulfils with the work's value when the work wins",
+      (: check_work_wins() :)),
+    atest("throws ASYNC_ERR_TIMEOUT when the ceiling elapses",
+      (: check_timeout_fires() :)),
+    atest("releases the timer when the work fulfils",
+      (: check_release_on_success() :)),
+    atest("releases the timer when the work rejects",
+      (: check_release_on_reject() :)),
+    atest("releases the timer when it is itself cancelled",
+      (: check_release_on_cancel() :)),
+    atest("passes the work's own rejection reason through",
+      (: check_rejection_reason_survives() :)),
+  }));
+
+  describe("map_async", ({
+    atest("results match the source positionally",
+      (: check_map_positional() :)),
+    atest("a non-async callback contributes its plain value",
+      (: check_map_mixed_sync() :)),
+    atest("an empty array fulfils with an empty array",
+      (: check_map_empty() :)),
+    atest("the first rejection rejects the whole batch",
+      (: check_map_rejects() :)),
+    atest("a synchronous throw rejects without abandoning the fan-out",
+      (: check_map_sync_throw() :)),
+  }));
+
+  describe("settle_async", ({
+    atest("reports an outcome per element and never rejects",
+      (: check_settle_reports_each() :)),
+    atest("a cancelled element reports PROMISE_CANCELLED, not rejected",
+      (: check_settle_reports_cancelled() :)),
+    atest("a synchronous throw is one element's outcome, not the batch's",
+      (: check_settle_sync_throw() :)),
+  }));
+}
+
+/**
+ * Counts the timer frames currently parked inside with_deadline().
+ *
+ * @returns {int} Number of suspended deadline_timer() frames.
+ */
+private int parked_timers() {
+  int count = 0;
+
+  foreach(mapping frame in async_info())
+    if(frame["function"] == "deadline_timer")
+      count++;
+
+  return count;
+}
+
+/**
+ * Marks a deliberately-rejected promise observed, so it is not reported to the
+ * debug log as an unhandled rejection.
+ *
+ * promise_all_settled() attaches to its input and never rejects itself, which
+ * is what this needs rather than promise_catch(), whose handler would be a
+ * functional owned by this cloned test object — destructed by the runner
+ * before the drain that would call it.
+ *
+ * @param {mixed} p - The promise to observe, or any non-promise value.
+ * @returns {mixed} The value it was given, unchanged.
+ */
+private mixed observed(mixed p) {
+  if(promisep(p))
+    promise_all_settled(({ p }));
+
+  return p;
+}
+
+/**
+ * Takes a baseline timer count after this body's own guard is armed.
+ *
+ * The runner wraps every atest() body in a with_timeout() of its own, and that
+ * ceiling is armed only once the body first suspends. Yielding before the
+ * baseline is taken counts the guard in it rather than mistaking it for a
+ * leak.
+ *
+ * @returns {int} The number of parked timers to compare against.
+ */
+private async int baseline_timers() {
+  await async_yield();
+
+  return parked_timers();
+}
+
+/**
+ * Work that never settles, so only a ceiling or a cancellation can end it.
+ */
+private async void never_settles() {
+  __stuck = promise_create();
+
+  await __stuck;
+}
+
+/**
+ * Work that suspends and then fulfils normally.
+ */
+private async void fulfils_quickly() {
+  await async_yield();
+}
+
+/**
+ * Work that suspends and then rejects with a reason of its own.
+ */
+private async void rejects_quickly() {
+  await async_yield();
+
+  throw("deliberate failure");
+}
+
+/**
+ * A callback for the fan-out tests that suspends before answering, so the
+ * batch genuinely has to wait for it.
+ *
+ * @param {int} n - The number to double.
+ * @returns {int} Twice n.
+ */
+private async int doubled(int n) {
+  await async_yield();
+
+  return n * 2;
+}
+
+/**
+ * A fan-out callback that rejects for exactly one value.
+ *
+ * @param {int} n - The element being processed.
+ * @param {int} bad - The value to reject on.
+ * @returns {int} n, for every value but bad.
+ * @throws A reason naming bad when n is bad.
+ */
+private async int fails_on(int n, int bad) {
+  await async_yield();
+
+  if(n == bad)
+    throw(sprintf("element %d refused", n));
+
+  return n;
+}
+
+/**
+ * A fan-out callback that is genuinely synchronous and throws for one value.
+ *
+ * Not async, deliberately: an async body has an implicit catch, so it can only
+ * ever reject. This one raises at the call site, inside the loop that is still
+ * starting the other elements — the path the fan-out has to absorb. It also
+ * records that it ran, so a test can prove the elements after the failing one
+ * were still started.
+ *
+ * @param {int} n - The element being processed.
+ * @param {int} bad - The value to throw on.
+ * @returns {int} n, for every value but bad.
+ * @throws A reason naming bad when n is bad.
+ */
+private int sync_fails_on(int n, int bad) {
+  __seen += ({ n });
+
+  if(n == bad)
+    throw(sprintf("element %d refused", n));
+
+  return n;
+}
+
+/**
+ * A plain value is handed back as-is, arming no timer.
+ */
+private async void check_plain_value_passthrough() {
+  int before = await baseline_timers();
+  mixed result = await with_deadline(42, 300.0);
+
+  ASSERT_EQ(42, result);
+  ASSERT_EQ(before, parked_timers());
+}
+
+/**
+ * A non-positive ceiling means no ceiling, so nothing is armed and the work is
+ * simply awaited.
+ */
+private async void check_no_ceiling_arms_no_timer() {
+  int before = await baseline_timers();
+
+  await with_deadline(fulfils_quickly(), 0.0);
+
+  ASSERT_EQ(before, parked_timers());
+}
+
+/**
+ * Work that beats the ceiling decides the race, and its value comes back at
+ * its own type rather than through a sentinel.
+ */
+private async void check_work_wins() {
+  int result = await with_deadline(doubled(21), 300.0);
+
+  ASSERT_EQ(42, result);
+}
+
+/**
+ * Work that never settles loses to the ceiling, and the reason is the shared
+ * constant rather than anything the driver authored.
+ */
+private async void check_timeout_fires() {
+  mixed err = acatch {
+    await with_deadline(never_settles(), 1.0);
+  };
+
+  ASSERT_EQ(ASYNC_ERR_TIMEOUT, err);
+}
+
+/**
+ * A fulfilling body must not leave its timer parked. The ceiling here is long
+ * enough that a leaked timer would still be suspended when the count is taken.
+ */
+private async void check_release_on_success() {
+  int before = await baseline_timers();
+
+  await with_deadline(fulfils_quickly(), 300.0);
+  await async_yield();
+
+  ASSERT_EQ(before, parked_timers());
+}
+
+/**
+ * The same release on the path that leaves the frame by throwing.
+ */
+private async void check_release_on_reject() {
+  int before = await baseline_timers();
+  mixed err;
+
+  err = acatch {
+    await with_deadline(rejects_quickly(), 300.0);
+  };
+
+  // Let the cancellation reach the timer's parked frame; it is delivered at
+  // that frame's next resumption, not when promise_cancel() returns.
+  await async_yield();
+
+  ASSERT_NE(0, err);
+  ASSERT_EQ(before, parked_timers());
+}
+
+/**
+ * The third route out of the frame: with_deadline() cancelled by whoever
+ * holds it. The defer() has to fire here too, or a caller who gave up would
+ * leave the ceiling running behind them.
+ *
+ * The status is what is asserted, not the reason. A cancelled body settles as
+ * PROMISE_CANCELLED, which rejectedp() deliberately does not report and which
+ * a throw() cannot forge.
+ */
+private async void check_release_on_cancel() {
+  int before = await baseline_timers();
+  promise bounded = with_deadline(observed(never_settles()), 300.0);
+
+  // Let it arm its timer before counting.
+  await async_yield();
+
+  ASSERT_EQ(before + 1, parked_timers());
+
+  promise_cancel(bounded);
+
+  // Two resumptions: one for the cancelled body to give up and run its
+  // defer(), one for the timer that defer() cancels to give up in turn.
+  await async_yield();
+  await async_yield();
+
+  ASSERT_EQ(before, parked_timers());
+  ASSERT_EQ(PROMISE_CANCELLED, promise_status(bounded));
+  ASSERT_EQ(1, cancelledp(bounded));
+  ASSERT_EQ(0, rejectedp(bounded));
+}
+
+/**
+ * A ceiling that is never reached must not rewrite what the work said. The
+ * work's reason arrives unchanged, which is what lets a caller tell a timeout
+ * apart from a failure by comparing against ASYNC_ERR_TIMEOUT.
+ */
+private async void check_rejection_reason_survives() {
+  mixed err = acatch {
+    await with_deadline(rejects_quickly(), 300.0);
+  };
+
+  ASSERT_EQ("deliberate failure", err);
+  ASSERT_NE(ASYNC_ERR_TIMEOUT, err);
+}
+
+/**
+ * Results line up with the source, whatever order the calls settled in.
+ */
+private async void check_map_positional() {
+  mixed *results = await map_async(({ 1, 2, 3 }), (: doubled($1) :));
+
+  ASSERT_EQ(3, sizeof(results));
+  ASSERT_EQ(2, results[0]);
+  ASSERT_EQ(4, results[1]);
+  ASSERT_EQ(6, results[2]);
+}
+
+/**
+ * A callback that answers without suspending contributes its plain value, so a
+ * batch of mixed sync and async work needs no wrapping.
+ */
+private async void check_map_mixed_sync() {
+  mixed *results = await map_async(({ 1, 2 }),
+    (: $1 == 1 ? doubled($1) : 99 :));
+
+  ASSERT_EQ(2, results[0]);
+  ASSERT_EQ(99, results[1]);
+}
+
+/**
+ * An empty batch fulfils rather than erroring, unlike promise_race().
+ */
+private async void check_map_empty() {
+  mixed *results = await map_async(({ }), (: doubled($1) :));
+
+  ASSERT_EQ(0, sizeof(results));
+}
+
+/**
+ * One refusal takes the batch down. This is the difference from
+ * settle_async(), and the reason to choose between them deliberately.
+ */
+private async void check_map_rejects() {
+  mixed err = acatch {
+    await map_async(({ 1, 2, 3 }), (: fails_on($1, 2) :));
+  };
+
+  ASSERT_EQ("element 2 refused", err);
+}
+
+/**
+ * A callback that throws at the call site still only costs its own element the
+ * batch, not the elements after it. The distinction matters because a
+ * synchronous throw happens while the fan-out is still starting things, where
+ * an async rejection arrives long after they have all been started.
+ */
+private async void check_map_sync_throw() {
+  mixed err;
+
+  __seen = ({});
+
+  err = acatch {
+    await map_async(({ 1, 2, 3 }), (: sync_fails_on($1, 2) :));
+  };
+
+  ASSERT_EQ("element 2 refused", err);
+
+  // The point of the test: element 3 was reached despite element 2 throwing.
+  ASSERT_EQ(3, sizeof(__seen));
+  ASSERT_EQ(3, __seen[2]);
+}
+
+/**
+ * The same callback under settle_async(), where the contract is stronger: it
+ * must not reject at all, and every element must still get an outcome.
+ */
+private async void check_settle_sync_throw() {
+  mapping *settled;
+
+  __seen = ({});
+
+  settled = await settle_async(({ 1, 2, 3 }), (: sync_fails_on($1, 2) :));
+
+  ASSERT_EQ(3, sizeof(settled));
+
+  ASSERT_EQ(PROMISE_FULFILLED, settled[0]["status"]);
+  ASSERT_EQ(1, settled[0]["value"]);
+
+  ASSERT_EQ(PROMISE_REJECTED, settled[1]["status"]);
+  ASSERT_EQ("element 2 refused", settled[1]["reason"]);
+
+  ASSERT_EQ(PROMISE_FULFILLED, settled[2]["status"]);
+  ASSERT_EQ(3, settled[2]["value"]);
+
+  ASSERT_EQ(3, sizeof(__seen));
+}
+
+/**
+ * Every element produces an entry, and one refusal costs only its own.
+ */
+private async void check_settle_reports_each() {
+  mapping *settled = await settle_async(({ 1, 2, 3 }), (: fails_on($1, 2) :));
+
+  ASSERT_EQ(3, sizeof(settled));
+
+  ASSERT_EQ(PROMISE_FULFILLED, settled[0]["status"]);
+  ASSERT_EQ(1, settled[0]["value"]);
+
+  ASSERT_EQ(PROMISE_REJECTED, settled[1]["status"]);
+  ASSERT_EQ("element 2 refused", settled[1]["reason"]);
+  ASSERT_EQ(undefined, settled[1]["value"]);
+
+  ASSERT_EQ(PROMISE_FULFILLED, settled[2]["status"]);
+  ASSERT_EQ(3, settled[2]["value"]);
+}
+
+/**
+ * A cancelled element is its own outcome, not a failure. Anything sorting
+ * these results by status has to test for "not fulfilled" rather than for
+ * "rejected", or it silently drops the elements that were asked to stop.
+ *
+ * The element here is a promise the callback did not create — a legitimate
+ * use of the fan-out, and the only way to hold a handle to cancel.
+ */
+private async void check_settle_reports_cancelled() {
+  promise victim;
+  promise batch;
+  mapping *settled;
+
+  __stuck = promise_create();
+  victim = never_settles();
+  batch = settle_async(({ victim }), (: $1 :));
+
+  // Let settle_async() attach before the cancellation is armed.
+  await async_yield();
+
+  ASSERT_EQ(1, promise_cancel(victim));
+
+  settled = await batch;
+
+  ASSERT_EQ(1, sizeof(settled));
+  ASSERT_EQ(PROMISE_CANCELLED, settled[0]["status"]);
+  ASSERT_EQ(PROMISE_REASON_CANCELLED, settled[0]["reason"]);
+  ASSERT_EQ(undefined, settled[0]["value"]);
+}

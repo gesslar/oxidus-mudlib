@@ -1,0 +1,79 @@
+#include <simul_efun.h>
+
+/**
+ * Rejects with ASYNC_ERR_TIMEOUT once the given delay elapses, unless it is
+ * cancelled first. Raced against real work by with_deadline() so a promise
+ * that never settles gives up instead of parking the frame for the life of
+ * the driver.
+ *
+ * It throws rather than errors: work running long is a routine outcome, and
+ * error() would write a traceback to /log/catch and notify every online
+ * developer for it.
+ *
+ * The cancellation its own body receives is caught and swallowed, because
+ * being cancelled is how this arm is retired when the work wins. Without
+ * that, releasing the loser would only swap one rejection for another.
+ *
+ * @param {float} seconds - Seconds to wait before rejecting.
+ * @returns {int} 0, and only on the cancelled path — the delay elapsing
+ *  rejects instead. The value is never read; it is an int rather than void so
+ *  the promise this hands back carries a payload.
+ * @throws ASYNC_ERR_TIMEOUT once the delay has elapsed.
+ */
+private async int deadline_timer(float seconds) {
+  mixed err = acatch(await call_out_walltime(seconds));
+
+  if(err)
+    return 0;
+
+  throw(ASYNC_ERR_TIMEOUT);
+}
+
+/**
+ * Awaits a promise under a ceiling, so work that never settles gives up
+ * instead of parking the awaiting frame for the life of the driver.
+ *
+ * The ceiling is a race against a timer, which is the only way to bound a
+ * wait on a promise you do not own — most of them cannot be cancelled at all
+ * (a promise_create() promise, async I/O, a call_out promise), and a race
+ * stops your waiting rather than the work. What the work goes on to do after
+ * the ceiling elapses is the caller's problem to handle, and callers with a
+ * transfer to tear down do exactly that.
+ *
+ * The losing arm is released on every path, not just the winning one:
+ * promise_race() does not stop its losers, so work that settles quickly
+ * would otherwise leave the timer parked for the rest of its delay, holding
+ * a call_out and a suspension slot. The release is a defer() rather than
+ * code after the await so it also runs when this body is itself cancelled or
+ * the work rejects. Cancelling a timer that already won returns 0 and does
+ * nothing.
+ *
+ * A non-promise is returned as-is, so wrapping something that turns out to
+ * be synchronous costs nothing and arms no timer. A non-positive ceiling
+ * means no ceiling, which only makes sense for something certain to settle.
+ *
+ * @param {mixed} p - The promise to await, or any plain value.
+ * @param {float} [seconds] - The ceiling in seconds; non-positive waits
+ *  indefinitely.
+ * @returns {mixed} What p fulfilled with, or p itself if it was not a
+ *  promise.
+ * @throws ASYNC_ERR_TIMEOUT if the ceiling elapses first, and whatever p
+ *  rejected with otherwise.
+ * @example
+ * mixed rows = await with_deadline(SOME_D->fetch(), 3.0);
+ */
+async varargs mixed with_deadline(mixed p, float seconds) {
+  promise<int> timer;
+
+  if(!promisep(p))
+    return p;
+
+  if(seconds <= 0.0)
+    return await p;
+
+  timer = deadline_timer(seconds);
+
+  defer((: promise_cancel($(timer)) :));
+
+  return await promise_race(({ timer, p }));
+}

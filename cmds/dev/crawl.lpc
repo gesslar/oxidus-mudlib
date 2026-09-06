@@ -1,0 +1,68 @@
+/**
+ * @file /cmds/dev/crawl.lpc
+ *
+ * Starts, stops, and reports on the world crawl that derives the coordinate
+ * grid for COORD_D.
+ *
+ * @created 2026-09-06 - Gesslar
+ * @last_modified 2026-09-06 - Gesslar
+ *
+ * @history
+ * 2026-09-06 - Gesslar - Created
+ */
+
+#include <daemons.h>
+
+inherit STD_CMD;
+
+void setup() {
+  usage_text =
+    "crawl          - start a crawl of the game world\n"
+    "crawl stop     - ask the running crawl to give up\n"
+    "crawl status   - report whether a crawl is running\n";
+
+  help_text =
+    "Drives the world crawler (CRAWLER_D), which walks every reachable room "
+    "from the configured starting room and derives the coordinate grid that "
+    "COORD_D publishes to the mapper.\n\n"
+    "A crawl also runs automatically at boot, so this is for re-running one "
+    "after world changes rather than for ordinary operation. Only one crawl "
+    "runs at a time; starting a second while one is in flight is refused "
+    "rather than queued.\n\n"
+    "\"crawl stop\" is a request, not a kill. It is delivered at the crawl's "
+    "next yield, so the room it is part way through is finished first. The "
+    "stopped crawl discards what it had gathered and publishes nothing, "
+    "leaving the previously published grid in place.\n\n"
+    "Progress and the final tally are reported to whoever started the crawl. "
+    "Cross-edge conflicts and rooms that failed to load are written to "
+    "/log/crawl.log.";
+}
+
+mixed main(/** @type {STD_PLAYER} */ object tp, string arg) {
+  arg = arg ? trim(arg) : "";
+
+  if(arg == "stop") {
+    if(!CRAWLER_D->stop_crawl())
+      return _error(tp, "No crawl is running.");
+
+    return _ok(tp, "Asked the crawl to stop; it will give up at its next "
+                   "room.");
+  }
+
+  if(arg == "status") {
+    if(CRAWLER_D->query_crawling())
+      return _info(tp, "A crawl is in flight.");
+
+    return _info(tp, "No crawl is running.");
+  }
+
+  if(strlen(arg))
+    return _error(tp, "Syntax: crawl [stop | status]");
+
+  if(!CRAWLER_D->crawl())
+    return _error(tp, "A crawl is already running. Use \"crawl stop\" to end "
+                      "it first.");
+
+  return _ok(tp, "Crawling the world. This will report back when it "
+                 "finishes.");
+}

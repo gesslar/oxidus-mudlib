@@ -31,6 +31,11 @@ useful documentation.
 4. **Types are mandatory on `@param` and `@returns`.** The `{type}`
    annotation is required, not optional — every `@param` must include
    a type and every `@returns` must include a type.
+5. **`@returns` is a type annotation, not prose.** It **overrides** the
+   declared return type, and it is the only tag that does — `@param` and
+   `@type` are overridden *by* the declaration instead. A wrong `@returns`
+   reports its errors inside the function body, on the `return` statements,
+   so it reads as a code bug. See `@returns` below.
 
 ## Updating Existing Code
 
@@ -112,6 +117,14 @@ Example:
 int MAX_PLAYER_HP = 100;
 ```
 
+`@type` follows the `@param` rule — the declared type wins — with one trap:
+**a mismatch is silent.** There is no diagnostic; the tag is simply discarded.
+A wrong `@type` is therefore invisible rather than merely harmless, and it
+will quietly keep telling you the wrong thing on hover. Like `@param`, it earns
+its place by narrowing a `mixed`/`object` declaration — a structured mapping, a
+class, an array of objects — not by restating a type the declaration already
+gives.
+
 ## Tags Reference
 
 ### `@param`
@@ -129,6 +142,21 @@ description.
  * @param {string} target - The name of the target.
  */
 ```
+
+**`@param` must match the declaration — it cannot override it.** This is the
+opposite of `@returns`, so do not generalise from one to the other. Where the
+declared type is strong (anything but `mixed`, `object`, `function`, `closure`,
+or an array of those) the declaration always wins and a mismatched `@param` is
+reported **on the docblock**:
+
+```text
+LPCDoc '@param' tag has type 'string', but parameter 'm' has type 'mapping'.
+```
+
+Where the declared type is weak, `@param` refines it as intended, and that
+refinement is then enforced at the call sites. So `@param` is for **narrowing a
+`mixed`**, never for correcting or widening a real type — if the type is wrong,
+fix the signature.
 
 #### Optional parameters
 
@@ -228,23 +256,54 @@ union type.
  */
 ```
 
-#### Async Functions
+#### `@returns` is a type annotation, not prose
 
-An `async` function declares its **payload** type, and the driver wraps it:
-`async int f()` is typed `promise<int>` at every call site, while `int` is
-what `return` statements inside the body are checked against.
+**`@returns {T}` overrides the declared return type, and it is the only LPCDoc
+tag that does.** The language server replaces the function's syntactic return
+type with `T` for all type checking. `@param` and `@type` work the opposite way
+— see **A wrong `@returns` looks like a code bug** below, and the notes in
+those sections.
 
-Document the **payload**, not the wrapper — `@returns {int}`, never
-`@returns {promise<int>}`. LPCDoc unwraps the promise itself, so writing the
-wrapper wraps it twice. The same applies to `@param`: annotate what the
-promise carries, not that it is one.
+The rule that follows from it:
+
+> **`@returns {T}` must name the type the function returns _as written_, not
+> the value a caller eventually observes.**
+
+#### Promise-returning functions
+
+Two shapes return a promise and they document differently. Which one you have
+is decided by a single word in the signature:
+
+| Signature | Declared return type | `@returns` names |
+|---|---|---|
+| `async mapping fetch()` | `mapping` — the **payload** | `{mapping}` |
+| `promise<mapping> http_request()` | `promise<mapping>` — the **whole promise** | `{promise<mapping>}` |
+
+An `async` function declares its payload and the driver wraps it: `async int
+f()` is typed `promise<int>` at every call site, while `int` is what `return`
+statements inside the body are checked against. So the payload *is* the
+declared type, and `@returns {promise<int>}` on one is wrong.
+
+A plain function that builds a promise and hands it back declares the promise
+itself, so that is what the tag names. Writing `@returns {mapping}` there is
+the same mistake in the other direction.
 
 ```c
 /**
  * @returns {int} 1 if the act ran to completion, or 0 if it was cancelled.
  */
 public async int async_act(string action, float delay) {
+
+/**
+ * @returns {promise<mapping>} The eventual connection state.
+ */
+varargs nomask promise<mapping> http_request(string url, string method) {
 ```
+
+Ask one question when documenting anything that returns a promise: **does the
+signature say `async`?** If yes, name the payload. If no, name the whole
+`promise<...>`. Describe the eventual value in the tag's *prose*, never by
+softening its type.
 
 Say in the prose what the payload alone cannot: that the value arrives later,
 what a rejection means, and — for a function whose every path throws — that it
@@ -263,6 +322,23 @@ That is about the tag, not the declaration. In the code itself, a bare
 `promise` return type means `promise<mixed>` and accepts any payload; declare
 it that way when the function invokes arbitrary caller-supplied code and
 cannot know the type.
+
+#### A wrong `@returns` looks like a code bug
+
+Because the tag replaces the declared type, a mismatch is not reported on the
+docblock. The errors land **inside the function body, on the `return`
+statements** — several lines from their cause, on code that is correct:
+
+```text
+Type 'promise<mixed>' is not assignable to type 'mapping'.     -- on `return p;`
+Type 'promise<mapping>' is not assignable to type 'mapping'.   -- on `return bounded_request(...);`
+```
+
+That is one wrong word in a docblock, not two type errors. When every `return`
+in a function lights up at once and the code looks right, **read the `@returns`
+tag first.** The driver never reads docblocks, so nothing here can break at
+runtime — it is purely an editor-diagnostics problem, which is exactly why it
+is easy to chase in the wrong place.
 
 #### Type Predicates
 

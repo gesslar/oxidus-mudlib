@@ -24,6 +24,7 @@
 #include "/adm/simul_efun/object.lpc"
 #include "/adm/simul_efun/override.lpc"
 #include "/adm/simul_efun/predicates.lpc"
+#include "/adm/simul_efun/promise.lpc"
 #include "/adm/simul_efun/prompt.lpc"
 #include "/adm/simul_efun/random.lpc"
 #include "/adm/simul_efun/save.lpc"

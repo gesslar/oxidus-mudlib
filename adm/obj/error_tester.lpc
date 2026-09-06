@@ -8,16 +8,23 @@
  * Do not run this on PRODUCTION!
  *
  * @created 2022-03-23 - Gesslar
- * @last_modified 2026-08-23 - Gesslar
+ * @last_modified 2026-09-06 - Gesslar
  *
  * @history
  * 2022-03-23 - Gesslar - Created
  * 2026-08-23 - Gesslar - Converted the call_out chains to async/await
+ * 2026-09-06 - Gesslar - Made the sweep stoppable and batched the listings
  */
 
 inherit STD_ITEM;
 
-private async void collect_dir();
+// Directories listed per pass. Listing is worker-thread I/O, so the batch
+// waits once for many rather than once each; the bound keeps the fan-out
+// well clear of the driver's suspended-frame ceiling however deep the tree
+// turns out to be.
+#define DIR_BATCH 32
+
+private async void collect_dirs();
 private void check_file();
 private void report();
 
@@ -38,19 +45,49 @@ private nosave int dirs_checked = 0;
 private nosave float started;
 private nosave object notify;
 
+/**
+ * The sweep in flight and the clone running it, both held on the blueprint so
+ * stop_check() has something to cancel. One sweep at a time: it test-loads
+ * the whole mudlib, and a second would compete with the first for the same
+ * eval budget to no purpose.
+ *
+ * @type {promise}
+ */
+private nosave promise __check;
+
+/** @type {object} */
+private nosave object __running;
+
 private nosave string FILE_COLOUR = "{{b06ba3}}";
 private nosave string DIR_COLOUR  = "{{1fa378}}";
 
 /**
- * Clones a fresh tester and awaits its crawl. If the crawl aborts, the
+ * Clones a fresh tester and awaits its sweep. If the sweep aborts, the
  * rejection surfaces here rather than vanishing, and the clone is cleaned up.
  *
  * @param {STD_PLAYER} who - The body to report progress and results to.
  */
 public async void runit(object who) {
-  object tester = new(base_name());
-  mixed err = acatch(await tester->do_check(who));
+  object tester;
+  mixed err;
 
+  if(objectp(__running)) {
+    message("info", "The error finder is already running.\n", who);
+
+    return;
+  }
+
+  tester = new(base_name());
+  __running = tester;
+  __check = tester->do_check(who);
+
+  err = acatch(await __check);
+
+  __running = 0;
+  __check = 0;
+
+  // A stopped sweep reports its partial totals and removes itself, so it
+  // fulfils rather than rejecting and never reaches here.
   if(err) {
     message("info", `{{f04747}}=== ERROR FINDER ABORTED: ${err} ==={{res}}\n`, who);
 
@@ -60,13 +97,48 @@ public async void runit(object who) {
 }
 
 /**
+ * Asks the sweep in flight to give up.
+ *
+ * Cooperative: the request is delivered at the sweep's next yield, so the
+ * batch of listings or the file it is part way through finishes first. The
+ * sweep then reports what it found up to that point rather than discarding
+ * it, so stopping early is a way to get partial results, not to throw them
+ * away.
+ *
+ * @returns {int} 1 if a cancellation was armed, 0 if there was no sweep left
+ *  to stop.
+ */
+public int stop_check() {
+  if(!promisep(__check))
+    return 0;
+
+  return promise_cancel(__check);
+}
+
+/**
+ * Reports whether a sweep is currently running.
+ *
+ * @returns {int} 1 if a sweep is in flight, 0 if not.
+ */
+public int query_checking() {
+  return objectp(__running) && promisep(__check) && pendingp(__check);
+}
+
+/**
  * Walks the mudlib from the root down, collecting directories and test-loading
  * every source file found. Yields to the event loop between units of work so
  * the driver keeps serving players, then reports and destructs.
  *
+ * A stop request arrives at one of those yields. It is caught rather than
+ * allowed to settle this promise, because everything gathered so far is worth
+ * reporting: catching a cancellation and finishing normally is the body
+ * declining the second half of the work, not failing at it.
+ *
  * @param {STD_PLAYER} who - The body to report progress and results to.
  */
 public async void do_check(object who) {
+  mixed err;
+
   notify = who;
   started = time_frac();
 
@@ -77,51 +149,72 @@ public async void do_check(object who) {
 
   dirs_to_check = ({ "/" });
 
-  while(sizeof(dirs_to_check) || sizeof(files_to_check)) {
-    if(sizeof(dirs_to_check))
-      await collect_dir();
+  err = acatch {
+    while(sizeof(dirs_to_check) || sizeof(files_to_check)) {
+      if(sizeof(dirs_to_check))
+        await collect_dirs();
 
-    if(sizeof(files_to_check))
-      check_file();
+      if(sizeof(files_to_check))
+        check_file();
 
-    await async_yield();
-  }
+      await async_yield();
+    }
+  };
+
+  if(err && err != PROMISE_REASON_CANCELLED)
+    throw(err);
+
+  if(err)
+    message("info", "{{f0c674}}=== ERROR FINDER STOPPED ==={{res}}\n", notify);
 
   report();
 }
 
 /**
- * Pops the next directory off the queue, lists it on a worker thread, and
- * appends its subdirectories and source files to their respective queues. A
- * directory that cannot be listed is skipped rather than aborting the crawl.
+ * Takes a batch of directories off the queue, lists them together on the
+ * worker threads, and appends their subdirectories and source files to their
+ * respective queues.
+ *
+ * The listings are settled rather than awaited as a group that must all
+ * succeed: a directory that cannot be listed is skipped, and one unreadable
+ * directory must not discard the other listings in its batch. A cancelled
+ * async_getdir() is not a possibility to handle — the worker thread is
+ * already doing the I/O and there is nothing to call back.
  */
-private async void collect_dir() {
-  string current = dirs_to_check[0];
-  string *paths, *files, *dirs;
-  mixed err;
+private async void collect_dirs() {
+  string *batch = dirs_to_check[0..DIR_BATCH - 1];
+  mapping *settled;
 
-  dirs_to_check = dirs_to_check[1..];
-  dirs_checked++;
+  dirs_to_check = dirs_to_check[DIR_BATCH..];
+  dirs_checked += sizeof(batch);
 
-  message("info", `${DIR_COLOUR}COLLECTING: ${current}{{res}}\n`, notify);
+  foreach(string dir in batch)
+    message("info", `${DIR_COLOUR}COLLECTING: ${dir}{{res}}\n`, notify);
 
-  current = append(current, "/");
+  batch = map(batch, (: append($1, "/") :));
 
-  err = acatch {
-    paths = await async_getdir(current);
-  };
+  settled = await settle_async(batch, (: async_getdir($1) :));
 
-  if(err || !pointerp(paths))
-    return;
+  // Positional: entry i is the outcome of listing batch[i].
+  for(int i = 0; i < sizeof(settled); i++) {
+    string current = batch[i];
+    string *paths;
 
-  paths -= exclude;
-  paths = map(paths, (: $2 + $1 :), current);
+    if(settled[i]["status"] != PROMISE_FULFILLED)
+      continue;
 
-  files = filter(paths, (: file_size($1) > 0 && (ends_with($1, ".lpc") || ends_with($1, ".c")) :));
-  dirs = filter(paths, (: file_size($1) == -2 :));
+    paths = settled[i]["value"];
 
-  dirs_to_check += dirs;
-  files_to_check += files;
+    if(!pointerp(paths))
+      continue;
+
+    paths -= exclude;
+    paths = map(paths, (: $2 + $1 :), current);
+
+    dirs_to_check += filter(paths, (: file_size($1) == -2 :));
+    files_to_check += filter(paths,
+      (: file_size($1) > 0 && (ends_with($1, ".lpc") || ends_with($1, ".c")) :));
+  }
 }
 
 /**

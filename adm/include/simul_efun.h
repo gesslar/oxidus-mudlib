@@ -48,6 +48,8 @@ int same_array_precisely(mixed *one, mixed *two);
 varargs mixed reduce(mixed *arr, function fun, mixed init, mixed arg...);
 varargs void each(mixed src, function fun, mixed extra...);
 async varargs void each_async(mixed src, function fun, mixed extra...);
+async varargs mixed *map_async(mixed *src, function fun, mixed extra...);
+async varargs mapping *settle_async(mixed *src, function fun, mixed extra...);
 
 // File: base64.c
 string base64_encode(mixed source_str);
@@ -213,6 +215,9 @@ int rejectedp(promise p);
 int resolvedp(promise p);
 int roomp(object ob);
 int settledp(promise p);
+
+// File: promise.c
+async varargs mixed with_deadline(mixed p, float seconds);
 
 // File: prompt.c
 varargs void prompt_colour(object body, mixed *cb, string prompt);

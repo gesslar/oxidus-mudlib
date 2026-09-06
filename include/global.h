@@ -1,6 +1,7 @@
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
 
+#include <async.h>
 #include <clean_up.h>
 #include <colour.h>
 #include <daemons.h>

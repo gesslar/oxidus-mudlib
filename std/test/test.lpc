@@ -230,26 +230,6 @@ protected int async_timeout() {
 }
 
 /**
- * Rejects with TEST_ERR_TIMEOUT once the given delay elapses, unless it is
- * cancelled first. Raced against a test body so a promise that never settles
- * fails the test instead of parking the sweep for the life of the driver.
- *
- * It throws rather than errors: a test running long is a routine outcome, and
- * error() would write a traceback to /log/catch and notify every online
- * developer for it.
- *
- * @param {int} secs - Seconds to wait before rejecting.
- */
-private async void timeout_after(int secs) {
-  mixed err = acatch(await call_out(secs));
-
-  if(err)
-    return;
-
-  throw(TEST_ERR_TIMEOUT);
-}
-
-/**
  * Awaits a promise under a ceiling, so a promise that never settles fails
  * instead of parking the frame for the life of the driver. The runner puts
  * every atest() body through this, and an async test lfun can use it directly
@@ -257,39 +237,18 @@ private async void timeout_after(int secs) {
  *
  *   mixed rows = await with_timeout(SOME_D->fetch(), 3);
  *
- * A non-promise is returned as-is, so wrapping something that turns out to be
- * synchronous costs nothing and arms no timer.
+ * The ceiling itself is with_deadline()'s; this only supplies the test
+ * framework's default. A non-promise is returned as-is, so wrapping something
+ * that turns out to be synchronous costs nothing and arms no timer.
  *
  * @param {mixed} p - The promise to await, or any plain value.
  * @param {int} [secs] - Ceiling in seconds; defaults to async_timeout().
  * @returns {mixed} What p fulfilled with, or p itself if it was not a promise.
- * @errors Throws TEST_ERR_TIMEOUT if the ceiling elapses first, and re-throws
- *  whatever p rejected with otherwise.
+ * @throws ASYNC_ERR_TIMEOUT if the ceiling elapses first, and whatever p
+ *  rejected with otherwise.
  */
 protected async varargs mixed with_timeout(mixed p, int secs) {
-  promise timer;
-  mixed result, err;
-
-  if(!promisep(p))
-    return p;
-
-  secs = secs || async_timeout();
-  timer = timeout_after(secs);
-
-  err = acatch {
-    result = await promise_race(({ timer, p }));
-  };
-
-  // Release the timer on every path, not just the winning one. promise_race()
-  // does not stop its losers, so work that rejected first — an ordinary
-  // failing atest() — would otherwise leave the timer parked for the rest of
-  // its delay. Cancelling a timer that already won returns 0 and does nothing.
-  promise_cancel(timer);
-
-  if(err)
-    throw(err);
-
-  return result;
+  return await with_deadline(p, to_float(secs || async_timeout()));
 }
 
 /**
@@ -316,9 +275,16 @@ private async void run_async_test(function fun, mixed *args) {
   if(!err)
     return;
 
-  if(err == TEST_ERR_TIMEOUT)
+  if(err == ASYNC_ERR_TIMEOUT)
     throw(sprintf("Timed out after %d seconds waiting for the test to settle.",
       async_timeout()));
+
+  // Asked to give up rather than failed. The status is the authoritative
+  // test: a body can forge PROMISE_REASON_CANCELLED with throw(), and a
+  // cancellation arriving at *this* frame's await rather than the body's
+  // carries the same reason while leaving the body pending.
+  if(cancelledp(result))
+    throw("The test body was cancelled before it settled.");
 
   throw(err);
 }
@@ -332,6 +298,11 @@ private async void run_async_test(function fun, mixed *args) {
  * Every call site therefore receives a promise, including a suite with no
  * atest() in it — see the runner, which awaits this.
  *
+ * Cancelling the returned promise stops the file after the test it is running.
+ * The request is caught rather than left to settle this promise, so the tests
+ * already recorded are still handed back: a stopped file reports what it got
+ * through, and the runner decides what to do about the rest.
+ *
  * @returns {mixed *} ({ passed, failed, failures, pendings }) where failures
  *                   is an array of ({ suite, test, error }) and pendings is
  *                   an array of ({ suite, test, reason }).
@@ -339,7 +310,7 @@ private async void run_async_test(function fun, mixed *args) {
 async mixed *run() {
   mixed *failures = ({});
   mixed *pendings = ({});
-  int passed = 0, failed = 0;
+  int passed = 0, failed = 0, stopped = 0;
 
   foreach(mixed *suite in test_functions) {
     string suite_description = suite[0];
@@ -364,6 +335,16 @@ async mixed *run() {
           await run_async_test(test[2], args);
         };
 
+        // Asked to stop, not failed. The test body run_async_test() was
+        // waiting on is left alone: it is bounded by the file's own timeout,
+        // and the runner destructs this clone straight after, which abandons
+        // the frame anyway.
+        if(e == PROMISE_REASON_CANCELLED) {
+          stopped = 1;
+
+          break;
+        }
+
         if(e) {
           failed++;
           failures += ({({ suite_description, test_description,
@@ -383,6 +364,9 @@ async mixed *run() {
         passed++;
       }
     }
+
+    if(stopped)
+      break;
   }
 
   test_functions = ({});
