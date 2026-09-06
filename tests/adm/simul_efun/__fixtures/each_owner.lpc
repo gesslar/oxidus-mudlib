@@ -1,0 +1,28 @@
+// @lpc-nocheck
+/**
+ * @file /tests/adm/simul_efun/__fixtures/each_owner.lpc
+ *
+ * Minimal clonable fixture for array.async.test.lpc. It exists to own a
+ * functional and then be destructed while each_async() is still parked on it.
+ *
+ * That has to be a separate object: each_async()'s frame lives in the
+ * simul_efun object, so the only way to take the callback's owner away
+ * mid-iteration is to destruct something that is neither the simul_efun object
+ * nor the test clone driving the assertions.
+ */
+
+/**
+ * Starts an iteration whose callback belongs to this object, and hands the
+ * promise back so the caller can still watch it after this object is gone.
+ *
+ * The callback reports into `sink` rather than accumulating here, because
+ * everything this object owns dies with it and the test needs to see how far
+ * the iteration got.
+ *
+ * @param {object} sink - The test object to report each element to.
+ * @param {mixed *} src - The elements to iterate.
+ * @returns {promise} The iteration, for the caller to hold and inspect.
+ */
+promise start(object sink, mixed *src) {
+  return each_async(src, (: $(sink)->record_tick($1) :));
+}
