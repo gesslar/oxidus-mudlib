@@ -53,7 +53,7 @@ protected nomask void shutdown_socket(int fd);
 private nomask void socket_resolve(string host, string addr, int key);
 private nomask void settle_request(mapping server);
 private nomask void abort_request(int id, string reason);
-private async void request_deadline(float seconds, int id, string url);
+private async mapping bounded_request(promise p, float seconds, int id, string url);
 
 // Variables
 private nosave mapping servers = ([ ]);
@@ -99,15 +99,16 @@ void post_setup_1() {
  * hostname lookup, a refused connection, a socket failure, or a malformed
  * response body. A 404 is an answer, so it fulfils.
  *
+ * A request that has not settled within the configured timeout is abandoned:
+ * its socket is torn down and the promise rejects. See set_request_timeout().
+ *
  * @param {string} url - The absolute HTTP or HTTPS URL.
  * @param {string} method - The HTTP request method.
  * @param {mapping} [headers] - Additional request headers.
  * @param {string} [body] - The optional request body.
- * A request that has not settled within the configured timeout is abandoned:
- * its socket is torn down and the promise rejects. See set_request_timeout().
- *
- * @returns {mapping} The eventual connection state, carrying the
- *                    "request", "response", and "state" keys.
+ * @returns {promise<mapping>} The eventual connection state, carrying the
+ *  "request", "response", and "state" keys. This function is not async — it
+ *  builds the promise itself — so the tag names the promise, not the payload.
  * @errors If the URL or method is not a string.
  */
 varargs nomask promise<mapping> http_request(string url, string method, mapping headers, string body) {
@@ -142,44 +143,56 @@ varargs nomask promise<mapping> http_request(string url, string method, mapping 
   if(request_timeout <= 0.0)
     return p;
 
-  return promise_race(({
-    p,
-    request_deadline(request_timeout, parsed_url["id"], url),
-  }));
+  return bounded_request(p, request_timeout, parsed_url["id"], url);
 }
 
 /**
- * Rejects a request that outlived its timeout.
+ * Awaits a request under its timeout and tears down whatever survived it.
  *
- * Two things have to happen and they are not the same thing. Aborting stops
- * the transfer, which is what reclaims the socket and the cache file; the
- * race this loses to releases the caller. They are kept separate because a
- * request can time out while it has no socket to abort — before the first
- * http_connect() runs, or in the hop between two redirects — and the caller
- * must be released either way.
+ * Two things have to happen when a request outlives its ceiling and they are
+ * not the same thing. with_deadline() releases the caller — that is all a
+ * race can ever do, since a race stops your waiting and never the work.
+ * Aborting is what reclaims the socket and the cache file, and it is this
+ * daemon's business rather than the timer's, so it happens here on the
+ * timeout branch.
+ *
+ * The abort is kept separate for a second reason: a request can time out
+ * while it has no socket to abort — before the first http_connect() runs, or
+ * in the hop between two redirects — and abort_request() handles that case by
+ * dropping the promise, which the caller must have released either way.
  *
  * Note that aborting stops the *transfer*, not whatever the far end already
  * did with it. A request that timed out after its bytes went out may well
  * have succeeded remotely, so a caller must not treat a timeout as proof of
  * failure and retry a non-idempotent request on the strength of it.
  *
+ * @param {promise} p - The request's own promise, settled by settle_request().
  * @param {float} seconds - The configured request timeout.
  * @param {int} id - The request serial.
  * @param {string} url - The requested URL, for the rejection reason.
- * @returns {void} Never fulfils meaningfully; the deadline either
- *                 loses the race or rejects it.
- * @throws If the timeout elapses with the request still outstanding.
+ * @returns {mapping} The eventual connection state.
+ * @throws A timeout message if the ceiling elapsed, and whatever the request
+ *  rejected with otherwise.
  */
-private async void request_deadline(float seconds, int id, string url) {
-  await call_out_walltime(seconds);
+private async mapping bounded_request(promise p, float seconds, int id,
+                                      string url) {
+  mapping result;
+  mixed err = acatch {
+    result = await with_deadline(p, seconds);
+  };
 
-  // The request very likely finished while this was parked.
-  if(nullp(promises[id]))
-    return;
+  if(!err)
+    return result;
 
-  _log(1, "Request %d timed out after %g seconds: %s", id, seconds, url);
+  if(err != ASYNC_ERR_TIMEOUT)
+    throw(err);
 
-  abort_request(id, `Request timed out after ${seconds} seconds.`);
+  // The request very likely finished in the same breath as the ceiling.
+  if(promises[id] == p) {
+    _log(1, "Request %d timed out after %g seconds: %s", id, seconds, url);
+
+    abort_request(id, `Request timed out after ${seconds} seconds.`);
+  }
 
   throw(`Request timed out after ${seconds} seconds: ${url}`);
 }

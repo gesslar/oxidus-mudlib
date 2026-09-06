@@ -109,13 +109,14 @@ private void greet() {
  * window closing without an answer -- and a client with no GMCP at all --
  * falls through to the ordinary account prompt.
  *
- * Nothing here has to reconcile timer handles: the waits release themselves,
- * and if the connection drops mid-wait the driver abandons this frame along
- * with the object.
+ * No timer handles are reconciled here: the losing arm of the race is
+ * cancelled by name rather than tracked, and if the connection drops mid-wait
+ * the driver abandons this frame along with the object.
  */
 private async void login_flow() {
-  promise supports_arrived;
+  promise supports_arrived, probe;
   mapping supports;
+  mixed err;
 
   // Armed before anything else, because a client answers the GMCP
   // negotiation faster than we can ask whether it did: Mudlet's Core.Hello
@@ -123,12 +124,23 @@ private async void login_flow() {
   // that is not open yet loses the message, and the wait then times out
   // having missed the very thing it was waiting for.
   supports_arrived = gmcp_await(GMCP_PKG_CORE_SUPPORTS_SET, 1.0);
+  probe = no_gmcp_probe();
 
   // Raced against a probe rather than awaited behind a fixed delay: pausing
   // to let has_gmcp() become answerable would make every GMCP client pay for
   // the one case where the answer is no. Whichever settles first decides --
   // the supports message if the client is talking, the probe if it is not.
-  if(acatch(await promise_race(({ supports_arrived, no_gmcp_probe() }))))
+  err = acatch(await promise_race(({ supports_arrived, probe })));
+
+  // Release the loser. A race stops the waiting, never the work, so the arm
+  // that did not decide it stays parked for the rest of its window -- 1.2
+  // seconds for the probe, on every GMCP login, and a whole second of mailbox
+  // for the supports wait on every login without it. Cancelling the winner
+  // returns 0 and does nothing.
+  promise_cancel(supports_arrived);
+  promise_cancel(probe);
+
+  if(err)
     return greet();
 
   // The Core handler ran before this resumed, so the parsed mapping is
@@ -162,9 +174,13 @@ private async void login_flow() {
  * waiting. If it says yes this probe has nothing useful to contribute, so it
  * sleeps past the window it is racing and can only ever lose.
  *
+ * Nothing is caught here on purpose: losing the race means being cancelled,
+ * and a cancellation nobody catches settles this promise as cancelled rather
+ * than rejected, silently and without reaching the error handler.
+ *
  * @returns {void} Never fulfils.
- * @throws Always -- once the answer is known to be no, or harmlessly after
- *  the race it belongs to has already been decided.
+ * @throws Once the answer is known to be no. Losing the race instead ends
+ *  this body at whichever sleep it is parked on.
  */
 private async void no_gmcp_probe() {
   await call_out_walltime(0.2);

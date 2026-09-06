@@ -1011,6 +1011,141 @@ async varargs void each_async(mixed src, function fun, mixed extra...) {
 }
 
 /**
+ * Starts the callback for every element of an array, so a fan-out has one
+ * entry per element before any of them is judged.
+ *
+ * A callback that is genuinely synchronous can throw where an async one would
+ * only reject: an async body has an implicit catch, so calling it hands back a
+ * promise and never raises at the call site. Letting a synchronous throw
+ * escape this loop would abandon the fan-out part way through, leaving the
+ * later elements never started — which breaks both callers. map_async() would
+ * reject before starting work it promises not to stop, and settle_async()
+ * would reject outright rather than reporting an outcome per element, which is
+ * the one thing it guarantees.
+ *
+ * So a synchronous throw becomes that element's already-rejected promise. Both
+ * combinators then see a uniform array and each applies its own rule to it.
+ *
+ * @param {mixed *} src - Array to fan out over.
+ * @param {function} fun - Function called with (element, index, array,
+ *  ...extra).
+ * @param {mixed *} extra - Additional arguments, spread after the first three.
+ * @returns {mixed *} What each call returned, positionally matching src, with
+ *  a rejected promise standing in wherever the call threw.
+ */
+private mixed *start_fan_out(mixed *src, function fun, mixed *extra) {
+  mixed *started = ({});
+  int i, sz;
+
+  for(i = 0, sz = sizeof(src); i < sz; i++) {
+    mixed result;
+    mixed err = catch(result = fun(src[i], i, src, extra...));
+
+    if(err) {
+      promise failed = promise_create();
+
+      promise_reject(failed, err);
+      result = failed;
+    }
+
+    started += ({ result });
+  }
+
+  return started;
+}
+
+/**
+ * Applies an async function to every element of an array at once and collects
+ * the results.
+ *
+ * The fan-out counterpart to each_async(): where that one visits elements in
+ * order and waits for each before starting the next, this starts them all and
+ * then waits for the set. Use it when the elements do not depend on each other
+ * and the waiting is what costs — a batch of file listings, a batch of
+ * requests. For work that is expensive to *run* rather than to wait for,
+ * each_async() is still the right shape, because starting a thousand pieces of
+ * computation at once does not make the driver compute them any faster.
+ *
+ * The callback is called with (element, index, array, ...extra), as each() and
+ * each_async() call it. Results are positional: entry i is what the callback
+ * returned for src[i], whatever order the calls settled in. A callback that
+ * is not async contributes its plain return value, so a mixed batch works.
+ *
+ * The first rejection rejects the whole thing, and the calls already running
+ * are not stopped — nothing here cancels anything. When a partial failure is a
+ * result rather than an error, reach for settle_async() instead.
+ *
+ * Every element is started before any of them is judged, including past one
+ * that fails. A synchronous callback can throw where an async one would only
+ * reject; that counts as its own element rejecting and nothing more.
+ *
+ * The fan-out is unbounded: every element holds a suspended frame until the
+ * set settles, so slice a large array into batches rather than handing the
+ * whole thing over at once.
+ *
+ * @param {mixed *} src - Array to fan out over.
+ * @param {function} fun - Function called per element (see above).
+ * @param {mixed} [extra] - Additional arguments passed to the callback
+ *  starting at $4.
+ * @returns {mixed *} A promise for the results, positionally matching src.
+ * @errors If src is not an array, or fun is not a valid function. Either
+ *  rejects the returned promise.
+ * @see each_async
+ * @see settle_async
+ * @example
+ * string **listings = await map_async(dirs, (: async_getdir($1) :));
+ */
+async varargs mixed *map_async(mixed *src, function fun, mixed extra...) {
+  assert_arg(pointerp(src), 1, "Array required.");
+  assert_arg(valid_function(fun), 2, "Function is required.");
+
+  return await promise_all(start_fan_out(src, fun, extra));
+}
+
+/**
+ * Applies an async function to every element of an array at once and reports
+ * how each one ended.
+ *
+ * map_async() for the case where a failure is an outcome to record rather than
+ * an error to abandon the batch for. Nothing rejects: every element produces
+ * an entry, positionally matching src, in promise_status()'s vocabulary:
+ *
+ *   ([ "status": PROMISE_FULFILLED, "value":  v ])
+ *   ([ "status": PROMISE_REJECTED,  "reason": r ])
+ *   ([ "status": PROMISE_CANCELLED, "reason": r ])
+ *
+ * A cancelled element reports PROMISE_CANCELLED and carries no value, so
+ * `status != PROMISE_FULFILLED` is the test for "did not deliver" — checking
+ * only for PROMISE_REJECTED misses it.
+ *
+ * "Nothing rejects" holds for a synchronous callback too. One that throws —
+ * which an async callback cannot do, having an implicit catch — is reported as
+ * that element rejecting, and the elements after it are still started.
+ *
+ * The same unbounded fan-out applies as for map_async(); batch a large array.
+ *
+ * @param {mixed *} src - Array to fan out over.
+ * @param {function} fun - Function called per element, as map_async() calls it.
+ * @param {mixed} [extra] - Additional arguments passed to the callback
+ *  starting at $4.
+ * @returns {mapping *} A promise for one outcome mapping per element,
+ *  positionally matching src.
+ * @errors If src is not an array, or fun is not a valid function. Either
+ *  rejects the returned promise.
+ * @see map_async
+ * @example
+ * foreach(mapping outcome in await settle_async(dirs, (: async_getdir($1) :)))
+ *   if(outcome["status"] == PROMISE_FULFILLED)
+ *     index(outcome["value"]);
+ */
+async varargs mapping *settle_async(mixed *src, function fun, mixed extra...) {
+  assert_arg(pointerp(src), 1, "Array required.");
+  assert_arg(valid_function(fun), 2, "Function is required.");
+
+  return await promise_all_settled(start_fan_out(src, fun, extra));
+}
+
+/**
  * Finds and returns the first non-null result of applying a function to each
  * element in an array.
  *

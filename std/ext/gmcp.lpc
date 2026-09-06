@@ -17,7 +17,7 @@ inherit CLASS_GMCP;
 public int gmcp_enabled();
 private mixed gmcp_stringify(mixed data);
 varargs promise gmcp_await(string name, float seconds);
-private async void gmcp_deadline(string name, float seconds);
+private async mixed bounded_gmcp_wait(string name, promise p, float seconds);
 
 // Functions from other objects
 varargs void _log(mixed args...);
@@ -35,47 +35,75 @@ private nosave mapping gmcp_waiting = ([ ]);
  * One outstanding wait per package name -- a second call replaces the first,
  * which is then never settled by anything but its own deadline.
  *
+ * The promise handed back is always an async function's, including in the
+ * indefinite case, so a caller racing this against something else can release
+ * it with promise_cancel(). That is not a detail a caller could work out for
+ * itself: cancelling a promise that is not a body's is a hard error, and
+ * nothing can be asked of a promise to tell the two apart. Returning the
+ * mailbox promise directly for one of the two windows would make the safety of
+ * a cancel depend on the argument.
+ *
  * @param {string} name - Full dotted package name, e.g. "Core.Supports.Set".
  * @param {float} [seconds] - How long to wait before giving up. Non-positive
  *  waits indefinitely, which only makes sense for something the client is
- *  certain to send.
- * @returns {mixed} The message payload, or a rejection once the
- *  wait has gone unanswered for `seconds`.
+ *  certain to send, or for something being raced against another arm.
+ * @returns {promise} Fulfilled with the message payload, or rejected once the
+ *  wait has gone unanswered for `seconds`. This function is not async — it
+ *  opens the mailbox and hands the waiting body's promise back — so the tag
+ *  names the promise, not the payload.
  */
 varargs promise gmcp_await(string name, float seconds) {
   promise p = promise_create();
 
   gmcp_waiting[name] = p;
 
-  if(seconds <= 0.0)
-    return p;
-
-  return promise_race(({ p, gmcp_deadline(name, seconds) }));
+  return bounded_gmcp_wait(name, p, seconds);
 }
 
 /**
- * Rejects a wait that outlived its window.
+ * Awaits one GMCP message under its window and retires the mailbox entry on
+ * every path that did not deliver one.
  *
- * Loses the race harmlessly if the message already arrived, which is why
- * nothing here has to ask whether the promise it is racing has settled --
- * the waiting entry having been cleared is the whole signal.
+ * with_deadline() decides when to stop waiting; clearing the entry is this
+ * module's own business. It is cleared only if it is still the one this wait
+ * opened, because a second gmcp_await() for the same name replaces the first
+ * and a late loser must not delete a mailbox that now belongs to someone
+ * else. On the delivery path the apply has already cleared it.
+ *
+ * A caller that cancels this wait -- racing it against something else and
+ * releasing the loser, as the login flow does -- gets the cancellation
+ * forwarded to the with_deadline() body below. Cancellation does not
+ * propagate on its own: that body is first-class and may have other awaiters,
+ * so nobody but its holder can decide to stop it, and left alone it would
+ * hold its timer for the rest of the window.
  *
  * @param {string} name - The package name being waited on.
+ * @param {promise} p - The mailbox promise the apply resolves on arrival.
  * @param {float} seconds - The window to wait out before giving up.
- * @returns {void} Never fulfils, except as a no-op when the message
- *  arrived while this was parked.
- * @throws If the window elapses with the message still outstanding.
+ * @returns {mixed} The message payload.
+ * @throws A message naming the package if the window elapses first, and
+ *  whatever the wait rejected with otherwise.
  */
-private async void gmcp_deadline(string name, float seconds) {
-  await call_out_walltime(seconds);
+private async mixed bounded_gmcp_wait(string name, promise p, float seconds) {
+  promise wait = with_deadline(p, seconds);
+  mixed result;
+  mixed err = acatch {
+    result = await wait;
+  };
 
-  // The message very likely arrived while this was parked.
-  if(nullp(gmcp_waiting[name]))
-    return;
+  if(!err)
+    return result;
 
-  map_delete(gmcp_waiting, name);
+  if(gmcp_waiting[name] == p)
+    map_delete(gmcp_waiting, name);
 
-  throw(`No ${name} from client after ${seconds} seconds.`);
+  if(err == PROMISE_REASON_CANCELLED)
+    promise_cancel(wait);
+
+  if(err == ASYNC_ERR_TIMEOUT)
+    throw(`No ${name} from client after ${seconds} seconds.`);
+
+  throw(err);
 }
 
 // This apply receives the GMCP messages from the client. We parse out the

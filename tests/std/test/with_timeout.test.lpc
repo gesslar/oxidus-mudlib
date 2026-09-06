@@ -29,15 +29,17 @@ private async void check_plain_value_passthrough();
 private nosave promise __stuck;
 
 /**
- * Counts the timer frames currently parked inside with_timeout().
+ * Counts the timer frames currently parked behind with_timeout(). The timer
+ * belongs to with_deadline() in the simul_efun object, which is what
+ * with_timeout() now defers the ceiling to.
  *
- * @returns {int} Number of suspended timeout_after() frames.
+ * @returns {int} Number of suspended deadline_timer() frames.
  */
 private int parked_timers() {
   int count = 0;
 
   foreach(mapping frame in async_info())
-    if(frame["function"] == "timeout_after")
+    if(frame["function"] == "deadline_timer")
       count++;
 
   return count;
@@ -49,7 +51,7 @@ void setup() {
       (: check_release_on_reject() :)),
     atest("releases the timer when the work fulfils",
       (: check_release_on_success() :)),
-    atest("throws TEST_ERR_TIMEOUT when the ceiling elapses",
+    atest("throws ASYNC_ERR_TIMEOUT when the ceiling elapses",
       (: check_timeout_fires() :)),
     atest("returns a non-promise unchanged",
       (: check_plain_value_passthrough() :)),
@@ -139,7 +141,7 @@ private async void check_timeout_fires() {
     await with_timeout(never_settles(), 1);
   };
 
-  ASSERT_EQ(TEST_ERR_TIMEOUT, err);
+  ASSERT_EQ(ASYNC_ERR_TIMEOUT, err);
 }
 
 /**

@@ -22,11 +22,23 @@ inherit STD_DAEMON;
 
 inherit CLASS_ROOMINFO;
 
+public int query_crawling();
+private async void run_crawl(object tp);
 private void process_room(object room, object tp);
 private object stash_objects(string room_file, object tp);
 private int *update_coordinates(int *coords, string exit, int distance);
 
 private nosave string log_file = "/log/crawl.log";
+
+/**
+ * The crawl currently in flight, or undefined if there is none. Held so it
+ * can be cancelled: a crawl is a long unattended sweep, and without a handle
+ * on the body there is no way to ask it to stop short of destructing the
+ * daemon out from under it.
+ *
+ * @type {promise}
+ */
+private nosave promise __crawl;
 
 /**
  * Rooms that have been fully crawled, keyed by room file path.
@@ -61,32 +73,77 @@ void setup() {
 }
 
 /**
- * Begins a fresh crawl of the game world, starting from crawl_start_room and
- * mapping every reachable room into a coordinate grid.
+ * Begins a fresh crawl of the game world, unless one is already running.
  *
- * Slotted on SIG_SYS_BOOT, so the crawl runs automatically at boot. The stale
- * crawl log is removed, the starting room is stashed and seeded into the todo
- * queue at the origin ({0, 0, 0}), and the queue is then drained one room at a
- * time, yielding to the event loop between rooms so the driver keeps serving
- * players while the crawl runs.
- *
- * When the queue empties the accumulated room data is handed to COORD_D, the
- * todo and done state is cleared, and SIG_SYS_CRAWL_COMPLETE is emitted. A
- * crawl that errors part way through logs the reason and clears its state
- * without publishing a partial grid.
+ * Slotted on SIG_SYS_BOOT, so a crawl runs automatically at boot. Synchronous
+ * because the signal dispatcher reads the return immediately and would take a
+ * promise for an answer; the sweep itself is run_crawl(), whose promise is
+ * kept so it can be stopped later.
  *
  * @param {mixed...} _arg - Unused; accepted because the signal dispatcher may
  *  pass arguments along with the signal.
+ * @returns {int} 1 if a crawl was started, 0 if one was already in flight.
  */
-public async void crawl(mixed _arg...) {
-  object tp = this_player();
+public int crawl(mixed _arg...) {
+  if(query_crawling())
+    return 0;
+
+  __crawl = run_crawl(this_player());
+
+  return 1;
+}
+
+/**
+ * Asks the crawl in flight to give up.
+ *
+ * Cooperative: the request is delivered at the sweep's next yield, so the room
+ * it is part way through is finished first and nothing is torn down
+ * mid-expression. The sweep clears its state and publishes nothing, exactly as
+ * it does for a crawl that errored.
+ *
+ * @returns {int} 1 if a cancellation was armed, 0 if there was no crawl left
+ *  to stop.
+ */
+public int stop_crawl() {
+  if(!promisep(__crawl))
+    return 0;
+
+  return promise_cancel(__crawl);
+}
+
+/**
+ * Reports whether a crawl is currently running.
+ *
+ * The promise is the authority rather than the todo queue: the queue is empty
+ * both before the first room is seeded and after the last one is drained, and
+ * the sweep is genuinely in flight across both.
+ *
+ * @returns {int} 1 if a crawl is in flight, 0 if not.
+ */
+public int query_crawling() {
+  return promisep(__crawl) && pendingp(__crawl);
+}
+
+/**
+ * Crawls the game world, starting from crawl_start_room and mapping every
+ * reachable room into a coordinate grid.
+ *
+ * The stale crawl log is removed, the starting room is stashed and seeded into
+ * the todo queue at the origin ({0, 0, 0}), and the queue is then drained one
+ * room at a time, yielding to the event loop between rooms so the driver keeps
+ * serving players while the crawl runs.
+ *
+ * When the queue empties the accumulated room data is handed to COORD_D, the
+ * todo and done state is cleared, and SIG_SYS_CRAWL_COMPLETE is emitted. A
+ * crawl that errors part way through, or that is asked to stop, logs the
+ * reason and clears its state without publishing a partial grid.
+ *
+ * @param {STD_BODY} tp - The body that asked for the crawl, if any, to report
+ *  progress and results to.
+ */
+private async void run_crawl(object tp) {
   object room;
   mixed err;
-
-  // A non-empty todo queue means a crawl is already in flight; a second would
-  // drain the same queue into the same done mapping.
-  if(sizeof(todo))
-    return;
 
   rm(log_file);
 
@@ -109,8 +166,8 @@ public async void crawl(mixed _arg...) {
       string file;
       object next;
 
-      // Yield first: the queue stays non-empty for as long as this crawl is
-      // in flight, which is what lets sizeof(todo) stand in for "in progress".
+      // The yield is also where a stop_crawl() request lands, so the sweep
+      // gives up between rooms rather than part way through one.
       await async_yield();
 
       file = keys(todo)[0];
@@ -124,10 +181,14 @@ public async void crawl(mixed _arg...) {
   };
 
   if(err) {
-    write_file(log_file, `Crawl aborted: ${err}\n`);
+    string what = err == PROMISE_REASON_CANCELLED
+                    ? "stopped on request"
+                    : `aborted: ${err}`;
+
+    write_file(log_file, `Crawl ${what}\n`);
 
     if(tp)
-      tell(tp, `Crawling aborted: ${err}\n`);
+      tell(tp, `Crawling ${what}.\n`);
 
     done = ([ ]);
     todo = ([ ]);

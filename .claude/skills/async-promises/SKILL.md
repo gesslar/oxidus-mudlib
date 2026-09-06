@@ -377,10 +377,23 @@ Three things none of them do:
 ### Bounding a wait with a timeout
 
 `promise_race()` against a timer is how you put a ceiling on an operation whose
-own promise you do not control. The timeout arm **must reject with `throw()`,
-not `error()`** — the two are equivalent to the caller's `acatch` except that
-`error()` writes a traceback to `/log/catch` and pages every online developer
-for what is a routine outcome. See **`acatch`** above.
+own promise you do not control. **Reach for the `with_deadline()` sefun rather
+than writing the race** — it is that shape, already correct:
+
+```lpc
+mixed rows = await with_deadline(SOME_D->fetch(), 3.0);
+```
+
+It fulfils with the work's value, throws `ASYNC_ERR_TIMEOUT` if the ceiling
+elapses first, passes any other rejection through untouched, returns a
+non-promise unchanged, and treats a non-positive ceiling as no ceiling. The
+rest of this section is why it is built the way it is, and what to get right
+when a caller has to add a side effect of its own on the timeout branch.
+
+The timeout arm **must reject with `throw()`, not `error()`** — the two are
+equivalent to the caller's `acatch` except that `error()` writes a traceback to
+`/log/catch` and pages every online developer for what is a routine outcome.
+See **`acatch`** above.
 
 ```lpc
 #define ERR_TIMEOUT "timed out"
@@ -683,12 +696,29 @@ which would read as success through `acatch`.
   one per state plus `settledp()` for "not pending". They partition the four
   states cleanly, so `rejectedp()` is **false** for a cancelled promise; reach
   for `settledp()` when a cancellation counts the same as a failure.
+- **`with_deadline(p, seconds)`** — `adm/simul_efun/promise.lpc`.
+  Awaits a promise under a ceiling, throwing `ASYNC_ERR_TIMEOUT`
+  (`include/async.h`) if the ceiling wins. It races an internal timer and
+  releases that timer from a `defer()`, so the loser is cancelled on the
+  fulfil, reject **and** cancel paths. Use it instead of hand-rolling a race;
+  a caller that also needs to *stop the work* on a timeout — tear down a
+  socket, retire a mailbox entry — wraps this and does that on the
+  `ASYNC_ERR_TIMEOUT` branch, because a race only ever stops the waiting.
 - **`each_async(src, fun, extra...)`** — `adm/simul_efun/array.lpc`.
   The async counterpart of `each()`, yielding with `await async_yield()` before
   every element and awaiting the callback, so an async callback finishes before
   the next element begins. This is the shape for walking a collection too large
   for one pass. Bad arguments **reject the returned promise** rather than
   throwing at the call site.
+- **`map_async(src, fun, extra...)` / `settle_async(src, fun, extra...)`** —
+  `adm/simul_efun/array.lpc`. The fan-out counterparts: both start the callback
+  for every element of an array at once and then wait for the set, with results
+  positionally matching the source. `map_async()` is `promise_all` — the first
+  rejection takes the batch down; `settle_async()` is `promise_all_settled` —
+  one outcome mapping per element and no rejection at all. Reach for them when
+  the elements are independent and the **waiting** is what costs; `each_async()`
+  is still right when the work is expensive to run rather than to wait for. The
+  fan-out is unbounded, so slice a large array into batches.
 - **`async_read` / `async_write` / `async_getdir` / `async_db_exec`** — with the
   trailing callback **omitted**, each returns a promise fulfilled with the value
   the callback would have received, or rejected with the failure value:
