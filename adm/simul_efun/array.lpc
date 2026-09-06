@@ -958,6 +958,59 @@ varargs void each(mixed src, function fun, mixed extra...) {
 }
 
 /**
+ * Executes a function for each element in an array or mapping, yielding to
+ * the event loop between elements.
+ *
+ * The async counterpart to each(). Dispatch is identical — arrays call the
+ * function with (element, index, array, ...extra), mappings with
+ * (key, value, mapping, ...extra) — but every call is preceded by an
+ * await async_yield(), so the driver reads input, queues commands and fires
+ * timers between elements, and each iteration resumes with a fresh
+ * evaluation-cost budget. That makes this the shape for walking a collection
+ * too large to process in one pass.
+ *
+ * The callback is awaited, so an async callback runs to completion before the
+ * next element begins.
+ *
+ * Await it from inside an async function. Argument errors reject the returned
+ * promise rather than throwing at the call site, so a caller that discards the
+ * promise learns nothing about them.
+ *
+ * @param {mixed} src - Array or mapping to iterate over
+ * @param {function} fun - Function called per element/pair (see above)
+ * @param {mixed} [extra] - Additional arguments passed to the callback starting at $4
+ * @returns {void} A promise carrying no value, fulfilled once every element
+ *                 has been visited.
+ * @errors If src is not an array or mapping, or fun is not a valid function.
+ *         Either rejects the returned promise.
+ * @see each
+ * @example
+ * await each_async(keys(rooms), (: index_room($1) :));
+ */
+async varargs void each_async(mixed src, function fun, mixed extra...) {
+  assert_arg(pointerp(src) || mapp(src), 1, "Array or mapping required.");
+  assert_arg(valid_function(fun), 2, "Function is required.");
+
+  if(pointerp(src)) {
+    int i, sz;
+
+    for(i = 0, sz = sizeof(src); i < sz; i++) {
+      await async_yield();
+      await fun(src[i], i, src, extra...);
+    }
+  }
+
+  if(mapp(src)) {
+    mixed key, val;
+
+    foreach(key, val in src) {
+      await async_yield();
+      await fun(key, val, src, extra...);
+    }
+  }
+}
+
+/**
  * Finds and returns the first non-null result of applying a function to each
  * element in an array.
  *
