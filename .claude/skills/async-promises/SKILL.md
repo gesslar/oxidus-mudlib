@@ -288,7 +288,7 @@ See the `command-creation` skill for the command-side detail and the
 | `promise_reject(p, reason)` | reject it |
 | `promise_then(p, on_ok, on_err)` | attach handlers, returning a chained promise |
 | `promise_catch(p, on_err)` | the rejection-only half of `promise_then` |
-| `promise_status(p)` | `0` pending, `1` fulfilled, `2` rejected |
+| `promise_status(p)` | `0` pending, `1` fulfilled, `2` rejected, `3` cancelled |
 | `promise_result(p)` | the value or reason; an error while pending |
 | `promisep(v)` | the `*p()` type test |
 
@@ -349,7 +349,11 @@ mixed *rows = await promise_all(map(names, (: fetch($1) :)));
 ```lpc
 ([ "status": 1, "value":  v ])   // fulfilled — no "reason" key
 ([ "status": 2, "reason": r ])   // rejected  — no "value" key
+([ "status": 3, "reason": r ])   // cancelled — no "value" key
 ```
+
+A cancelled input reports `3`, not `2`, so a caller sorting the results by
+outcome must handle it — `status != 1` is the safe test for "did not deliver".
 
 Reach for it instead of `promise_all` when a partial failure is a **result**
 rather than an error, which is the usual case when fanning work out over many
@@ -463,6 +467,15 @@ Three more things this shape is getting right:
 (`include/driver/promise.h`). It returns `1` if a cancellation was armed and `0` if
 there was nothing left to cancel — a body racing its canceller to completion is
 a normal outcome, not an error.
+
+**A cancelled body settles as `PROMISE_CANCELLED`, its own state, not as
+`PROMISE_REJECTED`.** That is the authoritative test — a mudlib can forge the
+reason string with `throw()`, but it cannot forge the status — and it is why
+`rejectedp()` does not report a cancellation and `cancelledp()` exists. The
+state lands **when the body gives up, not when `promise_cancel()` returns**:
+the raise is delivered at the body's next `await`, so immediately after
+cancelling, the promise is still `PROMISE_PENDING`. Anything asserting on a
+cancelled promise has to let the body resume first.
 
 **A cancel costs you nothing in the logs.** It is delivered through the driver's
 throw path, not `error()`, so it never reaches `error_handler()`: no traceback,
@@ -625,8 +638,9 @@ else if(err)
 ```
 
 The same header names `promise_status()`'s return codes — `PROMISE_PENDING`
-(0), `PROMISE_FULFILLED` (1), `PROMISE_REJECTED` (2). The driver's own state
-field is typed from those three, so they cannot drift either.
+(0), `PROMISE_FULFILLED` (1), `PROMISE_REJECTED` (2), `PROMISE_CANCELLED` (3).
+The driver's own state field is typed from those four, so they cannot drift
+either.
 
 | Constant | Raised when |
 |---|---|
@@ -664,6 +678,17 @@ which would read as success through `acatch`.
   if the callback is itself an async function, the promise adopts its promise. A
   rejection that is never observed is reported to the debug log, so do not call
   it and discard the result.
+- **`pendingp` / `resolvedp` / `rejectedp` / `cancelledp` / `settledp`** —
+  `adm/simul_efun/predicates.lpc`. The `*p()` reading of `promise_status()`,
+  one per state plus `settledp()` for "not pending". They partition the four
+  states cleanly, so `rejectedp()` is **false** for a cancelled promise; reach
+  for `settledp()` when a cancellation counts the same as a failure.
+- **`each_async(src, fun, extra...)`** — `adm/simul_efun/array.lpc`.
+  The async counterpart of `each()`, yielding with `await async_yield()` before
+  every element and awaiting the callback, so an async callback finishes before
+  the next element begins. This is the shape for walking a collection too large
+  for one pass. Bad arguments **reject the returned promise** rather than
+  throwing at the call site.
 - **`async_read` / `async_write` / `async_getdir` / `async_db_exec`** — with the
   trailing callback **omitted**, each returns a promise fulfilled with the value
   the callback would have received, or rejected with the failure value:

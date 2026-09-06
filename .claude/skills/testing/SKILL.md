@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Write and run unit tests for Oxidus. Covers the STD_TEST framework, test file layout under /tests/, area runners (STD_TEST_RUNNER), the runtests developer command, assertion macros, deep-equality via same(), sad-path testing via master test-mode suppression, pending() tests for known-broken boundaries, the @lpc-nocheck directive, and LPC quirks that bite tests (0 vs undefined, functional binding limits, loose array compare).
+description: Write and run unit tests for Oxidus. Covers the STD_TEST framework, test file layout under /tests/, area runners (STD_TEST_RUNNER), the runtests developer command, assertion macros, deep-equality via same(), sad-path testing via master test-mode suppression, atest() and with_timeout() for behaviour behind a suspension, pending() tests for known-broken boundaries, the @lpc-nocheck directive, and LPC quirks that bite tests (0 vs undefined, functional binding limits, loose array compare).
 ---
 
 # Testing
@@ -116,6 +116,13 @@ Suites are registered in `setup()` via `describe(description, tests)` where `tes
 > ```
 >
 > The third argument `1` flips `same_array` into strict positional mode.
+>
+> **`same_array` is shallow.** Its exact mode compares elements with a raw
+> `!=` ([adm/simul_efun/array.lpc](adm/simul_efun/array.lpc), `same_array_exact`), so nested arrays and
+> mappings match only by identity — two structurally equal but separate
+> sub-arrays compare unequal. For order-sensitive tests over nested data,
+> call the framework's own comparator instead, which recurses:
+> `ASSERT_EQ(1, same(expected, actual, 0))`.
 
 ## Area Runners
 
@@ -125,7 +132,7 @@ Each test directory needs a `runner.lpc`. Minimum content:
 inherit STD_TEST_RUNNER;
 ```
 
-Located at `/tests/<area>/runner.lpc`. The runner globs `__DIR__/*.test.lpc`, clones each file, calls `run()`, and aggregates pass/fail counts. Override `test_dir()` only if you want the runner to scan a different directory than its own.
+Located at `/tests/<area>/runner.lpc`. The runner globs `__DIR__/*.test.lpc`, clones each file, awaits `run()`, and aggregates pass/fail counts. It awaits rather than calls because `run()` is `async` — see **Async Code in Tests** — and the clone is destructed only once that promise settles. Override `test_dir()` only if you want the runner to scan a different directory than its own.
 
 ## Running Tests
 
@@ -155,7 +162,7 @@ test("invalid type errors", function() {
 
 1. `STD_TEST_RUNNER::run_tests()` calls `master()->set_test_mode(300)` before the sweep.
 2. `master::error_handler(mp, caught)` early-returns when `caught && testing_in_progress > time()` (see [adm/obj/master.lpc](adm/obj/master.lpc)).
-3. After the sweep (in a `catch{}`-protected block), runner calls `master()->clear_test_mode()`.
+3. After the sweep (in an `acatch`-protected block — the sweep awaits, and `await` is illegal inside `catch()`), runner calls `master()->clear_test_mode()`. Because every `atest()` is awaited inside that block, an async sad path is still suppressed when it settles.
 4. **Safety net:** `testing_in_progress` is a deadline timestamp, not a boolean. Even if both layers above fail, suppression auto-expires after 5 minutes.
 
 Only `caught=1` errors are suppressed — uncaught errors (real crashes, runner bugs) still log normally.
@@ -253,6 +260,22 @@ string err = catch(every(({ 1, 2 }), undefined));
 ASSERT_NE(0, err);
 ```
 
+**The same applies to the *expected* side of an assertion.** `same()` separates
+`0` from `undefined` via `nullp()`, so a literal `0` will not match a value that
+is genuinely undefined. A mapping miss is the usual way to trip over this:
+
+```c
+// Wrong — the miss is undefined, not int 0
+ASSERT_EQ(0, COLOUR_D->query_colour_cache()["{{poison}}"]);
+
+// Right
+ASSERT_EQ(undefined, COLOUR_D->query_colour_cache()["{{poison}}"]);
+```
+
+Reach for `undefined` whenever the value under test is "no answer" — a mapping
+miss, an unset local, or a function documented as returning undefined. Keep `0`
+for a real integer zero.
+
 When describing return values in tests, comments, or docs, use **"returns undefined"** when that's what the function actually does — not "returns 0". They're both falsy but they're not interchangeable, and the precision matters when callers do `if(nullp(result))` vs `if(!result)`.
 
 ### A functional cannot see an enclosing local at all
@@ -322,18 +345,68 @@ Repeated here because it bites repeatedly: `ASSERT_EQ(({1,2,3}), ({3,2,1}))` **p
 
 ## Async Code in Tests
 
-**Test functions and `run()` must stay synchronous.** The area runner does
-`results = ob->run();` (`std/test/runner.lpc`) and uses the value immediately,
-and individual test bodies are invoked as functionals — `(*f)();` in
-`std/test/test.lpc`. Both close the door on `async`:
+Behaviour that only exists after a suspension resumes is tested with
+`atest()`. Everything reachable without suspending stays on `test()`.
 
-- An `async run()` would hand the runner a promise instead of a results array
-  the moment it parked. Same failure class as an async apply.
-- `await` is illegal inside a `(: :)` functional or an anonymous function, so a
-  test body cannot await even if you wanted it to.
+### `atest()` — awaiting a test body
 
-That means an async function under test cannot be awaited from a test. Test what
-you can reach synchronously, and treat the rest as a boundary:
+`run()` is `async` and awaits each `atest()` body before recording its result;
+the runner awaits `run()` in turn, and only destructs the test clone
+afterwards, so the clone outlives its own async work.
+
+**A functional still cannot await** — `await` is illegal inside `(: :)` and
+inside an anonymous function, and `async function() {…}` does not parse. So an
+`atest()` body is a functional that *calls an async lfun and hands back its
+promise*, with the assertions living in that lfun after its awaits:
+
+```c
+private async void check_visits_every_element();   // prototypes must agree
+                                                   // about async
+void setup() {
+  describe("each_async", ({
+    atest("visits every element", (: check_visits_every_element() :)),
+  }));
+}
+
+private async void check_visits_every_element() {
+  __seen = ({});
+
+  await each_async(({ 10, 20, 30 }), (: __seen += ({ $1 }) :));
+
+  ASSERT_EQ(1, same_array(({ 10, 20, 30 }), __seen, 1));
+}
+```
+
+Accumulate into a **file-global**, not a bound local: `$(x)` stores a value,
+not a link, and `$(x) += …` is not an lvalue.
+
+A failed assertion throws, which rejects the lfun's promise, which is raised
+again at the await and recorded exactly like a sync failure. A body that
+returns a plain value is treated as an ordinary passing test, so wrapping
+something that turns out to be synchronous costs nothing.
+
+**Every `atest()` body runs under a timeout** (`TEST_ASYNC_TIMEOUT`, seconds).
+A promise that never settles fails that one test rather than parking the sweep
+forever. Override `async_timeout()` in a test file whose work legitimately
+takes longer. `with_timeout(p, secs)` is the same mechanism exposed for use
+inside a body, on any individual await you do not trust:
+
+```c
+mixed rows = await with_timeout(SOME_D->fetch(), 3);
+```
+
+### What still has to be tested synchronously
+
+An entry point that must not be `async` — a command's `main()`, an apply,
+`id()` — is still tested with `test()`, and so is everything an async body
+decides before its first await:
+
+- **Test the synchronous prefix.** An async body runs to its first `await`
+  before returning, so anything it registers first — a queue entry, an act, a
+  lock — is observable the instant the call returns. `tp->async_act("x", 2.0);`
+  followed by `assert(tp->is_acting())` is a valid synchronous assertion.
+- **Test the pieces, not the suspension.** Decision logic factored out into
+  ordinary functions is cheaper to test directly than through a promise.
 
 - **Test the synchronous prefix.** An async body runs to its first `await`
   before returning, so anything it registers first — a queue entry, an act, a
@@ -342,12 +415,28 @@ you can reach synchronously, and treat the rest as a boundary:
 - **Test the pieces, not the suspension.** Factor the decision logic out of the
   async function into ordinary functions and test those directly.
 - **Assert on promise state, not on delivery.** `promise_status(p)` returns 0
-  pending / 1 fulfilled / 2 rejected without suspending, and `async_info()`
-  lists parked frames. Reading `promise_result(p)` on a *pending* promise is an
-  error, so guard it with `promise_status()`.
-- **Use `pending()` for the rest.** Behaviour that only exists after a
-  suspension resumes is a known-untestable boundary in this framework, not a
-  test to fake with a call_out.
+  pending / 1 fulfilled / 2 rejected / 3 cancelled without suspending — or use
+  the `pendingp` / `resolvedp` / `rejectedp` / `cancelledp` / `settledp`
+  predicates — and `async_info()` lists parked frames. Reading
+  `promise_result(p)` on a *pending* promise is an error, so guard it with
+  `promise_status()`. Note that cancelling does not settle a promise
+  synchronously: the raise reaches the body at its next `await`, so a promise
+  is still pending immediately after `promise_cancel()` returns, and a
+  cancelled state is out of reach of a synchronous test.
+- **Observe a rejection you created on purpose, or it is logged.** A rejected
+  promise nobody handled prints `Unhandled promise rejection` at deallocation.
+  `promise_all_settled(({ p }))` marks it handled synchronously, inside the
+  driver, and never rejects itself. Do **not** use `promise_catch(p, (: 1 :))`
+  for this — the handler is a functional owned by the cloned test object, and
+  the drain that would run it happens after the runner destructs that clone,
+  so every one of them lands in `/log/catch` as
+  `*Owner (…) of function pointer is destructed.`
+- **`ASSERT_EQ` on a promise compares identity, not outcome.** `same()` handles
+  `T_PROMISE` the way the driver's own `==` does — the same promise equals
+  itself, two promises that will settle to the same value do not. Use it to
+  check that a function handed back *the* promise it was supposed to; use
+  `promise_status()` for what it settled to.
+- **Never reach for `call_out` to "wait" in a sync test.** `atest()` is the
+  supported way to wait; a `call_out` fires long after the runner has collected
+  results and destructed the test object.
 
-Do not reach for `call_out` in a test to "wait" for async work — the runner has
-already collected results and destructed the test object by the time it fires.

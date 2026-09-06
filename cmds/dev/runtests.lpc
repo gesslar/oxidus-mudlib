@@ -17,8 +17,8 @@ inherit STD_CMD;
 
 /** @typedef {STD_TEST_RUNNER} TestRunner */
 
-private void invoke_runner(object tp, string runner_path);
-private void walk(object tp, string dir);
+private async void invoke_runner(object tp, string runner_path);
+private async void walk(object tp, string dir);
 
 void setup() {
   usage_text = "runtests [<area>]\n";
@@ -29,6 +29,9 @@ void setup() {
     "runtests adm/simul_efun.";
 }
 
+// main() stays synchronous: the driver reads a command's return value
+// immediately, so an async entry point would hand it a promise instead of a
+// verdict. The sweep is fired without awaiting, and prints when it finishes.
 mixed main(object tp, string arg) {
   if(arg && strlen(arg)) {
     string trimmed = trim(arg);
@@ -51,19 +54,39 @@ mixed main(object tp, string arg) {
 }
 
 /**
+ * Runs one area's suite and then disposes of its runner.
+ *
+ * The removal has to wait for the sweep: run_tests() is async, so it hands
+ * back a promise the moment it suspends, and removing the runner at that point
+ * would destruct it mid-flight and abandon the rest of the run.
  *
  * @param {STD_PLAYER} tp - The developer running the tests.
  * @param {string} runner_path - The Test Runner object.
  */
-private void invoke_runner(object tp, string runner_path) {
-  string err = catch(/** @type {TestRunner} */ (runner_path)->run_tests());
+private async void invoke_runner(object tp, string runner_path) {
+  object runner;
+
+  mixed err = acatch {
+    await /** @type {TestRunner} */ (runner_path)->run_tests();
+  };
+
   if(err)
     tell(tp, sprintf("Runner %s failed: %s\n", runner_path, err));
 
-  /** @type {TestRunner} */ (find_object(runner_path))->remove();
+  if(runner = find_object(runner_path))
+    /** @type {TestRunner} */ (runner)->remove();
 }
 
-private void walk(object tp, string dir) {
+/**
+ * Walks a directory tree, running every runner.lpc it finds.
+ *
+ * Each area is awaited before the next begins, so output stays in directory
+ * order rather than arriving in whatever order the sweeps happen to settle.
+ *
+ * @param {STD_PLAYER} tp - The developer running the tests.
+ * @param {string} dir - Directory to walk.
+ */
+private async void walk(object tp, string dir) {
   string *entries = get_dir(dir);
 
   foreach(string entry in entries) {
@@ -77,9 +100,9 @@ private void walk(object tp, string dir) {
     sz = file_size(path);
 
     if(sz == -2) {
-      walk(tp, path + "/");
+      await walk(tp, path + "/");
     } else if(entry == "runner.lpc") {
-      invoke_runner(tp, chop(path, ".lpc", -1));
+      await invoke_runner(tp, chop(path, ".lpc", -1));
     }
   }
 }

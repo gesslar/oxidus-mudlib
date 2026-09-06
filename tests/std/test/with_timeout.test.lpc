@@ -1,0 +1,163 @@
+// @lpc-nocheck
+/**
+ * @file /tests/std/test/with_timeout.test.lpc
+ *
+ * Tests for with_timeout() in /std/test/test.lpc — the ceiling the
+ * runner puts around every atest() body.
+ *
+ * The resource half matters as much as the outcome half: promise_race()
+ * does not stop its losers, so a timer that is not explicitly cancelled
+ * stays parked for the rest of its delay. That leak is invisible from
+ * the outside, which is exactly why it is asserted here rather than
+ * left to inspection.
+ */
+
+#include <test.h>
+
+inherit STD_TEST;
+
+private async void rejects_quickly();
+private async void fulfils_quickly();
+private async void never_settles();
+private async void check_release_on_reject();
+private async void check_release_on_success();
+private async void check_timeout_fires();
+private async void check_plain_value_passthrough();
+
+// Held so the promise cannot be collected out from under the await, which
+// would reject with PROMISE_REASON_AWAITED_COLLECTED before the timer fires.
+private nosave promise __stuck;
+
+/**
+ * Counts the timer frames currently parked inside with_timeout().
+ *
+ * @returns {int} Number of suspended timeout_after() frames.
+ */
+private int parked_timers() {
+  int count = 0;
+
+  foreach(mapping frame in async_info())
+    if(frame["function"] == "timeout_after")
+      count++;
+
+  return count;
+}
+
+void setup() {
+  describe("with_timeout", ({
+    atest("releases the timer when the work rejects",
+      (: check_release_on_reject() :)),
+    atest("releases the timer when the work fulfils",
+      (: check_release_on_success() :)),
+    atest("throws TEST_ERR_TIMEOUT when the ceiling elapses",
+      (: check_timeout_fires() :)),
+    atest("returns a non-promise unchanged",
+      (: check_plain_value_passthrough() :)),
+  }));
+}
+
+/**
+ * Work that rejects — an ordinary failing atest().
+ */
+private async void rejects_quickly() {
+  await async_yield();
+
+  throw("deliberate failure");
+}
+
+/**
+ * Work that suspends and then fulfils normally.
+ */
+private async void fulfils_quickly() {
+  await async_yield();
+}
+
+/**
+ * Work that never settles, so only the timer can end the race.
+ */
+private async void never_settles() {
+  __stuck = promise_create();
+
+  await __stuck;
+}
+
+/**
+ * A rejecting body must not leave its timer parked. The ceiling here is
+ * long enough that a leaked timer would still be suspended when the
+ * count is taken.
+ */
+private async void check_release_on_reject() {
+  int before;
+  mixed err;
+
+  // The runner guards this very body with a with_timeout() of its own, and
+  // that guard is armed only once the body first suspends. Yield before
+  // taking the baseline so the guard is counted in it rather than mistaken
+  // for a leak.
+  await async_yield();
+
+  before = parked_timers();
+
+  err = acatch {
+    await with_timeout(rejects_quickly(), 300);
+  };
+
+  // Let the cancellation reach the timer's parked frame; it is delivered
+  // at that frame's next resumption, not when promise_cancel() returns.
+  await async_yield();
+
+  ASSERT_NE(0, err);
+  ASSERT_EQ(before, parked_timers());
+}
+
+/**
+ * The same release on the path that was already covered.
+ */
+private async void check_release_on_success() {
+  int before;
+
+  // The runner guards this very body with a with_timeout() of its own, and
+  // that guard is armed only once the body first suspends. Yield before
+  // taking the baseline so the guard is counted in it rather than mistaken
+  // for a leak.
+  await async_yield();
+
+  before = parked_timers();
+
+  await with_timeout(fulfils_quickly(), 300);
+  await async_yield();
+
+  ASSERT_EQ(before, parked_timers());
+}
+
+/**
+ * Work that never settles loses to the ceiling, and the reason is the
+ * framework's own constant rather than anything the driver authored.
+ */
+private async void check_timeout_fires() {
+  mixed err = acatch {
+    await with_timeout(never_settles(), 1);
+  };
+
+  ASSERT_EQ(TEST_ERR_TIMEOUT, err);
+}
+
+/**
+ * A plain value is handed back as-is, arming no timer.
+ */
+private async void check_plain_value_passthrough() {
+  int before;
+  mixed result;
+
+  // The runner guards this very body with a with_timeout() of its own, and
+  // that guard is armed only once the body first suspends. Yield before
+  // taking the baseline so the guard is counted in it rather than mistaken
+  // for a leak.
+  await async_yield();
+
+  before = parked_timers();
+  result = await with_timeout(42, 300);
+
+  ASSERT_EQ(42, result);
+  ASSERT_EQ(before, parked_timers());
+}

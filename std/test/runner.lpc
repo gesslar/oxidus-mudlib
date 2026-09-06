@@ -33,7 +33,15 @@ private string indent_lines(string text) {
   return implode(lines, "\n");
 }
 
-void run_tests() {
+/**
+ * Runs every *.test.lpc in test_dir() and prints an aggregate summary.
+ *
+ * Async, because a test file's run() is awaited — an atest() entry only
+ * settles after a suspension resumes, and the clone must outlive it. Callers
+ * get a promise: await it if the object's lifetime depends on the sweep having
+ * finished, as cmds/dev/runtests.lpc does before removing this runner.
+ */
+async void run_tests() {
   string dir = test_dir();
   string *files = get_dir(dir + "*.test.lpc");
   int total_passed = 0, total_failed = 0, total_pending = 0;
@@ -53,7 +61,8 @@ void run_tests() {
   // runs.
   master()->set_test_mode(300);
 
-  catch{
+  // acatch, not catch: the sweep awaits, and await is illegal inside catch().
+  acatch {
     foreach(string file in files) {
       string path = dir + file;
       object ob;
@@ -72,7 +81,10 @@ void run_tests() {
         continue;
       }
 
-      results = ob->run();
+      // Await before tearing the clone down. An atest() body's functionals and
+      // accumulators live in this object, so destructing it while its promise
+      // is still outstanding abandons the frame and refuses the callbacks.
+      results = await ob->run();
       catch(destruct(ob));
 
       // Destruct the test file's master so the next sweep recompiles

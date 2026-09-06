@@ -48,23 +48,69 @@ varargs int same(mixed x, mixed y, int loose) {
     case T_OBJECT:
     case T_FLOAT:
     case T_FUNCTION:
+    case T_PROMISE:
       return x == y;
-    case T_MAPPING:
+    case T_MAPPING: {
+      mixed *other_keys;
+
       if(x == y) return 1; // speed up this case
       if(sizeof(x) != sizeof(y)) return 0;
-      if(!same(keys(x), keys(y))) return 0;
-      if(!same(values(x), values(y))) return 0;
+
+      // Pair each key with its own value. Comparing keys() and values() as
+      // two loose arrays lets a mapping match one that pairs the same keys
+      // and values up differently.
+      other_keys = keys(y);
+
+      foreach(mixed key, mixed value in x) {
+        if(member_array(key, other_keys) == -1)
+          return 0;
+
+        if(!same(value, y[key], loose))
+          return 0;
+      }
+
       return 1;
+    }
     case T_BUFFER:
     case T_ARRAY:
       if(sizeof(x) != sizeof(y))
         return 0;
 
-      if(loose)
-        return !sizeof(filter(x, (: of($1, $(y)) == -1 :)));
+      // Recurse rather than reaching for member_array(), which compares
+      // nested arrays and mappings by identity and so never matches an
+      // equal-but-separate structure.
+      if(loose) {
+        // Each candidate satisfies at most one element. Without consuming the
+        // match, ({ 1, 1 }) and ({ 1, 2 }) compare equal — both 1s pair off
+        // against the same candidate — and unequal multisets pass ASSERT_EQ.
+        int *taken = allocate(sizeof(y));
+
+        foreach(mixed element in x) {
+          // Explicitly zeroed: a local is a frame slot, so a bare `int found;`
+          // inside a loop body keeps whatever the previous iteration left in
+          // it rather than starting over at 0.
+          int found = 0;
+
+          for(int i = 0; i < sizeof(y); i++) {
+            if(taken[i])
+              continue;
+
+            if(same(element, y[i], loose)) {
+              taken[i] = 1;
+              found = 1;
+              break;
+            }
+          }
+
+          if(!found)
+            return 0;
+        }
+
+        return 1;
+      }
 
       for(int i = 0; i < sizeof(x); i++)
-        if(!same(x[i], y[i]))
+        if(!same(x[i], y[i], loose))
           return 0;
 
       return 1;
@@ -147,15 +193,150 @@ varargs mixed *pending(string description, string reason) {
 }
 
 /**
+ * Build a test entry whose body returns a promise, to be awaited before the
+ * result is recorded. Use it for behaviour that only exists once a suspension
+ * has resumed; test() cannot reach that, because a functional body may not
+ * await.
+ *
+ * The body is an ordinary functional, so it cannot await either — what it does
+ * is call an async lfun on the test object and hand back its promise, and the
+ * assertions live in that lfun after its own awaits:
+ *
+ *   atest("visits every element", (: check_visits_every_element() :)),
+ *
+ * A failed assertion throws, which rejects the lfun's promise, which is raised
+ * again at the runner's await and recorded exactly like a sync failure. A body
+ * that returns a plain value is treated as an ordinary passing test.
+ *
+ * @param {string} description Test description.
+ * @param {function} test Functional returning the promise to await.
+ * @param {mixed} args Optional extra args passed to the functional.
+ * @returns {mixed *} A test entry for the array passed to describe().
+ */
+varargs mixed *atest(string description, function test, mixed *args...) {
+  args = args || ({});
+
+  return ({ description, "async", test, args... });
+}
+
+/**
+ * Seconds an atest() body is given to settle. Override in a test file whose
+ * async work legitimately takes longer.
+ *
+ * @returns {int} The ceiling, in seconds.
+ */
+protected int async_timeout() {
+  return TEST_ASYNC_TIMEOUT;
+}
+
+/**
+ * Rejects with TEST_ERR_TIMEOUT once the given delay elapses, unless it is
+ * cancelled first. Raced against a test body so a promise that never settles
+ * fails the test instead of parking the sweep for the life of the driver.
+ *
+ * It throws rather than errors: a test running long is a routine outcome, and
+ * error() would write a traceback to /log/catch and notify every online
+ * developer for it.
+ *
+ * @param {int} secs - Seconds to wait before rejecting.
+ */
+private async void timeout_after(int secs) {
+  mixed err = acatch(await call_out(secs));
+
+  if(err)
+    return;
+
+  throw(TEST_ERR_TIMEOUT);
+}
+
+/**
+ * Awaits a promise under a ceiling, so a promise that never settles fails
+ * instead of parking the frame for the life of the driver. The runner puts
+ * every atest() body through this, and an async test lfun can use it directly
+ * on any individual await it does not trust:
+ *
+ *   mixed rows = await with_timeout(SOME_D->fetch(), 3);
+ *
+ * A non-promise is returned as-is, so wrapping something that turns out to be
+ * synchronous costs nothing and arms no timer.
+ *
+ * @param {mixed} p - The promise to await, or any plain value.
+ * @param {int} [secs] - Ceiling in seconds; defaults to async_timeout().
+ * @returns {mixed} What p fulfilled with, or p itself if it was not a promise.
+ * @errors Throws TEST_ERR_TIMEOUT if the ceiling elapses first, and re-throws
+ *  whatever p rejected with otherwise.
+ */
+protected async varargs mixed with_timeout(mixed p, int secs) {
+  promise timer;
+  mixed result, err;
+
+  if(!promisep(p))
+    return p;
+
+  secs = secs || async_timeout();
+  timer = timeout_after(secs);
+
+  err = acatch {
+    result = await promise_race(({ timer, p }));
+  };
+
+  // Release the timer on every path, not just the winning one. promise_race()
+  // does not stop its losers, so work that rejected first — an ordinary
+  // failing atest() — would otherwise leave the timer parked for the rest of
+  // its delay. Cancelling a timer that already won returns 0 and does nothing.
+  promise_cancel(timer);
+
+  if(err)
+    throw(err);
+
+  return result;
+}
+
+/**
+ * Invokes an atest() body and waits for whatever it hands back, under the
+ * file's timeout. Throws on failure so the caller records it the same way it
+ * records a sync test throwing.
+ *
+ * @param {function} fun - The test body.
+ * @param {mixed *} args - Extra arguments for the body.
+ */
+private async void run_async_test(function fun, mixed *args) {
+  // Evaluated before any timer is armed, so a body that throws synchronously
+  // cannot leave one parked.
+  mixed result = sizeof(args) ? evaluate(fun, args...) : evaluate(fun);
+  mixed err;
+
+  if(!promisep(result))
+    return;
+
+  err = acatch {
+    await with_timeout(result, async_timeout());
+  };
+
+  if(!err)
+    return;
+
+  if(err == TEST_ERR_TIMEOUT)
+    throw(sprintf("Timed out after %d seconds waiting for the test to settle.",
+      async_timeout()));
+
+  throw(err);
+}
+
+/**
  * Run all registered suites and return aggregate results. Resets the suite
  * list so a subsequent run() starts fresh (relevant if the same instance is
  * reused; runners typically clone instead).
+ *
+ * Async, because an atest() entry is awaited before its result is recorded.
+ * Every call site therefore receives a promise, including a suite with no
+ * atest() in it — see the runner, which awaits this.
  *
  * @returns {mixed *} ({ passed, failed, failures, pendings }) where failures
  *                   is an array of ({ suite, test, error }) and pendings is
  *                   an array of ({ suite, test, reason }).
  */
-mixed *run() {
+async mixed *run() {
   mixed *failures = ({});
   mixed *pendings = ({});
   int passed = 0, failed = 0;
@@ -171,6 +352,25 @@ mixed *run() {
       // pending: ({ description, "pending", reason })
       if(stringp(test[1]) && test[1] == "pending") {
         pendings += ({({ suite_description, test_description, test[2] })});
+        continue;
+      }
+
+      // async: ({ description, "async", body, args... }). acatch rather than
+      // catch, because await is illegal inside catch().
+      if(stringp(test[1]) && test[1] == "async") {
+        mixed *args = sizeof(test) > 3 ? test[3..] : ({});
+
+        e = acatch {
+          await run_async_test(test[2], args);
+        };
+
+        if(e) {
+          failed++;
+          failures += ({({ suite_description, test_description,
+            stringp(e) ? e : sprintf("%O", e) })});
+        } else
+          passed++;
+
         continue;
       }
 
