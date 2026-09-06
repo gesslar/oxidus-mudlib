@@ -34,7 +34,7 @@ string substitute_colour(string text, string mode);
 string substitute_too_dark(string hex);
 string wrap(string str, int wrap_at, int indent_at);
 int get_luminance(int *rgb);
-float get_accessible_luminance_multiplier(int *rgb);
+private int *lighten_to_minimum(int *rgb);
 public string rgb_to_hex(int *rgb);
 int *random_bright_rgb();
 string random_bright_hex();
@@ -220,7 +220,7 @@ public string wrap(string str, int wrap_at, int indent_at) {
 
   sections = map(explode(str, "\n"), function(string section, int wrap_at, int indent_at) {
     string *parts = explode(section, " ");
-    mapping running = ([ "length" : 0 ]);
+    mapping running = ([ "length" : 0, "start" : 1 ]);
 
     // this routine strips out the first space, put it back into the
     // array if the original string had a leading space
@@ -234,18 +234,28 @@ public string wrap(string str, int wrap_at, int indent_at) {
       // new lines
       if(part[0..0] == "\n") {
         running["length"] = 0;
+        running["start"] = 1;
+
         return part;
       }
 
       plain = substitute_colour(part, "off");
       len = sizeof(plain);
 
-      running["length"] += (len + 1);
+      // implode only inserts a space *between* parts, so the separator is
+      // only charged when this part is not the first one on the line
+      if(!running["start"])
+        len += 1;
 
-      if(running["length"] >= max) {
+      running["start"] = 0;
+
+      if(running["length"] + len > max) {
         running["length"] = sizeof(plain) + indent;
+
         return "\n" + repeat_string(" ", indent) + part;
       }
+
+      running["length"] += len;
 
       return part;
 
@@ -388,35 +398,63 @@ mixed *base_colours() {
 }
 
 /**
- * Converts an ANSI 256 color code to a 3-digit hex representation.
+ * Converts an ANSI 256 colour code to the nearest 3-digit hex shorthand.
  *
- * @param {int} ansi - ANSI 256 color code (0-255)
- * @returns {string} 3-digit hex color code
+ * A shorthand digit expands by repetition, so the sixteen reachable values
+ * per channel are 17 apart. The xterm cube's levels do not sit on those
+ * boundaries, so this is a lossy narrowing by construction; it picks the
+ * nearest digit rather than truncating, which would bias every channel
+ * downward — level 95 would render as 5 (85) when 6 (102) is closer.
+ *
+ * @param {int} ansi - ANSI 256 colour code (0-255)
+ * @returns {string} 3-digit hex colour code
  */
 string ansi256_to_3hex(int ansi) {
-  int *rgb = colour_to_rgb(ansi); // Get the RGB triplet
-  return sprintf("%X%X%X", rgb[0] / 17, rgb[1] / 17, rgb[2] / 17); // Convert to 3-hex
+  int *rgb = colour_to_rgb(ansi);
+
+  return sprintf("%X%X%X", (rgb[0] + 8) / 17, (rgb[1] + 8) / 17,
+    (rgb[2] + 8) / 17);
 }
 
 int get_luminance(int *rgb) {
   assert_arg(uniformp(rgb, T_INT), 1, "Invalid value.");
   assert_arg(every(rgb, (: !nullp($1) && clamped($1, 0, 255) :)), 1, "Invalid value.");
 
-  return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+  return to_int(round(0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]));
 }
 
 /**
- * Checks if a colour value is considered too dark for display.
+ * Lightens a colour until it clears the minimum luminance.
  *
- * Tests colour values against the mud's dark colour configuration.
+ * The luminance weights total 1.0, so adding the same amount to every
+ * channel raises the luminance by exactly that amount. A channel already at
+ * 255 contributes less than its share, so the lift repeats until the colour
+ * clears the floor or no channel can be raised any further.
  *
- * @param {int*} rgb - The colour code to check
- * @returns {int} 1 if the colour is too dark, 0 otherwise
+ * @param {int*} rgb - The colour to lighten.
+ * @returns {int*} The lightened colour.
  */
-float get_accessible_luminance_multiplier(int *rgb) {
-  float lum = get_luminance(rgb);
+private int *lighten_to_minimum(int *rgb) {
+  int lum = get_luminance(rgb);
 
-  return lum >= minimum_luminance ? 1.0 : minimum_luminance / lum;
+  while(lum < minimum_luminance) {
+    int lift = to_int(ceil(to_float(minimum_luminance - lum)));
+    int *lifted = ({
+      clamp(rgb[0] + lift, 0, 255),
+      clamp(rgb[1] + lift, 0, 255),
+      clamp(rgb[2] + lift, 0, 255),
+    });
+
+    // Fully saturated in every channel that could still be raised; this is
+    // as light as the colour gets without shifting its hue.
+    if(same_array(lifted, rgb, 1))
+      break;
+
+    rgb = lifted;
+    lum = get_luminance(rgb);
+  }
+
+  return rgb;
 }
 
 /**
@@ -448,35 +486,36 @@ string random_bright_hex() {
 }
 
 /**
- * Substitutes dark colours with more visible alternatives.
+ * Lightens a colour that falls below the mud's minimum luminance.
  *
- * Uses the mud's dark colour substitution mapping to replace colours
- * that are considered too dark with more visible alternatives.
+ * A colour already at or above the floor is returned untouched; anything
+ * darker is lightened until it clears the floor.
  *
- * @param {string} hex - The colour code to potentially substitute
- * @returns {string} Substituted colour code or original if not too dark
+ * @param {string} hex - The colour code to potentially lighten
+ * @returns {string} The lightened colour code, or the original if it was
+ *                   already light enough. Answered in whichever form the
+ *                   caller asked in — bare, `{{fg}}`, or `{^bg^}`.
  */
 string substitute_too_dark(string hex) {
-  int *rgb;
-  float scale;
+  int *rgb = hex_to_rgb(hex);
+  string lightened;
 
-  if(find_index(base_colours(), (: $1[0] == $(hex) :)) > -1)
+  if(get_luminance(rgb) >= minimum_luminance)
     return hex;
 
-  rgb = hex_to_rgb(hex);
+  lightened = rgb_to_hex(lighten_to_minimum(rgb));
 
-  scale = get_accessible_luminance_multiplier(rgb);
-  if(scale == 1.0)
-    return hex;
+  if(pcre_match(hex, "^\\{\\{"))
+    return sprintf("{{%s}}", lightened);
 
-  rgb[0] = clamp(to_int(rgb[0] * scale), 0, 255);
-  rgb[1] = clamp(to_int(rgb[1] * scale), 0, 255);
-  rgb[2] = clamp(to_int(rgb[2] * scale), 0, 255);
+  if(pcre_match(hex, "^\\{\\^"))
+    return sprintf("{^%s^}", lightened);
 
-  return sprintf("{{%s}}", rgb_to_hex(rgb));
+  return lightened;
 }
 
 private void normalize_hex(string ref hex) {
+  string given = hex;
   int r, g, b;
   string *match;
 
@@ -487,8 +526,13 @@ private void normalize_hex(string ref hex) {
   if(!sizeof(match))
     match = pcre_extract(hex, BG_TRUE_COLOUR_REGEX);
 
-  if(!sizeof(match))
-    return;
+  // Undelimited, so either a bare hex code the caller typed straight in —
+  // 3 or 6 digits, optional leading "#" — or something unreadable.
+  if(!sizeof(match)) {
+    assert_arg(pcre_match(hex, HEX_CHECK), 1, `Invalid hex colour: "${given}"`);
+
+    match = ({ hex[0..0] == "#" ? hex[1..] : hex });
+  }
 
   hex = match[0];
 
@@ -567,10 +611,9 @@ public string bod_colour_replace(object body, string text, int message_type) {
 /**
  * Converts RGB values to the nearest 256-colour code.
  *
- * Maps RGB values to the closest matching colour in the 256-colour space:
- * - Values 0-15: System colours
- * - Values 16-231: 6x6x6 colour cube
- * - Values 232-255: Greyscale ramp
+ * Searches the whole space — system colours, the 6x6x6 cube and the
+ * greyscale ramp — for the code whose own RGB sits closest, so a colour
+ * that has an exact match always maps back to itself.
  *
  * @param {int} r - Red component (0-255)
  * @param {int} g - Green component (0-255)
@@ -579,23 +622,27 @@ public string bod_colour_replace(object body, string text, int message_type) {
  * @errors If any RGB value is outside the valid range
  */
 public int rgb_to_colour(int r, int g, int b) {
+  int best;
+  int best_distance = -1;
+
   if(r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255)
     error("Invalid RGB values: " + r + ", " + g + ", " + b);
 
-  if(r == g && g == b)
-    // Grayscale
-    return (r - 8) / 10 + 232; // 232-255 maps to 8-255
-  else if(r >= 0 && r < 128 && g >= 0 && g < 128 && b >= 0 && b < 128)
-    // Standard 16 colours
-    return (r > 0 ? 1 : 0) + (g > 0 ? 2 : 0) + (b > 0 ? 4 : 0);
-  else {
-    // 6x6x6 colour cube
-    int cube_r = r / 51;
-    int cube_g = g / 51;
-    int cube_b = b / 51;
+  for(int code = 0; code < 256; code++) {
+    int *rgb = colour_to_rgb(code);
+    int distance = (r - rgb[0]) * (r - rgb[0]) +
+                   (g - rgb[1]) * (g - rgb[1]) +
+                   (b - rgb[2]) * (b - rgb[2]);
 
-    return 16 + (cube_r * 36) + (cube_g * 6) + cube_b;
+    // Ties go to the higher code: 0-15 are whatever the player's terminal
+    // themes them to, while 16-255 are fixed.
+    if(best_distance < 0 || distance <= best_distance) {
+      best = code;
+      best_distance = distance;
+    }
   }
+
+  return best;
 }
 
 /**
@@ -609,12 +656,21 @@ int *colour_to_rgb(int colour_code) {
 
   if(colour_code < 16) { // ANSI basic colors
     return ansi_rgb[colour_code]; // Assuming you have a predefined array like before
-  } else if(clamped(colour_code, 16, 231)) { // 6x6x6 color cube (216 colors)
+  } else if(clamped(colour_code, 16, 231)) { // 6x6x6 colour cube (216 colours)
     colour_code -= 16;
-    r = (colour_code / 36) * 51; // 6 levels (0, 51, 102, 153, 204, 255)
-    g = ((colour_code / 6) % 6) * 51;
-    b = (colour_code % 6) * 51;
-  } else { // 24 grayscale shades (232-255)
+    r = colour_code / 36;
+    g = (colour_code / 6) % 6;
+    b = colour_code % 6;
+
+    // The xterm-256 cube is not evenly spaced: level 0 is 0, and levels 1-5
+    // are 55 + n * 40, giving 0, 95, 135, 175, 215, 255. Deriving it as
+    // n * 51 agrees only at the two ends, so every middle level named an RGB
+    // the terminal does not render — and rgb_to_colour(), which searches
+    // these as its candidates, answered with the wrong code as a result.
+    r = r ? 55 + r * 40 : 0;
+    g = g ? 55 + g * 40 : 0;
+    b = b ? 55 + b * 40 : 0;
+  } else { // 24 greyscale shades (232-255)
     r = g = b = 8 + (colour_code - 232) * 10; // Start at 8, increase by 10
   }
 

@@ -1,0 +1,829 @@
+// @lpc-nocheck
+/**
+ * @file /tests/adm/daemons/colour.test.lpc
+ *
+ * Tests for COLOUR_D (/adm/daemons/colour.lpc) — colour-code detection and
+ * substitution, colour-aware word wrapping, hex/RGB/ANSI conversion,
+ * luminance and dark-colour accessibility, and the cached lookup tables.
+ *
+ * These tests assert the *contract* each function documents, not whatever it
+ * happens to do today. Where the two disagree the test fails, and the failure
+ * is the point.
+ *
+ * Luminance-dependent tests read COLOUR_MININUM_LUMINANCE from config rather
+ * than hardcoding the tuned value, so retuning the mud does not turn them red.
+ *
+ * Isolation: every function under test is pure apart from the daemon's own
+ * colour cache, which is read-only from here except for the one resync() test.
+ * resync() only rebuilds the cache from scratch, so it is safe to call live.
+ */
+
+#include <test.h>
+#include <colour.h>
+#include <daemons.h>
+
+inherit STD_TEST;
+
+// A fixture colour returned by query_pref() so bod_colour_replace() can be
+// exercised against a body-shaped object without touching a real player.
+private nosave string pref_colour = "FF0000";
+
+public string query_pref(string key) {
+  if(key == "combat_hit_colour" || key == "combat_miss_colour")
+    return pref_colour;
+
+  return 0;
+}
+
+/**
+ * The configured minimum luminance, mirroring the daemon's own fallback.
+ *
+ * @returns {float} The luminance floor accessible colours are lifted to.
+ */
+private float min_luminance() {
+  return mud_config("COLOUR_MININUM_LUMINANCE") || 50.0;
+}
+
+/**
+ * Length of the longest line in a block of text, measured with colour codes
+ * stripped — i.e. the width the text actually occupies on screen.
+ *
+ * @param {string} text - The block of text to measure.
+ * @returns {int} The visible width of the widest line.
+ */
+private int widest_line(string text) {
+  int widest;
+
+  foreach(string line in explode(text, "\n")) {
+    int len = strlen(COLOUR_D->substitute_colour(line, "off"));
+
+    if(len > widest)
+      widest = len;
+  }
+
+  return widest;
+}
+
+/**
+ * The whitespace-separated words of a block of text, in order. Used to prove
+ * that wrapping rearranges whitespace without losing or duplicating content.
+ *
+ * @param {string} text - The block of text to split.
+ * @returns {string*} The words, with empty runs removed.
+ */
+private string *words_of(string text) {
+  return filter(explode(replace_string(text, "\n", " "), " "),
+    (: $1 != "" :));
+}
+
+/**
+ * The luminance of a hex colour, accepting either the bare or the
+ * `{{RRGGBB}}` brace-wrapped form.
+ *
+ * @param {string} hex - The colour to measure.
+ * @returns {int} Its luminance.
+ */
+private int luminance_of(string hex) {
+  string bare = hex;
+
+  sscanf(hex, "{{%s}}", bare);
+
+  return COLOUR_D->get_luminance(COLOUR_D->hex_to_rgb(bare));
+}
+
+void setup() {
+  describe("colourp", ({
+    test("detects a foreground true-colour code", function() {
+      ASSERT_EQ(1, COLOUR_D->colourp("{{f00}}"));
+    }),
+    test("detects a six-digit foreground code", function() {
+      ASSERT_EQ(1, COLOUR_D->colourp("{{FF0000}}"));
+    }),
+    test("detects a background code", function() {
+      ASSERT_EQ(1, COLOUR_D->colourp("{^abc^}"));
+    }),
+    test("detects the reset code", function() {
+      ASSERT_EQ(1, COLOUR_D->colourp("{{res}}"));
+    }),
+    test("detects an attribute code", function() {
+      ASSERT_EQ(1, COLOUR_D->colourp("{{bl1}}"));
+    }),
+    test("detects a code embedded in surrounding text", function() {
+      ASSERT_EQ(1, COLOUR_D->colourp("plain {{0f0}}green"));
+    }),
+    test("plain text carries no colour", function() {
+      ASSERT_EQ(0, COLOUR_D->colourp("plain text"));
+    }),
+    test("non-hex digits are not a colour code", function() {
+      ASSERT_EQ(0, COLOUR_D->colourp("{{zz0}}"));
+    }),
+    test("a four-digit run is not a colour code", function() {
+      ASSERT_EQ(0, COLOUR_D->colourp("{{f00f}}"));
+    }),
+  }));
+
+  describe("substitute_colour off", ({
+    test("strips a foreground code", function() {
+      ASSERT_EQ("red", COLOUR_D->substitute_colour("{{f00}}red", "off"));
+    }),
+    test("strips a background code", function() {
+      ASSERT_EQ("bg", COLOUR_D->substitute_colour("{^0f0^}bg", "off"));
+    }),
+    test("strips attributes and resets", function() {
+      ASSERT_EQ("bold",
+        COLOUR_D->substitute_colour("{{bl1}}bold{{bl0}}{{res}}", "off"));
+    }),
+    test("leaves plain text untouched", function() {
+      ASSERT_EQ("plain text",
+        COLOUR_D->substitute_colour("plain text", "off"));
+    }),
+    test("strips a mixed run without disturbing spacing", function() {
+      ASSERT_EQ("red plain bg",
+        COLOUR_D->substitute_colour(
+          "{{f00}}red{{res}} plain {^0f0^}bg{{res}}", "off"));
+    }),
+    test("an empty string stays empty", function() {
+      ASSERT_EQ("", COLOUR_D->substitute_colour("", "off"));
+    }),
+    test("a null string is returned as-is", function() {
+      ASSERT_EQ(0, COLOUR_D->substitute_colour(0, "off"));
+    }),
+    test("malformed codes survive stripping as literal text", function() {
+      ASSERT_EQ("{{zz0}}text",
+        COLOUR_D->substitute_colour("{{zz0}}text", "off"));
+    }),
+  }));
+
+  describe("substitute_colour on", ({
+    test("renders a foreground code as a 38;2 sequence", function() {
+      ASSERT_EQ("\e[38;2;255;0;0mred\e[0m",
+        COLOUR_D->substitute_colour("{{f00}}red{{res}}", "on"));
+    }),
+    test("renders a background code as a 48;2 sequence", function() {
+      ASSERT_EQ("\e[48;2;0;255;0mbg\e[0m",
+        COLOUR_D->substitute_colour("{^0f0^}bg{{res}}", "on"));
+    }),
+    test("six-digit and three-digit forms render identically", function() {
+      ASSERT_EQ(COLOUR_D->substitute_colour("{{FF0000}}x", "on"),
+        COLOUR_D->substitute_colour("{{f00}}x", "on"));
+    }),
+    test("renders attributes from the cached table", function() {
+      ASSERT_EQ("\e[1mbold\e[22m",
+        COLOUR_D->substitute_colour("{{bl1}}bold{{bl0}}", "on"));
+    }),
+    test("leaves plain text untouched", function() {
+      ASSERT_EQ("plain", COLOUR_D->substitute_colour("plain", "on"));
+    }),
+    test("rendering and stripping cover the same markup", function() {
+      string source = "{{f00}}red{{res}} {^0f0^}bg{{res}} {{bl1}}bold{{bl0}}";
+      string rendered = COLOUR_D->substitute_colour(source, "on");
+
+      // Nothing renderable may be left behind as literal markup.
+      ASSERT_EQ(0, COLOUR_D->colourp(rendered));
+    }),
+  }));
+
+  describe("wrap", ({
+    test("text shorter than the width is untouched", function() {
+      ASSERT_EQ("alpha bravo", COLOUR_D->wrap("alpha bravo", 40, 0));
+    }),
+    test("a line exactly the width is not wrapped", function() {
+      // Nineteen visible characters at a width of nineteen must stay put;
+      // wrapping here is the classic off-by-one.
+      ASSERT_EQ("alpha bravo charlie",
+        COLOUR_D->wrap("alpha bravo charlie", 19, 0));
+    }),
+    test("a line one over the width wraps at the last space", function() {
+      ASSERT_EQ("alpha bravo\ncharlie",
+        COLOUR_D->wrap("alpha bravo charlie", 18, 0));
+    }),
+    test("wrapping never emits a line wider than the limit", function() {
+      string text = "The quick brown fox jumps over the lazy dog while the "
+                    "spry cat naps beneath a warm and dusty windowsill";
+
+      for(int width = 20; width <= 78; width++)
+        ASSERT_EQ(1, widest_line(COLOUR_D->wrap(text, width, 0)) <= width);
+    }),
+    test("wrapping preserves every word in order", function() {
+      string text = "The quick brown fox jumps over the lazy dog while the "
+                    "spry cat naps beneath a warm and dusty windowsill";
+
+      ASSERT_EQ(1, same_array(words_of(text),
+        words_of(COLOUR_D->wrap(text, 30, 0)), 1));
+    }),
+    test("continuation lines carry the indent", function() {
+      ASSERT_EQ("alpha bravo charlie\n    delta echo\n    foxtrot",
+        COLOUR_D->wrap("alpha bravo charlie delta echo foxtrot", 20, 4));
+    }),
+    test("the indent counts against the width", function() {
+      string result =
+        COLOUR_D->wrap("alpha bravo charlie delta echo foxtrot", 20, 4);
+
+      ASSERT_EQ(1, widest_line(result) <= 20);
+    }),
+    test("leading whitespace is preserved", function() {
+      ASSERT_EQ("   three leading spaces",
+        COLOUR_D->wrap("   three leading spaces", 40, 0));
+    }),
+    test("existing line breaks are preserved", function() {
+      ASSERT_EQ("one two\nthree four",
+        COLOUR_D->wrap("one two\nthree four", 40, 0));
+    }),
+    test("blank lines are preserved", function() {
+      ASSERT_EQ("one\n\ntwo", COLOUR_D->wrap("one\n\ntwo", 40, 0));
+    }),
+    test("each existing line wraps independently", function() {
+      ASSERT_EQ("alpha bravo\ncharlie\ndelta echo\nfoxtrot",
+        COLOUR_D->wrap("alpha bravo charlie\ndelta echo foxtrot", 12, 0));
+    }),
+    test("colour codes do not count toward the width", function() {
+      string coloured = COLOUR_D->wrap(
+        "{{f00}}alpha{{res}} {{0f0}}bravo{{res}} charlie delta", 19, 0);
+
+      ASSERT_EQ(COLOUR_D->wrap("alpha bravo charlie delta", 19, 0),
+        COLOUR_D->substitute_colour(coloured, "off"));
+    }),
+    test("background codes do not count toward the width", function() {
+      ASSERT_EQ("{^f00^}alpha{{res}} bravo charlie",
+        COLOUR_D->wrap("{^f00^}alpha{{res}} bravo charlie", 19, 0));
+    }),
+    test("attribute codes do not count toward the width", function() {
+      ASSERT_EQ("{{bl1}}alpha{{bl0}} bravo charlie",
+        COLOUR_D->wrap("{{bl1}}alpha{{bl0}} bravo charlie", 19, 0));
+    }),
+    test("a word longer than the width is not broken", function() {
+      ASSERT_EQ("supercalifragilisticexpialidocious\nrex",
+        COLOUR_D->wrap("supercalifragilisticexpialidocious rex", 10, 0));
+    }),
+    test("an empty string stays empty", function() {
+      ASSERT_EQ("", COLOUR_D->wrap("", 20, 0));
+    }),
+    test("a single word is returned unchanged", function() {
+      ASSERT_EQ("alpha", COLOUR_D->wrap("alpha", 20, 0));
+    }),
+    test("wrapping is idempotent", function() {
+      string text = "The quick brown fox jumps over the lazy dog while the "
+                    "spry cat naps beneath a warm and dusty windowsill";
+      string once = COLOUR_D->wrap(text, 30, 0);
+
+      ASSERT_EQ(once, COLOUR_D->wrap(once, 30, 0));
+    }),
+    test("a null string errors rather than wrapping nothing", function() {
+      ASSERT_NE(0, catch(COLOUR_D->wrap(0, 20, 0)));
+    }),
+  }));
+
+  describe("rgb_to_hex", ({
+    test("formats a triple as six uppercase digits", function() {
+      ASSERT_EQ("FF8000", COLOUR_D->rgb_to_hex(({ 255, 128, 0 })));
+    }),
+    test("pads single-digit channels", function() {
+      ASSERT_EQ("010203", COLOUR_D->rgb_to_hex(({ 1, 2, 3 })));
+    }),
+    test("black is all zeroes", function() {
+      ASSERT_EQ("000000", COLOUR_D->rgb_to_hex(({ 0, 0, 0 })));
+    }),
+    test("white is all Fs", function() {
+      ASSERT_EQ("FFFFFF", COLOUR_D->rgb_to_hex(({ 255, 255, 255 })));
+    }),
+  }));
+
+  describe("hex_to_rgb", ({
+    test("parses a bare six-digit code", function() {
+      ASSERT_EQ(({ 255, 128, 0 }), COLOUR_D->hex_to_rgb("FF8000"));
+    }),
+    test("parses lowercase digits", function() {
+      ASSERT_EQ(({ 255, 128, 0 }), COLOUR_D->hex_to_rgb("ff8000"));
+    }),
+    test("parses a brace-wrapped six-digit code", function() {
+      ASSERT_EQ(({ 255, 128, 0 }), COLOUR_D->hex_to_rgb("{{FF8000}}"));
+    }),
+    test("expands a brace-wrapped three-digit code", function() {
+      ASSERT_EQ(({ 255, 136, 0 }), COLOUR_D->hex_to_rgb("{{F80}}"));
+    }),
+    test("parses a brace-wrapped background code", function() {
+      ASSERT_EQ(({ 255, 136, 0 }), COLOUR_D->hex_to_rgb("{^F80^}"));
+    }),
+    test("expands a bare three-digit code", function() {
+      // hex_to_sequence() documents "3 or 6 digits", and gradient_hex() hands
+      // this function whatever a caller typed, so the bare short form has to
+      // expand the same way the brace-wrapped one does.
+      ASSERT_EQ(({ 255, 136, 0 }), COLOUR_D->hex_to_rgb("F80"));
+    }),
+    test("expands a bare three-digit code in lowercase", function() {
+      ASSERT_EQ(({ 255, 136, 0 }), COLOUR_D->hex_to_rgb("f80"));
+    }),
+    test("every channel of a bare three-digit code expands", function() {
+      // Each digit feeds its own channel; a partial expansion reads the
+      // digits off by one and lands on a different colour entirely.
+      ASSERT_EQ(({ 170, 187, 204 }), COLOUR_D->hex_to_rgb("ABC"));
+    }),
+    test("accepts a six-digit code with a leading hash", function() {
+      ASSERT_EQ(({ 255, 128, 0 }), COLOUR_D->hex_to_rgb("#FF8000"));
+    }),
+    test("accepts a three-digit code with a leading hash", function() {
+      ASSERT_EQ(({ 255, 136, 0 }), COLOUR_D->hex_to_rgb("#F80"));
+    }),
+    test("a bare short code agrees with its brace-wrapped twin", function() {
+      ASSERT_EQ(COLOUR_D->hex_to_rgb("{{F80}}"), COLOUR_D->hex_to_rgb("F80"));
+    }),
+    test("round-trips through rgb_to_hex", function() {
+      ASSERT_EQ("1A2B3C",
+        COLOUR_D->rgb_to_hex(COLOUR_D->hex_to_rgb("1A2B3C")));
+    }),
+    test("unreadable input errors rather than returning a colour",
+      function() {
+        // Slicing an unnormalized string leaves channels undefined, so the
+        // complaint has to land here rather than on whoever consumes them.
+        ASSERT_NE(0, catch(COLOUR_D->hex_to_rgb("zzz")));
+      }),
+    test("an empty string errors", function() {
+      ASSERT_NE(0, catch(COLOUR_D->hex_to_rgb("")));
+    }),
+    test("a too-short code errors", function() {
+      ASSERT_NE(0, catch(COLOUR_D->hex_to_rgb("FF")));
+    }),
+    test("a too-long code errors", function() {
+      ASSERT_NE(0, catch(COLOUR_D->hex_to_rgb("FF80000")));
+    }),
+  }));
+
+  describe("rgb_to_sequence", ({
+    test("mode 0 emits a foreground sequence", function() {
+      ASSERT_EQ("\e[38;2;255;128;0m",
+        COLOUR_D->rgb_to_sequence(({ 255, 128, 0 }), 0));
+    }),
+    test("mode 1 emits a background sequence", function() {
+      ASSERT_EQ("\e[48;2;255;128;0m",
+        COLOUR_D->rgb_to_sequence(({ 255, 128, 0 }), 1));
+    }),
+  }));
+
+  describe("hex_to_sequence", ({
+    test("converts hex straight to a foreground sequence", function() {
+      ASSERT_EQ("\e[38;2;255;128;0m", COLOUR_D->hex_to_sequence("FF8000"));
+    }),
+    test("mode 1 gives the background form", function() {
+      ASSERT_EQ("\e[48;2;255;128;0m", COLOUR_D->hex_to_sequence("FF8000", 1));
+    }),
+    test("agrees with rgb_to_sequence on the same colour", function() {
+      ASSERT_EQ(COLOUR_D->rgb_to_sequence(({ 0, 255, 0 }), 0),
+        COLOUR_D->hex_to_sequence("{{00FF00}}"));
+    }),
+  }));
+
+  describe("colour_to_rgb", ({
+    test("code 0 is the ANSI black entry", function() {
+      ASSERT_EQ(({ 0, 0, 0 }), COLOUR_D->colour_to_rgb(0));
+    }),
+    test("code 7 is the ANSI white entry", function() {
+      ASSERT_EQ(({ 192, 192, 192 }), COLOUR_D->colour_to_rgb(7));
+    }),
+    test("code 15 is bright white", function() {
+      ASSERT_EQ(({ 255, 255, 255 }), COLOUR_D->colour_to_rgb(15));
+    }),
+    test("code 16 is the base of the colour cube", function() {
+      ASSERT_EQ(({ 0, 0, 0 }), COLOUR_D->colour_to_rgb(16));
+    }),
+    test("code 196 is pure red in the cube", function() {
+      ASSERT_EQ(({ 255, 0, 0 }), COLOUR_D->colour_to_rgb(196));
+    }),
+    test("code 231 is the top of the colour cube", function() {
+      ASSERT_EQ(({ 255, 255, 255 }), COLOUR_D->colour_to_rgb(231));
+    }),
+    test("code 232 is the base of the greyscale ramp", function() {
+      ASSERT_EQ(({ 8, 8, 8 }), COLOUR_D->colour_to_rgb(232));
+    }),
+    test("code 255 is the top of the greyscale ramp", function() {
+      ASSERT_EQ(({ 238, 238, 238 }), COLOUR_D->colour_to_rgb(255));
+    }),
+    test("every code in 0-255 yields three in-range channels", function() {
+      for(int code = 0; code < 256; code++) {
+        int *rgb = COLOUR_D->colour_to_rgb(code);
+
+        ASSERT_EQ(3, sizeof(rgb));
+        ASSERT_EQ(1, clamped(rgb[0], 0, 255));
+        ASSERT_EQ(1, clamped(rgb[1], 0, 255));
+        ASSERT_EQ(1, clamped(rgb[2], 0, 255));
+      }
+    }),
+  }));
+
+  // The xterm-256 cube's six channel levels are 0, 95, 135, 175, 215, 255 —
+  // not evenly spaced. Levels 0 and 5 land on the same values whether the
+  // ramp is derived correctly or as n * 51, so asserting only the ends (as
+  // the cases above do) cannot tell the two apart. These pin the middle.
+  describe("colour_to_rgb (cube channel levels)", ({
+    test("level 1 is 95, not 51", function() {
+      ASSERT_EQ(({ 0, 0, 95 }), COLOUR_D->colour_to_rgb(17));
+    }),
+    test("level 2 is 135, not 102", function() {
+      ASSERT_EQ(({ 0, 0, 135 }), COLOUR_D->colour_to_rgb(18));
+    }),
+    test("level 3 is 175, not 153", function() {
+      ASSERT_EQ(({ 0, 0, 175 }), COLOUR_D->colour_to_rgb(19));
+    }),
+    test("level 4 is 215, not 204", function() {
+      ASSERT_EQ(({ 0, 0, 215 }), COLOUR_D->colour_to_rgb(20));
+    }),
+    test("level 5 is 255", function() {
+      ASSERT_EQ(({ 0, 0, 255 }), COLOUR_D->colour_to_rgb(21));
+    }),
+    test("the green axis uses the same levels", function() {
+      ASSERT_EQ(({ 0, 95, 0 }), COLOUR_D->colour_to_rgb(22));
+    }),
+    test("the red axis uses the same levels", function() {
+      ASSERT_EQ(({ 95, 0, 0 }), COLOUR_D->colour_to_rgb(52));
+    }),
+    test("a mid-cube code mixes all three axes", function() {
+      ASSERT_EQ(({ 175, 0, 255 }), COLOUR_D->colour_to_rgb(129));
+    }),
+    test("every cube channel is one of the six levels", function() {
+      int *levels = ({ 0, 95, 135, 175, 215, 255 });
+
+      for(int code = 16; code <= 231; code++) {
+        int *rgb = COLOUR_D->colour_to_rgb(code);
+
+        ASSERT_NE(-1, member_array(rgb[0], levels));
+        ASSERT_NE(-1, member_array(rgb[1], levels));
+        ASSERT_NE(-1, member_array(rgb[2], levels));
+      }
+    }),
+  }));
+
+  describe("rgb_to_colour (exact cube colours)", ({
+    // An exact cube colour must come back as its own code. Against the
+    // n * 51 ramp these resolved to the neighbouring code, so callers were
+    // handed a code the terminal renders as a different colour.
+    test("an exact level-1 blue resolves to its own code", function() {
+      ASSERT_EQ(17, COLOUR_D->rgb_to_colour(0, 0, 95));
+    }),
+    test("an exact level-2 blue resolves to its own code", function() {
+      ASSERT_EQ(18, COLOUR_D->rgb_to_colour(0, 0, 135));
+    }),
+    test("an exact level-3 red resolves to its own code", function() {
+      ASSERT_EQ(124, COLOUR_D->rgb_to_colour(175, 0, 0));
+    }),
+  }));
+
+  describe("rgb_to_colour", ({
+    test("pure red maps to 196", function() {
+      ASSERT_EQ(196, COLOUR_D->rgb_to_colour(255, 0, 0));
+    }),
+    test("a mid grey lands in the greyscale ramp", function() {
+      ASSERT_EQ(1, clamped(COLOUR_D->rgb_to_colour(128, 128, 128), 232, 255));
+    }),
+    test("the result is always a valid 256-colour code", function() {
+      // "Best matching 256-colour code" has to be a code that exists; the
+      // greyscale formula runs past the top of the ramp for bright greys.
+      ASSERT_EQ(1, clamped(COLOUR_D->rgb_to_colour(255, 255, 255), 0, 255));
+    }),
+    test("white round-trips back to white", function() {
+      ASSERT_EQ(({ 255, 255, 255 }),
+        COLOUR_D->colour_to_rgb(COLOUR_D->rgb_to_colour(255, 255, 255)));
+    }),
+    test("black round-trips back to black", function() {
+      ASSERT_EQ(({ 0, 0, 0 }),
+        COLOUR_D->colour_to_rgb(COLOUR_D->rgb_to_colour(0, 0, 0)));
+    }),
+    test("every code in the space round-trips through its own RGB",
+      function() {
+        for(int code = 0; code < 256; code++) {
+          int *rgb = COLOUR_D->colour_to_rgb(code);
+
+          ASSERT_EQ(rgb, COLOUR_D->colour_to_rgb(
+            COLOUR_D->rgb_to_colour(rgb[0], rgb[1], rgb[2])));
+        }
+      }),
+    test("no other code sits closer than the one chosen", function() {
+      foreach(int *want in ({ ({ 7, 7, 7 }), ({ 200, 10, 50 }),
+                              ({ 255, 223, 186 }), ({ 139, 137, 137 }),
+                              ({ 1, 2, 3 }), ({ 250, 250, 250 }) })) {
+        int *got = COLOUR_D->colour_to_rgb(
+          COLOUR_D->rgb_to_colour(want[0], want[1], want[2]));
+        int chosen = (want[0] - got[0]) * (want[0] - got[0]) +
+                     (want[1] - got[1]) * (want[1] - got[1]) +
+                     (want[2] - got[2]) * (want[2] - got[2]);
+
+        for(int code = 0; code < 256; code++) {
+          int *rgb = COLOUR_D->colour_to_rgb(code);
+
+          ASSERT_EQ(1, (want[0] - rgb[0]) * (want[0] - rgb[0]) +
+                       (want[1] - rgb[1]) * (want[1] - rgb[1]) +
+                       (want[2] - rgb[2]) * (want[2] - rgb[2]) >= chosen);
+        }
+      }
+    }),
+    test("an out-of-range red errors", function() {
+      ASSERT_NE(0, catch(COLOUR_D->rgb_to_colour(256, 0, 0)));
+    }),
+    test("an out-of-range green errors", function() {
+      ASSERT_NE(0, catch(COLOUR_D->rgb_to_colour(0, 300, 0)));
+    }),
+    test("a negative channel errors", function() {
+      ASSERT_NE(0, catch(COLOUR_D->rgb_to_colour(0, 0, -1)));
+    }),
+  }));
+
+  describe("ansi256_to_3hex", ({
+    test("pure red collapses to F00", function() {
+      ASSERT_EQ("F00", COLOUR_D->ansi256_to_3hex(196));
+    }),
+    test("black collapses to 000", function() {
+      ASSERT_EQ("000", COLOUR_D->ansi256_to_3hex(0));
+    }),
+    test("cube white collapses to FFF", function() {
+      ASSERT_EQ("FFF", COLOUR_D->ansi256_to_3hex(231));
+    }),
+    test("every code yields three hex digits", function() {
+      for(int code = 0; code < 256; code++)
+        ASSERT_EQ(1,
+          pcre_match(COLOUR_D->ansi256_to_3hex(code), "^[0-9A-F]{3}$"));
+    }),
+  }));
+
+  // A shorthand digit expands by repetition, so the channel values it can
+  // name are 17 apart and the xterm cube's levels fall between them. These
+  // pin the narrowing to the nearest digit rather than a downward truncation.
+  describe("ansi256_to_3hex (nearest digit)", ({
+    test("level 1 (95) rounds up to 6, not down to 5", function() {
+      ASSERT_EQ("006", COLOUR_D->ansi256_to_3hex(17));
+    }),
+    test("level 2 (135) rounds to 8", function() {
+      ASSERT_EQ("008", COLOUR_D->ansi256_to_3hex(18));
+    }),
+    test("level 3 (175) rounds to A", function() {
+      ASSERT_EQ("00A", COLOUR_D->ansi256_to_3hex(19));
+    }),
+    test("level 4 (215) rounds up to D, not down to C", function() {
+      ASSERT_EQ("00D", COLOUR_D->ansi256_to_3hex(20));
+    }),
+    test("the six cube levels stay six distinct digits", function() {
+      string *seen = ({});
+
+      // Codes 16-21 walk the blue axis through every channel level.
+      for(int code = 16; code <= 21; code++)
+        seen += ({ COLOUR_D->ansi256_to_3hex(code) });
+
+      ASSERT_EQ(6, sizeof(distinct_array(seen)));
+    }),
+    test("the top of the range never overflows past F", function() {
+      for(int code = 0; code < 256; code++)
+        ASSERT_EQ(1,
+          pcre_match(COLOUR_D->ansi256_to_3hex(code), "^[0-9A-F]{3}$"));
+    }),
+  }));
+
+  describe("colour_to_greyscale", ({
+    test("0 maps to the base of the ramp", function() {
+      ASSERT_EQ(232, COLOUR_D->colour_to_greyscale(0));
+    }),
+    test("255 maps to the top of the ramp", function() {
+      ASSERT_EQ(255, COLOUR_D->colour_to_greyscale(255));
+    }),
+    test("every code lands inside the greyscale ramp", function() {
+      for(int code = 0; code < 256; code++)
+        ASSERT_EQ(1, clamped(COLOUR_D->colour_to_greyscale(code), 232, 255));
+    }),
+    test("the mapping is monotonic", function() {
+      int previous = COLOUR_D->colour_to_greyscale(0);
+
+      for(int code = 1; code < 256; code++) {
+        int current = COLOUR_D->colour_to_greyscale(code);
+
+        ASSERT_EQ(1, current >= previous);
+        previous = current;
+      }
+    }),
+  }));
+
+  describe("get_luminance", ({
+    test("black has no luminance", function() {
+      ASSERT_EQ(0, COLOUR_D->get_luminance(({ 0, 0, 0 })));
+    }),
+    test("white is fully luminant", function() {
+      // The coefficients sum to 1.0, so white is exactly 255.
+      ASSERT_EQ(255, COLOUR_D->get_luminance(({ 255, 255, 255 })));
+    }),
+    test("green weighs more than red", function() {
+      ASSERT_EQ(1, COLOUR_D->get_luminance(({ 0, 255, 0 })) >
+                   COLOUR_D->get_luminance(({ 255, 0, 0 })));
+    }),
+    test("red weighs more than blue", function() {
+      ASSERT_EQ(1, COLOUR_D->get_luminance(({ 255, 0, 0 })) >
+                   COLOUR_D->get_luminance(({ 0, 0, 255 })));
+    }),
+    test("every result lands in 0-255", function() {
+      foreach(int *rgb in ({ ({ 0, 0, 0 }), ({ 255, 255, 255 }),
+                             ({ 255, 0, 0 }), ({ 0, 255, 0 }),
+                             ({ 0, 0, 255 }), ({ 128, 128, 128 }) }))
+        ASSERT_EQ(1, clamped(COLOUR_D->get_luminance(rgb), 0, 255));
+    }),
+    test("a non-int array errors", function() {
+      ASSERT_NE(0, catch(COLOUR_D->get_luminance(({ "a", "b", "c" }))));
+    }),
+    test("an out-of-range channel errors", function() {
+      ASSERT_NE(0, catch(COLOUR_D->get_luminance(({ 300, 0, 0 }))));
+    }),
+    test("a negative channel errors", function() {
+      ASSERT_NE(0, catch(COLOUR_D->get_luminance(({ -1, 0, 0 }))));
+    }),
+  }));
+
+  describe("substitute_too_dark", ({
+    test("a legible colour is returned unchanged", function() {
+      ASSERT_EQ("FFFFFF", COLOUR_D->substitute_too_dark("FFFFFF"));
+    }),
+    test("a colour exactly on the floor is left alone", function() {
+      string floored = COLOUR_D->substitute_too_dark("101010");
+
+      ASSERT_EQ(floored, COLOUR_D->substitute_too_dark(floored));
+    }),
+    test("a too-dark colour is lightened", function() {
+      ASSERT_EQ(1, luminance_of(COLOUR_D->substitute_too_dark("101010")) >
+                   luminance_of("101010"));
+    }),
+    test("lightening reaches the minimum luminance", function() {
+      ASSERT_EQ(1, luminance_of(COLOUR_D->substitute_too_dark("101010")) >=
+                   min_luminance());
+    }),
+    test("a dark colour keeps its hue relationship", function() {
+      // Adding a uniform lift raises every channel equally, so the channel
+      // that led before still leads.
+      int *rgb = COLOUR_D->hex_to_rgb(COLOUR_D->substitute_too_dark("050520"));
+
+      ASSERT_EQ(rgb[0], rgb[1]);
+      ASSERT_EQ(1, rgb[2] > rgb[0]);
+    }),
+    test("a dark base colour gets no exemption", function() {
+      // Base-palette membership says nothing about legibility; blue sits at
+      // luminance 9 and must be lightened like any other dark colour.
+      ASSERT_EQ(1, luminance_of(COLOUR_D->substitute_too_dark("{{000080}}")) >=
+                   min_luminance());
+    }),
+    test("black is lightened to the floor rather than erroring", function() {
+      ASSERT_EQ(1, luminance_of(COLOUR_D->substitute_too_dark("000000")) >=
+                   min_luminance());
+    }),
+    test("a saturated colour that cannot reach the floor terminates",
+      function() {
+        // Pure red saturates before it can gain much; the lift must give up
+        // rather than loop.
+        ASSERT_EQ(1, luminance_of(COLOUR_D->substitute_too_dark("FF0000")) >=
+                     luminance_of("FF0000"));
+      }),
+    test("the result is a parseable colour", function() {
+      ASSERT_EQ(3,
+        sizeof(COLOUR_D->hex_to_rgb(COLOUR_D->substitute_too_dark("101010"))));
+    }),
+    test("lightening is idempotent", function() {
+      string once = COLOUR_D->substitute_too_dark("101010");
+
+      ASSERT_EQ(once, COLOUR_D->substitute_too_dark(once));
+    }),
+    test("a bare input is answered bare", function() {
+      ASSERT_EQ(1,
+        pcre_match(COLOUR_D->substitute_too_dark("101010"), "^[0-9A-F]{6}$"));
+    }),
+    test("a foreground input is answered as a foreground code", function() {
+      ASSERT_EQ(1, pcre_match(COLOUR_D->substitute_too_dark("{{101010}}"),
+        "^\\{\\{[0-9A-F]{6}\\}\\}$"));
+    }),
+    test("a background input is answered as a background code", function() {
+      ASSERT_EQ(1, pcre_match(COLOUR_D->substitute_too_dark("{^101010^}"),
+        "^\\{\\^[0-9A-F]{6}\\^\\}$"));
+    }),
+  }));
+
+  describe("random_bright_rgb", ({
+    test("returns three channels in the bright range", function() {
+      for(int i = 0; i < 32; i++) {
+        int *rgb = COLOUR_D->random_bright_rgb();
+
+        ASSERT_EQ(3, sizeof(rgb));
+        ASSERT_EQ(1, clamped(rgb[0], 80, 255));
+        ASSERT_EQ(1, clamped(rgb[1], 80, 255));
+        ASSERT_EQ(1, clamped(rgb[2], 80, 255));
+      }
+    }),
+    test("random_bright_hex is six uppercase hex digits", function() {
+      for(int i = 0; i < 32; i++)
+        ASSERT_EQ(1,
+          pcre_match(COLOUR_D->random_bright_hex(), "^[0-9A-F]{6}$"));
+    }),
+    test("a random bright colour is never too dark to substitute", function() {
+      for(int i = 0; i < 32; i++) {
+        string hex = COLOUR_D->random_bright_hex();
+
+        ASSERT_EQ(hex, COLOUR_D->substitute_too_dark(hex));
+      }
+    }),
+  }));
+
+  describe("base_colours", ({
+    test("lists the sixteen ANSI base colours", function() {
+      ASSERT_EQ(16, sizeof(COLOUR_D->base_colours()));
+    }),
+    test("each entry is a code and a name", function() {
+      foreach(mixed *entry in COLOUR_D->base_colours()) {
+        ASSERT_EQ(2, sizeof(entry));
+        ASSERT_EQ(1, pcre_match(entry[0], "^\\{\\{[0-9A-F]{6}\\}\\}$"));
+        ASSERT_EQ(1, strlen(entry[1]) > 0);
+      }
+    }),
+    test("callers get a copy they cannot use to mutate the daemon",
+      function() {
+        mixed *stolen = COLOUR_D->base_colours();
+
+        stolen[0][1] = "mutated";
+
+        ASSERT_NE("mutated", COLOUR_D->base_colours()[0][1]);
+      }),
+  }));
+
+  describe("query_colour_cache", ({
+    test("the reset code is cached", function() {
+      ASSERT_EQ("\e[0m", COLOUR_D->query_colour_cache()["{{res}}"]);
+    }),
+    test("attributes are cached", function() {
+      ASSERT_EQ("\e[1m", COLOUR_D->query_colour_cache()["{{bl1}}"]);
+    }),
+    test("the 256-colour table is cached", function() {
+      ASSERT_EQ(1, sizeof(COLOUR_D->query_colour_cache()) > 256);
+    }),
+    test("callers get a copy they cannot use to mutate the daemon",
+      function() {
+        mapping stolen = COLOUR_D->query_colour_cache();
+
+        stolen["{{poison}}"] = "x";
+
+        ASSERT_EQ(undefined, COLOUR_D->query_colour_cache()["{{poison}}"]);
+      }),
+  }));
+
+  describe("resync", ({
+    test("rebuilding the cache leaves rendering unchanged", function() {
+      string before = COLOUR_D->substitute_colour("{{f00}}red{{res}}", "on");
+
+      COLOUR_D->resync();
+
+      ASSERT_EQ(before,
+        COLOUR_D->substitute_colour("{{f00}}red{{res}}", "on"));
+    }),
+    test("the attribute table survives a rebuild", function() {
+      COLOUR_D->resync();
+
+      ASSERT_EQ("\e[0m", COLOUR_D->query_colour_cache()["{{res}}"]);
+    }),
+  }));
+
+  describe("bod_colour_replace", ({
+    test("a missing body leaves the text alone", function() {
+      ASSERT_EQ("hit", COLOUR_D->bod_colour_replace(0, "hit",
+        MSG_COMBAT_HIT));
+    }),
+    test("an empty message is left alone", function() {
+      ASSERT_EQ("", COLOUR_D->bod_colour_replace(this_object(), "",
+        MSG_COMBAT_HIT));
+    }),
+    test("no message type leaves the text alone", function() {
+      ASSERT_EQ("hit", COLOUR_D->bod_colour_replace(this_object(), "hit", 0));
+    }),
+    test("NO_COLOUR suppresses the preference", function() {
+      ASSERT_EQ("hit", COLOUR_D->bod_colour_replace(this_object(), "hit",
+        MSG_COMBAT_HIT | NO_COLOUR));
+    }),
+    test("an unrelated message type leaves the text alone", function() {
+      ASSERT_EQ("say", COLOUR_D->bod_colour_replace(this_object(), "say",
+        MSG_PROMPT));
+    }),
+    test("a hit is wrapped in the body's preferred colour", function() {
+      pref_colour = "FF0000";
+
+      ASSERT_EQ("{{FF0000}}hit{{res}}",
+        COLOUR_D->bod_colour_replace(this_object(), "hit", MSG_COMBAT_HIT));
+    }),
+    test("a miss is wrapped in the body's preferred colour", function() {
+      pref_colour = "00FF00";
+
+      ASSERT_EQ("{{00FF00}}miss{{res}}",
+        COLOUR_D->bod_colour_replace(this_object(), "miss", MSG_COMBAT_MISS));
+    }),
+    test("an empty preference leaves the text alone", function() {
+      pref_colour = "";
+
+      ASSERT_EQ("hit",
+        COLOUR_D->bod_colour_replace(this_object(), "hit", MSG_COMBAT_HIT));
+
+      pref_colour = "FF0000";
+    }),
+    test("a malformed preference leaves the text alone", function() {
+      pref_colour = "not-a-colour";
+
+      ASSERT_EQ("hit",
+        COLOUR_D->bod_colour_replace(this_object(), "hit", MSG_COMBAT_HIT));
+
+      pref_colour = "FF0000";
+    }),
+  }));
+}
