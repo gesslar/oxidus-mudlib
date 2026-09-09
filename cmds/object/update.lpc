@@ -4,11 +4,12 @@
  * A command to update objects! Neat, huh?
  *
  * @created 2026-07-13 - Gesslar
- * @last_modified 2026-08-30 - Gesslar
+ * @last_modified 2026-09-09 - Gesslar
  *
  * @history
  * 2026-07-13 - Gesslar - Created
  * 2026-08-30 - Gesslar - Added smart updating (-s)
+ * 2026-09-09 - Gesslar - Smart updating also seeds on changed includes
  */
 
 #include <stat.h>
@@ -34,10 +35,10 @@ void setup() {
     "through their virtual master.\n"
     "\n"
     "'-s' is the smart form of '-R': it walks the same tree but reloads only "
-    "the files whose source has changed since they were last compiled, and "
-    "everything that inherits one of those. The object itself is always "
-    "reloaded. If it is a clone, you may wish to refresh it with the `renew` "
-    "command.\n"
+    "the files whose source, or one of the headers they include, has changed "
+    "since they were last compiled, and everything that inherits one of those. "
+    "The object itself is always reloaded. If it is a clone, you may wish to "
+    "refresh it with the `renew` command.\n"
     "\n"
     "This command cannot update itself — destruct it instead and it will "
     "reload on next use.\n"
@@ -49,6 +50,7 @@ private nomask mapping resolve_target(mixed target, string kind);
 private nomask void generate_graph(mapping target, string kind);
 private nomask void prune_graph(mapping target);
 private nomask int source_changed(string file);
+private nomask int includes_changed(string file, int loaded);
 private nomask int inherits_stale(string file, mapping stale);
 private nomask mixed reload_it(mixed target);
 private nomask mixed perform_update(object tp, mapping target);
@@ -163,13 +165,14 @@ private nomask void generate_graph(mapping target, string kind) {
 }
 
 /**
- * Reduces a target's graph to the files whose source has changed, plus
- * everything that inherits one of them, keeping the target itself in every
- * case. Records the number of entries dropped in the target's "pruned" key.
+ * Reduces a target's graph to the files that have changed, plus everything
+ * that inherits one of them, keeping the target itself in every case. Records
+ * the number of entries dropped in the target's "pruned" key.
  *
- * Only a source change seeds staleness. A file merely being loaded, or having
- * been reloaded, says nothing about whether its code differs from what its
- * inheritors compiled against, so it does not drag the tree along with it.
+ * Only a change to a file's own source, or to a header it included, seeds
+ * staleness. A file merely being loaded, or having been reloaded, says nothing
+ * about whether its code differs from what its inheritors compiled against, so
+ * it does not drag the tree along with it.
  *
  * @param {mapping} target - A target mapping whose graph has been generated
  */
@@ -217,12 +220,13 @@ private nomask int inherits_stale(string file, mapping stale) {
 }
 
 /**
- * Reports whether a file's source has outrun the program compiled from it.
- * A file that is not loaded at all, or whose source cannot be stat'd, counts
- * as changed so that nothing is silently skipped.
+ * Reports whether a file's source, or any header it compiled against, has
+ * outrun the program compiled from it. A file that is not loaded at all, or
+ * whose source cannot be stat'd, counts as changed so that nothing is
+ * silently skipped.
  *
  * @param {string} file - A file from the target's graph
- * @returns {int} 1 if the source is newer than the loaded program, else 0
+ * @returns {int} 1 if the file is newer than the loaded program, else 0
  */
 private nomask int source_changed(string file) {
   mixed *info = stat(source_file(file));
@@ -233,7 +237,49 @@ private nomask int source_changed(string file) {
   if(!intp(info[STAT_LAST_MODIFIED]))
     return 1;
 
-  return info[STAT_LAST_MODIFIED] >= info[STAT_TIME_OBJECT_LOADED];
+  if(info[STAT_LAST_MODIFIED] >= info[STAT_TIME_OBJECT_LOADED])
+    return 1;
+
+  return includes_changed(file, info[STAT_TIME_OBJECT_LOADED]);
+}
+
+/**
+ * Reports whether any header a file included has been touched since the file
+ * was compiled. A header carries no program of its own, so nothing reloads it
+ * directly; the file that included it is what has to be recompiled, and that
+ * is the file this answers for.
+ *
+ * The list is the one the compiler actually opened, nested includes and the
+ * global include among them, so a change anywhere in a header's own include
+ * chain is caught here too. Every file picks up the global include, so most of
+ * the graph is answered against a real header list rather than an empty one.
+ *
+ * @param {string} file - A file from the target's graph
+ * @param {int} loaded - When the file's program was compiled
+ * @returns {int} 1 if an included header is newer than that, otherwise 0
+ */
+private nomask int includes_changed(string file, int loaded) {
+  object ob = find_object(file);
+
+  if(!objectp(ob))
+    return 1;
+
+  foreach(string header in include_list(ob)) {
+    // Search-path resolution can hand back doubled separators
+    // ("//std/object/include//cooldown.h"), which stat() will not open.
+    mixed *info = stat(resolve_path("/", header));
+
+    if(!pointerp(info) || sizeof(info) != 4)
+      return 1;
+
+    if(!intp(info[STAT_LAST_MODIFIED]))
+      return 1;
+
+    if(info[STAT_LAST_MODIFIED] >= loaded)
+      return 1;
+  }
+
+  return 0;
 }
 
 private nomask mixed reload_it(mixed target) {
