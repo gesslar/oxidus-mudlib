@@ -32,7 +32,7 @@ void virtual_setup(mixed args...) {
   else if(intp(data["level"]))
     set_level(data["level"]);
   else if(pointerp(data["level"]))
-    set_level(to_float(random(data["level"][1] - data["level"][0]) + data["level"][0]));
+    set_level(to_float(random_clamp(data["level"][0], data["level"][1])));
   else
     set_level(1);
 
