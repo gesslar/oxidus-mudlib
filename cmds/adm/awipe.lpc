@@ -5,10 +5,11 @@
  * account along with every character associated with it.
  *
  * @created 2026-07-13 - Gesslar
- * @last_modified 2026-07-13 - Gesslar
+ * @last_modified 2026-09-09 - Gesslar
  *
  * @history
  * 2026-07-13 - Gesslar - Moved help into setup()
+ * 2026-09-09 - Gesslar - Sweep up empty home directories
  */
 
 #include <logs.h>
@@ -100,6 +101,11 @@ void confirm_awipe(string str, object caller, string account) {
         return;
       }
     }
+
+    // A player's home is always empty; a dev or admin home holds at least a
+    // workroom. rmdir refuses a non-empty directory, so this sweeps the former
+    // and leaves the latter - no role check for a prior rmdev to defeat.
+    rmdir(home_path(character));
   }
 
   string account_file = account_file(account);

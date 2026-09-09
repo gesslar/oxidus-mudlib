@@ -6,10 +6,11 @@
  * detaching it from its owning account. The account itself is left intact.
  *
  * @created 2026-07-18 - Gesslar
- * @last_modified 2026-07-18 - Gesslar
+ * @last_modified 2026-09-09 - Gesslar
  *
  * @history
  * 2026-07-18 - Gesslar - Created
+ * 2026-09-09 - Gesslar - Sweep up an empty home directory
  */
 
 #include <logs.h>
@@ -95,6 +96,11 @@ void confirm_nuke(string str, object caller, string character) {
       return;
     }
   }
+
+  // A player's home is always empty; a dev or admin home holds at least a
+  // workroom. rmdir refuses a non-empty directory, so this sweeps the former
+  // and leaves the latter - no role check for a prior rmdev to defeat.
+  rmdir(home_path(character));
 
   string account = ACCOUNT_D->character_account(character);
   if(account) {
