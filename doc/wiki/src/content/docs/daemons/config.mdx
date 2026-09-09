@@ -13,13 +13,13 @@ import {
   ClassPropertyType,
 } from "../../../components/class-browser";
 
-<ClassBrowser language="lpc" name="CONFIG_D" source="adm/daemons/config.c" type="object">
-  Centralised configuration daemon. Loads a cascading pair of LPML files —
+<ClassBrowser language="lpc" name="CONFIG_D" source="adm/daemons/config.lpc" type="object">
+  Centralized configuration daemon. Loads a cascading pair of LPML files —
   shipped defaults plus local overrides — and serves values by flat key or
   dot-path. Most code reads config through the `mud_config()` simul_efun,
   which wraps `get_mud_config()`.
 
-  <ClassExtends label="inherits" name="STD_DAEMON" source="std/daemon/daemon.c" highlight="object" target="/systems/config/" />
+  <ClassExtends label="inherits" name="STD_DAEMON" source="std/daemon/daemon.lpc" highlight="object" target="/systems/config/" />
 
   <ClassProperty name="config" label="variable" highlight="variable">
     <ClassPropertyType type="mapping" highlight="type" />
@@ -51,7 +51,8 @@ import {
     Reloads and re-merges both files — `default.lpml` first, then
     `config.lpml` on top via shallow mapping addition. Runs automatically
     on startup; call it (or the `master` admin command) to pick up edits
-    without a restart.
+    without a restart. The merge is applied over the mapping already in
+    memory, so a key deleted from a file keeps its old value until reboot.
 
     <ClassMethodOutput type="void" highlight="type" />
   </ClassMethod>

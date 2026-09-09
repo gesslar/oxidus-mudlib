@@ -21,7 +21,13 @@ The `main` branch is the stable branch and is protected -- only specific users a
    git checkout -b your-feature-branch
    ```
 
-2. **Make your changes.** Match the surrounding code -- consistent 2-space indentation, brace-on-same-line, `snake_case` naming, and LPCDoc comment headers on functions. Keep commits focused.
+2. **Make your changes.** Match the surrounding code -- consistent 2-space indentation, brace-on-same-line, `snake_case` naming, explicit visibility on every function and file-global, and LPCDoc comment headers. Keep commits focused.
+
+   The conventions are written out in full under `.claude/skills/` -- one
+   directory per topic, each holding a plain-Markdown `SKILL.md`. Start with
+   `lpc-coding-style` and `lpcdoc`; `AGENTS.md` at the repository root is the
+   condensed form and points at the rest. New source files use the `.lpc`
+   extension.
 
 3. **Open a pull request** against `main`. Describe what changed and why.
 
@@ -29,6 +35,7 @@ The `main` branch is the stable branch and is protected -- only specific users a
 
 ## Before You Submit
 
-- Make sure the code compiles and loads cleanly in the driver.
+- Make sure the code compiles and loads cleanly in the driver. A clean compile is not proof of correct behaviour -- verify anything behavioural in-game.
+- Run the unit tests for any area you changed with the `runtests` developer command (see the `testing` skill).
+- Use Canadian English in code, comments, strings, and documentation.
 - If your change touches a documented system, update the relevant page under this wiki.
-- Run the unit tests for any area you changed (see the `testing` skill and the `runtests` wizard command).

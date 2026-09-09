@@ -51,7 +51,7 @@ On other distributions, install the equivalents: a compiler, `bison`, `cmake`, `
 adm/dist/rebuild
 ```
 
-This initialises the bundled FluffOS submodule, compiles the driver against the current FluffOS `master`, installs the binaries into `adm/dist/bin/`, and rewrites `adm/dist/config.mud` with the absolute paths for your checkout.
+This initializes the bundled FluffOS submodule, compiles the driver against the current FluffOS `master`, installs the binaries into `adm/dist/bin/`, and rewrites `adm/dist/config.mud` with the absolute paths for your checkout.
 
 ### 4. Start the MUD
 

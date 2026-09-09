@@ -9,14 +9,20 @@ The loot system handles item and coin drops from NPCs. It is entirely data-drive
 
 When an NPC dies, the death sequence calls the loot daemon (`LOOT_D`) which:
 
-1. Iterates the NPC's loot table -- each entry is an `[item, chance]` pair
+1. Iterates the NPC's loot table -- each entry is an `({ item, chance })` pair
 2. Rolls against the chance (0--100%) to decide whether the item drops
 3. Resolves the item (which may be a file path, weighted map, array pool, or function)
 4. Creates the loot object via `new()` -- for `.loot` files, the virtual system compiles them from LPML
 5. Auto-values the item if the `autovalue` property is set
-6. Moves the item into the corpse
+6. Moves the item into the NPC
 
-Coin drops follow a similar flow using a separate coin table.
+Coin drops follow a similar flow using a separate coin table, whose entries are
+`({ type, amount, chance })` triples.
+
+Both run *before* the corpse is filled: the death sequence in
+`std/living/body.lpc` creates the corpse, calls `LOOT_D`, and then sweeps the
+NPC's whole inventory -- freshly dropped loot included -- into it. A loot object
+that cannot be moved into the NPC is destructed rather than left loose.
 
 ## Defining Loot Items
 
@@ -131,10 +137,10 @@ void setup() {
 
 | Function | Description |
 |---|---|
-| `add_loot(item, chance)` | Add an item to the loot table. Item can be a string path, mapping, array, or function. Chance defaults to 100%. |
+| `add_loot(item, chance)` | Add an item to the loot table. Item can be a string path, mapping, array, or function. `chance` is optional, defaults to 100%, and is clamped to 0--100. |
 | `set_loot_table(table)` | Replace the entire loot table |
 | `query_loot_table()` | Returns a copy of the loot table |
-| `add_coin(type, amount, chance)` | Add a coin drop entry |
+| `add_coin(type, amount, chance)` | Add a coin drop entry. `chance` is optional and defaults to 100%. |
 | `set_coin_table(table)` | Replace the entire coin table |
 | `query_coin_table()` | Returns a copy of the coin table |
 
@@ -142,19 +148,24 @@ void setup() {
 
 The loot daemon resolves items recursively. The `item` field in each loot table entry can be:
 
-| Type | Behavior |
+| Type | Behaviour |
 |---|---|
 | **String** | Used directly as a file path to `new()` |
 | **Mapping** | Treated as a weighted selection -- `element_of_weighted()` picks one key, then resolves it |
 | **Array** | A random element is picked from the pool |
 | **Function** | Called as `f(killer, npc)` and the return value is resolved recursively |
 
+Within an array pool, a path may be followed by an array of constructor
+arguments -- `({ "/obj/loot/gem.loot", ({ "ruby" }) })`. If the random pick
+lands on either half of such a pair, both are returned together and the
+arguments are passed through to `new()`.
+
 ## Auto-Valuation
 
 Items with the `autovalue` property have their coin value calculated based on the NPC's level:
 
 - Base value = `level * COIN_VALUE_PER_LEVEL`
-- A random variance (configured by `COIN_VARIANCE`) is applied
+- A random spread of `COIN_VARIANCE` (a fraction of the base value) is applied, centred on the base -- so the result lands within half that spread either side
 - The result is set as the item's sale value
 
 This means the same loot item scales in value depending on what dropped it.
@@ -163,9 +174,9 @@ This means the same loot item scales in value depending on what dropped it.
 
 | File | Role |
 |---|---|
-| `adm/daemons/loot.c` | Loot daemon -- handles drops, item processing, auto-valuation |
-| `std/ext/loot.c` | `EXT_LOOT` module -- loot table management for NPCs |
-| `adm/daemons/modules/virtual/loot.c` | Virtual compiler for `.loot` files |
-| `obj/loot/loot.c` | Base loot object class |
+| `adm/daemons/loot.lpc` | Loot daemon -- handles drops, item processing, auto-valuation |
+| `std/ext/loot.lpc` | `EXT_LOOT` module -- loot table management for NPCs |
+| `adm/daemons/modules/virtual/loot.lpc` | Virtual compiler for `.loot` files |
+| `obj/loot/loot.lpc` | Base loot object class |
 | `obj/loot/*.lpml` | Loot item data files |
 | `d/mobs/*.lpml` | NPC definitions with loot tables |
