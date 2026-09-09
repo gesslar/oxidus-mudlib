@@ -51,6 +51,7 @@
   ALARMS: "on",
   ALARMS_PATH: "/adm/custom/alarms/",
   DB_PATH: "/data/db/",
+  DB_SCHEMA_PATH: "/adm/etc/db/",
   DB_SUFFIX: ".sqlite3",
   DB_TABLE_SUFFIX: ".tbl",
   DB_CHUNK_SIZE: 100,

@@ -12,7 +12,7 @@ Game configuration is held by the configuration daemon (`CONFIG_D`) and read eve
 | File | Tracked in git? | Purpose |
 |---|---|---|
 | `adm/etc/default.lpml` | yes | Shipped defaults |
-| `adm/etc/config.lpml` | no (`.gitignore`d) | Local overrides for your instance |
+| `adm/custom/config.lpml` | no (`.gitignore`d) | Local overrides for your instance |
 
 The daemon reads `default.lpml` first to establish the baseline, then merges `config.lpml` on top. The merge is a **shallow** mapping addition (`+=`) -- any top-level key in `config.lpml` replaces the same key from the defaults. Nested mappings replace as a whole; they do not deep-merge. Because your overrides live in a separate, untracked file, they are preserved across updates to the library.
 
@@ -62,7 +62,7 @@ int chance = mud_config("RESOURCE")["GLOBAL_SPAWN_CHANCE"];
    string val = mud_config("MY_NEW_KEY");
    ```
 
-3. To override it locally, add the key to `adm/etc/config.lpml` (create the file if needed):
+3. To override it locally, add the key to `adm/custom/config.lpml` (create the file if needed):
 
    ```lpml
    {
@@ -84,8 +84,8 @@ This system covers *library* configuration. Driver-level settings -- ports, stac
 
 | File | Role |
 |---|---|
-| `adm/daemons/config.c` | `CONFIG_D` -- loads, merges, and serves configuration |
-| `adm/simul_efun/system.c` | `mud_config()` simul_efun |
+| `adm/daemons/config.lpc` | `CONFIG_D` -- loads, merges, and serves configuration |
+| `adm/simul_efun/system.lpc` | `mud_config()` simul_efun |
 | `adm/etc/default.lpml` | Shipped default settings |
-| `adm/etc/config.lpml` | Local overrides (not tracked) |
-| `cmds/dev/mudconfig.c` | `mudconfig` command -- dumps current config |
+| `adm/custom/config.lpml` | Local overrides (not tracked) |
+| `cmds/dev/mudconfig.lpc` | `mudconfig` command -- dumps current config |

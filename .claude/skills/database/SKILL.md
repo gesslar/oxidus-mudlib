@@ -19,17 +19,19 @@ FluffOS db package (db_connect/db_exec/db_fetch/db_close efuns)
 
 - One `DB_D` daemon manages **all** databases
 - Each database is a single SQLite3 file under `DB_PATH`
-- Tables are declared via `.tbl` companion files and auto-created at boot
+- Tables are declared via `.tbl` schema files under `DB_SCHEMA_PATH` and auto-created at boot
+- Schema and data are deliberately split: `.tbl` files ship with the lib (tracked in git, baked into the Docker image), while the `.sqlite3` files they create are per-install state
 - `valid_database()` in `/adm/obj/master/valid.lpc` always returns 1 — DB security is by mudlib convention, not driver enforcement
 - DB_D inherits `STD_DAEMON` and `EXT_HTTP` (the latter for `parse_query()`, used to decode REST URL query strings)
 
 ## Configuration Keys
 
-All in `/adm/etc/default.lpml`, overridable in `/adm/etc/config.lpml`. Read via `mud_config()`. See the `mud-configuration` skill.
+All in `/adm/etc/default.lpml`, overridable in `/adm/custom/config.lpml`. Read via `mud_config()`. See the `mud-configuration` skill.
 
 | Key | Purpose |
 |---|---|
-| `DB_PATH` | Directory where the database and table-definition files live |
+| `DB_PATH` | Directory where the SQLite database files are created |
+| `DB_SCHEMA_PATH` | Directory holding the `.tbl` table-definition files |
 | `DB_SUFFIX` | Extension for the SQLite database file |
 | `DB_TABLE_SUFFIX` | Extension for table-definition files |
 | `DB_CHUNK_SIZE` | Rows per chunk for `lazy_query()` (LIMIT/OFFSET batching) |
@@ -38,7 +40,9 @@ Read them with `mud_config()`; do not restate the values here or in code.
 
 ## The `.tbl` Definition Format
 
-Each database has a companion `.tbl` file. The basename of the `.tbl` file is the database name. Example: `/data/db/bank.tbl` defines the database accessed as `"bank"`, stored in `/data/db/bank.sqlite3`.
+Each database has a `.tbl` file under `DB_SCHEMA_PATH`. The basename of the `.tbl` file is the database name. Example: `/adm/etc/db/bank.tbl` defines the database accessed as `"bank"`, stored in `/data/db/bank.sqlite3`.
+
+The `.tbl` file is the *only* thing that creates a database — DB_D registers nothing it has no schema for. Because schema lives on the code side rather than in the state directory, a fresh install (including a fresh Docker container) creates its databases on first boot, and a schema added in a later release reaches existing installs on upgrade.
 
 The format is one table per line:
 
@@ -48,7 +52,7 @@ table_name=column_definition_clause
 
 The right side is **the contents of the SQLite `CREATE TABLE` parens** — DB_D wraps it in `CREATE TABLE IF NOT EXISTS table_name (...)`. So you write columns, constraints, and foreign keys exactly as you would inside the parens.
 
-Example — `/data/db/bank.tbl`:
+Example — `/adm/etc/db/bank.tbl`:
 
 ```
 balance=id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL UNIQUE, amount INTEGER NOT NULL,time INTEGER NOT NULL
@@ -59,7 +63,7 @@ activity=id INTEGER PRIMARY KEY NOT NULL, time INTEGER NOT NULL UNIQUE, name TEX
 
 `DB_D::setup()`:
 
-1. Reads every `*.tbl` file under `DB_PATH`
+1. Reads every `*.tbl` file under `DB_SCHEMA_PATH`
 2. Parses each line with `sscanf("%s=%s", ...)` — only the **first** `=` is the separator
 3. **Skips any database whose `.tbl` parsed to zero tables** (logs to `system/db` and does not register in `__databases`). A `.tbl` file with only blank lines or unparseable lines effectively doesn't exist as far as DB_D is concerned.
 4. For each remaining database, opens the `.sqlite3` file (creating it if missing) and runs `CREATE TABLE IF NOT EXISTS` for each declared table
@@ -204,7 +208,7 @@ Don't `lazy_query` a query that already has its own `LIMIT`/`OFFSET` — DB_D wi
 
 ### Create a new database
 
-1. Create `/data/db/<name>.tbl` with one `table=cols` line per table
+1. Create `/adm/etc/db/<name>.tbl` with one `table=cols` line per table
 2. Either:
    - Reboot the MUD, **or**
    - Destruct DB_D and reload it: `destruct(find_object(DB_D)); load_object(DB_D);`
@@ -233,7 +237,7 @@ For more complex schema changes (rename column, change type, drop column on olde
 ### Drop a database
 
 1. Stop using it
-2. Delete `<name>.tbl` and `<name>.sqlite3` from `DB_PATH`
+2. Delete `<name>.tbl` from `DB_SCHEMA_PATH` and `<name>.sqlite3` from `DB_PATH`
 3. Reload DB_D so its `__databases` mapping forgets it
 
 ### Indexes
