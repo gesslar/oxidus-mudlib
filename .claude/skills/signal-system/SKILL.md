@@ -177,15 +177,25 @@ All defined in `include/signal.h`. String-based identifiers with category prefix
 
 | Constant | String Value | Emitted By | Arguments | When |
 |---|---|---|---|---|
-| `SIG_SYS_BOOT` | `"sys:boot"` | `adm/daemons/boot.lpc` | none | MUD startup complete |
+| `SIG_SYS_BOOT` | `"sys:boot"` | `adm/obj/master.lpc` | none | MUD startup complete |
 | `SIG_SYS_CRASH` | `"sys:crash"` | `adm/obj/master.lpc` | none | Crash handler triggered |
-| `SIG_SYS_SHUTTING_DOWN` | `"sys:shutting-down"` | `adm/daemons/shutdown.lpc` | (int seconds) | Shutdown countdown begins |
-| `SIG_SYS_SHUTDOWN` | `"sys:shutdown"` | `adm/simul_efun/override.lpc` | none | Immediate shutdown |
+| `SIG_SYS_SHUTTING_DOWN` | `"sys:shutting-down"` | `adm/daemons/shutdown.lpc` | none | A scheduled shutdown fires, after the final broadcast |
+| `SIG_SYS_SHUTDOWN` | `"sys:shutdown"` | `adm/simul_efun/override.lpc` | none | The `shutdown()` override runs, just before the driver goes down |
 | `SIG_SYS_SHUTDOWN_CANCEL` | `"sys:shutdown-cancel"` | `adm/daemons/shutdown.lpc` | none | Shutdown cancelled |
-| `SIG_SYS_REBOOTING` | `"sys:rebooting"` | `adm/daemons/shutdown.lpc` | (int seconds) | Reboot countdown begins |
+| `SIG_SYS_REBOOTING` | `"sys:rebooting"` | `adm/daemons/shutdown.lpc` | none | A scheduled reboot fires, after the final broadcast |
 | `SIG_SYS_REBOOT_CANCEL` | `"sys:reboot-cancel"` | `adm/daemons/shutdown.lpc` | none | Reboot cancelled |
 | `SIG_SYS_PERSIST` | `"sys:persist"` | — | none | Manual persistence request |
 | `SIG_SYS_CRAWL_COMPLETE` | `"sys:crawl-complete"` | `adm/daemons/crawler.lpc` | none | Room crawler finished |
+
+**Order at shutdown.** These are not alternatives. `SHUTDOWN_D::fire()` is the
+call_out at the *end* of the countdown: it announces, emits
+`SIG_SYS_SHUTTING_DOWN` (or `SIG_SYS_REBOOTING`), then calls `shutdown()`, whose
+override emits `SIG_SYS_SHUTDOWN` and persists every object. So a scheduled
+shutdown emits two signals back to back, and nothing at all is emitted when the
+countdown *starts* — `schedule()` only announces and arms the call_outs.
+
+Slot the first pair for work that must happen while the game is still up. Slot
+`SIG_SYS_SHUTDOWN` and you are racing the persistence pass and the driver exit.
 
 ### User Signals (`SIG_USER` = `"user:"`)
 
@@ -218,7 +228,7 @@ Note: `SIG_USER_ENV_CHANGED` and `SIG_USER_PREF_CHANGED` use the `SIG_PLAYER` pr
 
 | Constant | String Value | Emitted By | Arguments | When |
 |---|---|---|---|---|
-| `SIG_CHANNEL_MESSAGE` | `"channel:message"` | channel modules | (mixed data) | Channel message broadcast |
+| `SIG_CHANNEL_MESSAGE` | `"channel:message"` | — | (mixed data) | Reserved. Defined in `include/signal.h`; nothing currently emits or slots it. |
 
 ## All Signal Consumers (slot registrations)
 
@@ -235,10 +245,6 @@ Note: `SIG_USER_ENV_CHANGED` and `SIG_USER_PREF_CHANGED` use the `SIG_PLAYER` pr
 | `adm/daemons/grapevine.lpc` | `SIG_USER_LINK_RESTORE` | `grapevine_send_event_players_sign_in` | Notify Grapevine of reconnect |
 | `adm/daemons/grapevine.lpc` | `SIG_USER_LOGOUT` | `grapevine_send_event_players_sign_out` | Notify Grapevine network |
 | `adm/daemons/grapevine.lpc` | `SIG_USER_LINKDEAD` | `grapevine_send_event_players_sign_out` | Notify Grapevine of linkdead |
-| `adm/daemons/modules/channel/channel.lpc` | `SIG_CHANNEL_MESSAGE` | `incoming_transmission` | Route channel messages to modules |
-| `adm/daemons/modules/channel/herald.lpc` | `SIG_USER_LOGIN` | `herald_arrival` | Announce player login |
-| `adm/daemons/modules/channel/herald.lpc` | `SIG_USER_LOGOUT` | `herald_departure` | Announce player logout |
-| `adm/daemons/modules/channel/herald.lpc` | `SIG_SYS_CRAWL_COMPLETE` | `announce_crawl_complete` | Announce crawler done |
 | `std/living/player.lpc` | `SIG_SYS_CRASH` | `on_crash` | Save player data on crash |
 | `std/living/player.lpc` | `SIG_PLAYER_ADVANCED` | `on_advance` | Handle level advancement |
 | `std/living/ghost.lpc` | `SIG_SYS_CRASH` | `on_crash` | Save ghost data on crash |
