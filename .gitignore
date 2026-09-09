@@ -43,7 +43,6 @@ adm/dist/fluffos
 *.o
 journal.*
 *.sqlite3
-*.tbl
 
 # Customised configuration files. Most per-MUD data lives under /adm/custom
 # (see the block above); mssp.lpml is the last hold-out still read from

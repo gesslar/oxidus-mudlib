@@ -13,7 +13,7 @@ up in the repository and `git pull` never clobbers them.
 
 | Slot | Overrides / base | Loaded by | How it applies |
 |------|------------------|-----------|----------------|
-| `config.lpml` | `/adm/etc/default.lpml` | `CONFIG_D` (`/adm/daemons/config.c`) | mapping merge — your keys win |
+| `config.lpml` | `/adm/etc/default.lpml` | `CONFIG_D` (`/adm/daemons/config.lpc`) | mapping merge — your keys win |
 | `first_user` | — (presence marker) | `/adm/obj/login.c`, security | exists ⇒ first superuser already minted |
 | `alarms/*.txt` | template: `/adm/etc/alarms/alarm.txt.example` | `ALARM_D` (`/adm/daemons/alarm.c`) | every `*.txt` here is parsed |
 | `security/groups.lpml` | `/adm/etc/security/groups_base.lpml` | master security | per-group list merge (`-name` removes) |

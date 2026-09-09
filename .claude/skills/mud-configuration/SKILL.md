@@ -12,7 +12,7 @@ You are helping work with the Oxidus MUD configuration system. Follow the `lpc-c
 The configuration system uses a **cascading two-file pattern**:
 
 1. `/adm/etc/default.lpml` — shipped defaults (tracked in git)
-2. `/adm/etc/config.lpml` — local overrides (not in git, survives upgrades)
+2. `/adm/custom/config.lpml` — local overrides (not in git, survives upgrades)
 
 Both files use LPML format (see the `lpml` skill). Local overrides merge on top of defaults using mapping addition (`+=`), so any key in `config.lpml` replaces the same key from `default.lpml`.
 
@@ -67,7 +67,7 @@ All keys live in the top-level mapping of the LPML files. Keys are uppercase by 
 - `ADMIN_EMAIL` — admin contact
 - `LOG_CATCH`, `LOG_RUNTIME` — log paths
 - `TMP_DIR` — temporary file directory
-- `DB_PATH`, `DB_SUFFIX`, `DB_TABLE_SUFFIX`, `DB_CHUNK_SIZE` — database settings
+- `DB_PATH`, `DB_SCHEMA_PATH`, `DB_SUFFIX`, `DB_TABLE_SUFFIX`, `DB_CHUNK_SIZE` — database settings
 - `OBJECT_DATA_DIR` — persistent object data directory
 - `STORAGE_DATA_DIR` — storage container data directory
 
@@ -161,7 +161,7 @@ These are typically set in `config.lpml` (not defaults):
    string val = mud_config("MY_NEW_KEY");
    ```
 
-3. **To override locally**, add to `/adm/etc/config.lpml` (create if it doesn't exist):
+3. **To override locally**, add to `/adm/custom/config.lpml` (create if it doesn't exist):
    ```
    {
      MY_NEW_KEY: "local_override",
