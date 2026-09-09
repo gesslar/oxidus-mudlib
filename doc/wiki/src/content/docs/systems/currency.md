@@ -42,7 +42,7 @@ int plat = convert_currency(1000, "copper", "platinum");  // 1
 
 ## Wealth
 
-Each living's coins are stored by `std/living/wealth.c` (inherited by `STD_BODY`) as a mapping of denomination to count, e.g. `([ "copper": 50, "gold": 3 ])`. Key functions:
+Each living's coins are stored by `std/living/wealth.lpc` (inherited by `STD_BODY`) as a mapping of denomination to count, e.g. `([ "copper": 50, "gold": 3 ])`. Key functions:
 
 | Function | Returns | Description |
 |---|---|---|
@@ -57,7 +57,7 @@ Each living's coins are stored by `std/living/wealth.c` (inherited by `STD_BODY`
 
 ## Transactions
 
-Purchases go through the `EXT_CURRENCY` module (`std/ext/currency.c`), which both shop types inherit. The entry point takes a cost in base units:
+Purchases go through the `EXT_CURRENCY` module (`std/ext/currency.lpc`), which both shop types inherit. The entry point takes a cost in base units:
 
 ```lpc
 mixed handle_transaction(object tp, int cost)
@@ -82,14 +82,14 @@ Supporting helpers include `least_coins(total)` (break an amount into the fewest
 
 ## Coins as Objects
 
-Physical coins in rooms and containers are `LIB_COIN` objects (`lib/coin.c`), created as `new(LIB_COIN, "gold", 5)`. When a coin object moves onto a living it destroys itself and folds its value into that living's wealth via `adjust_wealth()`; in a container, same-type coins merge into one stack. Note that `query_value()` on a coin returns `({ num, type })` -- an array, not the `int` that ordinary items return.
+Physical coins in rooms and containers are `LIB_COIN` objects (`lib/coin.lpc`), created as `new(LIB_COIN, "gold", 5)`. When a coin object moves onto a living it destroys itself and folds its value into that living's wealth via `adjust_wealth()`; in a container, same-type coins merge into one stack. Note that `query_value()` on a coin returns `({ num, type })` -- an array, not the `int` that ordinary items return.
 
 ## Key Files
 
 | File | Role |
 |---|---|
-| `adm/daemons/currency.c` | `CURRENCY_D` -- denomination registry and conversion |
-| `std/living/wealth.c` | Per-living coin storage |
-| `std/ext/currency.c` | `EXT_CURRENCY` -- transaction handling |
-| `lib/coin.c` | `LIB_COIN` -- physical coin objects |
+| `adm/daemons/currency.lpc` | `CURRENCY_D` -- denomination registry and conversion |
+| `std/living/wealth.lpc` | Per-living coin storage |
+| `std/ext/currency.lpc` | `EXT_CURRENCY` -- transaction handling |
+| `lib/coin.lpc` | `LIB_COIN` -- physical coin objects |
 | `adm/etc/default.lpml` | `CURRENCY` denomination configuration |

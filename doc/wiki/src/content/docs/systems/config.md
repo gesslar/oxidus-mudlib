@@ -74,7 +74,11 @@ Keys are case-sensitive and uppercase by convention.
 
 ## Rehashing at Runtime
 
-After editing either file, reload without restarting the game by running the `master` admin command (which rehashes config among other reloads), or by calling `CONFIG_D->rehash_config()` directly. The `mudconfig` wizard command dumps the entire current configuration for inspection.
+After editing either file, reload without restarting the game by running the `master` admin command (which rehashes config among other reloads), or by calling `CONFIG_D->rehash_config()` directly. The `mudconfig` developer command dumps the entire current configuration for inspection.
+
+A rehash merges the files back over the mapping already in memory rather than
+starting from empty. Changed and added keys take effect immediately; a key you
+*delete* from a file keeps its old value until the next reboot.
 
 ## A Note on Driver Configuration
 

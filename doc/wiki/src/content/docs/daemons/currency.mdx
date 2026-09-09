@@ -13,13 +13,13 @@ import {
   ClassPropertyType,
 } from "../../../components/class-browser";
 
-<ClassBrowser language="lpc" name="CURRENCY_D" source="adm/daemons/currency.c" type="object">
+<ClassBrowser language="lpc" name="CURRENCY_D" source="adm/daemons/currency.lpc" type="object">
   Currency daemon. Loads the configured denominations and their relative
   values from the `CURRENCY` config key, exposes ordered lookups, and
   converts amounts between denominations. All values are relative to the
   lowest (base) denomination.
 
-  <ClassExtends label="inherits" name="STD_DAEMON" source="std/daemon/daemon.c" highlight="object" target="/systems/currency/" />
+  <ClassExtends label="inherits" name="STD_DAEMON" source="std/daemon/daemon.lpc" highlight="object" target="/systems/currency/" />
 
   <ClassProperty name="currency_map" label="variable" highlight="variable">
     <ClassPropertyType type="mapping" highlight="type" />
@@ -30,7 +30,7 @@ import {
   </ClassProperty>
 
   <ClassMethod name="valid_currency_type" visibility="public" highlight="function">
-    Reports whether a name is a recognised denomination.
+    Reports whether a name is a recognized denomination.
 
     <ClassMethodInput name="currency" type="string" highlight="parameter">The denomination name to check</ClassMethodInput>
     <ClassMethodOutput type="int" highlight="type">1 if valid, 0 otherwise</ClassMethodOutput>

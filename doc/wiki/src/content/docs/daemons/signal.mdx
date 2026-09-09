@@ -13,14 +13,14 @@ import {
   ClassPropertyType,
 } from "../../../components/class-browser";
 
-<ClassBrowser language="lpc" name="SIGNAL_D" source="adm/daemons/signal.c" type="object">
+<ClassBrowser language="lpc" name="SIGNAL_D" source="adm/daemons/signal.lpc" type="object">
   Daemon providing a system-wide event notification system. Manages
   registration, dispatch, and cleanup of signal handlers (slots), and
   persists them across reboots via the swap daemon. Every function below
   rejects callers other than the simul_efun layer — register, emit, and
   unregister through the `slot()`, `emit()`, and `unslot()` simul_efuns.
 
-  <ClassExtends label="inherits" name="STD_DAEMON" source="std/daemon/daemon.c" highlight="object" target="/systems/signal/" />
+  <ClassExtends label="inherits" name="STD_DAEMON" source="std/daemon/daemon.lpc" highlight="object" target="/systems/signal/" />
 
   <ClassProperty name="slots" label="variable" highlight="variable">
     <ClassPropertyType type="mapping" highlight="type" />

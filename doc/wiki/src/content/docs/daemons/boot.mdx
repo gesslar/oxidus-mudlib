@@ -12,14 +12,14 @@ import {
   ClassPropertyType,
 } from "../../../components/class-browser";
 
-<ClassBrowser language="lpc" name="BOOT_D" source="adm/daemons/boot.c" type="object">
+<ClassBrowser language="lpc" name="BOOT_D" source="adm/daemons/boot.lpc" type="object">
   A small persistent daemon that tracks how many times the game has
   booted. The boot number is useful for gating one-time-per-boot
   behaviour. `BOOT_D` listens for `SIG_SYS_BOOT`, increments its counter,
   and saves; everything else just reads the count.
 
-  <ClassExtends label="inherits" name="STD_DAEMON" source="std/daemon/daemon.c" highlight="object" />
-  <ClassExtends label="inherits" name="EXT_LOG" source="std/ext/log.c" highlight="object" />
+  <ClassExtends label="inherits" name="STD_DAEMON" source="std/daemon/daemon.lpc" highlight="object" />
+  <ClassExtends label="inherits" name="EXT_LOG" source="std/ext/log.lpc" highlight="object" />
 
   <ClassProperty name="boot_number" label="variable" highlight="variable">
     <ClassPropertyType type="int" highlight="type" />

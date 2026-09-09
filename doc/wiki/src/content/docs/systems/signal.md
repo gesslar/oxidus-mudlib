@@ -19,7 +19,7 @@ It is fire-and-forget: `emit()` has no return value, and handlers cannot communi
 
 ## The API
 
-All three functions are simul_efuns -- available to every object with no `#include` required:
+The API is a set of simul_efuns -- available to every object with no `#include` required:
 
 | Function | Signature | Purpose |
 |---|---|---|
@@ -28,7 +28,24 @@ All three functions are simul_efuns -- available to every object with no `#inclu
 | `unslot(sig)` | `int unslot(string sig)` | Unregister the calling object from `sig`. |
 | `signal_d()` | `object signal_d()` | Returns the signal daemon object. |
 
-All three throw `error()` if `sig` is not a string. There is **one slot per object per signal** -- calling `slot()` again for the same signal overwrites the previous handler.
+`slot()`, `emit()`, and `unslot()` each throw `error()` if `sig` is not a string --
+the check exists to force use of the `SIG_*` macros rather than bare literals.
+There is **one slot per object per signal** -- calling `slot()` again for the
+same signal overwrites the previous handler.
+
+### Status Codes
+
+`slot()` and `unslot()` return one of these, defined in `include/signal.h`:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `SIG_SLOT_OK` | `1` | Success |
+| `SIG_SLOT_INVALID_CALLER` | `0` | Caller was not the simul_efun layer |
+| `SIG_MISSING_SIGNAL` | `-1` | Signal identifier null or not a string |
+| `SIG_MISSING_OBJECT` | `-2` | Object parameter null |
+| `SIG_MISSING_FUNCTION` | `-3` | Function parameter null |
+| `SIG_INVALID_FUNCTION` | `-4` | Function does not exist in the object |
+| `SIG_INVALID_OBJECT` | `-5` | Object is not `objectp()` |
 
 ## Signal Identifiers
 
@@ -42,21 +59,44 @@ Signals are namespaced strings, defined as `SIG_*` macros in `include/signal.h`.
 | `game:` | `SIG_GAME` | `SIG_GAME_MIDNIGHT` -> `"game:midnight"` |
 | `channel:` | `SIG_CHANNEL` | `SIG_CHANNEL_MESSAGE` -> `"channel:message"` |
 
-### Common Signals
+### The Signals
 
-| Constant | Arguments | When |
+| Constant | Arguments | Emitted when |
 |---|---|---|
 | `SIG_SYS_BOOT` | none | MUD startup complete |
 | `SIG_SYS_CRASH` | none | Crash handler triggered |
-| `SIG_SYS_SHUTTING_DOWN` | `(int seconds)` | Shutdown countdown begins |
+| `SIG_SYS_SHUTTING_DOWN` | none | A scheduled shutdown fires -- not when its countdown starts |
+| `SIG_SYS_SHUTDOWN` | none | Just before the driver goes down, after either of the two above |
+| `SIG_SYS_SHUTDOWN_CANCEL` | none | Pending shutdown cancelled |
+| `SIG_SYS_REBOOTING` | none | A scheduled reboot fires -- not when its countdown starts |
+| `SIG_SYS_REBOOT_CANCEL` | none | Pending reboot cancelled |
+| `SIG_SYS_PERSIST` | none | Manual persistence request |
+| `SIG_SYS_CRAWL_COMPLETE` | none | Room crawler finished |
 | `SIG_USER_LOGIN` | `(object user)` | Player login complete |
 | `SIG_USER_LOGOUT` | `(object user)` | Player logs out |
 | `SIG_USER_LINKDEAD` | `(object user)` | Connection lost |
+| `SIG_USER_LINK_RESTORE` | `(object user)` | Reconnected after going linkdead |
 | `SIG_PLAYER_DIED` | `(object player, object killer)` | Player death |
+| `SIG_PLAYER_REVIVED` | `(object player)` | Ghost revived |
 | `SIG_PLAYER_ADVANCED` | `(object player, mixed level)` | Level up |
+| `SIG_USER_ENV_CHANGED` | `(object user, string var, string val)` | `env` setting changed |
+| `SIG_USER_PREF_CHANGED` | `(object user, string pref, string val)` | `set` preference changed |
+| `SIG_GAME_MIDNIGHT` | none | In-game midnight |
 | `SIG_CHANNEL_MESSAGE` | `(mixed data)` | Channel message broadcast |
 
-The full list lives in `include/signal.h`.
+`SIG_USER_ENV_CHANGED` and `SIG_USER_PREF_CHANGED` carry `SIG_USER` names but
+sit in the `player:` namespace. The definitive list is `include/signal.h`.
+
+:::note
+Nothing is emitted when a shutdown or reboot is *scheduled* -- announcing the
+countdown and arming its timers is silent. The signals come at the far end: the
+timer fires, the final warning goes out, `SIG_SYS_SHUTTING_DOWN` (or
+`SIG_SYS_REBOOTING`) is emitted, and then `shutdown()` emits `SIG_SYS_SHUTDOWN`
+and saves every persistent object. Two signals, back to back, at the very end.
+
+Use the first pair for anything that needs the game still standing. By
+`SIG_SYS_SHUTDOWN` you are racing the save pass and the driver exit.
+:::
 
 ## Registering for a Signal
 
@@ -132,7 +172,7 @@ Only the simul_efun wrappers may call the daemon directly -- the public daemon f
 
 | File | Role |
 |---|---|
-| `adm/daemons/signal.c` | `SIGNAL_D` -- registration, dispatch, cleanup, persistence |
-| `adm/simul_efun/signal.c` | Public API: `slot()`, `emit()`, `unslot()`, `signal_d()` |
+| `adm/daemons/signal.lpc` | `SIGNAL_D` -- registration, dispatch, cleanup, persistence |
+| `adm/simul_efun/signal.lpc` | Public API: `slot()`, `emit()`, `unslot()`, `signal_d()` |
 | `include/signal.h` | All `SIG_*` constants and status codes |
 | `include/daemons.h` | `SIGNAL_D` daemon path define |

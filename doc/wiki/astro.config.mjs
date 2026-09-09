@@ -15,6 +15,7 @@ const lpcGrammar = loadGrammar('lpc.tmLanguage.json');
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://oxidus.online',
 	vite: {
 		resolve: {
 			preserveSymlinks: true,

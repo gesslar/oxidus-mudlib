@@ -13,14 +13,14 @@ import {
   ClassPropertyType,
 } from "../../../components/class-browser";
 
-<ClassBrowser language="lpc" name="ALARM_D" source="adm/daemons/alarm.c" type="object">
+<ClassBrowser language="lpc" name="ALARM_D" source="adm/daemons/alarm.lpc" type="object">
   Schedules and executes recurring or one-shot events defined in the
   configured alarms directory (`ALARMS_PATH`) or registered at runtime.
   Re-evaluates the full alarm list once per wall-clock minute and
   dispatches any alarm whose pattern matches the current minute. See the
   [alarm system](/systems/alarm/) for types, file format, and patterns.
 
-  <ClassExtends label="inherits" name="STD_DAEMON" source="std/daemon/daemon.c" highlight="object" target="/systems/alarm/" />
+  <ClassExtends label="inherits" name="STD_DAEMON" source="std/daemon/daemon.lpc" highlight="object" target="/systems/alarm/" />
   <ClassExtends label="inherits" name="CLASS_ALARM" highlight="object" target="/systems/alarm/" />
 
   <ClassProperty name="alarms" label="variable" highlight="variable">
@@ -48,7 +48,7 @@ import {
     Registers an alarm of any type at runtime. Builds and validates the
     alarm, appends it to the in-memory list, and persists it. Throws if
     any of `type`, `master`, `pattern`, `file`, or `func` is null. Note
-    that `reload_alarms()` discards any alarm not present on disk.
+    that `rehash_alarms()` discards any alarm not present on disk.
 
     <ClassMethodInput name="type" type="string" highlight="parameter">One-character alarm type (`O`, `H`, `D`, `W`, `M`, `Y`); `B` alarms must come from config files</ClassMethodInput>
     <ClassMethodInput name="master" type="string" highlight="parameter">`"true"` if the alarm targets the master file</ClassMethodInput>
@@ -79,7 +79,7 @@ import {
     <ClassMethodOutput type="class Alarm *" highlight="object">The full alarm list</ClassMethodOutput>
   </ClassMethod>
 
-  <ClassMethod name="reload_alarms" visibility="public" highlight="function">
+  <ClassMethod name="rehash_alarms" visibility="public" highlight="function">
     Rebuilds the in-memory list from disk — clears the current alarms,
     scans `ALARMS_PATH` for `*.txt` files, parses each, and persists the
     result. Discards any alarms added at runtime.
