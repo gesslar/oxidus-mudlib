@@ -328,12 +328,14 @@ private int _feedback(string type, mixed args...) {
  * @param {STD_PLAYER} tp - The target object to receive the message.
  * @param {string} str - The confirmation message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no previous object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  *
  * @overload
  * @param {string} str - The confirmation message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no previous object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  */
 varargs int _ok(mixed args...) {
   return _feedback("ok", args...);
@@ -352,12 +354,14 @@ varargs int _ok(mixed args...) {
  * @param {STD_PLAYER} tp - The target object to receive the message.
  * @param {string} str - The error message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no previous object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  *
  * @overload
  * @param {string} str - The error message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no previous object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  */
 varargs int _error(mixed args...) {
   return _feedback("error", args...);
@@ -376,12 +380,14 @@ varargs int _error(mixed args...) {
  * @param {STD_PLAYER} tp - The target object to receive the message.
  * @param {string} str - The warning message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no previous object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  *
  * @overload
  * @param {string} str - The warning message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no previous object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  */
 varargs int _warn(mixed args...) {
   return _feedback("warn", args...);
@@ -400,12 +406,14 @@ varargs int _warn(mixed args...) {
  * @param {STD_PLAYER} tp - The target object to receive the message.
  * @param {string} str - The informational message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no previous object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  *
  * @overload
  * @param {string} str - The informational message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no previous object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  */
 varargs int _info(mixed args...) {
   return _feedback("info", args...);
@@ -424,12 +432,14 @@ varargs int _info(mixed args...) {
  * @param {STD_PLAYER} tp - The target object to receive the message.
  * @param {string} str - The question message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no body object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  *
  * @overload
  * @param {string} str - The question message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no body object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  */
 varargs int _question(mixed args...) {
   return _feedback("question", args...);
@@ -448,12 +458,14 @@ varargs int _question(mixed args...) {
  * @param {STD_PLAYER} tp - The target object to receive the message.
  * @param {string} str - The debug message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no body object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  *
  * @overload
  * @param {string} str - The debug message.
  * @param {mixed} [args] - Optional arguments to format the message.
- * @returns {int} Always returns 1, unless there is no body object.
+ * @returns {1 | 0} 1 when the message was delivered, 0 if it could not be
+ *  constructed.
  */
 varargs int _debug(mixed args...) {
   return _feedback("debug", args...);
