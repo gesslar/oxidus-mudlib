@@ -371,7 +371,14 @@ varargs void log_file(string file, string msg, mixed arg...) {
   }
 
   arg = pointerp(arg) ? arg : ({ arg });
-  msg = sanitize_regex(msg);
+
+  // With arguments, msg is a format string and its specifiers belong to the
+  // caller. Without them it is literal text that may carry a stray %, so it is
+  // escaped first and sprintf collapses the escape back to one character.
+  // Escaping unconditionally was what emptied every formatted log line.
+  if(!sizeof(arg))
+    msg = sanitize_regex(msg);
+
   msg = sprintf(msg, arg...);
   msg = append(msg, "\n");
 
