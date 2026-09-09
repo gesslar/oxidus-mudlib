@@ -1,0 +1,34 @@
+---
+{
+  title: "reject_prompt"
+}
+---
+### NAME
+
+    reject_prompt() - Determines whether a response to a prompt is a
+    refusal.
+
+### SYNOPSIS
+
+    int reject_prompt( string str );
+
+### DESCRIPTION
+
+    Determines whether a response to a prompt is a refusal.
+
+    Case is ignored, as with `accept_prompt()`.
+
+### PARAMETERS
+
+    str  (string)
+         The response to test.
+
+### RETURN VALUES
+
+    (int) 1 if the response refuses, 0 if not.
+
+### EXAMPLE
+
+    {{di1}}reject_prompt("No")  // 1
+    reject_prompt("yes") // 0
+    reject_prompt("wat") // 0{{di0}}

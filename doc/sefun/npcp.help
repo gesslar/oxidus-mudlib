@@ -22,4 +22,4 @@
 
 ### RETURN VALUES
 
-    (ob is STD_PLAYER) 1 if the object is an npc, otherwise 0.
+    (ob is STD_NPC) 1 if the object is an npc, otherwise 0.

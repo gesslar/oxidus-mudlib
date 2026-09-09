@@ -1,0 +1,30 @@
+---
+{
+  title: "settledp"
+}
+---
+### NAME
+
+    settledp() - Determine whether a promise has settled at all, without
+    distinguishing which way it went. Use resolvedp(), rejectedp() or
+    cancelledp() when the outcome matters.
+
+### SYNOPSIS
+
+    int settledp( promise p );
+
+### DESCRIPTION
+
+    Determine whether a promise has settled at all, without distinguishing
+    which way it went. Use resolvedp(), rejectedp() or cancelledp() when the
+    outcome matters.
+
+### PARAMETERS
+
+    p  (promise)
+       The promise to test.
+
+### RETURN VALUES
+
+    (int) 1 if the promise has resolved, rejected or been cancelled, 0 if it
+    is still pending.
