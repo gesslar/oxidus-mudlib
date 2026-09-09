@@ -63,6 +63,17 @@ Default: none (off)
  Effect: Set to any value other than {{bl1}}off{{res}} to send periodic keepalive
          packets once you have been idle for five minutes.
 
+Setting: health_bar
+Default: none (on)
+ Effect: Shows your HP, SP, and MP each combat round, if you have enough MP, and
+         whenever they change while you recover out of combat. Set to {{bl1}}off{{res}}
+         to hide it.
+
+Setting: recovery_messages
+Default: none (on)
+ Effect: Tells you when your health, mind, or body has finished recovering. Set
+         to {{bl1}}off{{res}} to stay quiet.
+
 Setting: combat_hit_colour
 Default: none
  Effect: Colour applied to combat messages where you land a hit. Unset leaves

@@ -376,3 +376,13 @@ public object query_su_body() {
 public void clear_su_body() {
   su_body = null;
 }
+
+public void display_health_bar() {
+  if(query_pref("health_bar") != "off") {
+    float hp = query_hp() * 100.0 / 100.00, max_hp = query_max_hp();
+    float sp = query_sp() * 100.0 / 100.00, max_sp = query_max_sp();
+    float mp = query_mp() * 100.0 / 100.00, max_mp = query_max_mp();
+
+    tell(this_object(), `HP: ${hp}/${max_hp}  SP: ${sp}/${max_sp}  MP: ${mp}/${max_mp}\n`);
+  }
+}

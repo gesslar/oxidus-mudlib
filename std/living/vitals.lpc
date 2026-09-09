@@ -22,6 +22,8 @@
 #include <boon.h>
 #include "/std/object/include/module.h"
 #include <combat.h>
+#include <body.h>
+#include <env.h>
 
 private nomask float __hp, __max_hp, __sp, __max_sp, __mp, __max_mp;
 private nomask int __dead = false;
@@ -374,6 +376,10 @@ float adjust_max_mp(float x) {
 protected void heal_tick(int force: (: 0 :)) {
   mapping rate = module("race", "query_regen_rate");
 
+  float old_hp = query_hp(), max_hp = query_max_hp();
+  float old_sp = query_sp(), max_sp = query_max_sp();
+  float old_mp = query_mp(), max_mp = query_max_mp();
+
   if(nullp(rate))
     rate = ([
       "hp" : pcp(this_object()) ? 2.0 : 15.0,
@@ -393,6 +399,24 @@ protected void heal_tick(int force: (: 0 :)) {
       adjust_sp(rate.sp);
     if(__mp < __max_mp)
       adjust_mp(rate.mp);
+  }
+
+  float hp = query_hp();
+  float sp = query_sp();
+  float mp = query_mp();
+
+  if(!in_combat()) {
+    if(hp != old_hp || sp != old_sp || mp != old_mp)
+      display_health_bar();
+  }
+
+  if(query_pref("recovery_messages") != "off") {
+    if(hp > old_hp && hp >= max_hp)
+      tell(this_object(), "Your injuries have fully mended.\n");
+    if(sp > old_sp && sp >= max_sp)
+      tell(this_object(), "Your mind has fully recovered.\n");
+    if(mp > old_mp && mp >= max_mp)
+      tell(this_object(), "Your body has fully rested.\n");
   }
 }
 
