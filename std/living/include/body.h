@@ -11,5 +11,6 @@ public string *query_weapon_slots();
 public void set_su_body(object source);
 public object query_su_body();
 public void clear_su_body();
+public void display_health_bar();
 
 #endif // __BODY_H__
