@@ -168,7 +168,7 @@ Pick by what the call site actually wants:
 - **Proc rolls / scaling on fractional progress** → `query_raw_skill()` (e.g. multi-strike in `swing()`) or `query_skill()` if buffs should help.
 - **Existence check** → `has_skill(s)` — returns 1 or 0. Do not use `nullp(query_raw_skill(...))` for this.
 
-The four functions return `null` if the skill is not found — with one exception. **On an NPC, `query_skill()` and `query_skill_level()` do not read storage at all**: they synthesize a node at `query_effective_level() * COMBAT.NPC_SKILL_MULTIPLIER`, add the boon, and return it for any skill name whatsoever. Only `query_raw_skill()` and `query_raw_skill_level()` walk an NPC's actual tree, and only `has_skill()` is a valid existence check on an NPC.
+The four functions return `null` if the skill is not found — with one exception. **On an NPC, `query_skill()` and `query_skill_level()` derive the value from the NPC's level** rather than reading storage: `query_effective_level() * COMBAT.NPC_SKILL_MULTIPLIER` plus the boon, for any skill name whatsoever. That is by design — see [NPC Skill Behaviour](#npc-skill-behaviour). It does mean they never return null on an NPC, so `has_skill()` is the existence check there, and `query_raw_skill()` / `query_raw_skill_level()` are what walk an NPC's actual tree.
 
 ### Boon Integration
 
@@ -305,17 +305,26 @@ Like skills, attributes support boon/curse modifiers via `query_effective_boon("
 
 ## NPC Skill Behaviour
 
-NPCs interact with the skill system through the same code paths as players — no shortcuts, no special-case branching in `query_*` functions:
+**An NPC's skills are derived from its level.** This is a deliberate
+normalisation, not a shortcut around the player path: a monster exists to be a
+level-appropriate opponent, so its level says what it is good at and nothing
+further needs authoring. `set_level(3.0)` is the entire skill configuration of a
+level 3 monster.
 
 1. **`npc.lpc::set_level()` calls `adjust_skills_by_npc_level()`**, which seeds every skill in the tree to `level * COMBAT.NPC_SKILL_MULTIPLIER`.
-2. **Combat formulas use `query_skill_level()`**, which on an NPC bypasses that storage entirely and returns `query_effective_level() * COMBAT.NPC_SKILL_MULTIPLIER + boon` — for *any* skill name, known or not. The seeded storage is what the `_raw_` queries and use-based improvement see.
-3. **Use-based improvement still fires** for NPCs (defenders train defence skill on hit attempts), but `set_level()` reseeding overwrites any accumulated progress, so improvements are transient — and since combat reads the synthesized value, they do not affect NPC combat performance either way.
+2. **`query_skill()` and `query_skill_level()` branch on `pcp()`.** On a non-PC they do not read storage at all — they compute `query_effective_level() * COMBAT.NPC_SKILL_MULTIPLIER + boon` for *any* skill name, known or not. The seeded storage is what the `_raw_` queries and use-based improvement see.
+3. **Use-based improvement still fires** for NPCs (defenders train defence skill on hit attempts), but combat reads the level-derived value, so accumulated progress does not change how an NPC fights — and `set_level()` reseeding clears it anyway.
+
+The API consequences, both of which are about picking the right function:
+
+- `has_skill()` is the existence check on an NPC. The level-derived queries always answer, so a null test never fires.
+- `query_raw_skill()` / `query_raw_skill_level()` are what read an NPC's real stored tree.
 
 ## Gotchas
 
 1. **Skills are a nested tree, not flat.** Using `"combat.melee.slashing"` requires the full path to exist. `add_skill` creates intermediates automatically but does NOT overwrite existing nodes.
 2. **Pick the right query.** Four-way grid: `query_raw_skill` / `query_skill` / `query_raw_skill_level` / `query_skill_level`. Combat math uses `query_skill_level()`. For existence checks use `has_skill()` — not `nullp(query_raw_skill(...))`.
-3. **`set_level()` on NPCs reseeds stored skills.** Always call `set_level()` before adding custom NPC skills.
+3. **`set_level()` on NPCs reseeds stored skills, so call it first.** Custom skills added beforehand are overwritten silently — no error, just a line of code that did nothing and a monster that is not what you wrote.
 4. **Improvement bubbles up.** Using a leaf skill has a chance to improve parent skills too, via the weighted pick in `determine_skill_to_improve()` — the pick is the only bubble-up mechanic. Exactly one node is improved per successful roll.
 5. **Skills cap at `query_level() * SKILLS.cap_factor`.** Level up to raise the ceiling; a level *boon* will not, because the cap reads `query_level()`, not `query_effective_level()`. A `use_skill` whose roll succeeds but whose candidates are all capped returns 0 and awards nothing.
 6. **`improvement` is an absolute bound, not an award or a multiplier.** `improve_skill` applies `random_float(bound)`, and the bound defaults to `SKILLS.default_gain`. A literal passed at a call site is only faster or slower relative to whatever that config key currently holds — check it before picking one, and prefer omitting the argument.

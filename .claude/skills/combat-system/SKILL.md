@@ -33,85 +33,129 @@ npc.lpc  → body.lpc (STD_BODY)
 
 ## Combat Round Loop
 
-`combat_round()` is called via `call_out_walltime` at intervals of `_attack_speed + random_float(1.5)` seconds (base speed default: `2.0`).
+`combat_round()` is rescheduled by `next_round()` via `call_out_walltime` at
+`__attack_speed` seconds. There is no random jitter on the interval.
 
 ```
 combat_round()
+  ├── is_dead() / hp <= 0        — bail, stopping combat on the hp case
   ├── clean_up_enemies()         — remove dead/gone enemies
-  ├── highest_threat() → enemy   — pick target with most accumulated threat
-  ├── valid_enemy(enemy)         — must be in same room and alive
-  ├── swing(1, 0)                — execute attack(s)
+  ├── in_combat()                — no enemies left: clear the handle and stop
+  ├── highest_threat() → victim  — pick target with most accumulated threat
+  ├── valid_enemy(victim)        — must be in same room and alive
+  ├── display_health_bar()       — when mp >= 0.0
+  ├── swing()                    — execute attack(s)
   ├── GMCP Char.Status update    — current_enemy, current_enemy_health, current_enemies
-  └── next_round()               — schedule next combat_round
+  └── next_round()               — only if no round is already scheduled
 ```
 
 ### Multi-Strike Logic (`swing`)
 
-Each swing checks for a dual-wield opportunity:
+The extra swing is **dual wield only** — it is rolled from the off-hand set, so a
+body with nothing in its off hand never rolls at all. A two-handed weapon
+occupies every slot it needs with the same object, and is excluded by object as
+well as by slot, so it does not count as its own off hand.
 
 ```lpc
-if(random(100) < 5 + query_skill("combat.melee"))
-    multi = 1;  // next recursive call uses off-hand weapon
+float multi_chance = 15.0 + floor(query_skill_level("combat.melee") / 5.0);
+
+if(random_float(100.0) < multi_chance)
+    next_multi = 1;   // next recursive call draws from the off-hand weapons
 ```
 
-When `multi` is set, a random weapon from non-main-slot weapons is used. The function recurses with decremented count.
-
-MP is checked before each swing — if `query_mp() <= 0.0`, the attacker is "too exhausted" and the swing is skipped.
+When `next_multi` is set, `element_of()` picks from the distinct off-hand
+weapons. The function recurses with the count decremented, then incremented back
+for the off-hand swing, so the extra swing is additive.
 
 ## Hit Chance Formula — `can_strike()`
 
 ```lpc
 float chance = mud_config("COMBAT.DEFAULT_HIT_CHANCE");
 
-if(enemy->query_mp() < 0.0)
-    chance += 25.0;    // exhausted enemies are easier to hit
+if(enemy->query_mp() <= 0.0)
+    chance += 50.0;    // enemies out of movement points are far easier to hit
 
 chance = chance
-    + (attacker_level - defender_level)          // effective levels
-    + attacker_skill_level                       // weapon skill (query_skill_level)
-    - (defender_ac * 2.0)                        // armour class doubled
-    - defender_defence_skill_level;              // dodge or evade skill
+    + (lvl - vlvl)                               // effective levels
+    + skill                                      // query_skill_level(skill_name)
+    - (ac * 2.0)                                 // armour class doubled
+    - enemy->query_skill_level(defence_skill);   // dodge or evade
+
+// Squash the raw number before rolling against it.
+chance = 50.0 + dim_sigmoid(chance - 50.0, 45.0, 0.03);
 
 result = random_float(100.0);
 enemy->use_skill(defence_skill);   // defender trains defence on every attempt
 return result < chance;
 ```
 
-**Skill routing by weapon type:**
+**The sigmoid is load-bearing and easy to miss.** The linear sum is passed
+through `dim_sigmoid()` centred on 50, so the result is squeezed into roughly
+5–95 and never reaches certainty in either direction. Stacked bonuses have
+sharply diminishing returns, a hopeless attacker still connects occasionally,
+and no amount of AC makes a defender untouchable. Any reasoning about hit rates
+that works from the linear sum alone will be wrong.
 
-| Weapon | Attacker Skill | Defender AC | Defender Skill |
+**Skill routing by weapon argument:**
+
+| `weapon` | Attacker Skill | Defender AC | Defender Skill |
 |--------|---------------|-------------|----------------|
-| Object or unarmed | `"combat.melee.<damage_type>"` | `query_ac()` | `"combat.defence.dodge"` |
-| Spell (string contains `".spell."`) | spell skill name | `query_spell_ac()` | `"combat.defence.evade"` |
-| Other string skill | skill name | `query_spell_ac()` | `"combat.defence.dodge"` |
+| Object, or null (unarmed / NPC defaults) | `query_weapon_info()["skill"]` | `query_ac()` | `"combat.defence.dodge"` |
+| String starting `"arcane."` | the string itself | `query_spell_ac()` | `"combat.defence.evade"` |
+| Any other string | the string itself | `query_spell_ac()` | `"combat.defence.dodge"` |
 
-## Damage Formula — `strike_enemy()`
+Anything else returns `0`. The arcane test is `strsrch(weapon, "arcane.") == 0`
+— a **prefix** match on the skill path, not a substring search.
+
+## Damage Formula — `calculate_damage()`
+
+Lives in `std/living/damage.lpc`, not in `combat.lpc`. `strike_enemy()` calls it,
+and so does the NPC proc path in `std/living/proc.lpc`.
 
 ```lpc
-base     = percent_of(5.0, enemy->query_max_hp());   // 5% of enemy max HP
-variance = percent_of(25.0, base);                     // 25% of that
-base    -= variance;
-base    += random_float(variance);                     // restore 0..variance randomly
+public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
+  // weapon_or_skill: an object, or a skill dot-path string, or nothing
+  string skill_name = stringp(weapon_or_skill)
+                      ? weapon_or_skill
+                      : weapon_info["skill"];
 
-if(enemy->query_mp() < 0.0)
-    base += 4.0;    // bonus vs exhausted
+  float skill      = query_skill_level(skill_name);
+  float base       = mud_config("COMBAT.BASE_DAMAGE");
+  float subtracted = percent_of(mud_config("COMBAT.DAMAGE_VARIANCE"), base);
 
-dam = base
-    + query_effective_level()                          // attacker level
-    - enemy->query_effective_level()                   // defender level
-    + skill                                            // attacker weapon skill level
-    - enemy->query_defence_amount(weapon_type)         // type-specific armour reduction
-    - enemy->query_skill_level("combat.defence");      // generic defence skill
+  base -= subtracted;
+  base += random_float(subtracted);        // base ± the variance band
 
-if(dam < 0.0) dam = 1.0;   // minimum 1 damage
+  if(enemy->query_mp() < 0.0)
+    base += 4.0;                           // bonus vs a spent defender
+
+  // "arcane." prefix routes to evade, everything else to dodge
+  return base
+       + weapon_info["base"]                              // the weapon's own damage
+       + (skill + query_skill_level("combat") / 2.0)      // specific + half general
+       - enemy->query_skill_level(defence_skill);
+}
 ```
 
-After calculating damage:
-1. Combat messaging via `MESS_D->get_message("combat", wtype, to_int(ceil(dam)))` and `ACTION_D->action(...)`.
-2. `deliver_damage(enemy, dam, wtype)` — dispatches to enemy.
-3. `adjust_mp(-random_float(5.0))` — each swing costs 0-5 MP.
-4. `add_threat(enemy, dam)` — threat grows by damage dealt.
-5. Weapon proc check: `weapon->can_proc()` then `weapon->proc(name, self, enemy)`.
+**There are no level terms and no max-HP term.** Damage does not scale off the
+defender's health pool and the level gap does not enter here — the level
+adjustment happens victim-side in `receive_damage()`. Any reasoning that assumes
+"a hit takes about 5% of the target" is out of date.
+
+`strike_enemy()` then, in order:
+
+1. `use_skill(skill_name)` — the attacker trains the weapon skill.
+2. `if(dam < 0.0) dam = 1.0;` — a **negative** result becomes 1. This is not a
+   floor at 1: a result of exactly `0.0` is left alone and lands as a zero-damage hit.
+3. Messaging via `MESS_D->get_message("combat", wtype, to_int(ceil(dam)))` and `ACTION_D->action(...)`, tagged `MSG_COMBAT_HIT`.
+4. `deliver_mundane_damage(enemy, dam, wtype)` — dispatches to the enemy.
+5. `adjust_mp(-random_float(5.0))` — each swing costs 0-5 movement points.
+6. `add_threat(enemy, dam)` **and** `add_seen_threat(enemy, dam)`.
+7. Weapon proc, via `call_if(weapon, "can_proc")` then `call_if(weapon, "proc", ...)`.
+8. NPC proc, via `can_proc()` on the NPC itself then `proc_npc(tag)`.
+
+`valid_enemy(enemy)` is re-tested between the later steps, so a target that dies
+mid-sequence stops the rest of it.
 
 ## Damage Reception — `receive_damage()`
 
@@ -126,9 +170,18 @@ red -= percent_of(mod, damage);           // level gap reduces/increases armour 
 
 damage -= red;
 if(damage < 0.0) damage = 0.0;
+
+// Shield effects absorb last, after armour and the level adjustment.
+float *reduced = module("shielding", "mitigate_damage", damage, type);
+if(!nullp(reduced))
+    damage -= max(sum(reduced), 0.0);
 ```
 
-Then applies `adjust_hp(-damage)` and sets `last_damaged_by` / `killed_by` as appropriate.
+Then applies `adjust_hp(-damage)`, sets `last_damaged_by`, and sets `killed_by`
+if that took the target to zero. Returns the damage actually dealt.
+
+Two early exits: a null attacker, and a target already at or below 0 HP, both
+return `0.0` — so damage never lands twice on something already dead.
 
 **Level modifier effect:** Higher-level attackers reduce the defender's armour effectiveness. Lower-level attackers increase it.
 
@@ -138,12 +191,12 @@ Threat values start at `1.0` on `start_attack()` and grow by damage dealt.
 
 | Function | Description |
 |---|---|
-| `add_threat(ob, float)` | Increments `_current_enemies[ob]` |
-| `add_seen_threat(ob, float)` | Increments `_seen_enemies[ob]` (persists across rounds) |
+| `add_threat(ob, float)` | Increments `__current_enemies[ob]` |
+| `add_seen_threat(ob, float)` | Increments `__seen_enemies[ob]` (persists across rounds) |
 | `highest_threat()` | Returns enemy with highest threat — combat target |
 | `lowest_threat()` | Returns enemy with lowest threat |
 
-`_current_enemies` is the active combat mapping. `_seen_enemies` tracks all-time threat.
+`__current_enemies` is the active combat mapping. `__seen_enemies` tracks all-time threat. Both start an enemy at `1.0` in `start_attack()`.
 
 ## Defence / AC System — `adjust_protection()`
 
@@ -168,10 +221,10 @@ mapping adjust_protection() {
 
 ### `start_attack(object victim)`
 
-1. Adds victim to `_current_enemies` with threat `1.0`.
-2. Adds to `_seen_enemies`.
-3. For NPCs: `module("combat_memory", "add_to_memory", victim)`.
-4. Schedules `combat_round` via `call_out_walltime`.
+1. Adds victim to `__current_enemies` with threat `1.0`. Returns `0` early if already engaged.
+2. Adds to `__seen_enemies` if not already there.
+3. For NPCs (`npcp()`): `module("combat_memory", "add_to_memory", victim)`.
+4. Schedules `combat_round` via `next_round()`, unless a round is already booked.
 5. Calls `victim->start_attack(this_object())` — mutual engagement.
 
 ### `stop_all_attacks()`
@@ -199,20 +252,25 @@ Used when the NPC has no wielded weapon object:
 
 `query_weapon_info(weapon)` transparently handles both real weapon objects and NPC defaults, returning `([ "name", "type", "skill", "base" ])`.
 
-## Weapon Proc System — `std/modules/proc.lpc`
+## Proc System — `std/ext/proc.lpc`
 
-Weapons inherit this module to add special effects on hit.
+Weapons inherit this module to add special effects on hit. NPCs carry procs
+directly through `std/living/proc.lpc`, dispatched by `proc_npc()` — see the
+`npc-creation` skill.
 
 ### Proc Data Structure
 
 ```lpc
-_procs[name] = ([
+__procs[name] = ([
     "function" : string | function,   // required
-    "cooldown" : int,                  // seconds, default 1
-    "weight"   : int,                  // selection weight, default 100
-    "chance"   : int,                  // optional per-proc chance override
+    "cooldown" : int,                  // seconds, defaults from __proc_cooldown
+    "weight"   : int,                  // selection weight, defaults from __proc_weight
 ])
 ```
+
+There is **no per-proc chance key**. A bare string or functional passed to
+`add_proc()` is wrapped into this shape, and the cooldown and weight defaults
+are filled in then.
 
 ### Key Functions
 
@@ -221,7 +279,7 @@ _procs[name] = ([
 | `add_proc(string name, mixed proc)` | Register a proc (mapping, string, or function) |
 | `set_procs(mixed *procs)` | Batch add: `({ ({ name, proc }), ... })` |
 | `set_proc_chance(float)` | Global proc chance, 0.0-100.0 (default 15.0) |
-| `can_proc()` | Called by `strike_enemy`. Filters by cooldown, selects via `element_of_weighted`. Returns proc name or false |
+| `can_proc()` | Called by `strike_enemy`. Rolls the global chance first, then filters by cooldown and selects via `element_of_weighted`. Returns proc name or false |
 | `proc(string name, mixed args...)` | Executes the proc function with `(attacker, victim)` args. Records cooldown |
 
 ### Integration
@@ -229,9 +287,14 @@ _procs[name] = ([
 ```lpc
 // In strike_enemy():
 if(weapon && weapon->is_weapon())
-    if(stringp(proc = weapon->can_proc()))
-        weapon->proc(proc, this_object(), enemy);
+    if(stringp(proc = call_if(weapon, "can_proc")))
+        call_if(weapon, "proc", proc, this_object(), enemy);
 ```
+
+`can_proc()` returns false immediately when `__proc_chance <= 0.0` or when
+`random_float(100.0)` exceeds it, so the global chance gates every roll. A proc
+whose `cooldown` is `0` is **never** eligible — the cooldown filter only
+considers entries with `cooldown > 0`.
 
 ## Vitals — `std/living/vitals.lpc`
 
@@ -242,8 +305,8 @@ All `private nomask float`, defaults `100.0`:
 | Variable | Description |
 |---|---|
 | `hp` / `max_hp` | Hit points |
-| `sp` / `max_sp` | Spirit/mana points |
-| `mp` / `max_mp` | Movement/stamina points |
+| `sp` / `max_sp` | Skill points — what spells and abilities cost |
+| `mp` / `max_mp` | Movement points — walking and every combat swing spend them |
 | `dead` | `int`, death flag |
 
 ### Query Functions
@@ -258,11 +321,19 @@ return max_hp + query_effective_boon("vital", "max_hp");
 
 ### Regen — `heal_tick()`
 
-- Fires every `regen_interval_pulses` heartbeats (default: 10 pulses).
-- **Suppressed during combat** (`in_combat()` check).
-- Rates come from race module: `module("race", "query_regen_rate")`.
-- Human defaults: HP +2.0, SP +2.0, MP +4.0 per tick.
-- No race module = no regen.
+- Fires every `__regen_interval_pulses` heartbeats, derived at setup from
+  `HEART_PULSE` × `HEARTBEATS_TO_REGEN`. A `force` argument ticks it regardless
+  without resetting the counter.
+- **HP and SP are suppressed during combat. MP is not** — movement points
+  regenerate mid-fight, which is deliberate: bottoming out on MP adds a large
+  bonus to everyone's chance to hit you (`can_strike()`), and the hole would be
+  otherwise inescapable.
+- Rates come from the race module: `module("race", "query_regen_rate")`.
+- **No race module still regenerates.** The fallback is a flat rate for all
+  three pools, and it branches on `pcp()` — player characters get the low rate,
+  everything else a much higher one.
+- Out of combat, a change in any pool calls `display_health_bar()`. Completion
+  messages are gated on the `recovery_messages` preference.
 
 ### Condition Strings
 
@@ -308,16 +379,12 @@ if(!is_dead() && query_hp() <= 0.0) {
 
 ```lpc
 to_next_level(level) = to_int(BASE_TNL * pow(TNL_RATE, level - 1.0))
-// Default: to_int(100 * 1.25^(level-1))
 ```
 
-| Level | TNL |
-|---|---|
-| 1 | 100 |
-| 2 | 125 |
-| 5 | 244 |
-| 10 | 931 |
-| 20 | ~8674 |
+Geometric: each level costs `TNL_RATE` times the one before. Call
+`ADVANCE_D->to_next_level()` for a real number rather than working one out from
+a table — `BASE_TNL` and `TNL_RATE` are tuning knobs and any table of worked
+values goes stale the first time either moves.
 
 ### Kill XP Formula
 
@@ -340,23 +407,26 @@ If `PLAYER_AUTOLEVEL` is true (default), `advance()` is called immediately after
 
 ### Config Constants
 
-| Key | Default | Used In |
-|---|---|---|
+| Key | Used In |
+|---|---|
 | `COMBAT.DEFAULT_HIT_CHANCE` | `can_strike()` |
+| `COMBAT.BASE_DAMAGE` | `calculate_damage()` |
+| `COMBAT.DAMAGE_VARIANCE` | `calculate_damage()` |
 | `COMBAT.DAMAGE_LEVEL_MODIFIER` | `receive_damage()` |
-| `COMBAT.NPC_SKILL_MULTIPLIER` | `query_skill_level()` on NPCs, `adjust_skills_by_npc_level()` |
+| `COMBAT.NPC_SKILL_MULTIPLIER` | `query_skill()` / `query_skill_level()` on non-PCs, `adjust_skills_by_npc_level()` |
 | `BASE_TNL` | `to_next_level()` |
 | `TNL_RATE` | `to_next_level()` |
 | `OVERLEVEL_THRESHOLD` | `kill_xp()` |
 | `OVERLEVEL_XP_PUNISH` | `kill_xp()` |
 | `UNDERLEVEL_THRESHOLD` | `kill_xp()` |
 | `UNDERLEVEL_XP_BONUS` | `kill_xp()` |
+| `PLAYER_AUTOLEVEL` | `earn_xp()` |
+| `HEART_PULSE` | regen interval |
+| `HEARTBEATS_TO_REGEN` | regen interval |
+| `DEFAULT_HEART_RATE` | NPC heartbeat |
 
-Values live in `adm/etc/default.lpml`. Read them with `mud_config()`; do not restate them here or in code.
-| `PLAYER_AUTOLEVEL` | `true` | `earn_xp()` |
-| `HEART_PULSE` | `2000` | regen interval |
-| `HEARTBEATS_TO_REGEN` | `5` | regen interval |
-| `DEFAULT_HEART_RATE` | `10` | NPC heartbeat |
+Values live in `adm/etc/default.lpml`. Read them with `mud_config()`; do not
+restate them here or in code.
 
 ## NPC Combat Behaviour — `std/living/npc.lpc`
 
@@ -378,15 +448,39 @@ void stop_heart_beat() {
 
 Heartbeat loop: `clean_up_enemies()` → `cooldown()` → death check → `heal_tick()` → `evaluate_heart_beat()` → `process_boon()`.
 
-### Combat Memory Module
+### Combat Memory Module — `std/modules/mob/combat_memory.lpc`
 
-Automatically added to all NPCs. Remembers enemy names.
+Automatically added to all NPCs. Registered as an `add_init()` handler, so it
+fires when a body enters the room.
 
-On init (player enters room), if target name is in memory:
+**The store is `private nomask nosave string *` — names, not object
+references.** That is the whole design, and it has two consequences worth
+holding onto:
+
+- **A grudge outlives the player's body object.** Dying, being revived, and
+  logging out and back in all construct a *new* body, but `set_name()` is
+  re-applied from the character name every time (`adm/daemons/body.lpc`
+  `create_body()` / `create_ghost()`, and `adm/obj/login.lpc`). The name matches,
+  so the NPC still knows them.
+- **The grudge lasts exactly as long as the NPC object.** A reboot, a `renew`,
+  or anything else that replaces that NPC starts it with an empty list. The
+  `nosave` on the declaration is belt-and-braces and changes nothing — NPCs
+  never call `set_persistent()`, so none of their state was going to be saved
+  either way.
+
+Ghosts are skipped outright, so a dead player walks back to their corpse
+unmolested.
 
 ```lpc
 void attack_on_sight(object target) {
+    if(target->is_ghost())
+        return;
+
+    name = target->query_name();
+
     if(of(name, combat_memory)) {
+        query_owner()->targetted_action(
+            "{{FF0033}}Raging, $N $vattack $t with a vengeance!{{res}}\n\n", target);
         query_owner()->start_attack(target);
         query_owner()->strike_enemy(target);   // immediate free strike
         query_owner()->strike_enemy(target);   // second free strike
@@ -397,7 +491,7 @@ void attack_on_sight(object target) {
 Memory is populated from `combat.lpc::start_attack()`:
 
 ```lpc
-if(!userp())
+if(npcp(this_object()))
     module("combat_memory", "add_to_memory", victim);
 ```
 
@@ -433,21 +527,25 @@ if(!userp())
 
 | Function | Description |
 |---|---|
-| `set_attack_speed(float)` | Directly sets base speed |
-| `add_attack_speed(float)` | Adjusts, clamped to `[0.5, 10.0]` |
-| `query_attack_speed()` | Returns `_attack_speed` |
+| `set_attack_speed(float)` | Sets the base speed, then clamps to `[0.5, 10.0]` |
+| `add_attack_speed(float)` | **Subtracts** the amount, then clamps — a positive argument makes the body *faster* |
+| `query_attack_speed()` | Returns `__attack_speed` |
 
-Actual interval per round = `_attack_speed + random_float(1.5)` seconds.
+The interval per round is `__attack_speed` seconds, unmodified. The value is a
+*gap*, not a rate, which is why `add_attack_speed()` subtracts.
 
 ## Gotchas
 
 1. **Death is detected in heartbeat, not in `receive_damage`**. The `dead` flag is set in `npc.lpc::heart_beat()` when `query_hp() <= 0.0`. There can be a brief window between HP hitting zero and `die()` firing.
-2. **No regen during combat.** `heal_tick()` returns immediately if `in_combat()`.
+2. **HP and SP do not regenerate during combat. MP does.** `heal_tick()` gates the HP and SP branches on `in_combat()`; the MP branch is ungated on purpose, because being at 0 MP hands every attacker a large hit-chance bonus.
 3. **NPCs stop ticking in empty rooms.** No heartbeat = no regen, no boon processing, no AI. Developers expecting continuous background behaviour need to understand this.
-4. **`query_skill()` vs `query_skill_level()`**: For NPCs, `query_skill()` returns `query_level() * 3.0` (shortcut), but `query_skill_level()` reads stored values. Combat formulas use `query_skill_level()`.
-5. **`set_level()` on NPCs wipes skills**: `npc.lpc::set_level()` calls `adjust_skills_by_npc_level()` which resets all stored skill levels to near-zero.
-6. **Proc `_proc_chance` field is maintained but not rolled against** in `can_proc()` — the actual selection uses per-proc cooldowns and `element_of_weighted`.
+4. **An NPC's skills are derived from its level — that is the design, not a quirk.** `query_skill()` and `query_skill_level()` branch on `pcp()` and compute `query_effective_level() * COMBAT.NPC_SKILL_MULTIPLIER` for *any* skill name, known or not, so a monster is fully equipped by `set_level()` alone and needs no skill authoring. The API consequence: those two never return null on an NPC, so `has_skill()` is the existence check, and `query_raw_skill()` / `query_raw_skill_level()` are what read an NPC's stored tree. Combat math uses `query_skill_level()`, so stored skills do not change how an NPC fights.
+5. **`set_level()` on NPCs reseeds skills, so it must come first.** `npc.lpc::set_level()` calls `adjust_skills_by_npc_level()`, which overwrites every node in the tree with `level * COMBAT.NPC_SKILL_MULTIPLIER`. Custom skills added beforehand are lost silently — no error, just a line of code that achieved nothing.
+6. **`__proc_chance` gates every proc roll.** `can_proc()` rolls it before it looks at cooldowns, then picks among the off-cooldown procs with `element_of_weighted`. A proc with `cooldown` 0 is never eligible.
 7. **Threat is accumulated damage**, not an abstract aggro value. `highest_threat()` targets whoever has dealt the most damage to this living.
+8. **Hit chance is not the linear sum.** `can_strike()` squashes it through `dim_sigmoid()` before rolling, so it never reaches 0 or 100 and stacked bonuses fall off sharply.
+9. **`add_attack_speed()` subtracts.** The value is the gap between rounds, so a positive argument speeds the body up.
+10. **Damage has no level term.** `calculate_damage()` dropped it; the level gap is applied victim-side in `receive_damage()`, where it scales how effective the defender's armour is.
 
 ## Timed Abilities: async_act
 

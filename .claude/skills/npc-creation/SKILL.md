@@ -88,31 +88,50 @@ Create a data file at `/d/mobs/town_guard.lpml`:
 }
 ```
 
-Then reference as `/d/somewhere/town_guard.mob` — the virtual system handles the rest.
+Then reference it as **`mob/town_guard`** — no leading slash, no extension:
+
+```lpc
+new("mob/town_guard");
+```
+
+Paths resolve from the mudlib root, so that is `/mob/town_guard`, and `mob`
+being the leading directory is what routes it to the monster compiler. Only the
+basename is then used, to find `/d/mobs/<basename>.lpml`. There is no `/mob/`
+directory on disk — the path is a routing instruction, not a location. This is
+the form every area in the lib uses.
+
+A `.mob` extension reaches the same compiler by the extension route, which is
+how to get there from a path that does not begin with `mob/`.
+
+**What does not work is a path with `mob/` in the middle of it** — 
+`/d/forest/mob/crimson_fox` routes on its *first* component (`d`), lands in the
+forest's virtual server, and returns 0.
 
 ### Virtual Compile Flow
 
 ```
-Request: /d/forest/wild_boar.mob
-  → VIRTUAL_D detects .mob extension
+Request: mob/wild_boar  (or anything.mob)
+  → VIRTUAL_D routes on the leading directory, or on a .mob extension
   → mob.lpc virtual module reads /d/mobs/wild_boar.lpml
   → lpml_decode() → mapping
-  → new("/std/mobs/<type>.c", data)
+  → new("/std/mobs/<type>.lpc", data)
   → virtual_setup(data) called on new object
 ```
 
-The `type` field maps to `/std/mobs/<type>.c` (spaces become underscores).
+The `type` field maps to `/std/mobs/<type>.lpc` (spaces become underscores). If that file does not exist the compile returns 0 and the monster silently does not appear.
 
 ## NPC Base — `std/living/npc.lpc`
 
 ### Setup
 
-In `mudlib_setup()` (for clones):
+`init_living()` runs for every NPC. The rest is guarded by `clonep()`, so a
+blueprint gets none of it:
+
 1. `init_living()` — initializes attributes, vitals, boon, wealth.
 2. `rehash_capacity()`.
-3. `add_init("start_heart_beat")` — starts ticking when player enters room.
-4. `add_hb("stop_heart_beat")` — checked each heartbeat to stop when room is empty.
-5. `add_module("mob/combat_memory")` — loads combat memory module.
+3. `add_init("start_heart_beat")` — starts ticking when a player enters the room.
+4. `add_hb("stop_heart_beat")` — checked each heartbeat to stop when the room is empty.
+5. `add_module("std/modules/mob/combat_memory")` — loads the combat memory module.
 
 ### `set_level(float level)`
 
@@ -126,7 +145,7 @@ Used when the NPC has no wielded weapon object:
 
 | Function | Default | Description |
 |---|---|---|
-| `set_damage(float)` | `0.0` | Base damage. If `<= 0`, the roll scales with level: `query_level() + random_float(query_level())` |
+| `set_damage(float)` | `0.0` | **A ceiling, not a fixed value.** `query_damage()` returns `random_float(__damage)`. If `__damage <= 0`, the roll scales with level instead: `query_level() + random_float(query_level())` |
 | `set_weapon_name(string)` | `"fist"` | Display name for combat messages |
 | `set_weapon_type(string)` | `"bludgeoning"` | Damage type string |
 
@@ -146,7 +165,11 @@ void stop_heart_beat() {
 }
 ```
 
-**Consequences of stopped heartbeat:** No regen, no boon expiration processing, no AI decisions, no death detection. An NPC at 1 HP in an empty room stays at 1 HP indefinitely.
+**Note the second condition.** `stop_heart_beat()` only stops an NPC that is *also* at full health, so a wounded NPC left alone keeps ticking and regenerating until it is whole, and only then goes quiet. An NPC at 1 HP in an empty room heals back up; it does not sit there.
+
+**Consequences once it has stopped:** no regen, no boon expiration processing, no AI decisions, no death detection.
+
+The threshold is the literal `100.0`, not `query_max_hp()`. Every living starts at `max_hp` 100.0, so the two normally coincide — but an NPC given a smaller maximum can never reach 100 and so never stops ticking.
 
 ### Death Detection
 
@@ -193,6 +216,10 @@ Called when cloning from LPML data. `args[0]` must be a mapping.
 | `"weapon name"` | string | `set_weapon_name()` (e.g., "tusks") |
 | `"weapon type"` | string | `set_weapon_type()` (e.g., "piercing") |
 | `"race"` | string | `set_race()` |
+| `"attack speed"` | float | `set_attack_speed()` — seconds between rounds |
+| `"plus attack speed"` | float | `add_attack_speed()` — **subtracts** from the interval, so positive is faster |
+| `"proc chance"` | float | `set_proc_chance()` — how often any proc fires |
+| `"simple procs"` | array of mappings | One `add_simple_proc()` per entry — see below |
 | `"loot"` | mapping or array | See loot section below |
 | `"loot chance"` | float | Default % for array-style loot. Default 50.0 |
 | `"coins"` | mapping | `{ type: [num, chance] }` |
@@ -201,7 +228,9 @@ After all data is applied, calls `call_if(this_object(), "monster_setup", data)`
 
 ### Level Range Interpretation
 
-The `[min, max]` array calculates: `random(max - min) + min`. So `[1, 3]` gives 1 or 2, `[2, 5]` gives 2, 3, or 4. The max value is **exclusive**.
+The `[min, max]` array rolls `random_clamp(min, max)`, which is **inclusive of both ends**. `[1, 3]` gives 1, 2 or 3; `[3, 5]` gives 3, 4 or 5.
+
+This is the same helper the area spawn paths use — the `spawn.lpml` pools and thornwick's `area_spawn()` — so a range means the same thing wherever it is written.
 
 ### Gender Formats
 
@@ -251,13 +280,50 @@ coins: {
 }
 ```
 
+### Simple Procs
+
+A proc is an alternate attack an NPC sometimes uses instead of a normal swing.
+`virtual_setup()` feeds each entry of `"simple procs"` to `add_simple_proc()`:
+
+```lpml
+simple procs: [
+    {
+        tag: "gore",
+        messages: [ "$N $vgore $t with $p short tusks." ],
+        damage_type: "piercing",
+        attack_type: "melee",   // defaults to "melee"
+        cooldown: 8,
+        weight: 100,
+        severity: "normal",
+    },
+],
+```
+
+`tag`, `messages` and `damage_type` are required — `add_simple_proc()` asserts
+on them. `messages` must hold **one or two** strings: one goes to the target,
+and a second, if given, to everyone else. `weight` is clamped 0-100; `severity`
+defaults to `"normal"` and scales the damage.
+
+Dispatch runs through `proc_npc()` in `std/living/proc.lpc`, which builds the
+skill name as `combat.<attack_type>.<damage_type>`, rolls `can_strike()` against
+the current highest-threat enemy, and delivers mundane damage on a hit.
+
+**`"simple"` is currently the only proc type.** `proc_npc()` dispatches on
+`proc.type` and handles nothing else. This is a deliberate starting point —
+curses, damage over time and area effects are not built.
+
 ## Race System — `std/living/race.lpc`
 
 ### `set_race(string race)`
 
-1. Checks for race module file at `DIR_STD_MODULES "race/" + race + ".c"`.
+1. Checks for race module file at `DIR_STD_MODULES "race/" + race + ".lpc"`.
 2. If file exists: loads via `add_module("race/" + race)`. The module's `start_module()` sets up body parts.
-3. **If file doesn't exist: silently stores just the string.** No body parts, no equipment slots, no regen rates. No error is raised.
+3. **If file doesn't exist: silently stores just the string.** No body parts and no equipment slots. No error is raised.
+
+Every animal race used by the mobs in `/d/mobs` (`pig`, `wolf`, `fox`, `insect`,
+`rodent`, …) is in this state — name only. Race on a monster is identity and
+flavour until somebody writes a module for it. The modules that do exist are the
+playable races: human, elf, dwarf, gnome, orc, troll, plus ghost.
 
 ### Race Module Base — `std/modules/race/race.lpc`
 
@@ -362,15 +428,28 @@ Each entry: `({ type_string, num_int, chance_float })`.
 If a loot item has `query_loot_property("autovalue") == true`:
 
 ```lpc
-value = level * COIN_VALUE_PER_LEVEL (15)   // with 25% variance
+value = level * COIN_VALUE_PER_LEVEL   // then spread by COIN_VARIANCE
 item->set_value(value)
 ```
 
-Level 10 NPC: base 150, range ~131-169 copper.
+The variance is a fraction of the base, applied centred on it, so the result
+lands within half that spread either side. Both keys are tuning knobs — read
+them with `mud_config()` rather than working an example out here.
 
 ## Utility-AI Decision System — `std/living/decision.lpc`
 
-Adapted from the npm `utility-ai` package. Used for NPC behavioral AI.
+Adapted from the npm `utility-ai` package.
+
+:::danger
+**This is not wired in.** `std/living/decision.lpc` is not inherited by
+`npc.lpc`, `body.lpc`, or anything else, and `setup_utility_ai()` is never
+called. The decisions inside it (`remove_stun`, `cast_fireball`,
+`cast_lightning`) are illustrative placeholders, not live behaviour.
+
+Nothing in the lib currently makes an AI decision through this path. Treat the
+API below as a design that exists on disk and would need inheriting and calling
+before it does anything — not as something an NPC you create will use.
+:::
 
 ### Classes
 
@@ -400,6 +479,8 @@ class Decision {
 | `decide` | `(mapping data)` | Evaluates all decisions, returns `([ "decision", "score", "func" ])` for highest |
 
 ### Usage Pattern
+
+This is how it *would* be used once wired in; no NPC does this today.
 
 ```lpc
 // In setup:
@@ -440,15 +521,25 @@ void attack_on_sight(object target) {
 }
 ```
 
-Memory is populated from `combat.lpc::start_attack()` for NPC combatants. Resets when the NPC is reloaded/recloned.
+Memory is populated from `combat.lpc::start_attack()` for NPC combatants.
+
+Because the store holds **names rather than object references**, a grudge
+survives the player's body being replaced — dying, being revived, and logging
+out and back in all build a new body carrying the same name. It lasts exactly as
+long as the NPC object, though: a reboot or a `renew` starts it empty. The
+`nosave` on the declaration is belt-and-braces and changes nothing, since NPCs
+never call `set_persistent()`.
 
 ## NPC Skill Behaviour
 
-NPCs interact with the skill system differently from players:
+**An NPC's skills come from its level.** This is a deliberate normalisation, not
+a gap: a monster exists to be level-appropriate opposition, so `set_level(3.0)`
+is the entire skill configuration of a level 3 monster and nothing further needs
+authoring.
 
-1. **Every NPC skill is scaled from the NPC's level**, not trained. `set_level()` seeds each stored skill node to a multiple of the level via `adjust_skills_by_npc_level()` — it does not wipe them to zero.
-2. **The query functions read those seeded values**, so `query_skill()` returns the scaled level (plus any boon) and `query_skill_level()` returns it floored. There is no NPC special-casing in the query path.
-3. The multiplier is defined in `adjust_skill_levels()` in `/std/living/skills.lpc` — check there rather than assuming a figure.
+1. **`set_level()` seeds the stored tree.** `adjust_skills_by_npc_level()` walks every node and sets it to a multiple of the level — it does not wipe them to zero. The recursive walker is `adjust_skill_levels()` in `/std/living/skills.lpc`; the multiplier is `COMBAT.NPC_SKILL_MULTIPLIER`.
+2. **`query_skill()` and `query_skill_level()` do not read that storage on an NPC.** Both branch on `pcp()`, and on a non-PC they compute `query_effective_level() * COMBAT.NPC_SKILL_MULTIPLIER` (plus boon) for *any* skill name, known or not. There very much is NPC special-casing in the query path.
+3. **The API consequence:** those two never return null on an NPC, so `has_skill()` is the existence check, and `query_raw_skill()` / `query_raw_skill_level()` are what read the seeded tree. Combat math uses `query_skill_level()`, so the seeded values do not change how an NPC fights.
 4. See the `skills-and-advancement` skill for full details on the skill system.
 
 ## Signals
@@ -473,10 +564,10 @@ Values live in `adm/etc/default.lpml`. Read them with `mud_config()`; do not res
 ## Gotchas
 
 1. **`set_level()` on NPCs overwrites stored skills** with the level-scaled value. Always call `set_level()` before adding custom skills.
-2. **`set_race()` silently falls back** if the race module file doesn't exist. The NPC will have no body parts, no equipment slots, and no regen rates. No error is raised.
-3. **NPCs stop ticking in empty rooms.** No heartbeat = no regen, no boon processing, no AI decisions, no death detection. An NPC at 1 HP in an empty room stays at 1 HP indefinitely.
+2. **`set_race()` silently falls back** if the race module file doesn't exist. The NPC will have no body parts and no equipment slots — but it still regenerates, via the fallback in `heal_tick()`. No error is raised.
+3. **NPCs stop ticking in empty rooms — but only once healed.** `stop_heart_beat()` requires no players *and* `query_hp() >= 100.0`, so a wounded NPC keeps ticking and regenerates to full before going quiet. Once stopped: no regen, no boon processing, no AI decisions, no death detection.
 4. **`add_func()` matches by exact description string.** If the string doesn't match a registered decision, the function is never called.
-5. **Combat memory persists for the NPC's lifetime** but is `nosave` — it resets when the NPC is reloaded/recloned.
+5. **Combat memory lasts exactly as long as the NPC object**, and is keyed by name — so it survives the player dying, reviving, or relogging, but not the NPC being reloaded. Ghosts are skipped outright.
 6. **Level range `[min, max]` uses `random(max - min) + min`**, so the maximum value is `max - 1`, not `max`.
-7. **No race module = no regen.** `heal_tick()` calls `module("race", "query_regen_rate")` — if null, no healing occurs.
+7. **No race module still regenerates.** `heal_tick()` calls `module("race", "query_regen_rate")` and, when that comes back null, falls back to a flat rate for all three pools chosen by `pcp()` — player characters get the low rate, everything else a considerably higher one. A race-less monster heals fine.
 8. **Death is detected in heartbeat, not `receive_damage`.** There's a brief window between HP hitting zero and `die()` firing. If the heartbeat is stopped (empty room), death won't trigger at all.
