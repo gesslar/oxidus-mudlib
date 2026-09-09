@@ -5,7 +5,7 @@
   "libFiles": {
     "master": "adm/obj/master.lpc",
     "simul_efun": "adm/obj/simul_efun.lpc",
-    "global_include": "include/global.h",
+    "global_include": "global.h",
     "player": "std/living/player.lpc",
   },
   "libInclude": [
