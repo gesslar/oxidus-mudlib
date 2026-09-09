@@ -1,6 +1,6 @@
 ---
 name: async-promises
-description: Understand and write asynchronous code in Oxidus. Covers the promise type and promise<T> payloads, the async modifier, await, acatch, where suspension is legal, the entry-point boundary, hand-built promises, the combinators (promise_all/any/race/all_settled), cancellation, async_yield scheduling, async_info, resource limits, and every way async code fails.
+description: Understand and write asynchronous code in Oxidus. Covers the promise type and promise<T> payloads, the async modifier, await, acatch, where suspension is legal, the entry-point boundary, hand-built promises, the combinators (promise_all/any/race/all_settled), cancellation, async_yield scheduling, async_info, awaited external processes, resource limits, and every way async code fails.
 ---
 
 # Async and Promises Skill
@@ -32,6 +32,7 @@ If a function needs neither, write it synchronously.
 | File or directory I/O off the main thread | `await async_read/async_write/async_getdir` |
 | Long computation that must not stall the mud | a loop with `await async_yield()` |
 | Fan out work and collect it | `promise_all` / `promise_all_settled` |
+| Run a shell command off the main thread | `await external_start(idx, args)` |
 | Delivering a callback's result to a caller | `async_call_back()` |
 | A driver apply, a command entry point, a verb function | **none of the above** — see **The Entry-Point Boundary** |
 
@@ -473,6 +474,52 @@ Three more things this shape is getting right:
   re-raising. Without that `acatch`, cancelling the loser merely swaps one
   rejection for another.
 
+## External Processes
+
+`PACKAGE_EXTERNAL` is compiled in, so a shell command can be run off the main
+thread and awaited. It needs an `external_cmd_N` line in the driver's runtime
+config (`config.oxidus`) naming the binary; the efuns take that number, never a
+path. No commands are enumerated today, so reaching for this starts with a
+config line.
+
+```lpc
+// no handle: index and args, await the result
+mixed *r = await external_start(CURL_CMD, ({ "-s", url }));
+string body = r[0], err = r[1];
+int code = r[2];
+
+// handle: drive stdin, query the streams afterwards
+int h = external_create(CAT_CMD, ({}));
+
+external_write(h, payload);
+external_close_stdin(h);
+
+mixed *r = await external_run(h);
+int code = external_exit_code(h);   // same as r[2]
+```
+
+Both forms fulfil with `({ stdout, stderr, exit_code })` when the process
+exits — **a non-zero exit still fulfils**, so read `r[2]` rather than waiting
+for a rejection that will not come. They reject with a socket error number
+(`EESECURITY`, `EESOCKET`, … from `include/driver/socket_err.h`) if the spawn
+fails, and with `"*external process aborted"` if the owner is destructed first.
+A handle runs once. `external_start()` keeps its classic callback form
+unchanged: pass the callbacks and it returns the socket fd, not a promise.
+
+Stopping one is the exception to everything in **Cancellation** below:
+
+| To | Use | The promise |
+|---|---|---|
+| stop it, keep what it produced | `external_kill(h)` | fulfils `({ stdout, stderr, 143 })` |
+| stop it, drop the handle | `external_close(h)` | rejects `"*external process aborted"` |
+| stop it from a promise you hold | `promise_reject(p, reason)` | rejects with `reason` |
+
+`promise_reject()` on a start or run promise **kills the child** — the one
+driver promise where rejecting also stops the work, because the efun installs a
+cancel handler for exactly that. `promise_cancel()` is not the tool here: the
+promise is not an async body's, so it errors. And `with_deadline()` /
+`with_timeout()` reject a *gate* around the promise — the child runs on.
+
 ## Cancellation
 
 `promise_cancel(p)` asks the `async` function body that owns `p` to give up: its
@@ -519,8 +566,8 @@ It is an **error** to cancel a promise that is not an async function's — only 
 body has a "next await" for the cancellation to arrive at. That rules out
 `promise_create()` promises, `async_read`/`async_write`/`async_getdir` promises
 (the worker thread is already doing the I/O), `call_out(delay)` promises (use
-the classic `call_out()` form and `remove_call_out()`), and `promise_then()`
-chain links.
+the classic `call_out()` form and `remove_call_out()`), external process
+promises (see **External Processes** above), and `promise_then()` chain links.
 
 For a timed act on a living, note there are now two different interruptions and
 they are not interchangeable: `cancel_act()` interrupts **the act**, which
