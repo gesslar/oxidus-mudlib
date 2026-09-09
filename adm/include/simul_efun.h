@@ -95,7 +95,7 @@ int user_exists(string user);
 
 // File: file.c
 int file_lines(string file);
-int log_file(string file, string str);
+varargs int log_file(string file, string str, mixed arg...);
 int touch(string file);
 string *dir_file(string path);
 string *explode_file(string file);
