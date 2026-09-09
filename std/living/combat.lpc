@@ -868,7 +868,7 @@ float query_defence_amount(string type) {
  */
 mapping adjust_protection() {
   mapping _equipment = query_equipped();
-  object *obs = values(_equipment), ob;
+  /** @type {STD_EQUIP*} */ object *obs = values(_equipment), ob;
 
   { // Defences
     __defence = ([]);
@@ -887,11 +887,7 @@ mapping adjust_protection() {
     }
   }
 
-  { // Armor Class
-    __ac = 0.0;
-    foreach(ob in obs)
-      __ac += ob->query_ac();
-  }
+  __ac = reduce(obs, (: $1 + $2->query_ac() :), 0.0);
 
   return copy(__defence);
 }
