@@ -42,8 +42,8 @@ int errorp(mixed input) {
  * Determine whether a promise has yet to settle.
  *
  * @param {promise} p - The promise to test.
- * @returns {int} 1 if the promise is still pending, 0 if it has resolved or
- *  rejected.
+ * @returns {int} 1 if the promise is still pending, 0 if it has resolved,
+ *  rejected, or was cancelled.
  */
 int pendingp(promise p) {
   return promise_status(p) == PROMISE_PENDING;
@@ -53,8 +53,8 @@ int pendingp(promise p) {
  * Determine whether a promise has settled with a value.
  *
  * @param {promise} p - The promise to test.
- * @returns {int} 1 if the promise has resolved, 0 if it is still pending or
- *  has rejected.
+ * @returns {int} 1 if the promise has resolved, 0 if it is still pending,
+ *  has rejected, or was cancelled.
  */
 int resolvedp(promise p) {
   return promise_status(p) == PROMISE_FULFILLED;

@@ -18,6 +18,13 @@
     Takes a callback structure created by assemble_call_back() and executes
     it, optionally with new arguments prepended to the stored ones.
 
+    The callback is invoked inside a catch, so this reports whether it
+    errored rather than what it returned. It is therefore not async-aware:
+    an async callback returns a promise the moment its body parks, which is
+    discarded here, so this reports success before the callback has done
+    anything. Use async_call_back() when the callback may be async or its
+    result matters.
+
 ### PARAMETERS
 
     cb  (mixed*)
@@ -25,7 +32,8 @@
 
 ### RETURN VALUES
 
-    (mixed|undefined) Result from callback execution
+    (string|int|undefined) 0 if the callback ran without error, the error
+    message if it threw, or undefined if cb does not describe a callable.
 
 ### ERRORS
 

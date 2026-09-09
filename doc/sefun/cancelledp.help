@@ -1,0 +1,35 @@
+---
+{
+  title: "cancelledp"
+}
+---
+### NAME
+
+    cancelledp() - Determine whether a promise settled because the body that
+    owned it was cancelled. A cancellation carries a reason and unwinds like
+    a rejection, but it is its own settlement, so rejectedp() does not
+    report it.
+
+### SYNOPSIS
+
+    int cancelledp( promise p );
+
+### DESCRIPTION
+
+    Determine whether a promise settled because the body that owned it was
+    cancelled. A cancellation carries a reason and unwinds like a rejection,
+    but it is its own settlement, so rejectedp() does not report it.
+
+    The cancellation is delivered to the body's next await, so a promise is
+    still pending immediately after promise_cancel() returns; this reports 1
+    only once the body has actually given up.
+
+### PARAMETERS
+
+    p  (promise)
+       The promise to test.
+
+### RETURN VALUES
+
+    (int) 1 if the promise was cancelled, 0 if it is still pending or
+    settled any other way.

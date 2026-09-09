@@ -1,0 +1,26 @@
+---
+{
+  title: "pendingp"
+}
+---
+### NAME
+
+    pendingp() - Determine whether a promise has yet to settle.
+
+### SYNOPSIS
+
+    int pendingp( promise p );
+
+### DESCRIPTION
+
+    Determine whether a promise has yet to settle.
+
+### PARAMETERS
+
+    p  (promise)
+       The promise to test.
+
+### RETURN VALUES
+
+    (int) 1 if the promise is still pending, 0 if it has resolved, rejected,
+    or was cancelled.

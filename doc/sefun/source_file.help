@@ -10,7 +10,7 @@
 
 ### SYNOPSIS
 
-    string source_file( string path_and_file );
+    varargs string source_file( string path_and_file, string relative_to );
 
 ### DESCRIPTION
 
@@ -26,6 +26,12 @@
     path_and_file  (string)
                    Path to a source file, with or without a .lpc / .c
                    extension
+
+    relative_to    (string, optional)
+                   Base directory used while probing for an existing file.
+                   Ignored for absolute paths, and not applied to the
+                   default returned when neither source file exists — that
+                   comes back unresolved.
 
 ### RETURN VALUES
 

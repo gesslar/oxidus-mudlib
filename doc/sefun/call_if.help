@@ -22,6 +22,10 @@
     is the same object as passed, `call_if()` will bind to the object,
     ensuring that it is callable.
 
+    The result is returned unwrapped, so an async target's promise passes
+    straight through and `await call_if(ob, "fetch")` works without any
+    async variant of this sefun.
+
 ### PARAMETERS
 
     ob    (object|string)

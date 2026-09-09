@@ -1,0 +1,48 @@
+---
+{
+  title: "substitute_tokens"
+}
+---
+### NAME
+
+    substitute_tokens() - Substitutes ${token} placeholders in a string with
+    values from a mapping.
+
+### SYNOPSIS
+
+    string substitute_tokens( string text, mapping tokens );
+
+### DESCRIPTION
+
+    Substitutes ${token} placeholders in a string with values from a
+    mapping.
+
+    Keys are bare names, without the ${ } around them: a key of "mud_name"
+    answers the placeholder ${mud_name}. Values may be of any type and are
+    rendered through stringify(), so an int token needs no conversion at the
+    call site.
+
+    The whole string is resolved in a single pass, which is the point of
+    doing this rather than a chain of replace_string() calls. A value that
+    itself contains ${...} lands as literal text instead of being expanded
+    by a later key, so this is safe to point at names and other text the mud
+    did not write.
+
+    A placeholder with no matching key is left where it is, so an unresolved
+    token shows up in the output rather than silently becoming nothing.
+
+### PARAMETERS
+
+    text    (string)
+            The text to substitute into.
+
+    tokens  (mapping)
+            Bare token names mapped to their values.
+
+### RETURN VALUES
+
+    (string) The text with every known placeholder replaced.
+
+### ERRORS
+
+    If text is not a string. If tokens is not a mapping.

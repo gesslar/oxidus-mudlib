@@ -1,0 +1,28 @@
+---
+{
+  title: "rejectedp"
+}
+---
+### NAME
+
+    rejectedp() - Determine whether a promise has settled with a rejection
+    reason. A cancelled promise is not one of these — see cancelledp().
+
+### SYNOPSIS
+
+    int rejectedp( promise p );
+
+### DESCRIPTION
+
+    Determine whether a promise has settled with a rejection reason. A
+    cancelled promise is not one of these — see cancelledp().
+
+### PARAMETERS
+
+    p  (promise)
+       The promise to test.
+
+### RETURN VALUES
+
+    (int) 1 if the promise has rejected, 0 if it is still pending, has
+    resolved, or was cancelled.

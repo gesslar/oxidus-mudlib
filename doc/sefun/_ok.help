@@ -30,4 +30,5 @@
 
 ### RETURN VALUES
 
-    (int) Always returns 1, unless there is no previous object.
+    (1 | 0) 1 when the message was delivered, 0 if it could not be
+    constructed.

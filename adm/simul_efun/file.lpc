@@ -493,7 +493,9 @@ int touch(string file) {
  *
  * @param {string} path_and_file - Path to a source file, with or without a
  *  .lpc / .c extension
- * @param {string} [relative_to] - If provided, will resolve to this location.
+ * @param {string} [relative_to] - Base directory used while probing for an
+ *  existing file. Ignored for absolute paths, and not applied to the default
+ *  returned when neither source file exists — that comes back unresolved.
  * @returns {string} Path to the existing source file, preferring .lpc; or the
  *  .lpc form if no source file is found
  * @example
