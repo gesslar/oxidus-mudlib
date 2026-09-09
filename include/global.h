@@ -18,7 +18,7 @@
 #include <objects.h>
 #include <driver/promise.h>
 #include <rooms.h>
-#include <runtime_config.h>
+#include <driver/runtime_config.h>
 #include <signal.h>
 #include <driver/type.h>
 #include <custom_type.h>
