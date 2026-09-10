@@ -5,7 +5,11 @@
     "wiki:dev": "npm --prefix doc/wiki run dev",
     "wiki:build": "npm --prefix doc/wiki run build",
     "wiki:deploy": "gh workflow run deploy-wiki.yml",
-    "sefuns": "bash adm/bash/sefuns"
+    "docker:deploy": "gh workflow run docker-publish.yml",
+    "sefuns": "bash adm/bash/sefuns",
+    "rebuild": "bash adm/dist/rebuild",
+    "oxidus": "bash adm/dist/run bg",
+    "stop": "bash adm/dist/run stop"
   },
   "devDependencies": {
     "@gesslar/bedoc": "*",

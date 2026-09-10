@@ -25,6 +25,16 @@ repo_root=$(cd ../.. && pwd)
 # Absolute path to the driver executable
 driver="${repo_root}/adm/dist/bin/driver"
 
+# Refuse to rebuild while the game is up. The compile overwrites the very binary
+# the running driver was started from, so the game has to be down first. This is
+# the same detection the run script uses to stop the driver.
+pids=$(pgrep -f "$driver" || true)
+if [[ -n "$pids" ]]; then
+  echo -e "${red}[ERROR]${reset} The driver is running (PIDs: $pids)."
+  echo -e "${red}[ERROR]${reset} Shut the game down first, or run ${red}${repo_root}/adm/dist/run stop${reset}."
+  exit 1
+fi
+
 # Pull FluffOS
 
 # Ensure the FluffOS driver source is present and tracking master
