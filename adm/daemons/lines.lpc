@@ -1,9 +1,9 @@
 /**
  * @file /adm/daemons/lines.lpc
  *
- * Daemon that handles line-drawing character substitution. Maps
- * Unicode box-drawing characters to ASCII or screenreader
- * equivalents based on the client's encoding.
+ * Daemon that handles line-drawing character substitution. Maps Unicode box-
+ * drawing characters to ASCII or screenreader equivalents based on the
+ * client's encoding.
  *
  * I know I stole this from someone, but I don't know who. Maybe Lima? idk.
  * Could have been @michaelprograms, but I'm not sure. Shout out whomever
@@ -13,10 +13,12 @@
  * of exactly the same thing.
  *
  * @created 2024-07-13 - Gesslar
- * @last_modified 2024-07-13 - Gesslar
+ * @last_modified 2026-09-09 - Gesslar
  *
  * @history
  * 2024-07-13 - Gesslar - Created
+ * 2026-09-09 - Gesslar - Added diagonal corner symbols; mapped the diagonal
+ *                        cross to X for US-ASCII
  */
 
 inherit STD_DAEMON;
@@ -25,104 +27,114 @@ private nosave mapping __lineDrawing = ([ ]);
 
 void setup() {
   __lineDrawing["UTF-8"] = ([
-      // lines
-      "─" : "─",
-      "═" : "═",
-      "│" : "│",
-      "║" : "║",
-      // diagonals
-      "╲" : "╲",
-      "╱" : "╱",
-      // corners
-      "┌" : "┌",
-      "╔" : "╔",
-      "╓" : "╓",
-      "╒" : "╒",
-      "┐" : "┐",
-      "╗" : "╗",
-      "╕" : "╕",
-      "╖" : "╖",
-      "┘" : "┘",
-      "╝" : "╝",
-      "╛" : "╛",
-      "╜" : "╜",
-      "└" : "└",
-      "╚" : "╚",
-      "╘" : "╘",
-      "╙" : "╙",
-      // joints
-      "┬" : "┬",
-      "╤" : "╤",
-      "╥" : "╥",
-      "╦" : "╦",
-      "┴" : "┴",
-      "╧" : "╧",
-      "╨" : "╨",
-      "╩" : "╩",
-      "├" : "├",
-      "╞" : "╞",
-      "╟" : "╟",
-      "╠" : "╠",
-      "┤" : "┤",
-      "╡" : "╡",
-      "╢" : "╢",
-      "╣" : "╣",
-      "┼" : "┼",
-      "╬" : "╬",
-      "╪" : "╪",
-      "╫" : "╫",
-      "╳" : "╳",
+    // lines
+    "─" : "─",
+    "═" : "═",
+    "│" : "│",
+    "║" : "║",
+    // diagonals
+    "╲" : "╲",
+    "╱" : "╱",
+    // corners
+    "┌" : "┌",
+    "╔" : "╔",
+    "╓" : "╓",
+    "╒" : "╒",
+    "┐" : "┐",
+    "╗" : "╗",
+    "╕" : "╕",
+    "╖" : "╖",
+    "┘" : "┘",
+    "╝" : "╝",
+    "╛" : "╛",
+    "╜" : "╜",
+    "└" : "└",
+    "╚" : "╚",
+    "╘" : "╘",
+    "╙" : "╙",
+    // diagonal corners
+    "🯘" : "🯘",
+    "🯙" : "🯙",
+    "🯚" : "🯚",
+    "🯛" : "🯛",
+    // joints
+    "┬" : "┬",
+    "╤" : "╤",
+    "╥" : "╥",
+    "╦" : "╦",
+    "┴" : "┴",
+    "╧" : "╧",
+    "╨" : "╨",
+    "╩" : "╩",
+    "├" : "├",
+    "╞" : "╞",
+    "╟" : "╟",
+    "╠" : "╠",
+    "┤" : "┤",
+    "╡" : "╡",
+    "╢" : "╢",
+    "╣" : "╣",
+    "┼" : "┼",
+    "╬" : "╬",
+    "╪" : "╪",
+    "╫" : "╫",
+    "╳" : "╳",
   ]);
 
   __lineDrawing["US-ASCII"] = ([
-      // lines
-      "─" : "-",
-      "═" : "=",
-      "│" : "|",
-      "║" : "|",
-      // diagonals
-      "╲" : "\\",
-      "╱" : "/",
-      // corners
-      "┌" : ".",
-      "╔" : ".",
-      "╓" : ".",
-      "╒" : ".",
-      "┐" : ".",
-      "╗" : ".",
-      "╕" : ".",
-      "╖" : ".",
-      "┘" : "'",
-      "╝" : "'",
-      "╛" : "'",
-      "╜" : "'",
-      "└" : "'",
-      "╚" : "'",
-      "╘" : "'",
-      "╙" : "'",
-      "╚" : "'",
-      // joints
-      "┬" : "-",
-      "╤" : "-",
-      "╥" : "-",
-      "╦" : "-",
-      "┴" : "-",
-      "╧" : "-",
-      "╨" : "-",
-      "╩" : "-",
-      "├" : "|",
-      "╞" : "|",
-      "╟" : "|",
-      "╠" : "|",
-      "┤" : "|",
-      "╡" : "|",
-      "╢" : "|",
-      "╣" : "|",
-      "┼" : "+",
-      "╬" : "+",
-      "╪" : "+",
-      "╫" : "+",
-      "╳" : "╳",
+    // lines
+    "─" : "-",
+    "═" : "=",
+    "│" : "|",
+    "║" : "|",
+    // diagonals
+    "╲" : "\\",
+    "╱" : "/",
+    // corners
+    "┌" : ".",
+    "╔" : ".",
+    "╓" : ".",
+    "╒" : ".",
+    "┐" : ".",
+    "╗" : ".",
+    "╕" : ".",
+    "╖" : ".",
+    "┘" : "'",
+    "╝" : "'",
+    "╛" : "'",
+    "╜" : "'",
+    "└" : "'",
+    "╚" : "'",
+    "╘" : "'",
+    "╙" : "'",
+    "╚" : "'",
+    // diagonal corners
+    "🯘" : "V",
+    "🯙" : "<",
+    "🯚" : "^",
+    "🯛" : ">",
+    // joints
+    "┬" : "-",
+    "╤" : "-",
+    "╥" : "-",
+    "╦" : "-",
+    "┴" : "-",
+    "╧" : "-",
+    "╨" : "-",
+    "╩" : "-",
+    "├" : "|",
+    "╞" : "|",
+    "╟" : "|",
+    "╠" : "|",
+    "┤" : "|",
+    "╡" : "|",
+    "╢" : "|",
+    "╣" : "|",
+    "┼" : "+",
+    "╬" : "+",
+    "╪" : "+",
+    "╫" : "+",
+    "╳" : "X",
   ]);
 
   __lineDrawing["screenreader"] = allocate_mapping(keys(__lineDrawing["UTF-8"]), " ");
@@ -140,11 +152,11 @@ private string replace_lines_characters(string mess, mapping replacement) {
 }
 
 string substitute_lines(string mess, string encoding) {
-    if(encoding == "UTF-8")
-      return mess;
+  if(encoding == "UTF-8")
+    return mess;
 
-    if(of(encoding, __lineDrawing))
-      return replace_lines_characters(mess, __lineDrawing[encoding]);
+  if(of(encoding, __lineDrawing))
+    return replace_lines_characters(mess, __lineDrawing[encoding]);
 
-    return replace_lines_characters(mess, __lineDrawing["US-ASCII"]);
+  return replace_lines_characters(mess, __lineDrawing["US-ASCII"]);
 }
