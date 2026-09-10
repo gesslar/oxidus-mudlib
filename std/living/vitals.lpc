@@ -405,7 +405,7 @@ protected void heal_tick(int force: (: 0 :)) {
   float sp = query_sp();
   float mp = query_mp();
 
-  if(!in_combat()) {
+  if(!in_combat() && query_pref("regen_notify") == "on") {
     if(hp != old_hp || sp != old_sp || mp != old_mp)
       display_health_bar();
   }

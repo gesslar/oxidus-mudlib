@@ -377,12 +377,140 @@ public void clear_su_body() {
   su_body = null;
 }
 
-public void display_health_bar() {
-  if(query_pref("health_bar") != "off") {
-    float hp = query_hp() * 100.0 / 100.00, max_hp = query_max_hp();
-    float sp = query_sp() * 100.0 / 100.00, max_sp = query_max_sp();
-    float mp = query_mp() * 100.0 / 100.00, max_mp = query_max_mp();
+/**
+ * Draws this body's own vitals bar, honouring the `health_bar` preference:
+ * `off` suppresses it entirely, `plain` prints bare numbers, and anything
+ * else falls through to the drawn bar.
+ */
+protected void display_health_bar() {
+  string pref = query_pref("health_bar") ?? "auto";
 
-    tell(this_object(), `HP: ${hp}/${max_hp}  SP: ${sp}/${max_sp}  MP: ${mp}/${max_mp}\n`);
+  if(query_pref("health_bar") != "off") {
+    if(pref == "plain") {
+      display_plain_health_bar();
+    } else {
+      display_auto_health_bar();
+    }
   }
+}
+
+/**
+ * Prints this body's HP, SP, and MP as plain current/maximum numbers, with
+ * no colour or bar glyphs.
+ */
+private void display_plain_health_bar() {
+  float hp = query_hp(), max_hp = query_max_hp();
+  float sp = query_sp(), max_sp = query_max_sp();
+  float mp = query_mp(), max_mp = query_max_mp();
+
+  tell(this_object(), `HP: ${hp}/${max_hp}  SP: ${sp}/${max_sp}  MP: ${mp}/${max_mp}\n`);
+}
+
+/**
+ * Bar colours per vital, keyed `hp` / `sp` / `mp`, each holding the `front`,
+ * `mid`, and `back` colour codes the bar segments are drawn with.
+ *
+ * @type {mapping}
+ */
+private nosave mapping __vcolours = ([
+  "hp": ([
+    "front": `{{${COLOUR_D->rgb_to_hex(({147, 58, 58}))}}}`,
+    "mid"  : `{{${COLOUR_D->rgb_to_hex(({114, 29, 29}))}}}`,
+    "back" : `{{${COLOUR_D->rgb_to_hex(({80, 0, 0}))}}}`,
+  ]),
+  "sp": ([
+    "front": `{{${COLOUR_D->rgb_to_hex(({58, 102, 147}))}}}`,
+    "mid"  : `{{${COLOUR_D->rgb_to_hex(({29, 68, 108}))}}}`,
+    "back" : `{{${COLOUR_D->rgb_to_hex(({0, 34, 68}))}}}`,
+  ]),
+  "mp": ([
+    "front": `{{${COLOUR_D->rgb_to_hex(({147, 88, 116}))}}}`,
+    "mid"  : `{{${COLOUR_D->rgb_to_hex(({112, 44, 80}))}}}`,
+    "back":  `{{${COLOUR_D->rgb_to_hex(({77, 0, 44}))}}}`,
+  ])
+]);
+
+private nosave string __vbracket = "{{555}}";
+
+/**
+ * Splits a vital into the three segments an auto health bar draws: the ticks
+ * that are entirely filled, the single tick the vital is partway through, and
+ * the ticks that are empty. The middle segment is 1 whenever the vital does
+ * not land exactly on a tick boundary, and 0 when it does, so a bar sitting on
+ * its final tick can be told apart from a bar that has actually filled it.
+ *
+ * @param {float} curr - The current value of the vital.
+ * @param {float} max - The maximum value of the vital.
+ * @param {int} constraint - The number of ticks the bar is drawn with.
+ * @returns {int*} `({ full, mid, rest })`, always summing to `constraint`.
+ */
+private int *get_vital_ratio(float curr, float max, int constraint) {
+  float bounded_curr = percent(curr, max);
+  float occupied = clamp(percent_of(bounded_curr, constraint), 0.0, to_float(constraint));
+
+  int full = to_int(floor(occupied));
+  int mid = full < to_int(ceil(occupied));
+  int rest = constraint - full - mid;
+
+  return ({ full, mid, rest });
+}
+
+/**
+ * Draws this body's HP, SP, and MP as three colour-segmented 20-tick bars on
+ * a single bracketed line.
+ */
+private void display_auto_health_bar() {
+  float hp = query_hp(), max_hp = query_max_hp();
+  float sp = query_sp(), max_sp = query_max_sp();
+  float mp = query_mp(), max_mp = query_max_mp();
+
+  int *hp_vals = get_vital_ratio(hp, max_hp, 20);
+  int *sp_vals = get_vital_ratio(sp, max_sp, 20);
+  int *mp_vals = get_vital_ratio(mp, max_mp, 20);
+
+  string hp_bar = `HP `
+    `${__vcolours.hp.front}${repeat_string("═", hp_vals[0])}`
+    `${__vcolours.hp.mid}${repeat_string("═", hp_vals[1])}`
+    `${__vcolours.hp.back}${repeat_string("─", hp_vals[2])}`;
+  string sp_bar = `SP `
+    `${__vcolours.sp.front}${repeat_string("═", sp_vals[0])}`
+    `${__vcolours.sp.mid}${repeat_string("═", sp_vals[1])}`
+    `${__vcolours.sp.back}${repeat_string("─", sp_vals[2])}`;
+  string mp_bar = `MP `
+    `${__vcolours.mp.front}${repeat_string("═", mp_vals[0])}`
+    `${__vcolours.mp.mid}${repeat_string("═", mp_vals[1])}`
+    `${__vcolours.mp.back}${repeat_string("─", mp_vals[2])}`;
+
+  tell(this_object(),
+    `${__vbracket}<{{res}}`
+    `${hp_bar}`
+    `${__vbracket}><{{res}}`
+    `${sp_bar}`
+    `${__vbracket}><{{res}}`
+    `${mp_bar}${__vbracket}`
+    `>{{res}}\n`
+  );
+}
+
+/**
+ * Draws a single wide HP bar for an enemy. Defaults to this body's highest
+ * threat, and prints nothing when there is no such target.
+ *
+ * @param {STD_BODY} who - The body to draw the bar for. Defaults to the
+ *                         highest threat on this body's threat list.
+ */
+protected varargs void display_enemy_health_bar(object who) {
+  who ??= highest_threat();
+
+  if(!who)
+    return;
+
+  float hp = who->query_hp(), max_hp = who->query_max_hp();
+  int *hp_vals = get_vital_ratio(hp, max_hp, 73);
+  string hp_bar =
+    `${__vcolours.hp.front}${repeat_string("═", hp_vals[0])}`
+    `${__vcolours.hp.mid}${repeat_string("═", hp_vals[1])}`
+    `${__vcolours.hp.back}${repeat_string("─", hp_vals[2])}`;
+
+  tell(this_object(), `${__vbracket}<{{res}}${hp_bar}${__vbracket}>{{res}}\n`);
 }
