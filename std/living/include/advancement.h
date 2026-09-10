@@ -13,5 +13,6 @@ float adjust_level_mod(float l) ;
 int adjust_xp(int amount) ;
 int set_xp(int amount) ;
 void on_advance(object tp, float l) ;
+public void wipe_xp() ;
 
 #endif // __ADVANCEMENT_H__

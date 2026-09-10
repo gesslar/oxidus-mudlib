@@ -180,3 +180,19 @@ int set_xp(int amount) {
 void on_advance(object tp, float l) {
   tell(tp, "{^fc0^}{{222}}You have advanced to level {{ul1}}" + to_int(l) + "{{ul0}}!{{res}}\n");
 }
+
+/**
+ * Clear the XP total outright, without routing through adjust_xp().
+ * Sends a Char.Status GMCP update if this body is a user.
+ */
+public void wipe_xp() {
+  __xp = 0;
+
+  if(userp()) {
+    GMCP_D->send_gmcp(this_object(), GMCP_PKG_CHAR_STATUS, ([
+      GMCP_LBL_CHAR_STATUS_XP: __xp,
+      GMCP_LBL_CHAR_STATUS_TNL: query_tnl(),
+      GMCP_LBL_CHAR_STATUS_LEVEL: __level,
+    ]));
+  }
+}
