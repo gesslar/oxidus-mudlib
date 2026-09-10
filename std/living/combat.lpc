@@ -81,8 +81,10 @@ void combat_round() {
   if(!valid_enemy(victim))
     return;
 
-  if(query_mp() >= 0.0)
+  if(query_mp() >= 0.0) {
     display_health_bar();
+    display_enemy_health_bar();
+  }
 
   swing();
 

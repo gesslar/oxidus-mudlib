@@ -40,7 +40,8 @@ unreadable choice is corrected on the way in -- see
 | `feedback` | `on` | Whether system messages (`ok`, `error`, `warn`, `info`) carry their decoration symbol. Set to `off` for plain text. |
 | `gmcp` | unset (enabled) | [GMCP](/systems/gmcp/) data is sent to clients that negotiate it. Set to `off` to stop sending it. |
 | `keepalive` | unset (off) | Set to any value other than `off` to send periodic keepalive packets once you have been idle for five minutes. |
-| `health_bar` | unset (on) | Shows your HP, SP, and MP each combat round, and whenever they change while you recover out of combat. Set to `off` to hide it. |
+| `health_bar` | unset (bars) | Shows your HP, SP, and MP each combat round. Fight on past your last movement point and the bar stops printing until you have recovered some -- being that exhausted costs you the readout as well as your defence. `con` tells you where you stand. Left unset you get the coloured bars; set it to `plain` for a bare numeric readout, or to `off` to hide it entirely. |
+| `regen_notify` | unset (off) | Set to `on` to see your health bar again each time your HP, SP, or MP change while you recover out of combat. Obeys `health_bar`, so nothing is shown while that is `off`. |
 | `recovery_messages` | unset (on) | Tells you when your health, mind, or body has finished recovering. Set to `off` to stay quiet. |
 | `combat_hit_colour` | unset | Colour applied to combat messages where you land a hit. Unset leaves them uncoloured. |
 | `combat_miss_colour` | unset | Colour applied to combat messages where you miss. Unset leaves them uncoloured. |

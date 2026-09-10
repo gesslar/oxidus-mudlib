@@ -14,7 +14,7 @@ and saved with your character.
 Any preference whose name ends in {{bl1}}_colour{{res}} accepts the value
 {{bl1}}prompt{{res}} to choose from the available colours instead of typing a code.
 
-See also: set, colour
+See also: set, colour, con
 
 {{re1}}Player Preferences{{res}}
 
@@ -64,10 +64,17 @@ Default: none (off)
          packets once you have been idle for five minutes.
 
 Setting: health_bar
-Default: none (on)
- Effect: Shows your HP, SP, and MP each combat round, if you have enough MP, and
-         whenever they change while you recover out of combat. Set to {{bl1}}off{{res}}
-         to hide it.
+Default: none (bars)
+ Effect: Shows your HP, SP, and MP each combat round. Fight on past your last
+         movement point and the bar stops printing until you have recovered
+         some. Left unset you get the coloured bars; set it to {{bl1}}plain{{res}}
+         for a bare numeric readout, or to {{bl1}}off{{res}} to hide it entirely.
+
+Setting: regen_notify
+Default: none (off)
+ Effect: Set to {{bl1}}on{{res}} to see your health bar again each time your HP, SP, or
+         MP change while you recover out of combat. Obeys {{bl1}}health_bar{{res}}, so
+         nothing is shown while that is {{bl1}}off{{res}}.
 
 Setting: recovery_messages
 Default: none (on)
