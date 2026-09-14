@@ -15,7 +15,7 @@ void setup() {
   __regen_rate += ([
     "hp" : 6.0,
     "sp" : 1.0,
-    "mp" : 1.0,
+    "mp" : 9.0,
   ]);
 
   __attribute_mod += ([
