@@ -73,7 +73,7 @@ mixed main(object tp, string arg) {
  * @param {STD_BODY} tp - The player gaining the alias.
  * @param {string} alias - The alias name.
  * @param {string} expansion - The text the alias expands to.
- * @returns {string} A success or error message reporting the result.
+ * @returns {mixed} A success or error message reporting the result.
  */
 mixed add_alias(
   /** @type {STD_BODY} */ object tp,
@@ -104,7 +104,7 @@ mixed add_alias(
  *
  * @param {STD_BODY} tp - The player whose alias is shown.
  * @param {string} alias - The alias name to display.
- * @returns {string} The alias and its expansion, or an error message if
+ * @returns {mixed} The alias and its expansion, or an error message if
  *  the player has no such alias.
  */
 mixed show_alias(
@@ -124,7 +124,7 @@ mixed show_alias(
  *
  * @param {STD_BODY} tp - The player whose alias is removed.
  * @param {string} alias - The alias name to remove.
- * @returns {string} A success or error message reporting the result.
+ * @returns {int} Always returns 1.
  */
 mixed remove_alias(
   /** @type {STD_BODY} */ object tp,
@@ -146,8 +146,8 @@ mixed remove_alias(
  * name and expansion column.
  *
  * @param {STD_BODY} tp - The player whose aliases are listed.
- * @returns {string | string*} A titled list of the player's aliases, or
- *  an informational message if none are defined.
+ * @returns {int | string*} A titled list of the player's aliases, or 1 if none
+ *  are defined.
  */
 mixed list_personal_aliases(
   /** @type {STD_BODY} */ object tp
@@ -175,8 +175,8 @@ mixed list_personal_aliases(
  *
  * @param {STD_BODY} tp - The player whose available global aliases are
  *  listed.
- * @returns {string | string*} A titled list of the global aliases, or an
- *  informational message if none are defined.
+ * @returns {int | string*} A titled list of the global aliases, 1 if none are
+ *  defined.
  */
 mixed list_global_aliases(
   /** @type {STD_BODY} */ object tp

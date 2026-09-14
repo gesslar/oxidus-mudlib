@@ -377,7 +377,7 @@ varargs string temp_file(mixed arg) {
  * Splits path into directory and filename components.
  *
  * @param {string|object} path - Path or object to analyze
- * @returns {({ string, string })} Tuple of ({ directory, filename })
+ * @returns {string*} Tuple of ({ directory, filename })
  * @example
  * string *parts = dir_file("/d/town/square.c");
  * // Returns ({ "/d/town/", "square.c" })
@@ -415,8 +415,8 @@ string *dir_file(mixed path) {
  *
  * @param {string} path - Path to verify
  * @param {int} [file_too=0] - Whether to check file existence
- * @returns {({ string, string })} Tuple of ({ directory_path, filename }),
- *                                 or null if invalid
+ * @returns {string*} Tuple of ({ directory_path, filename }), or null if
+ *  invalid
  * @example
  * string *parts = valid_dir_file("/d/town/square.c", 1);
  * // Returns ({ "/d/town/", "square.c" }) if path exists

@@ -121,7 +121,7 @@ float set_speed_mod(float mod) {
   return mod;
 }
 
-float get_speed_mod(float mod) {
+float get_speed_mod(float _mod) {
   return __speed_mod;
 }
 

@@ -44,20 +44,18 @@ protected nosave object *__objects = ({});
 /**
  * Adds or clones an object into the inventory of this object.
  *
- * If `file` is an object, it is moved into this object. If `file` is
- * a string, a new object is cloned from that path and moved in. On
- * success the object is stamped with spawn info (`spawned`,
- * `spawn_point`, `spawn_trace`) and the `object_spawned` event is
- * fired. When a uuid is supplied (typically by `reset_objects`), it
- * is also recorded as `object_uuid` and registered as an id.
+ * If `file` is an object, it is moved into this object. If `file` is a string,
+ * a new object is cloned from that path and moved in. On success the object is
+ * stamped with spawn info (`spawned`, `spawn_point`, `spawn_trace`) and the
+ * `object_spawned` event is fired. When a uuid is supplied (typically by
+ * `reset_objects`), it is also recorded as `object_uuid` and registered as an
+ * id.
  *
  * @param {STD_OBJECT | string} file - Object to add, or path to clone.
- * @param {string} [uuid] - Uuid of the inventory definition that
- *                          spawned this clone.
- * @param {mixed...} [args] - Constructor arguments forwarded to the
- *                            clone.
- * @returns {STD_OBJECT, undefined} The added object, or undefined on
- *                                  failure.
+ * @param {string} [uuid] - UUID of the inventory definition that spawned this
+ *  clone.
+ * @param {mixed...} [args] - Constructor arguments forwarded to the clone.
+ * @returns {STD_OBJECT | undefined} The added object, or undefined on failure.
  */
 varargs object add_inventory(mixed file, string uuid, mixed *args...) {
   object ob;

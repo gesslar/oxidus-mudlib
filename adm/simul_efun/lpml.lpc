@@ -35,8 +35,6 @@
 #ifndef __STD_LPML_H
 #define __STD_LPML_H
 
-#define to_string(x)                ("" + (x))
-
 #define LPML_DECODE_PARSE_TEXT      0
 #define LPML_DECODE_PARSE_POS       1
 #define LPML_DECODE_PARSE_LINE      2
@@ -1110,7 +1108,7 @@ varargs string lpml_encode(mixed value, mixed* pointers) {
   if(undefinedp(value))
     return "null";
   if(intp(value) || floatp(value))
-    return to_string(value);
+    return "" + value;
   if(stringp(value)) {
     value = replace_string(value, "\\", "\\\\");
     value = replace_string(value, "\"", "\\\"");

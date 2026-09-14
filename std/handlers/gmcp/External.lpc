@@ -3,7 +3,7 @@
 
 inherit __DIR__ "gmcp_module";
 
-void Discord(string submodule, mixed data) {
+void Discord(string submodule, mixed _data) {
   object prev = previous_object(1);
 
   switch(submodule) {

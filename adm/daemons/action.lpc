@@ -361,12 +361,12 @@ varargs string compose_message(object forwhom, string msg, object *who, mixed *o
             }
 
             has[who[num]]++;
-            bit = who[num]->query_name();
+            bit = /** @type {STD_OBJECT} */ (who[num])->query_name();
             break;
           }
         }
         has[who[num]]++;
-        bit = who[num]->query_name();
+        bit = /** @type {STD_OBJECT} */ (who[num])->query_name();
         break;
 
       case 'R':
@@ -387,12 +387,12 @@ varargs string compose_message(object forwhom, string msg, object *who, mixed *o
 
         /* hack for to be */
         if(str == "is" || str == "am" || str == "are") {
-          if(num >= sizeof(who) || who[num]==forwhom || who[num]->query_gender() == "other")
+          if(num >= sizeof(who) || who[num]==forwhom || /** @type {STD_BODY} */ (who[num])->query_gender() == "other")
             bit = "are";
           else
             bit = "is";
         } else {
-          if(num >= sizeof(who) || who[num]!=forwhom || who[num]->query_gender() == "other")
+          if(num >= sizeof(who) || who[num]!=forwhom || /** @type {STD_BODY} */ (who[num])->query_gender() == "other")
             bit = pluralize(str);
           else
             bit = str;
@@ -436,7 +436,7 @@ varargs string compose_message(object forwhom, string msg, object *who, mixed *o
             break;
           }
 
-          bit = who[num]->query_name();
+          bit = /** @type {STD_OBJECT} */ (who[num])->query_name();
           has[who[num]]++;
           break;
         }

@@ -39,11 +39,11 @@ mixed main(
 
   // Command files on the search path.
   foreach(string p in caller->get_path())
-    if(file_exists(p + verb + ".lpc"))
+    if(file_exists(`${p}${verb}.lpc`))
       out += ({ "Command: " + p + verb });
 
   // add_command() handlers on nearby objects, in command-resolution order.
-  object *obs = all_inventory(caller);
+  /** @type {STD_ITEM} */ object *obs = all_inventory(caller);
   /** @type {STD_ROOM} */ object room = environment(caller);
 
   if(room)

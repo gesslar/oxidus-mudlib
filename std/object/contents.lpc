@@ -29,8 +29,8 @@ private nosave int _fill;
 void clean_contents() {
   object *obs = deep_inventory();
 
-  obs->clean_contents();
-  obs->remove();
+  /** @type {STD_CONTAINER*} */ (obs)->clean_contents();
+  /** @type {STD_ITEM*} */ (obs)->remove();
 }
 
 /**
@@ -138,7 +138,7 @@ int adjust_fill(int x) {
  *
  * Will always return 1 if USE_MASS is disabled.
  *
- * @param {object} ob - The object to check
+ * @param {STD_ITEM} ob - The object to check
  * @returns {int} 1 if the object can be held, 0 if not
  */
 int can_hold_object(object ob) {
@@ -174,7 +174,8 @@ int can_hold_mass(int mass) {
  * Updates GMCP status for user players.
  */
 void rehash_capacity() {
-  object ob, *obs;
+  object *obs;
+  object ob;
   int total;
 
   if(!mud_config("USE_MASS"))
@@ -189,8 +190,8 @@ void rehash_capacity() {
   total = 0;
   obs = all_inventory();
   foreach(ob in obs) {
-    ob->rehash_capacity();
-    total += ob->query_mass();
+    /** @type {STD_CONTAINER} */ (ob)->rehash_capacity();
+    total += /** @type {STD_ITEM} */ (ob)->query_mass();
   }
 
   if(living())

@@ -17,7 +17,8 @@
     ".git/",
     "home/",
     "tmp/",
-    "adm/dist/fluffos/"
+    "adm/dist/fluffos/",
+    "log/"
   ],
   "defines": [
     {

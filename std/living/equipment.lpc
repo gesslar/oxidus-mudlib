@@ -17,10 +17,10 @@
  * @typedef {STD_WEAPON} Wieldable
  */
 
-/** @type ([ string: Wearable ]) */
+/** @type {([ string: Wearable ])} */
 protected nosave mapping __equipment = ([ ]);
 
-/** @type ([ string: Wieldable ]) */
+/** @type {([ string: Wieldable ])} */
 protected nosave mapping __wielded = ([ ]);
 
 /**

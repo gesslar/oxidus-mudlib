@@ -99,10 +99,9 @@ public void rehash() {
  * @param {string} input - The first word the player typed.
  * @param {([ string: string ])} [aliases] - The alias-name to expansion
  *  mapping to search; defaults to an empty mapping.
- * @returns {({string}) | ({string, string}) | undefined} A one-element
- *  array holding the expansion, a two-element array of the expansion and
- *  the leftover input for an XALIAS match, or undefined if no alias
- *  matched.
+ * @returns {string* | undefined} A one-element string array holding the
+ *  expansion, a two-element string array of the expansion and the leftover
+ *  input for an XALIAS match, or undefined if no alias matched.
  */
 private string *find_alias(string input, mapping aliases: (: ([]) :)) {
   string *found;
@@ -136,9 +135,9 @@ private string *find_alias(string input, mapping aliases: (: ([]) :)) {
  * @param {string} input - The first word the player typed.
  * @param {STD_BODY} who - The living whose group membership gates which
  *  aliases apply.
- * @returns {({string}) | ({string, string}) | undefined} A one-element array
- *  holding the expansion, a two-element array of the expansion and the
- *  leftover input for an XALIAS match, or undefined if no alias matched.
+ * @returns {string* | undefined} A one-element string array holding the
+ *  expansion, a two-element string array of the expansion and the leftover
+ *  input for an XALIAS match, or undefined if no alias matched.
  */
 private string *find_global_alias(string input, object who) {
   string name = who
@@ -165,10 +164,9 @@ private string *find_global_alias(string input, object who) {
  *
  * @param {STD_BODY} tp - The living whose personal aliases are searched.
  * @param {string} input - The first word the player typed.
- * @returns {({string}) | ({string, string}) | undefined} A one-element
- *  array holding the expansion, a two-element array of the expansion and
- *  the leftover input for an XALIAS match, or undefined if no alias
- *  matched.
+ * @returns {string* | undefined} A one-element string array holding the
+ *  expansion, a two-element string array of the expansion and the leftover
+ *  input for an XALIAS match, or undefined if no alias matched.
  */
 private string *find_personal_alias(
   /** @type {STD_BODY} */ object tp,

@@ -20,6 +20,6 @@ void setup() {
     "command takes no arguments.";
 }
 
-mixed main(object tp, string str) {
-  return sprintf("It is now %s.\n", TIME_D->query_full_time());
+mixed main(object _tp, string _str) {
+  return `It is now ${TIME_D->query_full_time()}.`;
 }

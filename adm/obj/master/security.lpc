@@ -103,7 +103,7 @@ private nomask nosave string ROLES_FILE_CUSTOM = "adm/custom/security/roles.map"
  * valid_write. Each element is a rule mapping with a "path" glob, "read"
  * and "write" capability tokens, and a precompiled "re" regex.
  *
- * @type {({ ([ "path": string, "read": string, "write": string, "re": string ]) })}
+ * @type {([ "path": string, "read": string, "write": string, "re": string ])*}
  */
 private nomask nosave mapping *access_rules = ({});
 

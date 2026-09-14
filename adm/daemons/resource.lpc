@@ -67,10 +67,10 @@ private void reset_room_resources(string file, mapping info) {
   if(!key)
     return;
 
-  mapping result = __resource[selected_resource][key];
+  // mapping result = __resource[selected_resource][key];
 
   /** @type {OBJ_NODE} */ /** @lpc-ignore - not a real file */
-  object node = new("/obj/node/"+selected_resource, result);
+  // object node = new("/obj/node/"+selected_resource, result);
 }
 
 public void register_obj(object room, mapping config) {

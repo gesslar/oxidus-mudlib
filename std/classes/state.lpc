@@ -2,8 +2,6 @@
 #define __STATE_STEP__
 
 /**
- * @typedef {class} StateStep - Represents a step in a state machine.
- *
  * @property {string} name - The label/name of this step.
  * @property {function} enter - The function to trigger to begin this state,
  * @property {function} exit - The function to trigger when this step has completed.

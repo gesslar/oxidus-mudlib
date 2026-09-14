@@ -56,7 +56,6 @@ private nomask nosave string *slider_colours = ({
 int supports_unicode() {
   /** @type {STD_BODY} */
   object body = this_body();
-  int unicode;
 
   if(!body)
     return 0;
