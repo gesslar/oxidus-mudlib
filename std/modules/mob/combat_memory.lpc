@@ -69,7 +69,7 @@ void attack_on_sight(object target) {
     return;
 
   name = target->query_name();
-  if(of(name, combat_memory)) {
+  if(of(name, __combat_memory)) {
     /** @type {STD_BODY} */ object body = query_owner();
 
     body->targetted_action(
@@ -94,6 +94,6 @@ void attack_on_sight(object target) {
 void add_to_memory(object target) {
   string name = target->query_name();
 
-  if(!of(name, combat_memory))
-    combat_memory += ({ name });
+  if(!of(name, __combat_memory))
+    __combat_memory += ({ name });
 }

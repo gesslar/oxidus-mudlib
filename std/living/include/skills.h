@@ -20,7 +20,7 @@ public int adjust_skills_by_npc_level(float level);
 private nomask mapping find_skill_node(string skill);
 private nomask mapping adjust_skill_levels(mapping current_skills, float level);
 string *query_skill_path(string skill);
-varargs int use_skill(string skill, mixed mod_adjust);
+public varargs int use_skill(string skill, mixed mod_adjust);
 int assure_skill(string skill);
 private string determine_skill_to_improve(string skill, float skill_cap);
 private float clamp_improvement(string skill_name, float improvement);

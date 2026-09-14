@@ -44,7 +44,7 @@ void set_burn(float per_tick, int ticks) {
 }
 
 void start() {
-  call_out("tick", 2.5);
+  call_out("tick", 2);
 }
 
 void tick() {
