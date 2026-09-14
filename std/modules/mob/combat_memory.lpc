@@ -1,12 +1,19 @@
 /**
  * @file /std/modules/mob/combat_memory.lpc
- * NPC combat memory module
+ *
+ * NPC combat memory module. Attached to an NPC, it records the names
+ * of every body that NPC has entered combat with, and re-engages them
+ * on sight the next time they share an environment.
+ *
+ * Memory is per-clone and is not saved, so it lasts only as long as
+ * the NPC does.
  *
  * @created 2024-07-29 - Gesslar
- * @last_modified 2024-07-29 - Gesslar
+ * @last_modified 2026-09-12 - Gesslar
  *
  * @history
  * 2024-07-29 - Gesslar - Created
+ * 2026-09-12 - Gesslar - Added documentation
  */
 
 #include <origin.h>
@@ -15,43 +22,75 @@ inherit M_MOBILE;
 
 void attack_on_sight(object target);
 
-private nomask nosave string *combat_memory = ({});
-public function attack_on_sight = (: attack_on_sight :);
+private nomask nosave function __attack = attack_on_sight;
+private nomask nosave string *__combat_memory = ({});
 
 void setup() {
   module_name = query_file_name();
 }
 
-int start_module(mixed args...) {
-  query_owner()->add_init(attack_on_sight);
+/**
+ * Module start hook. Registers the on-sight handler with the owner's
+ * init chain so that it fires whenever a body enters the owner's
+ * environment.
+ *
+ * @param {mixed...} _args - Attach arguments; unused by this module.
+ * @returns {int} 1, always.
+ */
+int start_module(mixed _args...) {
+  query_owner()->add_init(__attack);
 
   return 1;
 }
 
+/**
+ * Module stop hook. Unregisters the on-sight handler from the owner's
+ * init chain. Does nothing if the owner has already been destructed.
+ */
 void stop_module() {
   if(objectp(query_owner()))
-    query_owner()->remove_init(attack_on_sight);
+    query_owner()->remove_init(__attack);
 }
 
+/**
+ * Init callback run when a body enters the owner's environment. If
+ * the arrival is remembered as a past opponent, the owner announces
+ * its rage, opens combat, and gets two free swings in before the
+ * regular combat round begins.
+ *
+ * Ghosts are ignored.
+ *
+ * @param {STD_BODY} target - The body that entered the environment.
+ */
 void attack_on_sight(object target) {
   string name;
 
-  if(target->is_ghost())
-      return;
+  if(/** @type {STD_GHOST} */ (target)->is_ghost())
+    return;
 
   name = target->query_name();
   if(of(name, combat_memory)) {
-    query_owner()->targetted_action(
+    /** @type {STD_BODY} */ object body = query_owner();
+
+    body->targetted_action(
       "{{FF0033}}Raging, $N $vattack $t with a vengeance!{{res}}\n\n",
       target
     );
 
-    query_owner()->start_attack(target);
-    query_owner()->strike_enemy(target);
-    query_owner()->strike_enemy(target);
+    body->start_attack(target);
+    body->strike_enemy(target);
+    body->strike_enemy(target);
+    target->start_attack(body);
   }
 }
 
+/**
+ * Records a body as a past opponent, so the owner will attack it on
+ * sight from now on. Called by the combat system when the owner
+ * starts an attack. Names already remembered are not duplicated.
+ *
+ * @param {STD_BODY} target - The body to remember.
+ */
 void add_to_memory(object target) {
   string name = target->query_name();
 
