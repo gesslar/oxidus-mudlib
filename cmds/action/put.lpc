@@ -77,34 +77,38 @@ mixed main(
 
   // Handle 'put all' scenarios
   if(all_flag) {
-    object *obs = find_targets(tp, target, tp,
-      (: !$1->is_container() && !living($1) :));
+    /** @type {STD_ITEM} */ object *obs = find_targets(
+      tp,
+      target,
+      tp,
+      (: !containerp($1) && !living($1) :)
+    );
     int put_count = 0;
 
     if(sizeof(obs) < 1)
       return `You do not have any ${target}.`;
 
-    foreach(object item in obs) {
-      if(item == container)
+    foreach(object ob in obs) {
+      if(ob == container)
         continue;
 
       if(
-           call_if(item, "prevent_drop")
-        || call_if(item, "prevent_put")
+           call_if(ob, "prevent_drop")
+        || call_if(ob, "prevent_put")
         || call_if(container, "prevent_put")
       ) {
         continue;
       }
 
-      if(!container->can_hold_object(item))
+      if(!container->can_hold_object(ob))
         continue;
 
-      if(item->move(container)) {
-        tell(tp, `You could not put ${get_short(item)} in ${get_short(container)}.\n`);
+      if(ob->move(container)) {
+        tell(tp, `You could not put ${get_short(ob)} in ${get_short(container)}.\n`);
         continue;
       }
 
-      tp->simple_action("$N $vput a $o into a $o1.", item, container);
+      tp->simple_action("$N $vput a $o into a $o1.", ob, container);
       put_count++;
     }
 
