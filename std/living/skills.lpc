@@ -319,7 +319,7 @@ void set_skills(mapping s) {
  * @returns {int | undefined} 1 if progress was applied this call, 0 otherwise,
  *  or undefined on invalid input.
  */
-varargs int use_skill(string skill, mixed improvement) {
+public varargs int use_skill(string skill, mixed improvement, mixed improvement_chance) {
   if(!stringp(skill))
     return undefined;
 
@@ -347,6 +347,8 @@ varargs int use_skill(string skill, mixed improvement) {
     }
   } else {
     assure_skill(skill);
+
+    return use_skill(skill, improvement, improvement_chance);
   }
 
   return 0;

@@ -78,7 +78,7 @@ private async void cast(/** @type {STD_BODY} */ object tp,
         victim
       );
       tp->deliver_magic_damage(victim, initial, "cold");
-      tp->use_skill("arcane.discipline.frost", 1.15);
+      tp->use_skill("arcane.discipline.frost", 1.5);
 
       // Shards stack — each caster's shard shatters on its own
       // schedule, so group casts don't trample each other.

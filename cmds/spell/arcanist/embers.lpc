@@ -76,7 +76,7 @@ private async void cast(/** @type {STD_BODY} */ object tp,
         "{{f73}}Glowing embers cling to $t!{{res}}",
         victim
       );
-      tp->use_skill("arcane.discipline.fire", 1.15);
+      tp->use_skill("arcane.discipline.fire", 1.5);
 
       // Recasting reapplies a fresh burn rather than stacking.
       mapping existing = victim->query_curse_object(
@@ -86,12 +86,15 @@ private async void cast(/** @type {STD_BODY} */ object tp,
         foreach(int tag in keys(existing))
           victim->remove_curse_object(tag);
       }
+
+      int ticks = tp->query_skill_level("arcane.discipline") + 1;
+
       /** @type {"obj/effect/burn"} */ object eff = clone_object("/obj/effect/burn");
       eff->set_caster(tp);
-      eff->set_burn(per_tick, 2);
+      eff->set_burn(per_tick, ticks);
       eff->move(victim);
       eff->set_fixed(1);
-      victim->curse_object(eff, 6);
+      victim->curse_object(eff, 2 * ticks);
       eff->start();
     } else {
       tp->simple_action("The embers fizzle and fall away harmlessly.");
