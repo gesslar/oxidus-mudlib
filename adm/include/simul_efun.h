@@ -214,6 +214,7 @@ int pendingp(promise p);
 int rejectedp(promise p);
 int resolvedp(promise p);
 int roomp(object ob);
+int containerp(object ob);
 int settledp(promise p);
 
 // File: promise.c
