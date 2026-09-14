@@ -72,16 +72,25 @@ int adjust_mass(int delta) {
   // If we have an environment, we need to check if we can adjust its
   // mass and fill and if so, then we can adjust our mass.
   if(env = environment()) {
-    if(!env->ignore_mass())
-      if(!env->adjust_mass(delta))
-        return 0;
+    int env_ignores_mass = call_if(env, "ignore_mass");
 
-    if(!env->ignore_capacity())
-      if(!env->adjust_fill(delta))
-        if(!env->ignore_mass()) {
-          env->adjust_mass(-delta);
+    if(!env_ignores_mass) {
+      if(!call_if(env, "adjust_mass", delta)) {
         return 0;
+      }
+    }
+
+    int env_ignores_cap = call_if(env, "ignore_capacity");
+
+    if(!env_ignores_cap) {
+      if(!call_if(env, "adjust_fill", delta)) {
+        if(!env_ignores_mass) {
+          call_if(env, "adjust_mass", -delta);
+
+          return 0;
         }
+      }
+    }
   }
 
   _mass += delta;
