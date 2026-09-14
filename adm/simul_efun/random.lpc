@@ -98,7 +98,7 @@ public int *sanitize_seed(mixed seed) {
  *                   updated seed and the second is the random number.
  */
 int *prandom(mixed seed, int size) {
-  int *result = allocate(2);
+  mixed *result = allocate(2);
   int s0, s1;
   int random_value;
 

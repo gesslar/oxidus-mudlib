@@ -105,7 +105,7 @@ private mixed give_all(
   /** @type {STD_BODY} */ object target,
   string ob_id
 ) {
-  object *obs = find_targets(tp, ob_id, tp);
+  /** @type {STD_ITEM*} */ object *obs = find_targets(tp, ob_id, tp);
   int given = 0;
 
   if(!sizeof(obs))
@@ -113,7 +113,7 @@ private mixed give_all(
       ? `You are not carrying any ${ob_id}.`
       : "You are not carrying anything.";
 
-  foreach(/** @type {STD_ITEM} */ object ob in obs) {
+  foreach(object ob in obs) {
     if(call_if(ob, "prevent_drop", tp))
       continue;
 

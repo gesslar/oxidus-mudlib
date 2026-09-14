@@ -104,8 +104,9 @@ varargs int devp(mixed user) {
 /**
  * Checks if a user has developer privileges (alias for devp).
  *
+ * @deprecated Use `devp()` instead.
  * @param {mixed} user - The user to check, either as a username string or an
- *                       object.
+ *  object.
  * @returns {int} 1 if the user has developer privileges, otherwise 0.
  */
 int wizardp(mixed user) { return devp(user); }

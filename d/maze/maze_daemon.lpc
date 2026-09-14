@@ -72,8 +72,6 @@ private nosave string default_long_description;
  * 0..spread-1, which is then added to the minimum. So the final size of
  * an axis is min + prandom(spread), giving a result in the inclusive
  * range min..min+spread-1.
- *
- * @type {({ int, int })*}
  */
 private nosave mixed *dimension_config = ({ ({ 5, 10 }), ({ 10, 10 }), ({ 10, 10 }), });
 private nosave int *dimensions;

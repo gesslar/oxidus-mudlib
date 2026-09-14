@@ -111,7 +111,6 @@ private void rehash_directory(mapping directory_entry) {
     pcre_extract(
       content,
       "^---$([\\s\\S]+?)^---$([\\s\\S]+)",
-      // @lpc-expect-error: the LSP doesn't know about these arguments
       0,
       PCRE_M
     );

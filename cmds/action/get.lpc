@@ -129,7 +129,8 @@ private mixed get_all(
       : `The ${get_short(env)} is empty.`;
   }
 
-  foreach(/** @type {STD_ITEM} */ object ob in obs) {
+  /** @type {STD_ITEM} */ object ob;
+  foreach(ob in obs) {
     if(call_if(ob, "prevent_get", tp))
       continue;
 

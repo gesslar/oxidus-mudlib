@@ -636,7 +636,7 @@ void print_map() {
  * Maps each terrain-type name to a colour code (resolved from
  * COLOUR_D) used by the debug map printer.
  *
- * @type {([ string: string ])}
+ * @type {([ string: int ])}
  */
 private nosave mapping colour_map = ([
   "impassable" : COLOUR_D->rgb_to_colour(0, 0, 0),

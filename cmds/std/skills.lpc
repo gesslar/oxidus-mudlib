@@ -21,7 +21,7 @@ void setup() {
 
 mixed main(
   /** @type {STD_BODY} */ object tp,
-  string str
+  string _str
 ) {
   mapping skills = tp->query_skills();
   string result;
@@ -51,7 +51,6 @@ private string process_skill_data(object tp, mapping s, string curr, int depth) 
   foreach(cle in cles) {
     int level, progress;
     mapping sub;
-    string skill;
 
     level = tp->query_skill_level(curr+cle);
     progress = tp->query_skill_progress(curr+cle);

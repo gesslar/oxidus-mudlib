@@ -67,7 +67,7 @@ mixed main(object _tp, string arg) {
 mixed all_heartbeats() {
   int hb_ms = (int)get_config(__RC_HEARTBEAT_INTERVAL_MSEC__);
 
-  object *obs = heart_beats();
+  /** @type {STD_OBJECT*} */ object *obs = heart_beats();
   obs = filter(obs, (: living($1) && interactive($1) :));
 
   string *ret = ({ });

@@ -132,8 +132,6 @@ private mixed remove_waypoint(object tp, int num) {
   string file = user_data_directory(name) + "waypoints.txt";
   mixed *wps = ({});
   string *wp;
-  int i;
-  string result = "";
   string data;
 
   if(file_exists(file)) {

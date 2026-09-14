@@ -36,7 +36,7 @@ void init_shop() {
  *
  * @param {string} type - The type of the item.
  * @param {string} file - The file to add to the menu.
- * @param {mixed*} cost - The cost of the item.
+ * @param {int} cost - The cost of the item.
  */
 varargs void add_menu_item(string type, string file, int cost) {
     class Menu item;
@@ -88,11 +88,11 @@ void remove_menu_item(string file) {
 /**
  * Player command to list the menu.
  *
- * @param {object} tp - The player object.
+ * @param {object} _tp - The player object.
  * @param {string} str - The type of the item to list.
  * @returns {mixed} The menu list.
  */
-mixed cmd_menu(object tp, string str) {
+mixed cmd_menu(object _tp, string str) {
     class Menu *items, item;
     string out;
 

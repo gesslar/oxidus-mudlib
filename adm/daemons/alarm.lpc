@@ -159,7 +159,6 @@ varargs int add_alarm(string type, string master, string pattern,
 
   if(!type || !master || !pattern || !file || !func) {
     throw("Invalid arguments");
-    return 0;
   }
 
   assert(nullp(args) || pointerp(args), "Args must be null or an array.");

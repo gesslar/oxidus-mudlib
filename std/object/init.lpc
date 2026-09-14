@@ -30,18 +30,18 @@ void init() {
  *
  * Executes all registered init callbacks when objects encounter each other.
  *
- * @param {object} prev - The previous environment
- * @param {object} ob - The object that triggered the init event
+ * @param {object} _prev - The previous environment
+ * @param {object} _ob - The object that triggered the init event
  */
-void event_init(object prev, object ob) {
+void event_init(object _prev, object _ob) {
   int sz;
 
   sz = sizeof(_inits);
   for(int i = 0; i < sz; i++) {
     if(valid_function(_inits[i]))
-      catch(_inits[i](ob));
+      catch(_inits[i](_ob));
     else
-      catch(call_other(this_object(), _inits[i], ob));
+      catch(call_other(this_object(), _inits[i], _ob));
   }
 }
 
