@@ -1,13 +1,18 @@
 /**
- * @file /obj/mudlib/coin.lpc
- * A coin object
+ * @file /lib/coin.lpc
+ *
+ * A stack of coins of a single currency type. A coin object only exists
+ * outside a living: moving into a living folds the coins into that living's
+ * wealth, and moving into a container that already holds coins of the same
+ * type merges the two stacks. Either way, this object destructs itself.
  *
  * @created 2024-02-19 - Gesslar
- * @last_modified 2024-08-08 - Gesslar
+ * @last_modified 2026-09-13 - Gesslar
  *
  * @history
  * 2024-02-19 - Gesslar - Created
  * 2024-08-08 - Gesslar - Nearly completely rewritten and move logic added
+ * 2026-09-13 - Gesslar - Documented
  */
 
 inherit STD_ITEM;
@@ -26,6 +31,11 @@ varargs void mudlib_setup(string type, int num) {
     set_up(null, null);
 }
 
+/**
+ * Rebuilds the IDs, short, and long descriptions from the current coin type
+ * and count, using singular wording for a single coin and pile wording for
+ * more than one.
+ */
 void update_descriptions() {
   if(coin_num == 1) {
     set_id(({ "coin", coin_type }));
@@ -38,6 +48,18 @@ void update_descriptions() {
   }
 }
 
+/**
+ * Sets the currency type and number of coins, then recalculates the value,
+ * descriptions, and mass (one unit of mass per coin).
+ *
+ * A missing type, missing count, or count below 1 falls back to a single coin
+ * of the first configured currency.
+ *
+ * @param {string} type - The currency type, as named in the CURRENCY config.
+ * @param {int} num - The number of coins.
+ * @errors If `type` is not a configured currency. The coin destructs itself
+ *         before raising the error.
+ */
 void set_up(string type, int num) {
   mixed *config = mud_config("CURRENCY");
   int conversion;
@@ -61,12 +83,26 @@ void set_up(string type, int num) {
   set_mass(num);
 }
 
+/**
+ * Moves the coins to a new destination.
+ *
+ * When mass is in use, a destination that does not ignore capacity must be
+ * able to hold the coins. A living destination receives the coins as wealth.
+ * A non-living destination already holding coins of the same type has this
+ * stack merged into its existing one. In both cases this object destructs
+ * itself and the move reports success. Otherwise the move proceeds normally.
+ *
+ * @override
+ * @param {STD_CONTAINER | string} dest - Destination object or filename.
+ * @returns {int} MOVE_OK on success, MOVE_TOO_HEAVY if the destination cannot
+ *                hold the coins, or the result of the inherited move.
+ */
 int move(mixed dest) {
-  object env = environment();
-  int result;
+  if(stringp(dest))
+    dest = load_object(dest);
 
   if(!objectp(dest))
-      dest = load_object(dest);
+    return MOVE_NOT_ALLOWED;
 
   if(mud_config("USE_MASS")) {
     if(!dest->ignore_capacity()) {
@@ -83,7 +119,7 @@ int move(mixed dest) {
     remove();
     return MOVE_OK;
   } else {
-    object *coin_obs = present_clones(base_name(), dest);
+    /** @type {LIB_COIN} */ object *coin_obs = present_clones(base_name(), dest);
 
     coin_obs = filter(coin_obs, (: $1->query_coin_type() == coin_type :));
 
@@ -97,8 +133,15 @@ int move(mixed dest) {
   }
 }
 
+/**
+ * Adjusts the number of coins by a relative amount, updating mass, value,
+ * and descriptions. Reducing the count to exactly zero destructs the coins.
+ *
+ * @param {int} num - The number of coins to add, or remove if negative.
+ * @returns {int} 1 if the adjustment was applied, or 0 if it would leave a
+ *                negative count or the environment refused the mass change.
+ */
 int adjust_coin_num(int num) {
-  object env = environment();
   int new_sum  = coin_num + num;
 
   if(new_sum < 0)
@@ -124,9 +167,39 @@ int adjust_coin_num(int num) {
   return 1;
 }
 
+/**
+ * Returns the currency type of these coins.
+ *
+ * @returns {string} The currency type.
+ */
 string query_coin_type() { return coin_type ; }
+
+/**
+ * Returns the number of coins in this stack.
+ *
+ * @returns {int} The coin count.
+ */
 int query_coin_num() { return coin_num ; }
+
+/**
+ * Returns the face value of the coins as a count and currency type, in place
+ * of the single integer value ordinary objects report.
+ *
+ * @override
+ * @returns {mixed*} A two-element array of the coin count and currency type.
+ */
 mixed *query_value() { return ({ coin_num, coin_type }) ; }
+
+/**
+ * Returns the value of the coins in the lowest denomination of currency.
+ *
+ * @returns {int} The value in the lowest denomination.
+ */
 int query_base_value() { return value ; }
 
+/**
+ * Identifies this object as a coin.
+ *
+ * @returns {int} Always 1.
+ */
 int is_coin() { return 1 ; }
