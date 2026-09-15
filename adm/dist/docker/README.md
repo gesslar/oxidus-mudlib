@@ -7,9 +7,10 @@ fresh clone of FluffOS using the canonical `adm/dist/rebuild` script — so a fr
 container is a brand-new mudlib, ready to play. The first character to log in
 becomes Oxidus's owner with the highest privileges.
 
-> **Just want to run it?** See [`DOCKER.md`](../../../DOCKER.md) at the repo root
-> for the step-by-step usage guide — run the published image or build your own,
-> connect, watch the logs, start/stop, upgrade, reset, and edit the lib.
+> **If your goal is to run Oxidus**, see [`DOCKER.md`](../../../DOCKER.md) at the
+> repo root for the step-by-step usage guide: which way in suits your goal
+> (the published image, or building the image yourself), then connecting,
+> watching the logs, start/stop, upgrade, reset, and editing the lib.
 >
 > This document is the **technical reference**: the files in this directory, what
 > persists, the configuration knobs, TLS, and how the image is assembled.
@@ -19,7 +20,7 @@ becomes Oxidus's owner with the highest privileges.
 | File                    | Purpose                                                        |
 | ----------------------- | -------------------------------------------------------------- |
 | `Dockerfile`            | two-stage build — builder compiles the driver, slim runtime ships the tree |
-| `docker-compose.yml`    | local build-and-run (`docker compose up -d --build`)           |
+| `docker-compose.yml`    | local build-and-run (`docker compose up -d --build`); swap `build:` for the commented `image:` line to run the published image instead |
 | `docker-entrypoint.sh`  | boot-time persistence wiring, state ownership, TLS, driver reboot loop |
 | `.env.example`          | copy to `.env` for host-side compose settings (see below)      |
 | `.dockerignore`         | keeps build context small                                      |
@@ -131,14 +132,15 @@ clone/compile layers, force a clean build:
 docker compose build --no-cache && docker compose up -d
 ```
 
-(CI builds are always fresh: each push builds at its exact commit, busting the
-cache and recompiling against the latest FluffOS `master`.)
+(CI builds are always fresh: `docker-publish.yml` runs on each published release
+or a manual dispatch, builds at that exact commit with no layer cache, and
+compiles against the FluffOS `master` of the day.)
 
 ## Notes
 
 - Per the canonical `adm/dist/rebuild`, the **driver tracks fluffos `master`**:
   rebuilding the image picks up the latest FluffOS. The mudlib itself is pinned
-  to whatever `OXIDUS_REF` you build (CI builds the exact pushed commit).
+  to whatever `OXIDUS_REF` you build (CI builds the exact release commit).
 - FluffOS is **not a submodule** — `rebuild` clones it fresh from
   `github.com/fluffos/fluffos` (when the `fluffos/` dir is absent) and does
   `git reset --hard origin/master` before compiling, so every rebuild rides

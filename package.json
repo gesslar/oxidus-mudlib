@@ -7,6 +7,7 @@
     "wiki:deploy": "gh workflow run deploy-wiki.yml",
     "docker:deploy": "gh workflow run docker-publish.yml",
     "sefuns": "bash adm/bash/sefuns",
+    "pcre": "bash adm/dist/scripts/build-pcre",
     "rebuild": "bash adm/dist/rebuild",
     "oxidus": "bash adm/dist/run bg",
     "stop": "bash adm/dist/run stop"

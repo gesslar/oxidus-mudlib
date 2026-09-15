@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# Builds and installs PCRE 8.45 (classic PCRE, a.k.a. pcre3) from source, for
+# systems whose package repositories no longer ship libpcre3-dev (Debian 13
+# "trixie" and later, Ubuntu 26.04 "resolute" and later). FluffOS's pcre
+# package links classic PCRE, not PCRE2, so the driver cannot build without it.
+#
+# The library is built static-only, so the compiled driver carries PCRE inside
+# it and needs no libpcre at runtime. Only the libraries and pcre.h are
+# installed - no pcregrep/pcretest tools or man pages.
+#
+# Environment overrides:
+#   PREFIX   install prefix (default /usr/local, which cmake searches already)
+#   FORCE    set to 1 to rebuild even if PCRE is already installed in PREFIX
+
+# Exit immediately if a command exits with a non-zero status
+set -eo pipefail
+
+# Set up some colors for use in the script
+reset='\e[0m'
+green='\e[38;5;78m'
+gold='\e[38;5;214m'
+red='\e[38;5;124m'
+
+pcre_version="8.45"
+pcre_tarball="pcre-${pcre_version}.tar.gz"
+pcre_url="https://downloads.sourceforge.net/project/pcre/pcre/${pcre_version}/${pcre_tarball}"
+pcre_sha256="4e6ce03e0336e8b4a3d6c2b70b1c5e18590a5673a98186da90d4f33c23defc09"
+
+prefix="${PREFIX:-/usr/local}"
+
+if [[ "${FORCE:-0}" != "1" && -f "${prefix}/lib/libpcre.a" && -f "${prefix}/include/pcre.h" ]]; then
+  echo -e "${green}[SUCCESS]${reset} PCRE is already installed in ${prefix}. Set FORCE=1 to rebuild it."
+  exit 0
+fi
+
+if [[ -f /usr/include/pcre.h ]]; then
+  echo -e "${gold}[INFO]${reset} /usr/include/pcre.h already exists - your system packages provide PCRE, so you likely don't need this script."
+fi
+
+# Check the tools the build needs before downloading anything
+missing=()
+for tool in curl tar make gcc sha256sum; do
+  command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")
+done
+
+if [[ ${#missing[@]} -gt 0 ]]; then
+  echo -e "${red}[ERROR]${reset} Missing required tools: ${missing[*]}"
+  echo -e "${red}[ERROR]${reset} On Debian / Ubuntu: sudo apt-get install build-essential curl"
+  exit 1
+fi
+
+# Install with sudo only when the prefix is not writable as the current user
+install_cmd=()
+probe="$prefix"
+while [[ ! -e "$probe" ]]; do
+  probe=$(dirname "$probe")
+done
+
+if [[ ! -w "$probe" ]]; then
+  if ! command -v sudo >/dev/null 2>&1; then
+    echo -e "${red}[ERROR]${reset} ${prefix} is not writable and sudo is not available."
+    echo -e "${red}[ERROR]${reset} Run as root, or set PREFIX to a directory you own."
+    exit 1
+  fi
+
+  install_cmd=(sudo)
+fi
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+cd "$work"
+
+echo -e "${gold}[INFO]${reset} Downloading PCRE ${pcre_version}..."
+curl -fsSL -o "$pcre_tarball" "$pcre_url"
+
+echo "${pcre_sha256}  ${pcre_tarball}" | sha256sum -c --quiet - || {
+  echo -e "${red}[ERROR]${reset} Checksum mismatch for ${pcre_tarball}. Refusing to build it."
+  exit 1
+}
+
+tar xzf "$pcre_tarball"
+cd "pcre-${pcre_version}"
+
+# UTF-8 and \p{...} property support are required: the driver compiles every
+# pattern with PCRE_UTF8. --with-pic because the driver links as a
+# position-independent executable. No C++ wrapper, no JIT - FluffOS uses
+# neither.
+echo -e "${gold}[INFO]${reset} Configuring..."
+./configure \
+  --prefix="$prefix" \
+  --enable-static --disable-shared \
+  --with-pic \
+  --disable-cpp \
+  --enable-utf --enable-unicode-properties \
+  >/dev/null
+
+echo -e "${gold}[INFO]${reset} Compiling..."
+make -j "$(nproc)" libpcre.la >/dev/null
+
+echo -e "${gold}[INFO]${reset} Installing into ${prefix}..."
+"${install_cmd[@]}" make install-libLTLIBRARIES install-nodist_includeHEADERS >/dev/null
+
+echo -e ""
+echo -e "${green}[SUCCESS]${reset} PCRE ${pcre_version} is installed in ${prefix}."
+echo -e ""
+
+if [[ "$prefix" == "/usr/local" ]]; then
+  echo -e "${green}[SUCCESS]${reset} You can now build the driver with ${green}adm/dist/rebuild${reset}."
+else
+  echo -e "${gold}[INFO]${reset} ${prefix} is not on cmake's default search path. Build the driver with:"
+  echo -e "${gold}[INFO]${reset}   OXIDUS_CMAKE_EXTRA=\"-DCMAKE_PREFIX_PATH=${prefix}\" adm/dist/rebuild"
+fi

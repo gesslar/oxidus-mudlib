@@ -26,7 +26,7 @@ ARG OXIDUS_REF=main
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Build toolchain + FluffOS build deps (see /mud/fluffos_deps_ubuntu).
+# Build toolchain + FluffOS build deps.
 # Note: FluffOS's cmake always runs find_package(MySQL) and requires mysql.h
 # even though rebuild sets PACKAGE_DB_MYSQL=0, so the client headers must be
 # present (matches mysql-devel on the canonical Fedora build host).

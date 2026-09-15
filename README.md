@@ -31,6 +31,11 @@ sudo apt-get install build-essential bison cmake git \
   libjemalloc-dev libicu-dev default-libmysqlclient-dev
 ```
 
+> [!NOTE]
+> On Debian 13+ or Ubuntu 26.04+, `libpcre3-dev` no longer exists and the
+> command above fails with `has no installation candidate`. See
+> [PCRE3-Unavailable.md](PCRE3-Unavailable.md).
+
 On other distributions, install the equivalents: a compiler, `bison`, `cmake`,
 `git`, and the OpenSSL, zlib, PCRE, SQLite, PostgreSQL, jemalloc, ICU, and MySQL
 client development headers.

@@ -4,13 +4,22 @@ A fresh, self-contained Oxidus MUD runs entirely in Docker. The image bundles
 the mudlib **and** a freshly-compiled FluffOS driver, so the only thing you need
 on the host is Docker.
 
-There are two ways in: just run the published image (no clone), or build it
-yourself from a clone of this repo.
+Which way in depends on what you're after:
 
-> Not using Docker? See [README.md](README.md) for the native build-and-run
-> pipeline.
+- **If your goal is to try Oxidus** — poke around, or keep a demo running whose
+  world survives updates — run the published image
+  ([Option 1](#option-1--run-the-published-image)). No clone, no toolchain.
+- **If your goal is a newer FluffOS than the published image, or an image of a
+  specific lib ref or your own fork** — build the image yourself
+  ([Option 2](#option-2--build-the-image-yourself)).
 
-## Option 1 — Run the published image (lowest friction, no clone)
+> [!IMPORTANT]
+> **The Docker image is not provided or intended for running a live game.** If
+> your goal is to develop the lib, or run your own MUD with code changes that
+> last, Docker isn't the tool. Fork the repo and use the native build-and-run
+> pipeline in [README.md](README.md).
+
+## Option 1 — Run the published image
 
 You need nothing but Docker. The image is pulled automatically on first run:
 
@@ -61,6 +70,61 @@ Oxidus's owner with the highest privileges**:
 telnet localhost 1336
 ```
 
+### Editing the lib (heads-up: changes are temporary)
+
+The mudlib code is **baked into the image**, not the state directory — so every
+`docker pull` gives you a clean, current Oxidus. The trade-off: **any edit to
+the shipped lib is wiped when you recreate the container on a newer image.**
+That's intended — you always land on fresh, stock Oxidus. Only *state* survives
+an update: players, data, logs, and your wizard home directory (`/home/...`).
+So tinker freely; a refresh just resets the lib.
+
+**From inside the game:** the shipped lib is **read-only to the game**. The
+driver runs as your `OXIDUS_UID`, and the baked code belongs to the image, so
+in-game tools can't write it. They can write everything in the state directory,
+such as your wizard home directory (`/home/...`), and `update <path>` reloads
+whatever you change there.
+
+**From a shell:** `docker exec` puts you in as root, which *can* edit the shipped
+lib — these are the temporary edits described above. The image ships `nano`,
+`nvim`, and `rg` (ripgrep), so hop in and edit directly:
+
+```bash
+docker exec -it oxidus bash
+#  nano /oxidus/std/file.lpc     # /oxidus is the mudlib root
+#  rg "some_function" /oxidus    # search the lib
+#  then, in the game: update /std/file
+```
+
+Prefer your own editor on the host? Copy out, edit, copy back:
+
+```bash
+docker cp oxidus:/oxidus/std/file.lpc ./file.lpc
+docker cp ./file.lpc oxidus:/oxidus/std/file.lpc
+```
+
+**If your goal is edits that last**, Docker isn't the tool: fork the repo and
+run it natively (see [README.md](README.md)), or build an image from your fork
+(see [Option 2](#building-from-your-own-fork)).
+
+For a single area of your own, you can bind-mount a host folder as a **new**
+directory in the lib by adding it to the `docker run` command above:
+
+```bash
+-v "$PWD/myarea:/oxidus/d/myarea"
+```
+
+Mount a new directory, never an existing one like `d/` or `d/village`. A bind
+mount *replaces* whatever the image has at that path rather than merging with
+it, so mounting over `d/` hides the entire shipped world.
+
+Create the folder on the host first (`mkdir myarea`). It's then owned by you,
+and with `OXIDUS_UID` set to your `id -u` the game can write to it — so unlike
+the shipped lib, that area is editable in-game. If `-v` has to create the folder
+itself, it comes up empty and owned by root, and the game can't write to it.
+
+### Start, stop, upgrade, reset
+
 **Start / stop the MUD.** These control the container's lifecycle — whether the
 driver is actually running. Your world is preserved in the state directory
 either way:
@@ -106,43 +170,16 @@ The container must go before the image — `docker rmi` refuses to remove an ima
 something is still using. (On the build-it-yourself path, `docker compose down
 --rmi all` clears the locally-built image the same way.)
 
-## Editing the lib (heads-up: changes are temporary)
+## Option 2 — Build the image yourself
 
-The mudlib code is **baked into the image**, not the state directory — so every
-`docker pull` gives you a clean, current Oxidus. The trade-off: **any edit to
-the shipped lib is wiped when you recreate the container on a newer image.**
-That's intended — you always land on fresh, stock Oxidus. Only *state* survives
-an update: players, data, logs, and your wizard home directory (`/home/...`).
-So tinker freely; a refresh just resets the lib.
+If your goal is a newer FluffOS than the published image, or an image built from
+a specific lib ref or your own fork, build the image locally with Compose. This
+compiles the driver from source against the current FluffOS `master`.
 
-**From inside the game:** log in as a wizard, edit with the in-game tools, and
-`update <path>` to reload.
-
-**From a shell:** the image ships `nano`, `nvim`, and `rg` (ripgrep), so hop in
-and edit directly:
-
-```bash
-docker exec -it oxidus bash
-#  nano /oxidus/std/file.c       # /oxidus is the mudlib root
-#  rg "some_function" /oxidus    # search the lib
-#  then, in the game: update /std/file
-```
-
-Prefer your own editor on the host? Copy out, edit, copy back:
-
-```bash
-docker cp oxidus:/oxidus/std/file.c ./file.c
-docker cp ./file.c oxidus:/oxidus/std/file.c
-```
-
-**Want edits that stick** (real development)? Use Option 2 (clone + build) so the
-lib is yours, or bind-mount a host folder over a lib path
-(`-v "$PWD/d:/oxidus/d"`).
-
-## Option 2 — Build it yourself (clone, then Docker)
-
-Clone the repo and build the image locally with Compose. This compiles the
-driver from source, so a rebuild always picks up the latest FluffOS:
+**The build does not use the lib in your checkout.** It clones `OXIDUS_REPO` at
+`OXIDUS_REF` — by default, this repository's `main` — over HTTPS inside the
+image, so edits in your working directory never reach it. The clone below only
+gives you the Dockerfile and compose file.
 
 ```bash
 git clone https://github.com/gesslar/oxidus-mudlib.git
@@ -174,26 +211,22 @@ rm -rf "${OXIDUS_STATE_PARENT:-$HOME}/oxidus-state"
 docker compose up -d
 ```
 
-## What's actually happening
+### Building from your own fork
 
-- **The image is built in two stages.** The first stage clones a *pristine*
-  copy of this repository over HTTPS and compiles the driver using the canonical
-  [`adm/dist/rebuild`](adm/dist/rebuild) script (which also pins the mudlib paths
-  in `config.mud`). The second, slim runtime stage ships only the built tree.
-  (With Option 1 this has already been done for you on the published image.)
-- **Code is baked into the image; game state lives in a host directory.** On
-  first boot the container's entrypoint moves every runtime-mutable path
-  (`data/`, `home/`, `log/`, `open/`, `tmp/`, `adm/etc/secret/`, the
-  `adm/custom/` override tree — config, security, alarms, certs, `first_user`,
-  `mssp` — plus the seeded-but-editable `adm/dist/config.mud`) into the
-  `/oxidus/state` mount and symlinks them back
-  in. This keeps the mudlib code pristine while your players, data and logs
-  survive restarts **and** image upgrades. Resetting the MUD is simply deleting
-  that state directory.
-- **The driver runs in a reboot loop**, mirroring `adm/dist/run`: an in-game
-  reboot restarts it automatically, while a real shutdown stops the container.
+Push your changes to your fork, then point the build at it. The fork must be
+cloneable over public HTTPS:
 
-## Running vs. rebuilding (stable at run, fresh at build)
+```bash
+docker compose build --no-cache \
+  --build-arg OXIDUS_REPO=https://github.com/<you>/<your-fork>.git \
+  --build-arg OXIDUS_REF=main
+docker compose up -d
+```
+
+Your lib changes are baked into that image, so they survive upgrades the same
+way stock Oxidus does. Rebuild after each push to pick up new commits.
+
+### Running vs. rebuilding (stable at run, fresh at build)
 
 There are two clocks here, and they behave differently on purpose:
 
@@ -215,8 +248,28 @@ build:
 docker compose build --no-cache && docker compose up -d
 ```
 
-(CI doesn't have this problem: each push builds at its exact commit, which busts
-the cache and always recompiles against the latest FluffOS.)
+(The published image doesn't have this problem: CI builds it on each published
+release, at that release's exact commit and with no layer cache, so it always
+compiles against the FluffOS `master` of the day.)
+
+## What's actually happening
+
+- **The image is built in two stages.** The first stage clones a *pristine*
+  copy of this repository over HTTPS and compiles the driver using the canonical
+  [`adm/dist/rebuild`](adm/dist/rebuild) script (which also pins the mudlib paths
+  in `config.mud`). The second, slim runtime stage ships only the built tree.
+  (With Option 1 this has already been done for you on the published image.)
+- **Code is baked into the image; game state lives in a host directory.** On
+  first boot the container's entrypoint moves every runtime-mutable path
+  (`data/`, `home/`, `log/`, `open/`, `tmp/`, `adm/etc/secret/`, the
+  `adm/custom/` override tree — config, security, alarms, certs, `first_user`,
+  `mssp` — plus the seeded-but-editable `adm/dist/config.mud`) into the
+  `/oxidus/state` mount and symlinks them back
+  in. This keeps the mudlib code pristine while your players, data and logs
+  survive restarts **and** image upgrades. Resetting the MUD is simply deleting
+  that state directory.
+- **The driver runs in a reboot loop**, mirroring `adm/dist/run`: an in-game
+  reboot restarts it automatically, while a real shutdown stops the container.
 
 For TLS, build args, and the full option list, see
 [`adm/dist/docker/README.md`](adm/dist/docker/README.md).
