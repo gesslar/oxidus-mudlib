@@ -4,12 +4,14 @@
  * Command to look at things and the room and stuff.
  *
  * @created 2026-07-13 - Gesslar
- * @last_modified 2026-07-27 - Gesslar
+ * @last_modified 2026-09-15 - Gesslar
  *
  * @history
  * 2026-07-13 - Gesslar - Created
  * 2026-07-27 - Gesslar - Show equipped and wielded items when looking at a
  *                        living
+ * 2026-09-15 - Gesslar - List each door and whether it is open or closed
+ *                        after the exits
  */
 
 inherit STD_ACT;
@@ -112,6 +114,17 @@ mixed describe_environment(
     }
 
     result += `You may go ${simple_list(exits, "and")}.`;
+
+    string *doors = filter(exits, (: $(env)->valid_door($1) :));
+    if(sizeof(doors)) {
+      string *lines = map(doors, function(string dir, /** @type {STD_ROOM} */ object env) {
+        string status = env->is_door_open(dir) ? "open" : "closed";
+
+        return `The ${env->query_door_name(dir)} is ${status}.`;
+      }, env);
+
+      result += `\n\n${implode(lines, "\n")}`;
+    }
   }
 
   object *obs = all_inventory(env);
