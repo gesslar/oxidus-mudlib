@@ -63,7 +63,7 @@ void virtual_setup(mixed args...) {
         proc.messages,
         proc.damage_type,
         proc.attack_type ?? "melee",
-        proc.weight,
+        proc.weight ?? 100,
         proc.cooldown,
         proc.severity,
       );

@@ -301,8 +301,9 @@ simple procs: [
 
 `tag`, `messages` and `damage_type` are required — `add_simple_proc()` asserts
 on them. `messages` must hold **one or two** strings: one goes to the target,
-and a second, if given, to everyone else. `weight` is clamped 0-100; `severity`
-defaults to `"normal"` and scales the damage.
+and a second, if given, to everyone else. `weight` is clamped 0-100 and defaults
+to 100 — a weight of 0 is never picked, so an explicit 0 disables the proc;
+`severity` defaults to `"normal"` and scales the damage.
 
 Dispatch runs through `proc_npc()` in `std/living/proc.lpc`, which builds the
 skill name as `combat.<attack_type>.<damage_type>`, rolls `can_strike()` against
