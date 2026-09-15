@@ -1,0 +1,17 @@
+{
+  id: ["stinger"],
+  additional ids: ["sting","barb","tail"],
+  adj: ["scorpion","swollen","venomous"],
+  name: "scorpion stinger",
+  short: "a swollen scorpion stinger",
+  long: "The last segment of a dust scorpion's tail, a swollen bulb ending in"
+        "a dark, hooked barb. The venom sac inside is still full, and it"
+        "sloshes faintly when turned. An apothecary would want it whole, and"
+        "handled with gloves.",
+  mass: 2,
+  material: ["chitin"],
+  properties: {
+    autovalue: true,
+    crafting material: true,
+  },
+}

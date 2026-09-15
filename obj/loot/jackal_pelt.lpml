@@ -1,0 +1,17 @@
+{
+  id: ["pelt"],
+  additional ids: ["hide","skin","fur"],
+  adj: ["jackal","bone","pale","dusty"],
+  name: "bone jackal pelt",
+  short: "a pale, dusty jackal pelt",
+  long: "The pelt of a bone jackal, short-furred and the dull off-white of"
+        "sun-bleached bone. It is patchy and thin over the ribs, but tough,"
+        "and a tanner could work it into leather that would shrug off the"
+        "worst of the wastes' grit.",
+  mass: 25,
+  material: ["fur"],
+  properties: {
+    autovalue: true,
+    crafting material: true,
+  },
+}

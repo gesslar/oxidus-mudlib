@@ -19,13 +19,13 @@
 
   {
     path: "mob/forest_stag",
-    level: [7, 9],
+    level: [6, 9],
     weight: 3,
   },
 
   {
     path: "mob/shadow_wolf",
-    level: [8, 10],
+    level: [7, 10],
     weight: 2,
   },
 ]

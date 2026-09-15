@@ -1,0 +1,17 @@
+{
+  id: ["pincer"],
+  additional ids: ["claw","chela"],
+  adj: ["scorpion","pale","serrated"],
+  name: "scorpion pincer",
+  short: "a pale scorpion pincer",
+  long: "A heavy pincer taken from a dust scorpion, bleached the grey of the"
+        "wastes, with a serrated inner edge that still closes with a snap"
+        "when you work the joint. The chitin is thick and light, good for"
+        "plating or for a crude hook.",
+  mass: 8,
+  material: ["chitin"],
+  properties: {
+    autovalue: true,
+    crafting material: true,
+  },
+}

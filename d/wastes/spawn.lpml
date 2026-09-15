@@ -1,13 +1,37 @@
 [
   {
     path: "mob/waste_rat",
-    level: [3, 5],
+    level: [9, 11],
     weight: 5,
   },
 
   {
+    path: "mob/rustback_beetle",
+    level: [9, 11],
+    weight: 4,
+  },
+
+  {
     path: "mob/wasterel",
-    level: [4, 6],
+    level: [10, 12],
     weight: 3,
+  },
+
+  {
+    path: "mob/wasteland_vulture",
+    level: [10, 12],
+    weight: 3,
+  },
+
+  {
+    path: "mob/dust_scorpion",
+    level: [10, 12],
+    weight: 3,
+  },
+
+  {
+    path: "mob/bone_jackal",
+    level: [11, 13],
+    weight: 2,
   },
 ]

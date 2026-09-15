@@ -1,0 +1,40 @@
+// d/mobs/rustback_beetle.lpml
+// A slow, armoured scavenger that grazes on the rusted wreckage of the
+// wastes.
+
+{
+  type: "insect",
+  name: "rustback beetle",
+  short: "a rustback beetle",
+  long: "A beetle the size of a small dog trundles over the rubble, its"
+        "domed shell streaked and pitted the orange-brown of old iron. It"
+        "has been chewing on the scrap that litters the wastes, and flakes"
+        "of rust cling to its heavy mandibles. It swings its blunt head"
+        "toward you with a dry clicking of plates.",
+  id: [
+    "rustback beetle",
+    "rustback",
+    "beetle"
+  ],
+  adj: [
+    "rustback",
+    "rusty",
+    "armoured"
+  ],
+  weapon name: "mandibles",
+  weapon type: "slashing",
+  level: [3, 5],
+  gender: [
+    "male",
+    "female"
+  ],
+  race: "insect",
+  loot: [
+    ["/obj/loot/rustback_shell.loot", 60.0],
+    "/obj/loot/insect_wing.loot",
+  ],
+  loot chance: 40.0,
+  coins: {
+    copper: [1, 60.0],
+  },
+}

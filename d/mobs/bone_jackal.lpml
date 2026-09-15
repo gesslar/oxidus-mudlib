@@ -1,0 +1,54 @@
+// d/mobs/bone_jackal.lpml
+// The apex scavenger of the wastes, denning among the skeletal remains it
+// picks clean.
+
+{
+  type: "mammal",
+  name: "bone jackal",
+  short: "a bone jackal",
+  long: "A rangy jackal with a coat gone the colour of old bone, dusty and"
+        "patchy over ribs you could count. It slinks out from among the"
+        "skeletal remains it dens in, head low and ears flat, and its lips"
+        "peel back from long, stained teeth. There is nothing timid in it."
+        "The wastes have taught it that everything is meat eventually.",
+  id: [
+    "bone jackal",
+    "jackal"
+  ],
+  adj: [
+    "bone",
+    "pale",
+    "rangy"
+  ],
+  weapon name: "fangs",
+  weapon type: "piercing",
+  plus attack speed: 0.25,
+  level: [5, 7],
+  gender: [
+    "male",
+    "female"
+  ],
+  race: "jackal",
+  loot: [
+    ["/obj/loot/jackal_pelt.loot", 55.0],
+    ["/obj/loot/jackal_fang.loot", 40.0],
+    "/obj/food/jackal_meat.food",
+  ],
+  loot chance: 60.0,
+  coins: {
+    copper: [3, 85.0],
+    silver: [1, 35.0],
+  },
+  simple procs: [
+    {
+      tag: "hamstring",
+      messages: [
+        "{{630}}$N $vdart low and $vtear at the back of $p1 leg.{{res}}",
+      ],
+      damage_type: "slashing",
+      attack_type: "melee",
+      cooldown: 10,
+      severity: "heavy",
+    }
+  ]
+}

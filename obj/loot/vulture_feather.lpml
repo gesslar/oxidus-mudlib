@@ -1,0 +1,16 @@
+{
+  id: ["feather"],
+  additional ids: ["plume","quill"],
+  adj: ["vulture","brown","long","greasy"],
+  name: "vulture feather",
+  short: "a long brown vulture feather",
+  long: "A long flight-feather from a wasteland vulture, dusty brown fading"
+        "to near black at the tip. It is stiff and broad in the vane, with a"
+        "thick, sound quill that a fletcher would put to good use.",
+  mass: 1,
+  material: ["feather"],
+  properties: {
+    autovalue: true,
+    crafting material: true,
+  },
+}

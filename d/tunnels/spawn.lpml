@@ -1,25 +1,25 @@
 [
   {
     path : "mob/rat",
-    level: [2, 3],
+    level: [4, 5],
     weight: 5,
   },
 
   {
     path: "mob/bat",
-    level: [2, 3],
+    level: [4, 5],
     weight: 4,
   },
 
   {
     path: "mob/mole",
-    level: [2, 3],
+    level: [4, 5],
     weight: 3,
   },
 
   {
     path: "mob/centipede",
-    level: [3, 4],
+    level: [5, 6],
     weight: 2,
   },
 ]
