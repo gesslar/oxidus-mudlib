@@ -37,9 +37,11 @@ int start_module(mapping c) {
 }
 
 void stop_module() {
+  string colour = __config.expire_colour ?? __config.colour ?? "";
+
   tell(
     owner,
-    `${__config.colour}Your brightly glowing shielding dissipates.{{res}}\n`
+    `${colour}Your brightly glowing shielding dissipates.{{res}}\n`
   );
 }
 
@@ -57,6 +59,10 @@ public string shield_short() {
 
 public string shield_colour() {
   return __config.colour ?? "";
+}
+
+public string shield_expire_colour() {
+  return __config.expire_colour ?? __config.colour ?? "";
 }
 
 public float mitigation_percent() {
