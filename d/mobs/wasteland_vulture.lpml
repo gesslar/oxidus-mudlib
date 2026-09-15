@@ -1,0 +1,41 @@
+// d/mobs/wasteland_vulture.lpml
+// A carrion bird of the wastes, grown impatient with waiting for things to
+// die on their own.
+
+{
+  type: "monster",
+  name: "wasteland vulture",
+  short: "a wasteland vulture",
+  long: "A big, hunch-shouldered vulture with a bare, wrinkled red head"
+        "and a ruff of greasy brown feathers about its neck. It hops across"
+        "the ground with its ragged wings half spread, hooked beak open,"
+        "hissing. Most of its kind are content to wait for the wastes to do"
+        "their work. This one has plainly run out of patience.",
+  id: [
+    "wasteland vulture",
+    "vulture",
+    "bird"
+  ],
+  adj: [
+    "wasteland",
+    "bald",
+    "ragged"
+  ],
+  weapon name: "talons",
+  weapon type: "slashing",
+  level: [4, 6],
+  gender: [
+    "male",
+    "female"
+  ],
+  race: "bird",
+  loot: [
+    ["/obj/loot/vulture_feather.loot", 65.0],
+    ["/obj/loot/vulture_talon.loot", 40.0],
+  ],
+  loot chance: 50.0,
+  coins: {
+    copper: [2, 75.0],
+    silver: [1, 20.0],
+  },
+}

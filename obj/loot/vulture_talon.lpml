@@ -1,0 +1,17 @@
+{
+  id: ["talon"],
+  additional ids: ["claw"],
+  adj: ["vulture","hooked","black"],
+  name: "vulture talon",
+  short: "a hooked vulture talon",
+  long: "A thick black talon cut from the foot of a wasteland vulture, hooked"
+        "and blunted at the point from tearing at the dead. Strung on a"
+        "cord, it is the sort of charm the superstitious wear against a bad"
+        "end in the wastes.",
+  mass: 2,
+  material: ["bone"],
+  properties: {
+    autovalue: true,
+    crafting material: true,
+  },
+}

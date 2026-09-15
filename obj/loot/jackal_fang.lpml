@@ -1,0 +1,16 @@
+{
+  id: ["fang"],
+  additional ids: ["tooth","canine"],
+  adj: ["jackal","stained","long"],
+  name: "jackal fang",
+  short: "a long stained jackal fang",
+  long: "A long canine pulled from the jaw of a bone jackal, stained brown"
+        "along its length from a life of gnawing on what the wastes leave"
+        "behind. It is still wickedly sharp.",
+  mass: 2,
+  material: ["bone"],
+  properties: {
+    autovalue: true,
+    crafting material: true,
+  },
+}

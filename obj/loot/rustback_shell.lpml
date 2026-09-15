@@ -1,0 +1,17 @@
+{
+  id: ["shell"],
+  additional ids: ["carapace","plate"],
+  adj: ["rustback","rusty","domed","beetle"],
+  name: "rustback shell",
+  short: "a rust-streaked beetle shell",
+  long: "A curved plate of shell from the back of a rustback beetle, hard as"
+        "horn and streaked through with the orange-brown of the scrap it fed"
+        "on. It rings faintly when tapped. An armourer could make a stout"
+        "facing out of a few of these.",
+  mass: 12,
+  material: ["chitin"],
+  properties: {
+    autovalue: true,
+    crafting material: true,
+  },
+}

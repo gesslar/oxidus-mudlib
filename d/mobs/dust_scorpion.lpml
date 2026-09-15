@@ -1,0 +1,52 @@
+// d/mobs/dust_scorpion.lpml
+// A sun-bleached scorpion that lies up in the fissures of the cracked
+// earth.
+
+{
+  type: "insect",
+  name: "dust scorpion",
+  short: "a dust scorpion",
+  long: "A scorpion as long as your arm hauls itself out of a fissure in"
+        "the cracked earth, its carapace bleached the same pale grey as the"
+        "dust around it. Its pincers open and close with a patient,"
+        "measuring rhythm, and the segmented tail arched over its back ends"
+        "in a swollen barb that glistens wet in the harsh light.",
+  id: [
+    "dust scorpion",
+    "scorpion"
+  ],
+  adj: [
+    "dust",
+    "pale",
+    "bleached"
+  ],
+  weapon name: "pincers",
+  weapon type: "slashing",
+  level: [4, 6],
+  gender: [
+    "male",
+    "female"
+  ],
+  race: "insect",
+  loot: [
+    ["/obj/loot/scorpion_pincer.loot", 55.0],
+    ["/obj/loot/scorpion_stinger.loot", 40.0],
+  ],
+  loot chance: 50.0,
+  coins: {
+    copper: [2, 70.0],
+    silver: [1, 20.0],
+  },
+  simple procs: [
+    {
+      tag: "sting",
+      messages: [
+        "{{630}}$N $vdrive $p barbed tail down into $t.{{res}}",
+      ],
+      damage_type: "piercing",
+      attack_type: "melee",
+      cooldown: 8,
+      severity: "heavy",
+    }
+  ]
+}

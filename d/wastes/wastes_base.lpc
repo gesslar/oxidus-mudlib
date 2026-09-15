@@ -15,7 +15,7 @@ public void repopulate();
 
 /** @type {STD_NPC*} */
 private nosave object *__mobs = ({});
-private nosave float spawn_chance = 20.0;
+private nosave float __spawn_chance = 15.0;
 
 void setup() {
   set_light(0);
@@ -49,7 +49,7 @@ public void repopulate() {
     }
   }
 
-  if(random_float(100.0) < spawn_chance) {
+  if(random_float(100.0) < __spawn_chance) {
     mapping mob_data = element_of_weighted(
       __DIR__ "wastes_daemon"->query_mob_files()
     );
