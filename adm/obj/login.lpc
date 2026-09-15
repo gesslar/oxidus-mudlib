@@ -6,12 +6,14 @@
  * transitioning the player into the game world.
  *
  * @created 2021-09-29 - Gesslar
- * @last_modified 2026-08-31 - Gesslar
+ * @last_modified 2026-09-15 - Gesslar
  *
  * @history
  * 2021-09-29 - Gesslar - Created
  * 2026-08-30 - Gesslar - Promise-driven GMCP login handshake
  * 2026-08-31 - Gesslar - Account, character and password flow rewritten
+ * 2026-09-15 - Gesslar - Client state moved to EXT_CLIENT, handed to the body
+ *                        with adopt_client()
  */
 
 #include <daemons.h>
@@ -23,7 +25,7 @@
 inherit STD_ITEM;
 
 inherit EXT_MESSAGING;
-inherit EXT_GMCP;
+inherit EXT_CLIENT;
 inherit EXT_LOG;
 
 private void get_account(string str);
@@ -44,8 +46,6 @@ private void character_menu_input(string str, string prompt);
 private void first_admin_login();
 
 /** @type {STD_PLAYER} */ private nosave object body;
-private nosave mapping __login_gmcp_data = ([ "client" : null, "supports" : null, ]);
-private nosave mapping __environ_data = ([]);
 private nosave mapping __account = null;
 private nosave string __name, __character;
 private nosave string __logo = parse_tokens(read_file(mud_config("LOGO")));
@@ -626,16 +626,12 @@ private void enter_world(string name, int reconnecting) {
   }
 
   exec(body, this_object());
+  body->adopt_client(this_object());
 
   if(reconnecting)
     body->reconnect();
 
   body->setup_body();
-  body->clear_gmcp_data();
-  body->set_gmcp_client(__login_gmcp_data["client"]);
-  body->set_gmcp_supports(__login_gmcp_data["supports"]);
-  body->clear_environ_data();
-  body->set_environ(__environ_data);
 
   // If they are not reconnecting, figure out where to put them
   if(!reconnecting) {
@@ -755,55 +751,6 @@ private string parse_tokens(string text) {
   return substitute_tokens(text, ([
     "mud_name" : mud_name(),
   ]));
-}
-
-/**
- * Stores the GMCP client identification data received during
- * the handshake.
- *
- * @param {mapping} client - The client identification mapping
- */
-public void set_gmcp_client(mapping client) {
-  __login_gmcp_data["client"] = client;
-}
-
-/**
- * Returns the stored GMCP client identification data.
- *
- * @returns {mapping} The client identification mapping
- */
-public mapping query_gmcp_client() {
-  return __login_gmcp_data["client"];
-}
-
-/**
- * Stores the GMCP supported packages mapping. What is done about it is
- * login_flow()'s decision, made when its wait on Core.Supports.Set wakes.
- *
- * @param {mapping} supports - The supported GMCP packages
- */
-public void set_gmcp_supports(mapping supports) {
-  __login_gmcp_data["supports"] = supports;
-}
-
-/**
- * Returns the stored GMCP supported packages mapping.
- *
- * @returns {mapping} The supported GMCP packages
- */
-public mapping query_gmcp_supports() {
-  return __login_gmcp_data["supports"];
-}
-
-/**
- * Stores an environment variable received from the client via
- * telnet NEW-ENVIRON negotiation.
- *
- * @param {string} var - The environment variable name
- * @param {mixed} value - The environment variable value
- */
-private void receive_environ(string var, mixed value) {
-  __environ_data[var] = value;
 }
 
 /**

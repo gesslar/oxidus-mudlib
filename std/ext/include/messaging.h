@@ -3,6 +3,7 @@
 
 #include "/std/living/include/env.h"
 #include "/std/living/include/player.h"
+#include "/std/ext/include/client.h"
 
 void receive_message(string type, string msg);
 int set_contents_can_hear(int i);

@@ -29,7 +29,8 @@ call_other() to handler         ← routes to handler file by package name
 
 | File | Purpose |
 |---|---|
-| `std/ext/gmcp.lpc` | Main GMCP module (`EXT_GMCP`), inherited by player and login objects. Entry point for all incoming messages, also provides `do_gmcp()` for sending |
+| `std/ext/gmcp.lpc` | Main GMCP module (`EXT_GMCP`). Entry point for all incoming messages, also provides `do_gmcp()` for sending |
+| `std/ext/client.lpc` | Client state module (`EXT_CLIENT`). Inherits `EXT_GMCP`, holds NEW-ENVIRON variables, and hands client state across an `exec()` with `adopt_client()`. Inherited by `STD_BODY` and the login object |
 | `std/handlers/gmcp/gmcp_module.lpc` | Base class for handler modules. Provides cooldown system. Inherits `STD_DAEMON` |
 | `std/handlers/gmcp/Core.lpc` | Handles Core protocol (Hello, Supports, Ping) |
 | `std/handlers/gmcp/Char.lpc` | Handles Char.Login.Credentials and Char.Items requests |
@@ -42,7 +43,7 @@ call_other() to handler         ← routes to handler file by package name
 
 ### 1. Reception
 
-The FluffOS driver calls `void gmcp(string message)` on the user/login object when a GMCP telopt arrives. This function lives in `std/ext/gmcp.lpc` (`EXT_GMCP`), inherited by both `std/living/player.lpc` and `adm/obj/login.lpc`.
+The FluffOS driver calls `void gmcp(string message)` on the user/login object when a GMCP telopt arrives. This function lives in `std/ext/gmcp.lpc` (`EXT_GMCP`), which reaches every connection-holding object through `EXT_CLIENT` — `STD_BODY` (so players and ghosts) and `adm/obj/login.lpc`.
 
 The module does **not** check if the player has GMCP enabled at this stage — this ensures `Core.Hello` and `Core.Supports` are still processed during login.
 
@@ -139,6 +140,16 @@ The supports hierarchy uses nested mappings with `"modules"` and `"submodules"` 
 | `gmcp_enabled()` | Check if GMCP is enabled (has GMCP + pref not "off") |
 | `do_gmcp(package, data)` | Send a GMCP message to the client (JSON-encodes data) |
 | `clear_gmcp_data()` | Reset all stored GMCP data |
+
+## Handing Client State Across an exec()
+
+The client sends `Core.Hello` and `Core.Supports.Set` once, at the start of
+the connection, so whatever object holds the connection next must inherit what
+the last one learned. `EXT_CLIENT` provides `adopt_client(object source)` for
+this: called on the new object right after `exec()`, it replaces that object's
+GMCP client, supports and NEW-ENVIRON data with the source's. Only the source
+itself may make the call. Login entering the world, a body dying into a ghost,
+and a ghost reviving all do it.
 
 ## Cooldown System
 

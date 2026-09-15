@@ -4,7 +4,7 @@
  * Body object that is shared by players and NPCs.
  *
  * @created 2024-07-29 - Gesslar
- * @last_modified 2026-07-23 - Gesslar
+ * @last_modified 2026-09-15 - Gesslar
  *
  * @history
  * 2024-07-29 - Gesslar - Created
@@ -12,7 +12,8 @@
  * 2026-07-23 - Gesslar - Renamed mudlib_setup() to std_setup(). It will now
  *                        run before mudlib_setup() so inheritors will not need
  *                        to make super calls.
- *
+ * 2026-09-15 - Gesslar - Inherits EXT_CLIENT; client state carried into the
+ *                        ghost on death
  */
 
 #include <body.h>
@@ -44,6 +45,7 @@ inherit __DIR__ "vitals";
 inherit __DIR__ "wealth";
 
 inherit EXT_ACTION;
+inherit EXT_CLIENT;
 inherit EXT_LOG;
 
 void std_setup() {
@@ -170,6 +172,7 @@ protected void die() {
   if(userp())  {
     object ghost = BODY_D->create_ghost(query_privs());
     exec(ghost, this_object());
+    ghost->adopt_client(this_object());
     ghost->setup_body();
     ghost->set_hp(-1.0);
     ghost->set_sp(-1.0);

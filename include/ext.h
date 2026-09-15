@@ -7,6 +7,7 @@
 #define EXT_BANK          DIR_STD_EXT "bank"
 #define EXT_CHECKS        DIR_STD_EXT "checks"
 #define EXT_CLEAN         DIR_STD_EXT "clean"
+#define EXT_CLIENT        DIR_STD_EXT "client"
 #define EXT_CURRENCY      DIR_STD_EXT "currency"
 #define EXT_EDIBLE        DIR_STD_EXT "edible"
 #define EXT_GMCP          DIR_STD_EXT "gmcp"
