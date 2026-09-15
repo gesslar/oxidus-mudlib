@@ -245,7 +245,7 @@ trace lpc execution context : 0
 trace lpc instructions : 0
 
 # INTERACTIVE_CATCH_TELL: define this if you want catch_tell called on
-#   interactives as well as NPCs.  If this is defined, user.c will need a
+#   interactives as well as NPCs.  If this is defined, user.lpc will need a
 #   catch_tell(msg) method that calls receive(msg);
 #
 interactive catch tell : 0
@@ -337,7 +337,7 @@ sprintf add_justified ignore ANSI colors : 1
 #
 enable_commands call init : 0
 
-# TRAP_CRASHES:  define this if you want MudOS to call crash() in master.c
+# TRAP_CRASHES:  define this if you want MudOS to call crash() in master.lpc
 #   and then shutdown when signals are received that would normally crash the
 #   driver.
 #
