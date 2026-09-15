@@ -1,0 +1,81 @@
+/**
+ * @file /std/ext/client.lpc
+ *
+ * Module for the state a connected client negotiates with the MUD: the
+ * telnet NEW-ENVIRON variables and, through EXT_GMCP, the GMCP client
+ * identification and supported packages.
+ *
+ * This state belongs to the connection, not to whichever object holds it.
+ * Anything that exec()s a connection into a new object -- login entering the
+ * world, a body dying into a ghost, a ghost reviving -- hands it across with
+ * adopt_client(), because the client only negotiates it once.
+ *
+ * @created 2026-09-15 - Gesslar
+ * @last_modified 2026-09-15 - Gesslar
+ *
+ * @history
+ * 2026-09-15 - Gesslar - Created from the environ handling in player.lpc and
+ *                        login.lpc
+ */
+
+inherit EXT_GMCP;
+
+// Functions from other objects
+varargs void _log(mixed args...);
+
+private nosave mapping __environ = ([ ]);
+
+/**
+ * Returns the value of a NEW-ENVIRON variable sent by the client.
+ *
+ * @param {string} key - The environment variable name.
+ * @returns {mixed} The value, or undefined if the client did not send it.
+ */
+public mixed query_environ(string key) {
+  return __environ[key];
+}
+
+/**
+ * Returns a copy of every NEW-ENVIRON variable sent by the client.
+ *
+ * @returns {mapping} Copy of the environment variables, keyed by name.
+ */
+public mapping query_all_environ() {
+  return copy(__environ);
+}
+
+/**
+ * Receives a NEW-ENVIRON variable from the client's telnet negotiation,
+ * converting it from its string representation.
+ *
+ * @apply
+ * @param {string} var - The environment variable name.
+ * @param {string} value - The value as the client sent it.
+ */
+private void receive_environ(string var, string value) {
+  __environ[var] = from_string(value);
+
+  _log(1, "Setting environ option: %s = %O", var, value);
+}
+
+/**
+ * Takes over the client state of the object this connection was exec()'d
+ * away from, replacing whatever this object held.
+ *
+ * Only the source itself may hand its state over, so the call is made from
+ * the object giving up the connection, right after the exec().
+ *
+ * @param {object} source - The object that previously held the connection.
+ */
+public void adopt_client(object source) {
+  if(!objectp(source) || previous_object() != source)
+    return;
+
+  /** @type {EXT_CLIENT} */ object from = source;
+
+  __environ = from->query_all_environ() || ([ ]);
+
+  clear_gmcp_data();
+  set_gmcp_client(from->query_gmcp_client());
+  set_gmcp_supports(from->query_gmcp_supports());
+}

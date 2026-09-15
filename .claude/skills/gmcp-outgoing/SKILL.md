@@ -36,7 +36,7 @@ Module gathers data, calls user->do_gmcp(package, data)
 | `adm/daemons/modules/gmcp/Comm.lpc` | Communication: channel text |
 | `adm/daemons/modules/gmcp/Client.lpc` | Client features: GUI install |
 | `adm/daemons/modules/gmcp/Room.lpc` | Room info and travel paths |
-| `std/ext/gmcp.lpc` | `EXT_GMCP` module on player/login objects. Provides `do_gmcp()` for final transmission |
+| `std/ext/gmcp.lpc` | `EXT_GMCP` module, reaching bodies and the login object through `EXT_CLIENT`. Provides `do_gmcp()` for final transmission |
 | `include/gmcp_defines.h` | All `GMCP_PKG_*`, `GMCP_KEY_*`, `GMCP_VAL_*` defines |
 
 ## The send_gmcp() Function

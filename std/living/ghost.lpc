@@ -1,12 +1,14 @@
 /**
  * @file /std/living/ghost.lpc
+ *
  * You're a ghost OooOoOOOOoOOoOooooOOo
  *
  * @created 2024-07-28 - Gesslar
- * @last_modified 2024-07-28 - Gesslar
+ * @last_modified 2026-09-15 - Gesslar
  *
  * @history
  * 2024-07-28 - Gesslar - Created
+ * 2026-09-15 - Gesslar - Client state carried into the revived body
  */
 
 #include <logs.h>
@@ -14,8 +16,6 @@
 #include <gmcp_defines.h>
 
 inherit STD_BODY;
-
-inherit EXT_GMCP;
 
 void mudlib_setup() {
   set_log_level(0);
@@ -58,6 +58,7 @@ int revive(string _str) {
     /** @type {STD_PLAYER} */ object body = BODY_D->create_body(name);
 
     exec(body, this_object());
+    body->adopt_client(this_object());
 
     body->setup_body();
     body->set_dead(0);
