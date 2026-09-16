@@ -24,6 +24,7 @@ void init_shop();
 varargs void add_menu_item(string type, string file, int cost);
 void remove_menu_item(string file);
 void wipe_menu();
+private mixed find_menu_item(string str);
 
 void init_shop() {
     add_command("buy", "cmd_buy");
@@ -130,20 +131,15 @@ mixed cmd_buy(object tp, string str) {
     string action;
     mixed *paid, *change;
     class Menu item;
-    int found;
 
     if(!str)
         return "What do you want to buy?";
 
-    foreach(item in food_menu) {
-        if(of(str, item.id)) {
-            found = 1;
-            break;
-        }
-    }
+    mixed match = find_menu_item(str);
+    if(stringp(match))
+        return match;
 
-    if(!found)
-        return "No such item for sale.";
+    item = match;
 
     result = handle_transaction(tp, item.cost);
     if(stringp(result))
@@ -194,12 +190,38 @@ mixed cmd_view(object _tp, string str) {
     if(!str)
         return "What do you want to view?";
 
-    foreach(item in food_menu) {
-        if(of(str, item.id))
-            return sprintf("%s\n%s", item.short, item.description);
+    mixed match = find_menu_item(str);
+    if(stringp(match))
+        return match;
+
+    item = match;
+
+    return sprintf("%s\n%s", item.short, item.description);
+}
+
+/**
+ * Find the single menu item a player's words refer to. Items match on any
+ * of their ids, which include adjective and id pairings, so "studded cap"
+ * picks out one item where "cap" may match several.
+ *
+ * @param {string} str - The words the player used.
+ * @returns {class Menu | string} The matching item, or a message saying
+ *                                nothing matched or asking which of several
+ *                                matches was meant.
+ */
+private mixed find_menu_item(string str) {
+    class Menu *matches = filter(food_menu, (: of($(str), $1.id) :));
+
+    if(!sizeof(matches))
+        return "No such item for sale.";
+
+    if(sizeof(matches) > 1) {
+        string *shorts = map(matches, (: $1.short :));
+
+        return `Which do you mean: ${simple_list(shorts, "or")}?`;
     }
 
-    return "No such item for sale.";
+    return matches[0];
 }
 
 /**

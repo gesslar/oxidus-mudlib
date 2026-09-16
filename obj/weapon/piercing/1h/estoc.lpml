@@ -1,0 +1,19 @@
+// obj/weapon/piercing/1h/estoc.lpml
+
+{
+  id: ["estoc", "sword", "blade"],
+  adj: ["tempered", "steel"],
+  name: "tempered steel estoc",
+  short: "tempered steel estoc",
+  long: "A long, narrow blade of tempered steel, diamond in section and"
+        "sharpened nowhere along its length. It is not made for cutting at"
+        "all, but for driving a point through a gap in a guard with the"
+        "whole weight of the arm behind it. The ricasso is wrapped in cord"
+        "so the off hand can take hold of the blade itself and steer the"
+        "thrust home.",
+  mass: 35,
+  value: 50,
+  hands: 1,
+  dc: 7.5,
+  type: "piercing",
+}

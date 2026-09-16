@@ -1,0 +1,23 @@
+// obj/armour/head/studded_leather_cap.lpml
+
+{
+  id: ["cap", "armour"],
+  adj: ["studded", "leather"],
+  name: "studded leather cap",
+  short: "studded leather cap",
+  long: "This cap is boiled hard from doubled leather and shaped close over"
+        "the crown, its dark brown surface set with rows of blunt iron studs"
+        "that run from brow to nape. A thicker band of leather circles the"
+        "temples, and the inside is lined with felted wool to take the"
+        "sting out of a blow. A buckled strap holds it firm beneath the"
+        "chin.",
+  mass: 40,
+  value: 48,
+  slot: "head",
+  ac: 2.0,
+  defence: {
+    slashing: 2.0,
+    piercing: 1.0,
+    bludgeoning: 1.0,
+  },
+}

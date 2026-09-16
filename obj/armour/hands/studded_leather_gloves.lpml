@@ -1,0 +1,21 @@
+// obj/armour/hands/studded_leather_gloves.lpml
+
+{
+  id: ["gloves", "armour"],
+  adj: ["studded", "leather"],
+  name: "studded leather gloves",
+  short: "pair of studded leather gloves",
+  long: "These gloves are made from supple leather at the palm and fingers,"
+        "but the backs are faced with a hardened plate set with small iron"
+        "studs across the knuckles. Flared cuffs cover the wrist and buckle"
+        "snug, and the palms are roughened to keep a grip on a slick hilt.",
+  mass: 20,
+  value: 40,
+  slot: "hands",
+  ac: 1.0,
+  defence: {
+    slashing: 1.0,
+    piercing: 1.0,
+    bludgeoning: 0.5,
+  },
+}

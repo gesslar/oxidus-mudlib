@@ -1,0 +1,22 @@
+// obj/armour/legs/studded_leather_leggings.lpml
+
+{
+  id: ["leggings", "greaves", "armour"],
+  adj: ["studded", "leather"],
+  name: "studded leather leggings",
+  short: "pair of studded leather leggings",
+  long: "These leggings are layered from thick leather and reinforced over"
+        "the thighs and shins with hardened panels, each set with a grid of"
+        "iron studs. Cupped leather guards cover the knees, and the seams"
+        "are doubled and waxed. A row of side straps draws them close"
+        "without binding the stride.",
+  mass: 105,
+  value: 72,
+  slot: "legs",
+  ac: 3.0,
+  defence: {
+    slashing: 3.0,
+    piercing: 2.0,
+    bludgeoning: 1.0,
+  },
+}

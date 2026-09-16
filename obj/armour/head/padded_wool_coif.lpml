@@ -1,0 +1,22 @@
+// obj/armour/head/padded_wool_coif.lpml
+
+{
+  id: ["coif", "armour"],
+  adj: ["padded", "wool"],
+  name: "padded wool coif",
+  short: "padded wool coif",
+  long: "This close-fitting coif is quilted from several layers of undyed"
+        "wool, stitched in narrow channels so the padding cannot bunch. It"
+        "covers the crown, the ears and the back of the neck, and ties"
+        "beneath the chin with a pair of woollen cords. It is warm, soft,"
+        "and thick enough to dull a knock to the head.",
+  mass: 15,
+  value: 8,
+  slot: "head",
+  ac: 0.5,
+  defence: {
+    slashing: 0.25,
+    piercing: 0.25,
+    bludgeoning: 0.5,
+  },
+}

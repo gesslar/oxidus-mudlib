@@ -1,0 +1,23 @@
+// obj/armour/back/layered_silk_mantle.lpml
+
+{
+  id: ["mantle", "cloak", "armour"],
+  adj: ["layered", "silk"],
+  name: "layered silk mantle",
+  short: "layered silk mantle",
+  long: "This mantle is cut from layered silk and hangs from the shoulders to"
+        "the small of the back, heavier at the hem so it does not lift in a"
+        "wind. The shoulders are quilted over a thin wool lining, and it"
+        "fastens at the collarbone with a plain silver clasp. It moves"
+        "quietly, and it turns a glancing blow better than its weight would"
+        "suggest.",
+  mass: 30,
+  value: 64,
+  slot: "back",
+  ac: 1.0,
+  defence: {
+    slashing: 0.25,
+    piercing: 0.75,
+    bludgeoning: 1.0,
+  },
+}

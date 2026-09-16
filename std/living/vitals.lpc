@@ -529,7 +529,7 @@ string *query_condition_string() {
   if(ratio[0] <= 0.0)
     result[0] = "dead";
   else if(ratio[0] <= 10.0)
-    result[0] = "criticall injured";
+    result[0] = "critically injured";
   else if(ratio[0] <= 30.0)
     result[0] = "severely injured";
   else if(ratio[0] <= 45.0)

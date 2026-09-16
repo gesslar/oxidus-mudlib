@@ -1,0 +1,22 @@
+// obj/armour/head/layered_silk_hood.lpml
+
+{
+  id: ["hood", "armour"],
+  adj: ["layered", "silk"],
+  name: "layered silk hood",
+  short: "layered silk hood",
+  long: "This hood is sewn from many fine layers of raw silk, pressed and"
+        "stitched together until the cloth is dense enough to catch an arrow"
+        "point. It is dyed a muted slate grey and drapes loosely about the"
+        "face, and a soft quilted band inside the brow keeps it seated. For"
+        "all its layers it weighs almost nothing.",
+  mass: 10,
+  value: 32,
+  slot: "head",
+  ac: 1.0,
+  defence: {
+    slashing: 0.25,
+    piercing: 0.75,
+    bludgeoning: 1.0,
+  },
+}

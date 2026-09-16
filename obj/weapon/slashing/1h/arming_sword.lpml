@@ -1,0 +1,19 @@
+// obj/weapon/slashing/1h/arming_sword.lpml
+
+{
+  id: ["arming sword", "sword", "blade"],
+  adj: ["tempered", "steel", "arming"],
+  name: "tempered steel arming sword",
+  short: "tempered steel arming sword",
+  long: "A straight, double-edged blade of folded and tempered steel, its"
+        "fuller running most of the length to spare the weight without"
+        "costing it any stiffness. The crossguard is plain and square, the"
+        "grip is bound in dark leather over cord, and a heavy wheel pommel"
+        "brings the balance back into the hand. This is the sword a soldier"
+        "carries when the soldier can afford to choose.",
+  mass: 55,
+  value: 62,
+  hands: 1,
+  dc: 7.8,
+  type: "slashing",
+}

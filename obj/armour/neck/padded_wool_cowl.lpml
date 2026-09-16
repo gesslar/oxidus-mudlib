@@ -1,0 +1,20 @@
+// obj/armour/neck/padded_wool_cowl.lpml
+
+{
+  id: ["cowl", "armour"],
+  adj: ["padded", "wool"],
+  name: "padded wool cowl",
+  short: "padded wool cowl",
+  long: "This cowl is a thick loop of quilted wool that sits around the"
+        "throat and spills over the top of the shoulders. The padding is"
+        "stitched in rings, and it can be pulled up over the chin against a"
+        "cold wind. It offers more comfort than protection, but it takes"
+        "some of the force out of a blow aimed at the neck.",
+  mass: 10,
+  value: 6,
+  slot: "neck",
+  ac: 0.25,
+  defence: {
+    bludgeoning: 0.25,
+  },
+}

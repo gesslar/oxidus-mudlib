@@ -1,0 +1,21 @@
+// obj/armour/legs/padded_wool_trousers.lpml
+
+{
+  id: ["trousers", "armour"],
+  adj: ["padded", "wool"],
+  name: "padded wool trousers",
+  short: "pair of padded wool trousers",
+  long: "These trousers are quilted from layered wool, padded heaviest over"
+        "the thighs and knees and left lighter behind the leg so they do"
+        "not stiffen the stride. A drawstring gathers them at the waist,"
+        "and the hems are bound tight at the ankle.",
+  mass: 40,
+  value: 14,
+  slot: "legs",
+  ac: 0.75,
+  defence: {
+    slashing: 0.25,
+    piercing: 0.25,
+    bludgeoning: 0.75,
+  },
+}

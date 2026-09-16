@@ -1,0 +1,23 @@
+// obj/armour/torso/studded_leather_jerkin.lpml
+
+{
+  id: ["jerkin", "armour"],
+  adj: ["studded", "leather"],
+  name: "studded leather jerkin",
+  short: "studded leather jerkin",
+  long: "This jerkin is cut from two layers of thick, hardened leather"
+        "riveted together with close-set iron studs across the chest, back"
+        "and shoulders. The studs are flattened smooth so a blade skids"
+        "rather than bites, and a panel of heavier hide guards the belly."
+        "Laces at either side draw it snug, and the collar and armholes are"
+        "bound with softer leather to spare the skin beneath.",
+  mass: 155,
+  value: 100,
+  slot: "torso",
+  ac: 4.0,
+  defence: {
+    slashing: 4.0,
+    piercing: 2.0,
+    bludgeoning: 2.0,
+  },
+}

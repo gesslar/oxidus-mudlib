@@ -1,0 +1,19 @@
+// obj/armour/feet/padded_wool_boots.lpml
+
+{
+  id: ["boots", "armour"],
+  adj: ["padded", "wool"],
+  name: "padded wool boots",
+  short: "pair of padded wool boots",
+  long: "These soft boots are made from felted wool over a quilted lining,"
+        "with a thin leather sole stitched on beneath. They rise to the"
+        "ankle and wrap closed with a woollen tie, quiet on a stone floor"
+        "and warm on a cold one.",
+  mass: 25,
+  value: 8,
+  slot: "feet",
+  ac: 0.25,
+  defence: {
+    bludgeoning: 0.25,
+  },
+}

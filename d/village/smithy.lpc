@@ -1,0 +1,77 @@
+/**
+ * @file /d/village/smithy.lpc
+ * The Olum village smithy, where weapons are forged and sold.
+ *
+ * @created 2026-09-16 - Gesslar
+ * @last_modified 2026-09-16 - Gesslar
+ *
+ * @history
+ * 2026-09-16 - Gesslar - Created
+ */
+
+inherit __DIR__ "village_base";
+
+inherit EXT_SHOP_MENU;
+
+void setup() {
+  set_short("Olum Village Smithy");
+  set_long(
+  "Cut down into the bedrock beneath the armoury, this low, vaulted cellar "
+  "is held at a steady red heat by a stone forge banked against the far "
+  "wall. A great bellows hangs from the ceiling beam above it, and the anvil "
+  "below rings flat and hard off the stone. Finished weapons rest in racks "
+  "along the walls, plain work to one side and tempered steel to the other, "
+  "and the smith turns each piece slowly in the light of the coals before "
+  "letting it go. The stair climbs back up to the armoury.");
+
+  set_exits(([
+    "up" : "armoury",
+  ]));
+
+  set_items(([
+    ({ "stone forge", "forge", "coals", "fire" }) :
+      "The forge is a squat block of soot-blackened stone with a bed of "
+      "coals banked deep in its throat. The heat off it is steady rather "
+      "than fierce, and the light it throws makes every edge in the room "
+      "look sharper than it is.",
+    ({ "great bellows", "bellows" }) :
+      "A pair of leather lungs the size of a hog, slung from the ceiling "
+      "beam on chains and worked by a rope that hangs within reach of the "
+      "anvil. Every pull of it lifts a slow red glow out of the coals.",
+    ({ "anvil" }) :
+      "A blunt-horned anvil set on a section of oak trunk sunk into the "
+      "floor. Its face is polished mirror-bright by work, and the stone "
+      "around its base is dusted with fine black scale.",
+    ({ "racks", "weapons", "finished weapons" }) :
+      "Blades, hafts and hammer heads stand in racks along both walls: "
+      "plain iron and seasoned wood to one side, tempered steel to the "
+      "other. Use 'list' to see what the smith has for sale.",
+    ({ "smith", "blacksmith", "shopkeeper" }) :
+      "The smith is thick through the shoulders and unhurried, with a "
+      "scorched apron and forearms marked by years of small burns. Every "
+      "piece that leaves the racks gets turned once in the firelight first, "
+      "and now and then one goes back onto the coals instead.",
+    ({ "stair", "stairs", "steps" }) :
+      "Worn stone steps climb up out of the heat and into the armoury "
+      "above.",
+  ]));
+
+  init_shop();
+
+  add_menu_item("plain", "/obj/weapon/piercing/1h/dagger.weapon");
+  add_menu_item("plain", "/obj/weapon/slashing/1h/short_sword.weapon");
+  add_menu_item("plain", "/obj/weapon/bludgeoning/1h/mace.weapon");
+  add_menu_item("plain", "/obj/weapon/piercing/2h/spear.weapon");
+  add_menu_item("plain", "/obj/weapon/slashing/2h/greatsword.weapon");
+  add_menu_item("plain", "/obj/weapon/bludgeoning/2h/quarterstaff.weapon");
+
+  add_menu_item("tempered", "/obj/weapon/piercing/1h/estoc.weapon");
+  add_menu_item("tempered", "/obj/weapon/slashing/1h/arming_sword.weapon");
+  add_menu_item("tempered", "/obj/weapon/bludgeoning/1h/warhammer.weapon");
+  add_menu_item("tempered", "/obj/weapon/piercing/2h/partisan.weapon");
+  add_menu_item("tempered", "/obj/weapon/slashing/2h/claymore.weapon");
+  add_menu_item("tempered", "/obj/weapon/bludgeoning/2h/maul.weapon");
+
+  set_terrain("indoor");
+  set_room_type("shop");
+}

@@ -1,0 +1,54 @@
+/**
+ * @file /d/village/armoury.lpc
+ * The Olum village armoury, a hall joining the general shop to the clothier
+ * and the tannery.
+ *
+ * @created 2026-09-15 - Gesslar
+ * @last_modified 2026-09-15 - Gesslar
+ *
+ * @history
+ * 2026-09-15 - Gesslar - Created
+ */
+
+inherit __DIR__ "village_base";
+
+void setup() {
+  set_short("Olum Village Armoury");
+  set_long(
+  "This long, timber-beamed hall serves the village's outfitters, and the "
+  "smell of oiled leather and fresh wool hangs in the air. Wooden stands "
+  "along the walls display finished pieces from the workshops beyond: "
+  "quilted coats and hoods to the north, where the clothier keeps shop, and "
+  "hardened jerkins and studded boots to the east, where the tannery works. "
+  "A stone stair in the far corner drops away into the smithy below, and "
+  "warm air and the ring of a hammer come up it. A broad archway to the "
+  "west leads back into the general shop.");
+
+  set_exits(([
+    "west" : "shop",
+    "north": "clothier",
+    "east" : "tannery",
+    "down" : "smithy",
+  ]));
+
+  set_items(([
+    ({ "wooden stands", "stands", "display stands" }) :
+      "Each stand is a simple frame of pegs and crossbars, dressed with a "
+      "finished piece so a customer can judge the work before stepping into "
+      "the workshop to buy. The pieces are fixed firmly in place.",
+    ({ "finished pieces", "pieces", "displays" }) :
+      "Padded wool and layered silk hang on the stands nearest the north "
+      "door, while sturdy and studded leather fill those beside the east "
+      "door.",
+    ({ "timber beams", "beams" }) :
+      "Heavy, dark beams span the ceiling, hung here and there with iron "
+      "hooks that once held hides left to cure.",
+    ({ "stone stair", "stair", "stairs", "steps" }) :
+      "Worn stone steps turn down out of the corner of the hall and into "
+      "the heat and hammering of the forge below.",
+    ({ "archway", "broad archway" }) :
+      "A wide archway of worn stone opens onto the general shop to the west.",
+  ]));
+
+  set_terrain("indoor");
+}

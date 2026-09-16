@@ -1,0 +1,20 @@
+// obj/armour/hands/layered_silk_gloves.lpml
+
+{
+  id: ["gloves", "armour"],
+  adj: ["layered", "silk"],
+  name: "layered silk gloves",
+  short: "pair of layered silk gloves",
+  long: "These slim gloves are made from several layers of fine silk, thin"
+        "enough at the fingertips to feel the grain of a page and doubled"
+        "across the back of the hand. They reach just past the wrist and"
+        "fasten with a single silk loop.",
+  mass: 5,
+  value: 24,
+  slot: "hands",
+  ac: 0.5,
+  defence: {
+    piercing: 0.5,
+    bludgeoning: 0.5,
+  },
+}

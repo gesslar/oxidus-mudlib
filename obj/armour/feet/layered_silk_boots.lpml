@@ -1,0 +1,20 @@
+// obj/armour/feet/layered_silk_boots.lpml
+
+{
+  id: ["boots", "armour"],
+  adj: ["layered", "silk"],
+  name: "layered silk boots",
+  short: "pair of layered silk boots",
+  long: "These soft boots are made from layered silk over felted wool and"
+        "rise to mid-calf, with a supple leather sole sewn on beneath. They"
+        "wrap closed with long silk ties and make almost no sound on any"
+        "floor.",
+  mass: 20,
+  value: 32,
+  slot: "feet",
+  ac: 0.5,
+  defence: {
+    piercing: 0.5,
+    bludgeoning: 0.5,
+  },
+}
