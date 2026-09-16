@@ -1,0 +1,70 @@
+/**
+ * @file /d/village/tannery.lpc
+ * The Olum village tannery, where leather armour is made and sold.
+ *
+ * @created 2026-09-15 - Gesslar
+ * @last_modified 2026-09-15 - Gesslar
+ *
+ * @history
+ * 2026-09-15 - Gesslar - Created
+ */
+
+inherit __DIR__ "village_base";
+
+inherit EXT_SHOP_MENU;
+
+void setup() {
+  set_short("Olum Village Tannery");
+  set_long(
+  "The sharp tang of tanning bark and oil fills this workshop. Hides in "
+  "every stage of working are stretched on wooden frames along the back "
+  "wall, and a heavy workbench is scattered with awls, waxed thread, and "
+  "tins of iron studs. Finished leather armour hangs from a row of pegs "
+  "above the counter, where the tanner, sleeves rolled and forearms stained "
+  "brown, sizes up each customer's shoulders with a practised glance. The "
+  "armoury lies back through the doorway to the west.");
+
+  set_exits(([
+    "west" : "armoury",
+  ]));
+
+  set_items(([
+    ({ "hides", "wooden frames", "frames" }) :
+      "Hides are laced tight to square wooden frames, some still pale and "
+      "raw, others darkened and supple from weeks of oiling.",
+    ({ "heavy workbench", "workbench", "bench" }) :
+      "The workbench is scarred by years of cutting and punching. Awls, "
+      "mallets, and spools of waxed thread share its surface with small "
+      "tins of iron studs waiting to be set.",
+    ({ "pegs", "leather armour", "armour" }) :
+      "Caps, jerkins, bracers, and boots hang from the pegs in two ranks: "
+      "plain sturdy leather below, and heavier studded leather above.",
+    ({ "counter" }) :
+      "A thick plank counter, darkened by oil and handling. Use 'list' to "
+      "see what the tanner has for sale.",
+    ({ "tanner", "shopkeeper" }) :
+      "The tanner is broad and unhurried, with brown-stained hands and a "
+      "leather apron that has clearly outlived several owners.",
+  ]));
+
+  init_shop();
+
+  add_menu_item("sturdy", "/obj/armour/head/leather_cap.armour");
+  add_menu_item("sturdy", "/obj/armour/neck/leather_gorget.armour");
+  add_menu_item("sturdy", "/obj/armour/torso/leather_jerkin.armour");
+  add_menu_item("sturdy", "/obj/armour/arms/leather_bracers.armour");
+  add_menu_item("sturdy", "/obj/armour/hands/leather_gloves.armour");
+  add_menu_item("sturdy", "/obj/armour/legs/leather_leggings.armour");
+  add_menu_item("sturdy", "/obj/armour/feet/leather_boots.armour");
+
+  add_menu_item("studded", "/obj/armour/head/studded_leather_cap.armour");
+  add_menu_item("studded", "/obj/armour/neck/studded_leather_gorget.armour");
+  add_menu_item("studded", "/obj/armour/torso/studded_leather_jerkin.armour");
+  add_menu_item("studded", "/obj/armour/arms/studded_leather_bracers.armour");
+  add_menu_item("studded", "/obj/armour/hands/studded_leather_gloves.armour");
+  add_menu_item("studded", "/obj/armour/legs/studded_leather_leggings.armour");
+  add_menu_item("studded", "/obj/armour/feet/studded_leather_boots.armour");
+
+  set_terrain("indoor");
+  set_room_type("shop");
+}

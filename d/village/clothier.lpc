@@ -1,0 +1,71 @@
+/**
+ * @file /d/village/clothier.lpc
+ * The Olum village clothier, where cloth armour is made and sold.
+ *
+ * @created 2026-09-15 - Gesslar
+ * @last_modified 2026-09-15 - Gesslar
+ *
+ * @history
+ * 2026-09-15 - Gesslar - Created
+ */
+
+inherit __DIR__ "village_base";
+
+inherit EXT_SHOP_MENU;
+
+void setup() {
+  set_short("Olum Village Clothier");
+  set_long(
+  "Bolts of undyed wool and bundles of raw silk are stacked to the rafters "
+  "in this snug workshop, and the air is soft with lint. A long quilting "
+  "frame fills the middle of the room, a half-finished gambeson stretched "
+  "across it with its padding pinned in neat channels. Finished garments "
+  "hang from a rail beside the counter, where the clothier sits stitching "
+  "by lamplight, looking up now and then to measure a customer by eye. The "
+  "armoury lies back through the doorway to the south.");
+
+  set_exits(([
+    "south": "armoury",
+  ]));
+
+  set_items(([
+    ({ "bolts of wool", "bolts", "wool", "bundles of silk", "silk" }) :
+      "Coarse grey wool is stacked on the lower shelves, while the raw silk "
+      "is kept higher up in wrapped bundles, away from the dust.",
+    ({ "quilting frame", "frame", "half-finished gambeson", "gambeson" }) :
+      "The frame holds a gambeson mid-work, its layers pinned and chalked "
+      "and half the channels already stitched through.",
+    ({ "rail", "finished garments", "garments" }) :
+      "Coifs, coats, sleeves, and boots hang from the rail in two ranks: "
+      "padded wool nearest the door, and layered silk further in.",
+    ({ "counter" }) :
+      "A narrow counter strewn with pins and thread. Use 'list' to see what "
+      "the clothier has for sale.",
+    ({ "clothier", "shopkeeper" }) :
+      "The clothier is a small, quick-fingered figure with a needle tucked "
+      "behind one ear and a tape of knotted cord looped about the neck.",
+  ]));
+
+  init_shop();
+
+  add_menu_item("padded", "/obj/armour/head/padded_wool_coif.armour");
+  add_menu_item("padded", "/obj/armour/neck/padded_wool_cowl.armour");
+  add_menu_item("padded", "/obj/armour/torso/padded_wool_gambeson.armour");
+  add_menu_item("padded", "/obj/armour/back/wool_cloak.armour");
+  add_menu_item("padded", "/obj/armour/arms/padded_wool_sleeves.armour");
+  add_menu_item("padded", "/obj/armour/hands/padded_wool_gloves.armour");
+  add_menu_item("padded", "/obj/armour/legs/padded_wool_trousers.armour");
+  add_menu_item("padded", "/obj/armour/feet/padded_wool_boots.armour");
+
+  add_menu_item("silk", "/obj/armour/head/layered_silk_hood.armour");
+  add_menu_item("silk", "/obj/armour/neck/layered_silk_scarf.armour");
+  add_menu_item("silk", "/obj/armour/torso/layered_silk_coat.armour");
+  add_menu_item("silk", "/obj/armour/back/layered_silk_mantle.armour");
+  add_menu_item("silk", "/obj/armour/arms/layered_silk_sleeves.armour");
+  add_menu_item("silk", "/obj/armour/hands/layered_silk_gloves.armour");
+  add_menu_item("silk", "/obj/armour/legs/layered_silk_trousers.armour");
+  add_menu_item("silk", "/obj/armour/feet/layered_silk_boots.armour");
+
+  set_terrain("indoor");
+  set_room_type("shop");
+}

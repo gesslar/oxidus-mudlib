@@ -1,0 +1,19 @@
+// obj/weapon/slashing/2h/claymore.lpml
+
+{
+  id: ["claymore", "sword", "blade"],
+  adj: ["tempered", "steel"],
+  name: "tempered steel claymore",
+  short: "tempered steel claymore",
+  long: "A great two-handed blade of folded and tempered steel, its quillons"
+        "swept forward toward the point and finished in small pierced"
+        "rings. The edge runs true along the whole of its considerable"
+        "reach, and the long wire-bound grip leaves room for both hands and"
+        "then some. Given the space to swing it, very little in its path"
+        "keeps the shape it started with.",
+  mass: 105,
+  value: 92,
+  hands: 2,
+  dc: 9.1,
+  type: "slashing",
+}

@@ -1,0 +1,20 @@
+// obj/armour/neck/layered_silk_scarf.lpml
+
+{
+  id: ["scarf", "armour"],
+  adj: ["layered", "silk"],
+  name: "layered silk scarf",
+  short: "layered silk scarf",
+  long: "This long scarf is folded from a single length of layered silk and"
+        "wound twice about the throat before its ends are tucked away. The"
+        "folds trap the point of a thrust and turn it aside, and the slate"
+        "grey cloth has a faint sheen where it catches the light.",
+  mass: 6,
+  value: 24,
+  slot: "neck",
+  ac: 0.5,
+  defence: {
+    piercing: 0.5,
+    bludgeoning: 0.5,
+  },
+}

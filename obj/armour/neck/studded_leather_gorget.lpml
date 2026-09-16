@@ -1,0 +1,22 @@
+// obj/armour/neck/studded_leather_gorget.lpml
+
+{
+  id: ["gorget", "armour"],
+  adj: ["studded", "leather"],
+  name: "studded leather gorget",
+  short: "studded leather gorget",
+  long: "This gorget is built from three overlapping collars of hardened"
+        "leather, each edged with a line of small iron studs. It rises high"
+        "enough to guard the throat and settles over the collarbones,"
+        "buckling at the side so the plates can shift as the head turns. The"
+        "leather is dyed a deep brown and oiled against the weather.",
+  mass: 32,
+  value: 52,
+  slot: "neck",
+  ac: 2.0,
+  defence: {
+    slashing: 2.0,
+    piercing: 2.0,
+    bludgeoning: 1.0,
+  },
+}

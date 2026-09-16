@@ -1,0 +1,19 @@
+// obj/weapon/piercing/2h/partisan.lpml
+
+{
+  id: ["partisan", "polearm"],
+  adj: ["tempered", "steel"],
+  name: "tempered steel partisan",
+  short: "tempered steel partisan",
+  long: "A broad, tapering head of tempered steel set on a long haft, with"
+        "a pair of upswept lugs at its base to catch a blade that slides"
+        "down the shaft. Iron langets run a forearm's length below the head"
+        "to keep an axe from shearing the wood through. Braced in both"
+        "hands it holds trouble at the far end of the haft, which is where"
+        "trouble belongs.",
+  mass: 80,
+  value: 78,
+  hands: 2,
+  dc: 8.8,
+  type: "piercing",
+}

@@ -1,0 +1,23 @@
+// obj/armour/torso/layered_silk_coat.lpml
+
+{
+  id: ["coat", "armour"],
+  adj: ["layered", "silk"],
+  name: "layered silk coat",
+  short: "layered silk coat",
+  long: "This fitted coat is built up from layer upon layer of raw silk over"
+        "a quilted wool core, the outer face dyed slate grey and stitched in"
+        "a fine diamond pattern. It closes across the chest with silk frog"
+        "fastenings and falls to mid-thigh, split at the sides for movement."
+        "The silk binds around a blade or an arrowhead rather than parting,"
+        "and the padding beneath softens the blow.",
+  mass: 45,
+  value: 72,
+  slot: "torso",
+  ac: 2.0,
+  defence: {
+    slashing: 0.5,
+    piercing: 1.5,
+    bludgeoning: 2.0,
+  },
+}

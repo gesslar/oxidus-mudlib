@@ -1,0 +1,19 @@
+// obj/armour/hands/padded_wool_gloves.lpml
+
+{
+  id: ["gloves", "armour"],
+  adj: ["padded", "wool"],
+  name: "padded wool gloves",
+  short: "pair of padded wool gloves",
+  long: "These gloves are knitted from thick wool with a quilted pad sewn"
+        "across the back of each hand. The fingertips are left thinner so"
+        "the wearer can still turn a page or work a clasp, and the cuffs"
+        "fold back over the wrist.",
+  mass: 8,
+  value: 6,
+  slot: "hands",
+  ac: 0.25,
+  defence: {
+    bludgeoning: 0.25,
+  },
+}

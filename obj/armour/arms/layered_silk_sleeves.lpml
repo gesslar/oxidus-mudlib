@@ -1,0 +1,21 @@
+// obj/armour/arms/layered_silk_sleeves.lpml
+
+{
+  id: ["sleeves", "armour"],
+  adj: ["layered", "silk"],
+  name: "layered silk sleeves",
+  short: "pair of layered silk sleeves",
+  long: "These sleeves are sewn from layered silk over a quilted lining and"
+        "lace to the shoulder with silk cord. They are close-fitted along"
+        "the forearm so they never catch a gesture, and padded a little"
+        "thicker over the elbow.",
+  mass: 14,
+  value: 40,
+  slot: "arms",
+  ac: 1.0,
+  defence: {
+    slashing: 0.25,
+    piercing: 0.75,
+    bludgeoning: 1.0,
+  },
+}

@@ -1,0 +1,19 @@
+// obj/weapon/bludgeoning/1h/warhammer.lpml
+
+{
+  id: ["warhammer", "hammer"],
+  adj: ["tempered", "steel"],
+  name: "tempered steel warhammer",
+  short: "tempered steel warhammer",
+  long: "A short steel haft topped with a squared hammer face on one side"
+        "and a stout, down-curved beak on the other. The face is for"
+        "breaking what will break, and the beak is for what will not. The"
+        "haft is bound in leather along the length of a forearm and"
+        "finishes in a plain iron cap, and the whole of it is tempered hard"
+        "enough to trouble a breastplate.",
+  mass: 75,
+  value: 58,
+  hands: 1,
+  dc: 8.0,
+  type: "bludgeoning",
+}

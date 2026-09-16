@@ -1,0 +1,22 @@
+// obj/armour/arms/studded_leather_bracers.lpml
+
+{
+  id: ["bracers", "vambraces", "armour"],
+  adj: ["studded", "leather"],
+  name: "studded leather bracers",
+  short: "pair of studded leather bracers",
+  long: "These bracers are moulded from hardened leather to wrap the forearm"
+        "from wrist to elbow, and a double row of iron studs runs along the"
+        "outer face where a parrying arm takes its knocks. Each is closed by"
+        "three buckled straps, and the inner edge is cut away so the wrist"
+        "can still turn freely.",
+  mass: 52,
+  value: 60,
+  slot: "arms",
+  ac: 2.0,
+  defence: {
+    slashing: 2.0,
+    piercing: 1.0,
+    bludgeoning: 1.0,
+  },
+}

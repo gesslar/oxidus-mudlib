@@ -1,0 +1,21 @@
+// obj/armour/arms/padded_wool_sleeves.lpml
+
+{
+  id: ["sleeves", "armour"],
+  adj: ["padded", "wool"],
+  name: "padded wool sleeves",
+  short: "pair of padded wool sleeves",
+  long: "These separate sleeves are quilted from layered wool and lace to"
+        "the shoulders of whatever is worn beneath. They are padded thickest"
+        "along the outer forearm and the point of the elbow, and taper to"
+        "a snug cuff at the wrist so they do not catch or drag.",
+  mass: 20,
+  value: 10,
+  slot: "arms",
+  ac: 0.5,
+  defence: {
+    slashing: 0.25,
+    piercing: 0.25,
+    bludgeoning: 0.5,
+  },
+}

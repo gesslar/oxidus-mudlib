@@ -1,0 +1,21 @@
+// obj/armour/legs/layered_silk_trousers.lpml
+
+{
+  id: ["trousers", "armour"],
+  adj: ["layered", "silk"],
+  name: "layered silk trousers",
+  short: "pair of layered silk trousers",
+  long: "These trousers are made from layered silk over a light quilted"
+        "lining, cut loose through the leg and gathered at the ankle. The"
+        "layers are doubled again over the thigh and knee, and a silk sash"
+        "ties them at the waist.",
+  mass: 30,
+  value: 56,
+  slot: "legs",
+  ac: 1.5,
+  defence: {
+    slashing: 0.5,
+    piercing: 1.0,
+    bludgeoning: 1.5,
+  },
+}

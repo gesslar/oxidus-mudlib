@@ -1,0 +1,23 @@
+// obj/armour/torso/padded_wool_gambeson.lpml
+
+{
+  id: ["gambeson", "armour"],
+  adj: ["padded", "wool"],
+  name: "padded wool gambeson",
+  short: "padded wool gambeson",
+  long: "This gambeson is sewn from a dozen layers of wool and coarse linen,"
+        "quilted in vertical channels from collar to hem. It falls to the"
+        "upper thigh and fastens down the front with wooden toggles. The"
+        "layers give under a blow and spread its force, and the whole"
+        "garment is light enough to wear through a long day without"
+        "complaint.",
+  mass: 60,
+  value: 18,
+  slot: "torso",
+  ac: 1.0,
+  defence: {
+    slashing: 0.5,
+    piercing: 0.5,
+    bludgeoning: 1.0,
+  },
+}

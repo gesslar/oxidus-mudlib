@@ -1,0 +1,22 @@
+// obj/armour/feet/studded_leather_boots.lpml
+
+{
+  id: ["boots", "armour"],
+  adj: ["studded", "leather"],
+  name: "studded leather boots",
+  short: "pair of studded leather boots",
+  long: "These boots climb to just below the knee, built from heavy leather"
+        "with a hardened shin guard studded in iron down its length. The"
+        "soles are thick and hobnailed for rough ground, the toes are"
+        "capped with an extra layer of hide, and two broad buckles hold"
+        "the shafts firm against the calf.",
+  mass: 70,
+  value: 60,
+  slot: "feet",
+  ac: 2.0,
+  defence: {
+    slashing: 2.0,
+    piercing: 1.0,
+    bludgeoning: 1.0,
+  },
+}

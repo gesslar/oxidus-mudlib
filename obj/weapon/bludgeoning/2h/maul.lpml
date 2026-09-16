@@ -1,0 +1,19 @@
+// obj/weapon/bludgeoning/2h/maul.lpml
+
+{
+  id: ["maul", "hammer"],
+  adj: ["tempered", "steel"],
+  name: "tempered steel maul",
+  short: "tempered steel maul",
+  long: "A blunt block of tempered steel mounted on a long ash haft banded"
+        "with iron along its upper third. There is no edge to it and no"
+        "finesse in it. Swung from the shoulders it simply arrives, and"
+        "armour that would turn a blade only spreads the blow a little"
+        "wider before it lands. It asks for both hands and a good deal of"
+        "room.",
+  mass: 115,
+  value: 72,
+  hands: 2,
+  dc: 8.5,
+  type: "bludgeoning",
+}
