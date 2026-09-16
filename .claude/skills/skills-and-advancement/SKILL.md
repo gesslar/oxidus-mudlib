@@ -79,8 +79,8 @@ The rest of the `SKILLS` block holds the numbers `use_skill` reads on every call
 
 | Key | Description |
 |---|---|
-| `SKILLS.improve_chance.floor` | Percent chance floor for a `use_skill` roll |
-| `SKILLS.improve_chance.ceiling` | Hyperbolic scale added to the floor; the chance rises toward `floor + ceiling` as the skill grows |
+| `SKILLS.improve_chance.floor` | The percent chance a `use_skill` roll decays toward, and never drops below, when the caller passes no `improvement_chance` |
+| `SKILLS.improve_chance.ceiling` | The bonus above the floor at skill 0, and the hyperbolic scale it erodes on. The chance starts at `floor + ceiling` and halves that bonus once the raw skill reaches `ceiling` |
 | `SKILLS.default_gain` | Progress bound used when the caller passes no `improvement` |
 | `SKILLS.cap_factor` | Multiplied by the living's level to get the per-node skill cap |
 
@@ -102,8 +102,8 @@ The rest of the `SKILLS` block holds the numbers `use_skill` reads on every call
 | `set_skill_level` | `int (string skill, float level)` | Sets exact float level. Requires intermediates to already exist; will not create them |
 | `query_skills` | `mapping ()` | Returns a copy of the entire tree |
 | `set_skills` | `void (mapping s)` | Replaces the tree wholesale (no-op if `s` is not a mapping) |
-| `use_skill` | `int (string skill, mixed improvement)` | Rolls for improvement, chooses a node, clamps the gain, and applies it. Auto-creates the skill if missing. `improvement` overrides the `SKILLS.default_gain` progress bound. See improvement algorithm below |
-| `improve_skill` | `float (string skill_name, mixed potential_progress)` | Applies progress to **one** node — no path walk, no bubble-up, no cap. Defaults to `SKILLS.default_gain`. `use_skill` is the entry point; call this directly only when you deliberately want to bypass the cap and the weighted pick |
+| `use_skill` | `int (string skill, mixed improvement, mixed improvement_chance)` | **Players only.** Rolls for improvement, chooses a node, clamps the gain, and applies it. Auto-creates the skill if missing. `improvement` overrides the `SKILLS.default_gain` progress bound; `improvement_chance` overrides the level-scaled roll chance. See improvement algorithm below |
+| `improve_skill` | `float (string skill_name, mixed potential_progress)` | **Players only.** Applies progress to **one** node — no path walk, no bubble-up, no cap. Defaults to `SKILLS.default_gain`. `use_skill` is the entry point; call this directly only when you deliberately want to bypass the cap and the weighted pick |
 | `determine_skill_to_improve` | `private string (string skill_name, float skill_cap)` | Builds the node-and-ancestors candidate list, drops any node at or over `skill_cap`, weighted-draws one survivor. `undefined` if all are capped |
 | `clamp_improvement` | `private float (string skill_name, float improvement)` | Trims a proposed gain to the distance remaining to that node's cap; `0.0` if already at or over |
 | `query_skill_progress` | `int (string skill)` | Fractional part of the level as a 0-99 integer |
@@ -117,16 +117,32 @@ The rest of the `SKILLS` block holds the numbers `use_skill` reads on every call
 
 Players improve skills transparently by using them — no skill points or manual allocation.
 
-`use_skill()` is the only entry point. An unknown skill is created instead of rolled, so the first use costs a call:
+`use_skill()` is the only entry point, and it is **player-only** — the first thing it does after validating its argument is `pcp()`, and a non-player returns 0 without touching the tree. An unknown skill is created and then rolled in the same call:
 
 ```lpc
-varargs int use_skill(string skill, mixed improvement) {
-    // unknown skill -> assure_skill() at 1.0, no roll this call
-    // known skill   -> roll, then pick a node, clamp, improve
+varargs int use_skill(string skill, mixed improvement, mixed improvement_chance) {
+    // not a player  -> return 0, nothing happens
+    // unknown skill -> assure_skill() at 1.0, then carry on
+    // then          -> pick a node, roll against THAT node, clamp, improve
 }
 ```
 
-The chance is not flat. It is `improve_chance.floor + dim_hyperbolic(raw, improve_chance.ceiling)`, where `dim_hyperbolic(v, s) == (s * v) / (s + v)`. That starts at the floor, reaches `floor + ceiling/2` when the raw skill equals the ceiling, and approaches `floor + ceiling` asymptotically — **higher** skill means a more frequent roll, and the cap is what slows advancement down.
+The node is drawn **before** the roll, and the chance is read from the drawn node's level, not the named skill's. That is what lets an under-trained ancestor climb at its own rate instead of being throttled by the child that was actually used.
+
+The chance is not flat, and it **falls** as the skill rises. Absent an `improvement_chance` argument it is `improve_chance.floor + (improve_chance.ceiling - dim_hyperbolic(raw, improve_chance.ceiling))`, where `raw` is `query_raw_skill()` of the **drawn** node and `dim_hyperbolic(v, s) == (s * v) / (s + v)`.
+
+The hyperbolic term is the portion of the ceiling bonus that skill has already worn away, so the chance starts at `floor + ceiling`, has shed half the bonus by the time the raw skill reaches `ceiling`, and approaches the floor asymptotically without ever reaching it. A novice trains quickly, a veteran slowly, and no skill ever stops improving outright — the cap does that.
+
+The erosion is deliberately gentle: it is hyperbolic rather than exponential, so the rate decays over the whole skill range instead of collapsing in the first few levels. Roughly, with the current config:
+
+| Raw skill | Chance |
+|---|---|
+| 1 | ~24% |
+| 20 | ~15% |
+| 60 | ~10% |
+| 150 | ~7% |
+
+Read `SKILLS.improve_chance` for the live numbers; the shape is what matters here. If a future tuning pass wants a sharper falloff, swap `dim_hyperbolic` for `dim_exponential_decay` on the same subtraction — that is the knob, not the config values.
 
 `use_skill()` is called throughout the codebase:
 - Combat: attacker trains weapon skill after each swing, defender trains defence skill on every hit attempt.
@@ -134,18 +150,21 @@ The chance is not flat. It is `improve_chance.floor + dim_hyperbolic(raw, improv
 
 **`improvement`** replaces the `SKILLS.default_gain` bound for this call. It is a bound, not an award — `improve_skill` applies `random_float()` of it.
 
+**`improvement_chance`** replaces the whole computed chance for this call, as a flat percentage rolled against `random_float(100.0)`. Pass it when a call site needs a rate that does not track the skill's own level — a guaranteed tick at `100.0`, or a deliberately rare one. Omit it everywhere else, because the level-scaled default is what keeps advancement curves consistent across the lib.
+
 Omit it unless the call site genuinely wants to advance at a different rate from everything else, and if you do pass one, **read `SKILLS.default_gain` before choosing the literal** — the argument is an absolute bound, not a multiplier, so whether a given number speeds a call site up or slows it down depends entirely on where the default currently sits. Existing spell and ability sites pass literals (`victim->use_skill("combat.defence.evade", 0.1);`) that were chosen against an older default.
 
 ### Improvement Algorithm
 
 Selection and application are separate functions. `use_skill()` orchestrates:
 
-1. **Roll.** `random_float(100.0) < improve_chance.floor + dim_hyperbolic(raw, improve_chance.ceiling)`. Fail -> return 0.
-2. **Select** — `determine_skill_to_improve(skill, query_level() * cap_factor)`:
+0. **Gate.** Non-players return 0 immediately — nothing below runs. `assure_skill()` then creates the skill if it is new.
+1. **Select** — `determine_skill_to_improve(skill, query_level() * cap_factor)`:
    - Candidates are the skill itself and every ancestor: `"combat.melee.slashing"` -> `({ "combat", "combat.melee", "combat.melee.slashing" })`.
    - Any candidate whose `query_raw_skill()` is at or over the cap is dropped.
    - Survivors are weighted `(segments + 1) * 3` and drawn with `element_of_weighted()`. For a full 3-segment path: leaf 12, middle 9, root 6 — **44% / 33% / 22%**. As parents cap out, the surviving weights redistribute toward the leaf.
-   - All capped -> `undefined`, and `use_skill` returns 0 even though the roll succeeded.
+   - All capped -> `undefined`, and `use_skill` returns 0 without rolling at all.
+2. **Roll.** `random_float(100.0) < improvement_chance ?? improve_chance.floor + (improve_chance.ceiling - dim_hyperbolic(query_raw_skill(chosen), improve_chance.ceiling))`. Fail -> return 0. The chance shrinks as the chosen node's level grows.
 3. **Clamp** — `clamp_improvement(chosen, improvement)` trims the bound to `cap - current`, so a near-cap node gets a proportionally smaller bound.
 4. **Apply** — `improve_skill(chosen, clamped)` coerces the bound to a float (float as-is, int promoted, functional evaluated against `this_object()`, omitted -> `SKILLS.default_gain` via `??=`), adds `random_float(bound)` to that node, and notifies the player if the floored level rose.
 
@@ -313,7 +332,7 @@ level 3 monster.
 
 1. **`npc.lpc::set_level()` calls `adjust_skills_by_npc_level()`**, which seeds every skill in the tree to `level * COMBAT.NPC_SKILL_MULTIPLIER`.
 2. **`query_skill()` and `query_skill_level()` branch on `pcp()`.** On a non-PC they do not read storage at all — they compute `query_effective_level() * COMBAT.NPC_SKILL_MULTIPLIER + boon` for *any* skill name, known or not. The seeded storage is what the `_raw_` queries and use-based improvement see.
-3. **Use-based improvement still fires** for NPCs (defenders train defence skill on hit attempts), but combat reads the level-derived value, so accumulated progress does not change how an NPC fights — and `set_level()` reseeding clears it anyway.
+3. **Use-based improvement does not fire** for NPCs. `use_skill()` and `improve_skill()` both gate on `pcp()` and return 0 on anything else, so an NPC's stored tree only ever changes through `set_level()` reseeding or a direct `set_skill_level()` / `modify_skill_level()` call. Combat call sites still invoke `enemy->use_skill(...)` on monsters; those calls are simply no-ops.
 
 The API consequences, both of which are about picking the right function:
 
@@ -326,10 +345,12 @@ The API consequences, both of which are about picking the right function:
 2. **Pick the right query.** Four-way grid: `query_raw_skill` / `query_skill` / `query_raw_skill_level` / `query_skill_level`. Combat math uses `query_skill_level()`. For existence checks use `has_skill()` — not `nullp(query_raw_skill(...))`.
 3. **`set_level()` on NPCs reseeds stored skills, so call it first.** Custom skills added beforehand are overwritten silently — no error, just a line of code that did nothing and a monster that is not what you wrote.
 4. **Improvement bubbles up.** Using a leaf skill has a chance to improve parent skills too, via the weighted pick in `determine_skill_to_improve()` — the pick is the only bubble-up mechanic. Exactly one node is improved per successful roll.
-5. **Skills cap at `query_level() * SKILLS.cap_factor`.** Level up to raise the ceiling; a level *boon* will not, because the cap reads `query_level()`, not `query_effective_level()`. A `use_skill` whose roll succeeds but whose candidates are all capped returns 0 and awards nothing.
-6. **`improvement` is an absolute bound, not an award or a multiplier.** `improve_skill` applies `random_float(bound)`, and the bound defaults to `SKILLS.default_gain`. A literal passed at a call site is only faster or slower relative to whatever that config key currently holds — check it before picking one, and prefer omitting the argument.
-7. **Boons apply to `query_skill` / `query_skill_level`, not the `_raw_` variants.** A boon on `"combat.melee.slashing"` changes what `query_skill_level` and `query_skill` return but never mutates the stored value.
-8. **Attributes are currently independent of skills.** They have their own boon class (`"attribute"`) and don't directly modify skill checks — they're tracked but not yet wired into formulas.
-9. **`improve_skill` no longer selects a node.** It applies progress to exactly the dot-path it is handed, with no cap check. Selection and clamping live in `use_skill`, so calling `improve_skill` directly bypasses both. Use `use_skill()` unless that bypass is the point.
-10. **Defaults come from config, not from a default-arg functional.** `improve_skill` resolves an omitted bound with `potential_progress ??= mud_config("SKILLS.default_gain")`. The `valid_function()` branch only fires when a caller explicitly passes a functional.
-11. **Spelling is `defence` everywhere.** The config tree, the dot-paths (`"combat.defence.dodge"`, `"combat.defence.evade"`), and the armour-side identifiers (`set_defence`, `query_defence_amount`, `__defence`) all use the Canadian spelling. There is no `defense` anywhere in the lib.
+5. **Improvement gets rarer as a skill rises, it does not stall.** The roll chance erodes from `floor + ceiling` toward `floor` and never reaches it, so a high skill still trains — just slowly. Do not read a quiet high-level skill as a broken roll.
+6. **The roll reads the drawn node, not the skill you named.** Selection happens first. `use_skill("combat.melee.slashing")` may draw `"combat"`, and then the chance comes from `combat`'s level. Leaves still train fastest in practice — the depth weights are absolute, so the leaf holds 44% of draws — but that is now a property of realistic level spreads rather than an unconditional guarantee, because the chance is no longer a common factor across candidates. It would take a root more than a factor of two cheaper than its leaf to flip, which training alone will not produce; `set_skill_level()` and restored data can.
+7. **Skills cap at `query_level() * SKILLS.cap_factor`.** Level up to raise the ceiling; a level *boon* will not, because the cap reads `query_level()`, not `query_effective_level()`. A `use_skill` whose roll succeeds but whose candidates are all capped returns 0 and awards nothing.
+8. **`improvement` is an absolute bound, not an award or a multiplier.** `improve_skill` applies `random_float(bound)`, and the bound defaults to `SKILLS.default_gain`. A literal passed at a call site is only faster or slower relative to whatever that config key currently holds — check it before picking one, and prefer omitting the argument.
+9. **Boons apply to `query_skill` / `query_skill_level`, not the `_raw_` variants.** A boon on `"combat.melee.slashing"` changes what `query_skill_level` and `query_skill` return but never mutates the stored value.
+10. **Attributes are currently independent of skills.** They have their own boon class (`"attribute"`) and don't directly modify skill checks — they're tracked but not yet wired into formulas.
+11. **`improve_skill` does not select a node.** It applies progress to exactly the dot-path it is handed, with no cap check. Selection and clamping live in `use_skill`, so calling `improve_skill` directly bypasses both. Use `use_skill()` unless that bypass is the point. It is not a way around the player gate either — `improve_skill` checks `pcp()` itself.
+12. **Defaults come from config, not from a default-arg functional.** `improve_skill` resolves an omitted bound with `potential_progress ??= mud_config("SKILLS.default_gain")`. The `valid_function()` branch only fires when a caller explicitly passes a functional.
+13. **Spelling is `defence` everywhere.** The config tree, the dot-paths (`"combat.defence.dodge"`, `"combat.defence.evade"`), and the armour-side identifiers (`set_defence`, `query_defence_amount`, `__defence`) all use the Canadian spelling. There is no `defense` anywhere in the lib.

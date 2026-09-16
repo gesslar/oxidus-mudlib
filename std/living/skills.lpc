@@ -8,11 +8,13 @@
  * toward the next level) and a "subskills" submapping. Dot-paths
  * (e.g. "combat.melee.slashing") address nodes within the tree.
  *
- * Improvement is use-based: callers invoke use_skill(), which rolls
- * for a chance to hand progress to improve_skill().
+ * Improvement is use-based and player-only: callers invoke use_skill(),
+ * which rolls for a chance to hand progress to improve_skill(). Both refuse
+ * to run on a non-player, whose skill levels are derived from its own level
+ * rather than trained.
  *
  * @created 2024-07-31 - Gesslar
- * @last_modified 2026-08-31 - Gesslar
+ * @last_modified 2026-09-16 - Gesslar
  *
  * @history
  * 2024-07-31 - Gesslar - Created
@@ -24,6 +26,15 @@
  * 2026-08-31 - Gesslar - Documented clamp_improvement, and clamped it
  *                        against the skill cap rather than the next level
  *                        boundary so use-based gains roll over.
+ * 2026-09-16 - Gesslar - use_skill honours an improvement_chance override;
+ *                        use_skill and improve_skill are player-only; gave
+ *                        every function an explicit visibility; inverted the
+ *                        improve chance so it erodes toward the floor as the
+ *                        skill rises instead of climbing toward the ceiling;
+ *                        draw the node before the roll so the chance reads
+ *                        that node's level rather than the named skill's;
+ *                        clamp the rolled gain rather than the roll's bound,
+ *                        so a node near the cap can actually reach it.
  */
 
 #include <skills.h>
@@ -37,7 +48,7 @@ private nomask mapping __skills = ([]);
  * Reset the skill tree to an empty mapping, discarding all skills
  * and progress.
  */
-void wipe_skills() {
+public void wipe_skills() {
   __skills = ([]);
 }
 
@@ -53,7 +64,7 @@ void wipe_skills() {
  * @param {string} [curr_path] - The dot-path of the current recursion
  *                               level. Omit on the initial call.
  */
-varargs void initialize_missing_skills(mapping skill_set, string curr_path) {
+public varargs void initialize_missing_skills(mapping skill_set, string curr_path) {
   string cat;
   mixed element;
 
@@ -88,7 +99,7 @@ varargs void initialize_missing_skills(mapping skill_set, string curr_path) {
  *                        be >= 1.0.
  * @returns {int} 1 on success, null on invalid input.
  */
-varargs int add_skill(string skill, float level) {
+public varargs int add_skill(string skill, float level) {
   string *path = explode(skill, ".");
   mapping current = __skills;
   int x, sz;
@@ -120,7 +131,7 @@ varargs int add_skill(string skill, float level) {
  * @param {string} skill - The dot-path of the skill to remove.
  * @returns {int} 1 if removed, 0 if not found, null on invalid input.
  */
-int remove_skill(string skill) {
+public int remove_skill(string skill) {
   string *path;
   mapping current = __skills;
   int x, sz;
@@ -185,7 +196,7 @@ private nomask mapping find_skill_node(string skill) {
  * @param {string} skill - The dot-path of the skill.
  * @returns {float} The level, or null if not found or invalid.
  */
-float query_raw_skill(string skill) {
+public float query_raw_skill(string skill) {
   mapping node = find_skill_node(skill);
 
   if(!node)
@@ -197,10 +208,16 @@ float query_raw_skill(string skill) {
 /**
  * Get a skill's level — unfloored, boon applied.
  *
+ * On a player this reads the stored tree. On any other living the level is
+ * derived from query_effective_level() and COMBAT.NPC_SKILL_MULTIPLIER for
+ * any skill name whatsoever, so it never reports a missing skill — use
+ * has_skill() for existence checks there.
+ *
  * @param {string} skill - The dot-path of the skill.
- * @returns {float} The level, or null if not found or invalid.
+ * @returns {float} The level plus the "skill" boon, or null if a player does
+ *                  not have the skill or the input is invalid.
  */
-float query_skill(string skill) {
+public float query_skill(string skill) {
   mapping node;
 
   if(pcp(this_object()))
@@ -218,12 +235,19 @@ float query_skill(string skill) {
 }
 
 /**
- * Get a skill's level — floored, boon applied.
+ * Get a skill's level — floored, boon applied. This is the value the combat
+ * maths reads.
+ *
+ * On a player this reads the stored tree. On any other living the level is
+ * derived from query_effective_level() and COMBAT.NPC_SKILL_MULTIPLIER for
+ * any skill name whatsoever, so it never reports a missing skill — use
+ * has_skill() for existence checks there.
  *
  * @param {string} skill - The dot-path of the skill.
- * @returns {float} The level, or null if not found or invalid.
+ * @returns {float} The floored level plus the "skill" boon, or null if a
+ *                  player does not have the skill or the input is invalid.
  */
-float query_skill_level(string skill) {
+public float query_skill_level(string skill) {
   mapping node;
 
   if(pcp(this_object()))
@@ -245,7 +269,7 @@ float query_skill_level(string skill) {
  * @param {string} skill - The dot-path of the skill.
  * @returns {float} The level, or null if not found or invalid.
  */
-float query_raw_skill_level(string skill) {
+public float query_raw_skill_level(string skill) {
   mapping node = find_skill_node(skill);
 
   if(!node)
@@ -260,7 +284,7 @@ float query_raw_skill_level(string skill) {
  * @param {string} skill - The dot-path of the skill.
  * @returns {int} 1 if the skill exists, 0 otherwise.
  */
-int has_skill(string skill) {
+public int has_skill(string skill) {
   return mapp(find_skill_node(skill));
 }
 
@@ -273,7 +297,7 @@ int has_skill(string skill) {
  * @returns {int} 1 on success, 0 if an intermediate is missing,
  *                null on invalid input.
  */
-int set_skill_level(string skill, float level) {
+public int set_skill_level(string skill, float level) {
   mapping node;
 
   if(!stringp(skill) || nullp(level) || level < 1.0)
@@ -292,7 +316,7 @@ int set_skill_level(string skill, float level) {
  *
  * @returns {mapping} A copy of the skills mapping.
  */
-mapping query_skills() {
+public mapping query_skills() {
   return copy(__skills);
 }
 
@@ -302,20 +326,31 @@ mapping query_skills() {
  *
  * @param {mapping} s - The skills mapping to install.
  */
-void set_skills(mapping s) {
+public void set_skills(mapping s) {
   if(!mapp(s))
     return;
   __skills = copy(s);
 }
 
 /**
- * Invoke a skill, rolling for a chance to improve it. The chance scales with
- * the skill's current level. An unknown skill is created instead, with no roll
- * this call.
+ * Invoke a skill, rolling for a chance to improve it. The chance falls as the
+ * skill rises, so early levels come quickly and later ones do not.
+ *
+ * Players only — on any other living the call is a no-op. An unknown skill is
+ * created first, so a player's first use both gains the skill and rolls
+ * against it.
+ *
+ * The node to improve is drawn before the roll, and the chance is derived from
+ * that node's own level rather than the named skill's, so an under-trained
+ * ancestor advances at its own rate instead of its child's.
  *
  * @param {string} skill - The dot-path of the skill being used.
  * @param {mixed} [improvement] - Progress bound, passed through to
  *  improve_skill(). Omitted, SKILLS.default_gain is used.
+ * @param {mixed} [improvement_chance] - Percent chance of the roll succeeding,
+ *  replacing the level-scaled chance for this call. Omitted, the chance starts
+ *  at SKILLS.improve_chance.floor plus .ceiling and erodes hyperbolically
+ *  toward the floor as the drawn node's level grows.
  * @returns {int | undefined} 1 if progress was applied this call, 0 otherwise,
  *  or undefined on invalid input.
  */
@@ -323,35 +358,38 @@ public varargs int use_skill(string skill, mixed improvement, mixed improvement_
   if(!stringp(skill))
     return undefined;
 
-  float raw = query_raw_skill(skill);
-  float cap_factor = mud_config("SKILLS.cap_factor");
+  if(!pcp(this_object()))
+    return 0;
 
-  mapping improve_chance = mud_config("SKILLS.improve_chance");
+  if(!assure_skill(skill))
+    return 0;
 
-  if(!nullp(raw)) {
-    float chance_to_improve = improve_chance.floor + dim_hyperbolic(raw, improve_chance.ceiling);
+  float skill_cap = query_level() * mud_config("SKILLS.cap_factor");
+  string to_improve = determine_skill_to_improve(skill, skill_cap);
 
-    float default_gain = mud_config("SKILLS.default_gain");
+  if(!to_improve)
+    return 0;
 
-    improvement ??= default_gain;
+  float chance_to_improve;
 
-    if(random_float(100.0) < chance_to_improve) {
-      string to_improve = determine_skill_to_improve(skill, query_level() * cap_factor);
+  if(nullp(improvement_chance)) {
+    mapping improve_chance = mud_config("SKILLS.improve_chance");
+    float raw = query_raw_skill(to_improve);
+    float bonus = improve_chance.ceiling - dim_hyperbolic(raw, improve_chance.ceiling);
 
-      if(!to_improve)
-        return 0;
-
-      float modified_improvement = clamp_improvement(to_improve, improvement);
-      improve_skill(to_improve, modified_improvement);
-      return 1;
-    }
+    chance_to_improve = improve_chance.floor + bonus;
   } else {
-    assure_skill(skill);
-
-    return use_skill(skill, improvement, improvement_chance);
+    chance_to_improve = to_float(improvement_chance);
   }
 
-  return 0;
+  if(random_float(100.0) >= chance_to_improve)
+    return 0;
+
+  improvement ??= mud_config("SKILLS.default_gain");
+
+  improve_skill(to_improve, improvement);
+
+  return 1;
 }
 
 /**
@@ -364,7 +402,7 @@ public varargs int use_skill(string skill, mixed improvement, mixed improvement_
  * level boundaries freely and only the cap itself halts it.
  *
  * @param {string} skill_name - The dot-path of the node being improved.
- * @param {float} improvement - The proposed gain.
+ * @param {float} improvement - The rolled gain.
  * @returns {float} The gain to actually award, never less than 0.0.
  */
 private float clamp_improvement(string skill_name, float improvement) {
@@ -383,7 +421,7 @@ private float clamp_improvement(string skill_name, float improvement) {
  * @param {string} skill - A skill dot-path (e.g. "combat.melee").
  * @returns {string*} The path components.
  */
-string *query_skill_path(string skill) {
+public string *query_skill_path(string skill) {
   return explode(skill, ".");
 }
 
@@ -409,7 +447,6 @@ private string determine_skill_to_improve(string skill_name, float skill_cap) {
     return acc + ({ `${implode(arr[0..idx-1], ".")}.${curr}` });
   }, ({}));
   string *can_improve = filter(candidates, (: query_raw_skill($1) < $(skill_cap) :));
-
   mapping chances = ([]);
   int sz = sizeof(can_improve);
   int i = sz;
@@ -431,20 +468,26 @@ private string determine_skill_to_improve(string skill_name, float skill_cap) {
 /**
  * Apply progress to a single skill node.
  *
- * The node gains a random amount of progress, bounded by potential_progress,
- * and the living object is told if that crosses a level. Choosing which node
- * along a dot-path to hand to this is determine_skill_to_improve()'s job.
+ * Players only — on any other living the call is a no-op. The node gains a
+ * random amount of progress, bounded by potential_progress, and the living
+ * object is told if that crosses a level. The rolled gain is clamped to the
+ * skill cap after the roll, so a node near the cap lands on it exactly.
+ * Choosing which node along a dot-path to hand to this is
+ * determine_skill_to_improve()'s job.
  *
  * @param {string} skill_name - The dot-path of the node to improve.
  * @param {mixed} [potential_progress] - Upper bound for the random roll, not
  *  the amount applied. A float, an int, or a functional evaluated against
  *  this_object(). Omitted, SKILLS.default_gain is used.
- * @returns {float | undefined} The node's new level, 0 if the node is missing,
- *  or undefined on invalid input.
+ * @returns {float | undefined} The node's new level, 0 if the node is missing
+ *  or this living is not a player, or undefined on invalid input.
  */
-varargs float improve_skill(string skill_name, mixed potential_progress) {
+public varargs float improve_skill(string skill_name, mixed potential_progress) {
   if(!stringp(skill_name))
     return undefined;
+
+  if(!pcp(this_object()))
+    return 0;
 
   potential_progress ??= mud_config("SKILLS.default_gain");
 
@@ -466,7 +509,7 @@ varargs float improve_skill(string skill_name, mixed potential_progress) {
     return 0;
 
   float skill_points = query_raw_skill(skill_name);
-  node["level"] += random_float(progress);
+  node["level"] += clamp_improvement(skill_name, random_float(progress));
   float new_level = query_raw_skill(skill_name);
 
   if(floor(new_level) > floor(skill_points))
@@ -483,7 +526,7 @@ varargs float improve_skill(string skill_name, mixed potential_progress) {
  *                0-99, or null if the skill is not found or input
  *                is invalid.
  */
-int query_skill_progress(string skill) {
+public int query_skill_progress(string skill) {
   mapping node = find_skill_node(skill);
   float level;
 
@@ -504,7 +547,7 @@ int query_skill_progress(string skill) {
  * @returns {int} 1 on success, 0 if an intermediate is missing,
  *                null on invalid input.
  */
-int modify_skill_level(string skill, int level) {
+public int modify_skill_level(string skill, int level) {
   mapping node;
 
   if(!stringp(skill) || nullp(level))
@@ -571,7 +614,7 @@ private nomask mapping adjust_skill_levels(mapping current_skills, float level) 
  * @returns {int} 1 if the skill exists (or was just created), 0
  *                if creation failed.
  */
-int assure_skill(string skill) {
+public int assure_skill(string skill) {
   if(!has_skill(skill)) {
     if(add_skill(skill, 1.0)) {
       tell(this_object(), "{{9c6}}You have gained a new skill: {{re1}}" + skill + "{{re0}}.{{res}}\n");
