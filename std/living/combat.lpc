@@ -201,13 +201,15 @@ varargs void swing(int count, int multi) {
       weapon = main_hand;
 
       if(sizeof(off_hands)) {
-        float multi_chance =  15.0
-                            + floor(query_skill_level("combat.melee") / 5.0);
+        float multi_chance =  mud_config("COMBAT.MULTI_ATTACK_BASE_CHANCE")
+                            + floor(query_skill_level("combat.melee.multi-attack") / 5.0);
 
         float roll = random_float(100.0);
 
-        if(roll < multi_chance)
+        if(roll < multi_chance) {
           next_multi = 1;
+          use_skill("combat.melee.multi-attack");
+        }
       }
     }
   }
@@ -379,7 +381,14 @@ void strike_enemy(object enemy, object weapon, int off_hand) {
   tell_down(environment(), messes[2], MSG_COMBAT_HIT, ({ this_object(), enemy }));
 
   deliver_mundane_damage(enemy, dam, wtype);
-  adjust_mp(-random_float(5.0));
+
+  if(pcp(this_object())) {
+    float fatigue = mud_config("COMBAT.PC_FATIGUE_BASE")
+        + random_float(weapon ? weapon->query_mass() / 10.0 : 0.0);
+
+    adjust_mp(-random_float(fatigue));
+  }
+
   add_threat(enemy, dam);
   add_seen_threat(enemy, dam);
 
@@ -426,7 +435,7 @@ mapping query_weapon_info(object weapon) {
   if(weapon) {
     wname = weapon->query_name();
     wtype = weapon->query_damage_type();
-    skill_name = sprintf("combat.melee.%s", wtype);
+    skill_name = sprintf("combat.melee.weapon.%s", wtype);
     base = weapon->query_dc();
   } else {
     if(pcp(this_object())) {
@@ -857,7 +866,7 @@ float query_defence_amount(string type) {
 
     return __defence[type];
   } else {
-    return query_level() * 0.5;
+    return query_effective_level() * 0.25;
   }
 }
 
@@ -904,7 +913,7 @@ float query_ac() {
   if(pcp(this_object()))
     return __ac;
   else
-    return query_level() + (query_level() * 2.0);
+    return query_effective_level() * mud_config("COMBAT.NPC_AC_MULTIPLIER");
 }
 
 /**
@@ -987,7 +996,7 @@ float set_damage(float x) {
  */
 float query_damage() {
   if(__damage <= 0.0)
-    return query_level() + random_float(query_level());
+    return query_effective_level() + random_float(query_effective_level() / 2.0);
 
   return random_float(__damage);
 }

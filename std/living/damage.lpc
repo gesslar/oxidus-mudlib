@@ -264,27 +264,20 @@ public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
   float base = to_float(mud_config("COMBAT.BASE_DAMAGE"));
   float subtracted = percent_of(to_float(mud_config("COMBAT.DAMAGE_VARIANCE")), base);
 
-  base -= subtracted;
+  float running = base -= subtracted;
   float variance = random_float(subtracted);
-  base += variance;
+  running += variance;
 
   float wbase = weapon_info["base"];
 
   if(enemy->query_mp() < 0.0)
-    base += 4.0;
+    running += 4.0;
 
-  string defence_skill;
-  if(strsrch(skill_name, "arcane.") == 0) {
-    defence_skill = "combat.defence.evade";
-  } else {
-    defence_skill = "combat.defence.dodge";
-  }
-
-  float dam =
-      base
+  float damage =
+      running
     + wbase
     + (skill + query_skill_level("combat") / 2.0)
-    - enemy->query_skill_level(defence_skill)
+    - enemy->query_skill_level("combat")
   ;
 
 /*
@@ -296,7 +289,7 @@ public varargs float calculate_damage(object enemy, mixed weapon_or_skill) {
   );
 */
 
-  return dam;
+  return damage;
 }
 
 /**

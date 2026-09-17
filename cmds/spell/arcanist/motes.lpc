@@ -22,7 +22,7 @@ void setup() {
   sp_cost = 5.0;
 
   cooldowns = ([
-    "motes" : ({ "", 10 }),
+    "motes" : ({ "", 5 }),
   ]);
 
   usage_text = "motes <target>";
