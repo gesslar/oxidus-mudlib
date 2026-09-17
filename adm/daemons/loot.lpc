@@ -13,6 +13,7 @@
 
 inherit STD_DAEMON;
 inherit EXT_LOG;
+inherit EXT_CURRENCY;
 
 private void drop_items(object tp, mixed item, object source);
 private mixed process_loot_item(mixed item, object tp, object source);
@@ -46,22 +47,37 @@ public void loot_drop(object tp, object source) {
 }
 
 /**
- * Drops coins from the source's coin table into the source.
+ * Drops coins from the source's coin table into the same object.
  *
- * @param {STD_BODY} _tp - The player to drop the coins for
+ * @param {STD_BODY} tp - The player to drop the coins for
  * @param {STD_NPC} source - The source of the coins
  */
-public void coin_drop(object _tp, object source) {
-  mixed *coin_table = source->query_coin_table();
+public void coin_drop(object tp, object source) {
+  mixed coin_table = source->query_coin_table();
 
-  if(sizeof(coin_table)) {
-    foreach(mixed loot in coin_table) {
-      mixed item = loot[0..1];
+  if(pointerp(coin_table) && sizeof(coin_table)) {
+    if(sizeof(coin_table) == 1 && coin_table[0][0] == "auto") {
+      mixed *loot = coin_table[0];
       float chance = loot[2];
       float roll = random_float(100.0);
 
-      if(roll < chance)
-        catch(drop_coins(_tp, item, source));
+      if(roll < chance) {
+        int level = source->query_level();
+        int value = determine_value_by_level(level) / 2;
+        mapping currencies = least_coins(value);
+        mixed *formatted = format_return_currency(currencies);
+
+        each(formatted, (: catch(drop_coins($(tp), $1, $(source))) :));
+      }
+    } else {
+      foreach(mixed *loot in coin_table) {
+        mixed item = loot[0..1];
+        float chance = loot[2];
+        float roll = random_float(100.0);
+
+        if(roll < chance)
+          catch(drop_coins(tp, item, source));
+      }
     }
   }
 }
@@ -167,7 +183,7 @@ private void autovalue_loot_item(object item, object _tp, object source) {
 }
 
 /**
- * Creates a coin object and moves it into the source.
+ * Creates a coin object and moves it into the destination object.
  *
  * @param {STD_BODY} _tp - The player to drop the coins for
  * @param {mixed} item - The value array of currency type and number

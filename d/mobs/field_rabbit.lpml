@@ -20,7 +20,5 @@
     "/obj/loot/rabbit_fur.loot",
   ],
   loot chance: 60.0,
-  coins: {
-    copper: [1,50.0],
-  },
+  coins: "auto",
 }
