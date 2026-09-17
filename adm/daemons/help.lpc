@@ -13,7 +13,7 @@
 
 inherit STD_DAEMON;
 
-#include <pcre_flags.h>
+#include <driver/pcre_flags.h>
 
 public void rehash();
 private void rehash_directory(mapping directory);
