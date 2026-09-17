@@ -20,7 +20,5 @@
     "/obj/loot/insect_wing.loot",
   ],
   loot chance: 100.0,
-  coins: {
-    copper: [1,10.0],
-  },
+  coins: "auto",
 }

@@ -16,7 +16,5 @@
     "/obj/loot/small_bone.loot",
   ],
   loot chance: 50.0,
-  coins: {
-    copper: [1,25.0],
-  },
+  coins: "auto",
 }

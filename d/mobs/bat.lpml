@@ -27,6 +27,6 @@
   ],
   loot chance: 70.0,
   coins: {
-    copper: [1,25.0],
+    auto: 25.0,
   },
 }

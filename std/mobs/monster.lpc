@@ -94,11 +94,21 @@ void virtual_setup(mixed args...) {
   }
 
   // Handle coins
-  if(!nullp(data["coins"])) {
-    foreach(string coin_type, mixed coin_data in data["coins"]) {
-      if(pointerp(coin_data) && sizeof(coin_data) == 2) {
-        add_coin(coin_type, coin_data[0], coin_data[1]);
+  if(!nullp(data.coins)) {
+    if(mapp(data.coins)) {
+      // coins: { auto: 30.0 } - ignores any other coins specified
+      if(!nullp(data.coins.auto) && (floatp(data.coins.auto) || intp(data.coins.auto))) {
+        add_coin("auto", 0, to_float(data.coins.auto));
+      } else {
+        foreach(string coin_type, mixed *coin_data in data.coins) {
+          if(pointerp(coin_data) && sizeof(coin_data) == 2) {
+            add_coin(coin_type, coin_data[0], coin_data[1]);
+          }
+        }
       }
+      // coins: "auto"
+    } else if(data.coins == "auto") {
+      add_coin("auto", 0, 100.0);
     }
   }
 
