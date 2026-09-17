@@ -6,16 +6,14 @@
  * between denominations.
  *
  * @created 2024-02-19 - Gesslar
- * @last_modified 2024-02-20 - Assistant
+ * @last_modified 2024-02-20 - Gesslar
  *
  * @history
  * 2024-02-19 - Gesslar - Created
- * 2024-02-20 - Assistant - Updated
+ * 2024-02-20 - Gesslar - Updated
  */
 
 inherit STD_DAEMON;
-
-// Variables
 
 /**
  * Maps each currency denomination name to its relative value.
@@ -33,7 +31,7 @@ void setup() {
   // Transform the array into a mapping
   currency_map = ([]);
   foreach(mixed *currency in currency_config)
-      currency_map[currency[0]] = currency[1];
+    currency_map[currency[0]] = currency[1];
 
   // Create an ordered list of currencies
   currency_order = sort_array(keys(currency_map),
