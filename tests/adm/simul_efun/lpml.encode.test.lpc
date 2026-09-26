@@ -2,74 +2,138 @@
 /**
  * @file /tests/adm/simul_efun/lpml.encode.test.lpc
  *
- * Tests for lpml_encode() (LPC value -> JSON text) and decode/encode
- * roundtrips. lpml_encode emits standard JSON: undefined -> null,
- * booleans collapse into their integer forms, and non-string mapping
- * keys are skipped.
+ * Tests for lpml_encode() (LPC value -> human-readable, width-bounded LPML).
+ * The core property: lpml_decode(lpml_encode(x)) == x, and no line exceeds
+ * the width when the data allows it.
  */
 
 #include <test.h>
 
 inherit STD_TEST;
 
+private nosave string __desc =
+  "Enables Homestead (help homestead, help holiday), Hallowe'en themed "
+  "items in the J4, Haunted Series battlecards in the shops and "
+  "world drops, pumpkin searching, pumpkin submission at the Gamwich 3000 "
+  "Pumpkin Food Processsor, and pumpkin donations to the STEA.";
+
+/**
+ * Returns the lines of `text` longer than `width`.
+ *
+ * @param {string} text - The text to check.
+ * @param {int} width - Maximum line length.
+ * @returns {string*} The overlong lines.
+ */
+private string *long_lines(string text, int width) {
+  return filter(explode(text, "\n"), (: strlen($1) > $2 :), width);
+}
+
 void setup() {
-  describe("lpml_encode primitives", ({
-    test("positive integer", function() {
-      ASSERT_EQ("42", lpml_encode(42));
+  describe("lpml_encode scalars", ({
+    test("int", function() {
+      ASSERT_EQ("42\n", lpml_encode(42));
     }),
-    test("negative integer", function() {
-      ASSERT_EQ("-5", lpml_encode(-5));
+    test("float keeps a decimal point", function() {
+      ASSERT_EQ("15.0\n", lpml_encode(15.0));
     }),
-    test("plain string is quoted", function() {
-      ASSERT_EQ("\"hi\"", lpml_encode("hi"));
+    test("float uses shortest round-trip form", function() {
+      ASSERT_EQ("0.1\n", lpml_encode(0.1));
     }),
-    test("undefined encodes as null", function() {
-      ASSERT_EQ("null", lpml_encode(undefined));
+    test("undefined is null", function() {
+      ASSERT_EQ("null\n", lpml_encode(undefined));
     }),
   }));
 
-  describe("lpml_encode string escaping", ({
-    test("embedded double quote is escaped", function() {
-      ASSERT_EQ("\"a\\\"b\"", lpml_encode("a\"b"));
+  describe("lpml_encode keys", ({
+    test("identifier key is bare", function() {
+      ASSERT_EQ("{ name: 1 }\n", lpml_encode(([ "name": 1 ])));
     }),
-    test("newline is escaped", function() {
-      ASSERT_EQ("\"a\\nb\"", lpml_encode("a\nb"));
+    test("spacey and hyphen keys are bare", function() {
+      ASSERT_EQ("{ 10-15: 1, hit points: 2 }\n",
+        lpml_encode(([ "hit points": 2, "10-15": 1 ])));
     }),
-    test("backslash is escaped", function() {
-      ASSERT_EQ("\"a\\\\b\"", lpml_encode("a\\b"));
+    test("padded key is quoted", function() {
+      ASSERT_EQ("{ \"  <=9\": 1 }\n", lpml_encode(([ "  <=9": 1 ])));
+    }),
+    test("path key is quoted", function() {
+      ASSERT_EQ("{ \"/obj/x\": 1 }\n", lpml_encode(([ "/obj/x": 1 ])));
+    }),
+    test("colon key is quoted", function() {
+      ASSERT_EQ("{ \"a:b\": 1 }\n", lpml_encode(([ "a:b": 1 ])));
+    }),
+    test("non-string key errors", function() {
+      ASSERT(catch(lpml_encode(([ 1: 2 ]))));
+    }),
+  }));
+
+  describe("lpml_encode include safety", ({
+    test("leading # survives", function() {
+      ASSERT_EQ("#ff0000", lpml_decode(lpml_encode("#ff0000")));
+    }),
+    test("quote-hash mid-string survives", function() {
+      ASSERT_EQ("say \"#1\" it's '#2'",
+        lpml_decode(lpml_encode("say \"#1\" it's '#2'")));
+    }),
+    test("hash key survives", function() {
+      mapping m = ([ "#tag": 1 ]);
+      ASSERT_EQ(m, lpml_decode(lpml_encode(m)));
+    }),
+    test("backslash before hash survives", function() {
+      ASSERT_EQ("a\\#b", lpml_decode(lpml_encode("a\\#b")));
+    }),
+  }));
+
+  describe("lpml_encode wrapping", ({
+    test("long description stays within 79", function() {
+      string out = lpml_encode(([ "name": "Homestead", "description": __desc ]));
+      ASSERT_EQ(({ }), long_lines(out, 79));
+    }),
+    test("long description round-trips", function() {
+      mapping m = ([ "name": "Homestead", "description": __desc ]);
+      ASSERT_EQ(m, lpml_decode(lpml_encode(m)));
+    }),
+    test("newlines and double spaces round-trip", function() {
+      string s = "Usage: thing [opts]\n\nFirst paragraph that goes on and on "
+        "and on well past the width.  Two spaces here.\n Leading space line.";
+      ASSERT_EQ(s, lpml_decode(lpml_encode(([ "help": s ])))["help"]);
+    }),
+    test("narrow width still round-trips", function() {
+      mapping m = ([ "description": __desc ]);
+      ASSERT_EQ(m, lpml_decode(lpml_encode(m, 30)));
     }),
   }));
 
   describe("lpml_encode containers", ({
-    test("empty array", function() {
-      ASSERT_EQ("[]", lpml_encode(({})));
+    test("small containers stay inline", function() {
+      ASSERT_EQ("{ a: [1, 2], b: {} }\n",
+        lpml_encode(([ "a": ({ 1, 2 }), "b": ([ ]) ])));
     }),
-    test("empty mapping", function() {
-      ASSERT_EQ("{}", lpml_encode(([])));
-    }),
-    test("integer array", function() {
-      ASSERT_EQ("[1,2,3]", lpml_encode(({ 1, 2, 3 })));
-    }),
-    test("single-key mapping", function() {
-      ASSERT_EQ("{\"a\":1}", lpml_encode((["a": 1])));
-    }),
-    test("non-string keys are skipped", function() {
-      ASSERT_EQ("{}", lpml_encode(([1: 2])));
-    }),
-  }));
+    test("overflowing mapping expands with trailing commas", function() {
+      mapping m = ([
+        "rewards": ([ "  <=9": 75000, "10-15": 150000, "16-20": 300000,
+          "21-29": 450000, "30-34": 900000, " >=40": 1500000 ]),
+      ]);
+      string out = lpml_encode(m);
 
-  describe("lpml roundtrip", ({
-    test("nested structure survives encode then decode", function() {
+      ASSERT_EQ(({ }), long_lines(out, 79));
+      ASSERT_EQ(m, lpml_decode(out));
+      ASSERT(strsrch(out, "    10-15: 150000,\n") != -1);
+    }),
+    test("nested structure round-trips", function() {
       mapping m = ([
         "name": "Gesslar",
-        "level": 10,
-        "tags": ({ "a", "b" }),
-        "stats": (["str": 5, "dex": 7]),
+        "tags": ({ "a", "b", __desc }),
+        "stats": ([ "str": 5, "dex": 7, "nested": ([ "deep": ({ 1.5, 0 }) ]) ]),
       ]);
       ASSERT_EQ(m, lpml_decode(lpml_encode(m)));
     }),
-    test("float survives encode then decode", function() {
-      ASSERT_EQ(3.5, lpml_decode(lpml_encode(3.5)));
+    test("circular reference errors", function() {
+      mapping m = ([ ]);
+      m["self"] = m;
+      ASSERT(catch(lpml_encode(m)));
+    }),
+    test("object value errors", function() {
+      ASSERT(catch(lpml_encode(([ "ob": this_object() ]))));
     }),
   }));
 }

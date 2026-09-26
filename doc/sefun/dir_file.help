@@ -22,7 +22,7 @@
 
 ### RETURN VALUES
 
-    (({ string, string )
+    (string*) Tuple of ({ directory, filename })
 
 ### EXAMPLE
 

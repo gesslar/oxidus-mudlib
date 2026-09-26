@@ -149,7 +149,7 @@ varargs string json_encode(mixed value, mixed* pointers);
 
 // File: lpml.c
 varargs mixed lpml_decode(string text, string path);
-mixed lpml_encode(string text);
+varargs string lpml_encode(mixed value, int width);
 
 // File: mapping.c
 string pretty_map(mapping map);

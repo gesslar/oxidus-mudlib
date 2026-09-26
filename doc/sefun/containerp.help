@@ -1,0 +1,25 @@
+---
+{
+  title: "containerp"
+}
+---
+### NAME
+
+    containerp() - Determine if an object inherits `STD_CONTAINER`.
+
+### SYNOPSIS
+
+    int containerp( object ob );
+
+### DESCRIPTION
+
+    Determine if an object inherits `STD_CONTAINER`.
+
+### PARAMETERS
+
+    ob  (object)
+        THe object to test.
+
+### RETURN VALUES
+
+    (ob is STD_CONTAINER) 1 if the object inherits `STD_CONTAINER`.
