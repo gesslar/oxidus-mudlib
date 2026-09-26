@@ -5,22 +5,45 @@
 ---
 ### NAME
 
-    lpml_encode() - Serializes an LPC value into JSON text.
+    lpml_encode() - Serializes an LPC value into human-readable LPML,
+    keeping lines within a column width.
 
 ### SYNOPSIS
 
-    varargs string lpml_encode( mixed value, mixed* pointers );
+    varargs string lpml_encode( mixed value, int width );
 
 ### DESCRIPTION
 
-    Serializes an LPC value into JSON text.
+    Serializes an LPC value into human-readable LPML, keeping lines within a
+    column width.
+
+    Output is meant for files people read and edit: unquoted keys where
+    safe, sorted mapping keys, trailing commas, containers expanded only
+    when they overflow, and long strings wrapped with LPML string
+    concatenation so the decoded value is unchanged.
+
+    Lossy by nature of LPC, not of the format: there are no booleans (1/0
+    are written as ints), mapping order is not preserved (keys are sorted),
+    and comments in a source file cannot survive a decode/encode round trip.
 
 ### PARAMETERS
 
     value  (mixed)
-           The LPC value to serialize.
+           The value to serialize.
+
+    width  (int, optional, default: 79)
+           Maximum line length. A single string with no safe break point, or
+           a very long key, can still exceed it.
 
 ### RETURN VALUES
 
-    (string) The JSON string representation. Note: Encoding produces
-    standard JSON
+    (string) The LPML text, newline-terminated.
+
+### ERRORS
+
+    If the value contains a non-string mapping key, a circular reference, or
+    a type LPML cannot represent (object, function, buffer).
+
+### EXAMPLE
+
+    {{di1}}write_file("/adm/etc/thing.lpml", lpml_encode(data), 1);{{di0}}

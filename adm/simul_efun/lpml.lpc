@@ -24,8 +24,9 @@
  *     Deserializes LPML into an LPC value.
  *     base_path is optional, used for resolving relative includes.
  *
- * string lpml_encode(mixed value)
- *     Serializes an LPC value into JSON text.
+ * string lpml_encode(mixed value, int width)
+ *     Serializes an LPC value into human-readable, width-bounded LPML.
+ *     width is optional and defaults to 79.
  *
  * @created 2025-11-09 - Gesslar
  * @version 1.0.0
@@ -1093,76 +1094,363 @@ varargs mixed lpml_decode(string text, string base_path) {
   return lpml_decode_parse(parse);
 }
 
-/**
- * Serializes an LPC value into JSON text.
- *
- * @param {mixed} value - The LPC value to serialize.
- * @returns {string} The JSON string representation.
- *
- * Note: Encoding produces standard JSON
- */
-varargs string lpml_encode(mixed value, mixed* pointers) {
-  // Use standard JSON encoding - LPML is primarily for parsing
-  // For now, delegate to json_encode if available, or implement basic encoding
+#define LPML_ENCODE_WIDTH 79
 
+private string lpml_encode_inline(mixed value);
+private string *lpml_encode_value(mixed value, int indent, string head,
+  string tail, int width);
+
+/**
+ * Quotes a string for LPML output.
+ *
+ * The include preprocessor scans raw source text for `"#` and `'#` anywhere,
+ * not just at the start of a value, so any `#` directly after a quote
+ * character is escaped as `\#`. The preprocessor's final pass strips every
+ * `\#` back to `#` before the string parser runs.
+ *
+ * @private
+ * @param {string} str - The string to quote.
+ * @returns {string} The double-quoted, escaped string.
+ */
+private string lpml_encode_quote(string str) {
+  str = replace_string(str, "\\", "\\\\");
+  str = replace_string(str, "\"", "\\\"");
+  str = replace_string(str, "\n", "\\n");
+  str = replace_string(str, "\r", "\\r");
+  str = replace_string(str, "\t", "\\t");
+  str = replace_string(str, sprintf("%c", 8), "\\b");
+  str = replace_string(str, sprintf("%c", 12), "\\f");
+
+  str = "\"" + str + "\"";
+
+  str = replace_string(str, "\"#", "\"\\#");
+  str = replace_string(str, "'#", "'\\#");
+
+  return str;
+}
+
+/**
+ * Formats a mapping key, bare when the decoder would read it back verbatim
+ * and quoted otherwise.
+ *
+ * A bare key starts with a letter, digit or underscore and continues with
+ * letters, digits, underscores, hyphens, dots or single interior spaces.
+ * Anything else — leading/trailing whitespace (the spacey-key reader trims
+ * it), a `:`, a leading `/` (comment), quotes, `#` — is quoted.
+ *
+ * @private
+ * @param {string} key - The mapping key.
+ * @returns {string} The key as it should appear before the `:`.
+ */
+private string lpml_encode_key(string key) {
+  int len = strlen(key);
+
+  if(!len || key[<1] == ' ' || strsrch(key, "  ") != -1)
+    return lpml_encode_quote(key);
+
+  for(int i = 0; i < len; i++) {
+    int ch = key[i];
+
+    if((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
+    || (ch >= '0' && ch <= '9') || ch == '_')
+      continue;
+
+    if(i > 0 && (ch == '-' || ch == '.' || ch == ' '))
+      continue;
+
+    return lpml_encode_quote(key);
+  }
+
+  return key;
+}
+
+/**
+ * Returns a mapping's keys in a stable (sorted) order.
+ *
+ * @private
+ * @param {mapping} map - The mapping.
+ * @returns {string*} The sorted keys.
+ * @errors If any key is not a string.
+ */
+private string *lpml_encode_keys(mapping map) {
+  mixed *ks = keys(map);
+
+  foreach(mixed key in ks) {
+    if(!stringp(key))
+      error(sprintf("lpml_encode: non-string mapping key %O\n", key));
+  }
+
+  return sort_array(ks, 1);
+}
+
+/**
+ * Formats a float as the shortest decimal that reads back as the same value,
+ * always with a decimal point so it decodes as a float, not an int.
+ *
+ * @private
+ * @param {float} value - The float.
+ * @returns {string} The formatted number.
+ */
+private string lpml_encode_float(float value) {
+  string out;
+
+  for(int precision = 1; precision <= 17; precision++) {
+    out = sprintf(sprintf("%%.%df", precision), value);
+
+    while(out[<1] == '0' && out[<2] != '.')
+      out = out[0..<2];
+
+    if(to_float(out) == value)
+      return out;
+  }
+
+  return out;
+}
+
+/**
+ * Formats a scalar value.
+ *
+ * @private
+ * @param {mixed} value - An int, float, string or undefined.
+ * @returns {string} The LPML text for the value.
+ * @errors If the value is an object, function, buffer or other type LPML
+ *  cannot represent.
+ */
+private string lpml_encode_scalar(mixed value) {
   if(undefinedp(value))
     return "null";
-  if(intp(value) || floatp(value))
+
+  if(intp(value))
     return "" + value;
-  if(stringp(value)) {
-    value = replace_string(value, "\\", "\\\\");
-    value = replace_string(value, "\"", "\\\"");
-    value = replace_string(value, "\n", "\\n");
-    value = replace_string(value, "\r", "\\r");
-    value = replace_string(value, "\t", "\\t");
-    return sprintf("\"%s\"", value);
+
+  if(floatp(value))
+    return lpml_encode_float(value);
+
+  if(stringp(value))
+    return lpml_encode_quote(value);
+
+  error(sprintf("lpml_encode: cannot represent %O\n", value));
+}
+
+/**
+ * Finds the positions where a string can be split into adjacent LPML string
+ * literals without changing its decoded value.
+ *
+ * Adjacent literals join with a single space unless the left one ends in a
+ * newline. So a split may land:
+ * - right after a `\n` (next chunk starts there, nothing dropped), or
+ * - on a single space with non-space, non-newline neighbours (the space is
+ *   dropped and the decoder puts it back).
+ *
+ * @private
+ * @param {string} str - The decoded string.
+ * @returns {int**} Pairs of ({ split_index, chars_to_skip }), ascending.
+ */
+private mixed *lpml_encode_breaks(string str) {
+  mixed *breaks = ({ });
+  int len = strlen(str);
+
+  for(int i = 0; i < len; i++) {
+    int ch = str[i];
+
+    if(ch == '\n' && i + 1 < len)
+      breaks += ({ ({ i + 1, 0 }) });
+    else if(ch == ' ' && i > 0 && i < len - 1
+         && str[i - 1] != ' ' && str[i - 1] != '\n' && str[i + 1] != ' ')
+      breaks += ({ ({ i, 1 }) });
   }
 
-  if(mapp(value)) {
-    string out;
-    int ix = 0;
+  return breaks;
+}
 
-    if(pointers && member_array(value, pointers) != -1)
-        return "null";
+/**
+ * Splits a string into quoted chunks that fit the width, greedily.
+ *
+ * The first chunk starts at `first_col`; later chunks at `cont_col`. The
+ * last chunk must also leave room for `tail_len` (e.g. a trailing comma).
+ * When no break fits, the first available break is taken and the line runs
+ * long; a string with no breaks at all stays on one line.
+ *
+ * @private
+ * @param {string} str - The decoded string.
+ * @param {int} first_col - Column the first chunk starts at.
+ * @param {int} cont_col - Column continuation chunks start at.
+ * @param {int} tail_len - Length of text following the last chunk.
+ * @param {int} width - Maximum line length.
+ * @returns {string*} The quoted chunks, in order.
+ */
+private string *lpml_encode_wrap(string str, int first_col, int cont_col,
+  int tail_len, int width) {
+  string whole = lpml_encode_quote(str);
 
-    pointers = pointers ? pointers + ({ value }) : ({ value });
+  if(first_col + strlen(whole) + tail_len <= width)
+    return ({ whole });
 
-    foreach(mixed k, mixed v in value) {
-      if(!stringp(k))
+  mixed *breaks = lpml_encode_breaks(str);
+  string *chunks = ({ });
+  int start = 0;
+  int col = first_col;
+
+  while(1) {
+    string rest = lpml_encode_quote(str[start..]);
+
+    if(col + strlen(rest) + tail_len <= width) {
+      chunks += ({ rest });
+      break;
+    }
+
+    mixed *best = 0;
+
+    foreach(mixed *brk in breaks) {
+      if(brk[0] <= start)
         continue;
 
-      if(ix++)
-        out = sprintf("%s,%s:%s", out, lpml_encode(k, pointers), lpml_encode(v, pointers));
-      else
-        out = sprintf("%s:%s", lpml_encode(k, pointers), lpml_encode(v, pointers));
+      if(col + strlen(lpml_encode_quote(str[start..brk[0] - 1])) > width) {
+        if(!best)
+          best = brk;
+
+        break;
+      }
+
+      best = brk;
     }
 
-    return sprintf("{%s}", out || "");
-  }
-
-  if(pointerp(value)) {
-    string out;
-    int ix = 0;
-
-    if(sizeof(value) == 0)
-      return "[]";
-
-    if(pointers && member_array(value, pointers) != -1)
-      return "null";
-
-    pointers = pointers ? pointers + ({ value }) : ({ value });
-
-    foreach(mixed v in value) {
-      if(ix++)
-        out = sprintf("%s,%s", out, lpml_encode(v, pointers));
-      else
-        out = lpml_encode(v, pointers);
+    if(!best) {
+      chunks += ({ rest });
+      break;
     }
 
-    return sprintf("[%s]", out);
+    chunks += ({ lpml_encode_quote(str[start..best[0] - 1]) });
+    start = best[0] + best[1];
+    col = cont_col;
   }
 
-  return "null";
+  return chunks;
+}
+
+/**
+ * Formats a value on a single line, e.g. `{ a: 1, b: [1, 2] }`.
+ *
+ * @private
+ * @param {mixed} value - The value.
+ * @returns {string} The single-line LPML text.
+ */
+private string lpml_encode_inline(mixed value) {
+  if(!mapp(value) && !pointerp(value))
+    return lpml_encode_scalar(value);
+
+  string *parts = ({ });
+
+  if(mapp(value)) {
+    if(!sizeof(value))
+      return "{}";
+
+    foreach(string key in lpml_encode_keys(value))
+      parts += ({ lpml_encode_key(key) + ": "
+        + lpml_encode_inline(value[key]) });
+
+    return "{ " + implode(parts, ", ") + " }";
+  }
+
+  foreach(mixed element in value)
+    parts += ({ lpml_encode_inline(element) });
+
+  return "[" + implode(parts, ", ") + "]";
+}
+
+/**
+ * Formats a value as one or more lines.
+ *
+ * Containers stay on one line when they fit, otherwise expand one entry per
+ * line with trailing commas. Long strings wrap via adjacent-literal
+ * concatenation, continuation lines aligned under the opening quote (or
+ * indented two past the parent when the key is very long).
+ *
+ * @private
+ * @param {mixed} value - The value.
+ * @param {int} indent - Indent of the line holding this value.
+ * @param {string} head - Text already on the line (indent + `key: `).
+ * @param {string} tail - Text after the value (`,` or `""`).
+ * @param {int} width - Maximum line length.
+ * @returns {string*} The lines.
+ */
+private string *lpml_encode_value(mixed value, int indent, string head,
+  string tail, int width) {
+  int col = strlen(head);
+
+  if(stringp(value)) {
+    int cont = col <= 40 ? col : indent + 2;
+    string *chunks = lpml_encode_wrap(value, col, cont, strlen(tail), width);
+    string *lines = ({ head + chunks[0] });
+
+    for(int i = 1; i < sizeof(chunks); i++)
+      lines += ({ sprintf("%*s%s", cont, "", chunks[i]) });
+
+    lines[<1] += tail;
+
+    return lines;
+  }
+
+  if(!mapp(value) && !pointerp(value))
+    return ({ head + lpml_encode_scalar(value) + tail });
+
+  string text = lpml_encode_inline(value);
+
+  if(col + strlen(text) + strlen(tail) <= width)
+    return ({ head + text + tail });
+
+  string pad = sprintf("%*s", indent + 2, "");
+  string *lines = ({ head + (mapp(value) ? "{" : "[") });
+
+  if(mapp(value)) {
+    foreach(string key in lpml_encode_keys(value)) {
+      string key_head = pad + lpml_encode_key(key) + ": ";
+
+      lines += lpml_encode_value(value[key], indent + 2, key_head, ",", width);
+    }
+  } else {
+    foreach(mixed element in value)
+      lines += lpml_encode_value(element, indent + 2, pad, ",", width);
+  }
+
+  lines += ({ sprintf("%*s%s", indent, "", mapp(value) ? "}" : "]") + tail });
+
+  return lines;
+}
+
+/**
+ * Serializes an LPC value into human-readable LPML, keeping lines within a
+ * column width.
+ *
+ * Output is meant for files people read and edit: unquoted keys where safe,
+ * sorted mapping keys, trailing commas, containers expanded only when they
+ * overflow, and long strings wrapped with LPML string concatenation so the
+ * decoded value is unchanged.
+ *
+ * Lossy by nature of LPC, not of the format: there are no booleans (1/0 are
+ * written as ints), mapping order is not preserved (keys are sorted), and
+ * comments in a source file cannot survive a decode/encode round trip.
+ *
+ * @param {mixed} value - The value to serialize.
+ * @param {int} [width=79] - Maximum line length. A single string with no
+ *  safe break point, or a very long key, can still exceed it.
+ * @returns {string} The LPML text, newline-terminated.
+ * @errors If the value contains a non-string mapping key, a circular
+ *  reference, or a type LPML cannot represent (object, function, buffer).
+ * @example
+ * write_file("/adm/etc/thing.lpml", lpml_encode(data), 1);
+ */
+varargs string lpml_encode(mixed value, int width) {
+  string *cycles = find_cycles(value);
+
+  if(sizeof(cycles))
+    error(`lpml_encode: circular reference at ${implode(cycles, ", ")}\n`);
+
+  if(width <= 0)
+    width = LPML_ENCODE_WIDTH;
+
+  return implode(lpml_encode_value(value, 0, "", "", width), "\n")
+    + "\n";
 }
 
 #endif /* __STD_LPML_H */

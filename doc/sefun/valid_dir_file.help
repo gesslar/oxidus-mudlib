@@ -28,7 +28,7 @@
 
 ### RETURN VALUES
 
-    (({ string, string ) or null if invalid
+    (string*) Tuple of ({ directory_path, filename }), or null if invalid
 
 ### EXAMPLE
 
