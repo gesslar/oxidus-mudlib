@@ -32,8 +32,8 @@
            The value to serialize.
 
     width  (int, optional, default: 79)
-           Maximum line length. A single string with no safe break point, or
-           a very long key, can still exceed it.
+           Maximum line length. A string whose text after its last safe
+           break point doesn't fit, or a very long key, can still exceed it.
 
 ### RETURN VALUES
 
