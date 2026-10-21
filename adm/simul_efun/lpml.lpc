@@ -1073,8 +1073,9 @@ private string *lpml_encode_keys(mapping map) {
 }
 
 /**
- * Formats a float as the shortest decimal that reads back as the same value,
- * always with a decimal point so it decodes as a float, not an int.
+ * Formats a float as the shortest `%g` form that reads back as the same
+ * value. Very large or small magnitudes come out in exponent notation; plain
+ * forms get a decimal point so they decode as a float, not an int.
  *
  * @private
  * @param {float} value - The float.
@@ -1084,14 +1085,14 @@ private string lpml_encode_float(float value) {
   string out;
 
   for(int precision = 1; precision <= 17; precision++) {
-    out = sprintf(sprintf("%%.%df", precision), value);
-
-    while(out[<1] == '0' && out[<2] != '.')
-      out = out[0..<2];
+    out = sprintf(sprintf("%%.%dg", precision), value);
 
     if(to_float(out) == value)
-      return out;
+      break;
   }
+
+  if(strsrch(out, ".") == -1 && strsrch(out, "e") == -1)
+    out += ".0";
 
   return out;
 }
@@ -1321,8 +1322,9 @@ private string *lpml_encode_value(mixed value, int indent, string head,
  * comments in a source file cannot survive a decode/encode round trip.
  *
  * @param {mixed} value - The value to serialize.
- * @param {int} [width=79] - Maximum line length. A single string with no
- *  safe break point, or a very long key, can still exceed it.
+ * @param {int} [width=79] - Maximum line length. A string whose text after
+ *  its last safe break point doesn't fit, or a very long key, can still
+ *  exceed it.
  * @returns {string} The LPML text, newline-terminated.
  * @errors If the value contains a non-string mapping key, a circular
  *  reference, or a type LPML cannot represent (object, function, buffer).

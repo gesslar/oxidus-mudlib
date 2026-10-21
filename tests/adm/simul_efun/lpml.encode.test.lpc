@@ -39,6 +39,12 @@ void setup() {
     test("float uses shortest round-trip form", function() {
       ASSERT_EQ("0.1\n", lpml_encode(0.1));
     }),
+    test("tiny float round-trips", function() {
+      ASSERT_EQ(1e-20, lpml_decode(lpml_encode(1e-20)));
+    }),
+    test("huge float round-trips", function() {
+      ASSERT_EQ(1.5e20, lpml_decode(lpml_encode(1.5e20)));
+    }),
     test("undefined is null", function() {
       ASSERT_EQ("null\n", lpml_encode(undefined));
     }),
