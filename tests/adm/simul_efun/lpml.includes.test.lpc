@@ -2,7 +2,7 @@
 /**
  * @file /tests/adm/simul_efun/lpml.includes.test.lpc
  *
- * Tests for lpml_decode() file-include preprocessing ("#path" values),
+ * Tests for lpml_decode() file includes ("#path" values),
  * recursive includes, the \# literal-hash escape, and the
  * file-not-found fallback (the include string is kept verbatim).
  *
@@ -35,11 +35,30 @@ void setup() {
         "{ x: \"#./does_not_exist.lpml\" }", FIXTURE_DIR);
       ASSERT_EQ("#./does_not_exist.lpml", r["x"]);
     }),
+    test("a quoted # inside a comment is not an include", function() {
+      mixed r = lpml_decode(
+        "{ a: 1, // \"#./lpml_stats.lpml\"\n b: 2 }", FIXTURE_DIR);
+      ASSERT_EQ(1, r["a"]);
+      ASSERT_EQ(2, r["b"]);
+    }),
+    test("a quoted # mid-string is not an include", function() {
+      mixed r = lpml_decode(
+        "{ s: 'say \"#./lpml_stats.lpml\" aloud' }", FIXTURE_DIR);
+      ASSERT_EQ("say \"#./lpml_stats.lpml\" aloud", r["s"]);
+    }),
+    test("a # key is not an include", function() {
+      mixed r = lpml_decode(
+        "{ \"#./lpml_stats.lpml\": 1 }", FIXTURE_DIR);
+      ASSERT_EQ(1, r["#./lpml_stats.lpml"]);
+    }),
   }));
 
   describe("lpml_decode hash escape", ({
     test("\\# yields a literal leading hash, not an include", function() {
       ASSERT_EQ("#FF0000", lpml_decode("{ c: \"\\#FF0000\" }")["c"]);
+    }),
+    test("\\# mid-string yields a literal hash", function() {
+      ASSERT_EQ("a#b", lpml_decode("\"a\\#b\""));
     }),
   }));
 }

@@ -40,13 +40,15 @@
 #define LPML_DECODE_PARSE_POS       1
 #define LPML_DECODE_PARSE_LINE      2
 #define LPML_DECODE_PARSE_CHAR      3
-#define LPML_DECODE_PARSE_FIELDS    4
+#define LPML_DECODE_PARSE_BASE      4
+#define LPML_DECODE_PARSE_FIELDS    5
 
 private mixed lpml_decode_parse_value(mixed* parse);
 private varargs mixed lpml_decode_parse_string(mixed* parse, int quote_char);
 private string lpml_decode_parse_identifier(mixed* parse);
 private string lpml_decode_parse_spacey_key(mixed* parse);
 private varargs void lpml_decode_parse_error(mixed* parse, string msg, int ch);
+varargs mixed lpml_decode(string text, string base_path);
 
 // If at or below the relative path. We do not do multi-cross-traversal.
 // examples:
@@ -600,6 +602,8 @@ private varargs mixed lpml_decode_parse_string(mixed* parse, int quote_char) {
       out = replace_string(out, "\\t", "\t");
     if(member_array('/', out) != -1)
       out = replace_string(out, "\\/", "/");
+    if(member_array('#', out) != -1)
+      out = replace_string(out, "\\#", "#");
 
     // Unicode escape sequences: \uXXXX
     if(strsrch(out, "\\u") != -1) {
@@ -671,7 +675,7 @@ private varargs mixed lpml_decode_parse_string(mixed* parse, int quote_char) {
  * leading/trailing decimals (.5, 5.), plus sign (+5)
  */
 private mixed lpml_decode_parse_number(mixed* parse) {
-  int from, to, dot, exp, ch, next_ch;
+  int from, to, dot, exp, ch, next_ch, digits, exp_digits;
   string number;
   int is_negative = 0;
   int result;
@@ -726,6 +730,10 @@ private mixed lpml_decode_parse_number(mixed* parse) {
         lpml_decode_parse_next_char(parse);
       }
       to = parse[LPML_DECODE_PARSE_POS] - 1;
+
+      if(to < from)
+        lpml_decode_parse_error(parse, "Expected hex digit", ch);
+
       number = string_decode(parse[LPML_DECODE_PARSE_TEXT][from .. to], "utf-8");
       sscanf(number, "%x", result);
 
@@ -746,6 +754,9 @@ private mixed lpml_decode_parse_number(mixed* parse) {
         lpml_decode_parse_next_char(parse);
       }
 
+      if(parse[LPML_DECODE_PARSE_POS] == from)
+        lpml_decode_parse_error(parse, "Expected octal digit", ch);
+
       return is_negative ? -result : result;
     }
 
@@ -763,6 +774,9 @@ private mixed lpml_decode_parse_number(mixed* parse) {
         lpml_decode_parse_next_char(parse);
       }
 
+      if(parse[LPML_DECODE_PARSE_POS] == from)
+        lpml_decode_parse_error(parse, "Expected binary digit", ch);
+
       return is_negative ? -result : result;
     }
   }
@@ -778,6 +792,11 @@ private mixed lpml_decode_parse_number(mixed* parse) {
     ch = parse[LPML_DECODE_PARSE_TEXT][parse[LPML_DECODE_PARSE_POS]];
 
     if(ch >= '0' && ch <= '9') {
+      if(exp == -1)
+        digits++;
+      else
+        exp_digits++;
+
       lpml_decode_parse_next_char(parse);
     } else if(ch == '.' && dot == -1 && exp == -1) {
       dot = parse[LPML_DECODE_PARSE_POS];
@@ -797,12 +816,44 @@ private mixed lpml_decode_parse_number(mixed* parse) {
   if(to == -1)
     to = parse[LPML_DECODE_PARSE_POS] - 1;
 
+  if(!digits)
+    lpml_decode_parse_error(parse, "Expected digit", ch);
+
+  if(exp != -1 && !exp_digits)
+    lpml_decode_parse_error(parse, "Expected exponent digit", ch);
+
   number = string_decode(parse[LPML_DECODE_PARSE_TEXT][from .. to], "utf-8");
 
   if(dot != -1 || exp != -1)
     return to_float(number);
   else
     return to_int(number);
+}
+
+/**
+ * Resolves a `"#path"` include, decoding the referenced file in its place.
+ * Relative paths resolve against the including text's base path, and the
+ * included file's own includes resolve against its directory.
+ *
+ * @param {mixed*} parse - The parse state, carrying the base path.
+ * @param {string} str - The decoded string value, beginning with `#`.
+ * @returns {mixed} The decoded file contents, or `str` verbatim when the file
+ *                  is missing or unreadable.
+ */
+private mixed lpml_decode_include(mixed* parse, string str) {
+  string file_path = resolve_relative_path(str[1..], parse[LPML_DECODE_PARSE_BASE]);
+
+  if(!file_exists(file_path))
+    return str;
+
+  string file_text = read_file(file_path);
+
+  if(!file_text)
+    return str;
+
+  int slash = strsrch(file_path, "/", -1);
+
+  return lpml_decode(file_text, slash != -1 ? file_path[0..slash - 1] : "");
 }
 
 /**
@@ -825,9 +876,14 @@ private mixed lpml_decode_parse_value(mixed* parse) {
   if(ch == '[')
     return lpml_decode_parse_array(parse);
 
-  // String (double or single quoted, both support multiline)
-  if(ch == '"' || ch == '\'')
-    return lpml_decode_parse_string(parse, ch);
+  // String (double or single quoted, both support multiline). A bare # as
+  // the first character marks an include; \# arrives here as a backslash.
+  if(ch == '"' || ch == '\'') {
+    int is_include = parse[LPML_DECODE_PARSE_TEXT][parse[LPML_DECODE_PARSE_POS] + 1] == '#';
+    string str = lpml_decode_parse_string(parse, ch);
+
+    return is_include ? lpml_decode_include(parse, str) : str;
+  }
 
   // Number (including +, leading ., hex)
   if(ch == '-' || ch == '+' || ch == '.' || (ch >= '0' && ch <= '9'))
@@ -904,167 +960,6 @@ private mixed lpml_decode_parse(mixed* parse) {
   return out;
 }
 
-// File interpolation pattern: "#path"
-
-/**
- * Preprocesses LPML text to handle "#path" includes
- *
- * @param {string} text - The LPML string to preprocess
- * @param {string} base_path - Base directory for relative paths
- * @returns {string} Preprocessed LPML text
- *
- * Looks for "#path" pattern and replaces with file contents.
- * Use \# to escape literal # (per LPML spec).
- */
-private string lpml_decode_preprocess(string text, string base_path) {
-  string source;
-  string result, file_path, file_text, include_base;
-  int start, end;
-
-  result = "";
-  source = text;
-
-  while(strlen(source) > 0) {
-    int dq_start, sq_start, dq_esc_start, sq_esc_start;
-    int is_single_quote = 0;
-    int is_escaped = 0;
-
-    // Look for "# or '# or "\# or '\# patterns
-    dq_start = strsrch(source, "\"#");
-    sq_start = strsrch(source, "'#");
-    dq_esc_start = strsrch(source, "\"\\#");
-    sq_esc_start = strsrch(source, "'\\#");
-
-    // Find the earliest match
-    start = -1;
-
-    if(dq_start != -1 && (start == -1 || dq_start < start)) {
-      start = dq_start;
-      is_single_quote = 0;
-      is_escaped = 0;
-    }
-    if(sq_start != -1 && (start == -1 || sq_start < start)) {
-      start = sq_start;
-      is_single_quote = 1;
-      is_escaped = 0;
-    }
-    if(dq_esc_start != -1 && (start == -1 || dq_esc_start < start)) {
-      start = dq_esc_start;
-      is_single_quote = 0;
-      is_escaped = 1;
-    }
-    if(sq_esc_start != -1 && (start == -1 || sq_esc_start < start)) {
-      start = sq_esc_start;
-      is_single_quote = 1;
-      is_escaped = 1;
-    }
-
-    if(start == -1) {
-      // No more includes or escapes
-      result += source;
-      break;
-    }
-
-    // If escaped, strip the backslash and skip
-    if(is_escaped) {
-      // Add everything before the escape, then quote+#
-      result += source[0..start-1];
-      if(is_single_quote)
-        result += "'#";
-      else
-        result += "\"#";
-      source = source[start+3..];
-      continue;
-    }
-
-    // Add text before the include (including the opening quote)
-    if(start > 0)
-      result += source[0..start-1];
-
-    // Find closing quote after the #
-    {
-      string remainder = source[start+2..];  // Skip quote + #
-      string close_quote = is_single_quote ? "'" : "\"";
-      int close_pos = strsrch(remainder, close_quote);
-      int i;
-
-      // Make sure the " isn't escaped
-      while(close_pos != -1) {
-        // Count preceding backslashes
-        int backslashes = 0;
-        i = close_pos - 1;
-
-        while(i >= 0 && remainder[i] == '\\') {
-          backslashes++;
-          i--;
-        }
-
-        // If odd number of backslashes, the " is escaped
-        if(backslashes % 2 == 0) {
-          // Not escaped - this is our closing quote
-          break;
-        }
-
-        // Escaped - keep looking
-        close_pos = strsrch(remainder, close_quote, close_pos + 1);
-      }
-
-      if(close_pos == -1) {
-        // No closing quote - keep the \"# and continue
-        result += source[start..start+1];
-        source = source[start+2..];
-        continue;
-      }
-
-      end = start + 2 + close_pos;  // Position of closing "
-    }
-
-    // Extract file path (between # and ")
-    file_path = source[start+2..end-1];
-
-    // Handle relative paths
-    file_path = resolve_relative_path(file_path, base_path);
-
-    // Try to read the file
-    if(!file_exists(file_path)) {
-      // File not found - keep the original string and continue
-      result += source[start..end];
-      source = source[end+1..];
-      continue;
-    }
-
-    file_text = read_file(file_path);
-    if(!file_text) {
-      // Could not read - keep the original string and continue
-      result += source[start..end];
-      source = source[end+1..];
-      continue;
-    }
-
-    // Trim trailing newline from read_file
-    if(file_text[<1] == '\n')
-      file_text = file_text[0..<2];
-
-    // Recursively preprocess (in case included file has includes)
-    include_base = strsrch(file_path, "/") != -1
-      ? file_path[0..strsrch(file_path, "/", -1)-1]
-      : "";
-
-    file_text = lpml_decode_preprocess(file_text, include_base);
-
-    // Insert the file content (no quotes around it)
-    result += file_text;
-
-    // Consume the processed part of source (skip the closing ")
-    source = source[end+1..];
-  }
-
-  // Final pass: strip \# escapes that weren't includes
-  result = replace_string(result, "\\#", "#");
-
-  return result;
-}
-
 /**
  * Deserializes a LPML string into an LPC value.
  *
@@ -1079,9 +974,6 @@ varargs mixed lpml_decode(string text, string base_path) {
   if(!text)
     return 0;
 
-  // Preprocess includes
-  text = lpml_decode_preprocess(text, base_path);
-
   endl = allocate_buffer(1);
   endl[0] = 0;
 
@@ -1090,6 +982,7 @@ varargs mixed lpml_decode(string text, string base_path) {
   parse[LPML_DECODE_PARSE_POS] = 0;
   parse[LPML_DECODE_PARSE_CHAR] = 1;
   parse[LPML_DECODE_PARSE_LINE] = 1;
+  parse[LPML_DECODE_PARSE_BASE] = base_path;
 
   return lpml_decode_parse(parse);
 }
@@ -1103,10 +996,8 @@ private string *lpml_encode_value(mixed value, int indent, string head,
 /**
  * Quotes a string for LPML output.
  *
- * The include preprocessor scans raw source text for `"#` and `'#` anywhere,
- * not just at the start of a value, so any `#` directly after a quote
- * character is escaped as `\#`. The preprocessor's final pass strips every
- * `\#` back to `#` before the string parser runs.
+ * A leading `#` is escaped as `\#` so the decoder does not read the string
+ * as a file include.
  *
  * @private
  * @param {string} str - The string to quote.
@@ -1121,12 +1012,10 @@ private string lpml_encode_quote(string str) {
   str = replace_string(str, sprintf("%c", 8), "\\b");
   str = replace_string(str, sprintf("%c", 12), "\\f");
 
-  str = "\"" + str + "\"";
+  if(str[0..0] == "#")
+    str = "\\" + str;
 
-  str = replace_string(str, "\"#", "\"\\#");
-  str = replace_string(str, "'#", "'\\#");
-
-  return str;
+  return "\"" + str + "\"";
 }
 
 /**

@@ -41,4 +41,28 @@ void setup() {
       ASSERT_NE(0, catch(lpml_decode("@")));
     }),
   }));
+
+  describe("lpml_decode incomplete numbers", ({
+    test("hex prefix with no digits", function() {
+      ASSERT_NE(0, catch(lpml_decode("0x")));
+    }),
+    test("octal prefix with no digits", function() {
+      ASSERT_NE(0, catch(lpml_decode("0o")));
+    }),
+    test("binary prefix with no digits", function() {
+      ASSERT_NE(0, catch(lpml_decode("0b")));
+    }),
+    test("lone decimal point", function() {
+      ASSERT_NE(0, catch(lpml_decode(".")));
+    }),
+    test("lone sign", function() {
+      ASSERT_NE(0, catch(lpml_decode("-")));
+    }),
+    test("exponent with no digits", function() {
+      ASSERT_NE(0, catch(lpml_decode("1e")));
+    }),
+    test("signed exponent with no digits", function() {
+      ASSERT_NE(0, catch(lpml_decode("1e+")));
+    }),
+  }));
 }
