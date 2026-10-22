@@ -34,6 +34,9 @@
     func  (string)
           Function name to call
 
+    arg   (...mixed, optional)
+          Arguments to pass to function
+
 ### RETURN VALUES
 
     (mixed) Function result or undefined if function doesn't exist

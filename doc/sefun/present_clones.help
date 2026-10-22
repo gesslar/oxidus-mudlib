@@ -23,8 +23,11 @@
 
 ### PARAMETERS
 
-    file  (string|object)
-          The file or object to look for clones of in a container.
+    file       (string|object)
+               The file or object to look for clones of in a container.
+
+    container  (object STD_CONTAINER, optional)
+               The container to search.
 
 ### RETURN VALUES
 

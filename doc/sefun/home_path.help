@@ -15,6 +15,11 @@
 
     Returns the home directory path for the user.
 
+### PARAMETERS
+
+    name  (string | STD_PLAYER)
+          The user's name, or the body of the user.
+
 ### RETURN VALUES
 
     (string) The home directory path for the user.

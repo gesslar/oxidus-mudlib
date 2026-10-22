@@ -21,6 +21,9 @@
     sig  (string)
          string signal identifier (use `SIG_*` macros)
 
+    arg  (mixed...)
+         arguments to pass to the signal handlers
+
 ### ERRORS
 
     If `sig` is not a string this function calls `error()` and thus raises

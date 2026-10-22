@@ -17,6 +17,11 @@
     Retrieves all non-player characters (NPCs) present in the specified
     room.
 
+### PARAMETERS
+
+    room  (object STD_ROOM)
+          The room to search for NPCs in.
+
 ### RETURN VALUES
 
     (object STD_NPC*) An array of NPC objects present in the room.

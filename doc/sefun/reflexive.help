@@ -15,6 +15,11 @@
 
     Gets the reflexive pronoun for a gender.
 
+### PARAMETERS
+
+    ob  (string|object STD_BODY)
+        Gender string or object with query_gender()
+
 ### RETURN VALUES
 
     (string) Reflexive pronoun (himself/herself/itself/themself)

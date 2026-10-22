@@ -32,6 +32,9 @@
     value  (mixed|function)
            The value to find, or a predicate function.
 
+    arg    (mixed..., optional)
+           Optional trailing arguments forwarded into the predicate call.
+
 ### RETURN VALUES
 
     (mixed*) Array of all matching keys, empty array if none found.

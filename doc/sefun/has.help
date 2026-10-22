@@ -21,8 +21,11 @@
 
 ### PARAMETERS
 
-    ob  (object)
-        The object to check.
+    ob              (object)
+                    The object to check.
+
+    function_names  (string | string*)
+                    Function name(s) to look for `(string | string*)`
 
 ### RETURN VALUES
 

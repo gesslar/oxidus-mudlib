@@ -18,8 +18,11 @@
 
 ### PARAMETERS
 
-    id  (string)
-        The name of the living object to locate.
+    id    (string)
+          The name of the living object to locate.
+
+    room  (object STD_ROOM)
+          The room to search for the living object in.
 
 ### RETURN VALUES
 

@@ -19,8 +19,11 @@
 
 ### PARAMETERS
 
-    key  (mixed)
-         The key to remove
+    &map  (mixed*)
+          The sequential map to modify
+
+    key   (mixed)
+          The key to remove
 
 ### RETURN VALUES
 

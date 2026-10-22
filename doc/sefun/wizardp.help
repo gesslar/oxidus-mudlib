@@ -9,7 +9,7 @@
 
 ### SYNOPSIS
 
-    int wizardp( mixed user) { return devp(user );
+    int wizardp( mixed user );
 
 ### DESCRIPTION
 

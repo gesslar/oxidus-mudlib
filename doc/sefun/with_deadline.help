@@ -1,0 +1,60 @@
+---
+{
+  title: "with_deadline"
+}
+---
+### NAME
+
+    with_deadline() - Awaits a promise under a ceiling, so work that never
+    settles gives up instead of parking the awaiting frame for the life of
+    the driver.
+
+### SYNOPSIS
+
+    async varargs mixed with_deadline( mixed p, float seconds );
+
+### DESCRIPTION
+
+    Awaits a promise under a ceiling, so work that never settles gives up
+    instead of parking the awaiting frame for the life of the driver.
+
+    The ceiling is a race against a timer, which is the only way to bound a
+    wait on a promise you do not own — most of them cannot be cancelled at
+    all (a promise_create() promise, async I/O, a call_out promise), and a
+    race stops your waiting rather than the work. What the work goes on to
+    do after the ceiling elapses is the caller's problem to handle, and
+    callers with a transfer to tear down do exactly that.
+
+    The losing arm is released on every path, not just the winning one:
+    promise_race() does not stop its losers, so work that settles quickly
+    would otherwise leave the timer parked for the rest of its delay,
+    holding a call_out and a suspension slot. The release is a defer()
+    rather than code after the await so it also runs when this body is
+    itself cancelled or the work rejects. Cancelling a timer that already
+    won returns 0 and does nothing.
+
+    A non-promise is returned as-is, so wrapping something that turns out to
+    be synchronous costs nothing and arms no timer. A non-positive ceiling
+    means no ceiling, which only makes sense for something certain to
+    settle.
+
+### PARAMETERS
+
+    p        (mixed)
+             The promise to await, or any plain value.
+
+    seconds  (float, optional)
+             The ceiling in seconds; non-positive waits indefinitely.
+
+### RETURN VALUES
+
+    (mixed) What p fulfilled with, or p itself if it was not a promise.
+
+### ERRORS
+
+    ASYNC_ERR_TIMEOUT if the ceiling elapses first, and whatever p rejected
+    with otherwise.
+
+### EXAMPLE
+
+    {{di1}}mixed rows = await with_deadline(SOME_D->fetch(), 3.0);{{di0}}

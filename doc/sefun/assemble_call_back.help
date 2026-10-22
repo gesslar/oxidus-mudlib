@@ -28,8 +28,14 @@
     method  (string)
             Method name to invoke on ob.
 
+    arg     (...mixed, optional)
+            Additional arguments to forward to the method.
+
     f       (function)
             Function pointer to invoke.
+
+    arg     (...mixed, optional)
+            Additional arguments to forward to the function.
 
 ### RETURN VALUES
 
