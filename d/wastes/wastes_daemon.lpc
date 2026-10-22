@@ -25,6 +25,7 @@ private void generate_map();
 private mixed *generate_terrain();
 private mixed *generate_river(mixed *map);
 varargs string determine_room_type(int z, int y, int x);
+private int has_neighbour_of_type(int z, int y, int x, string type);
 private void setup_dimensions();
 private void print_row(int y);
 private void load_mobs();
@@ -217,7 +218,7 @@ private mixed *generate_river(mixed map) {
   int river_width = dimensions[WIDTH] / 6;
   int river_height = dimensions[HEIGHT];
   int river_start_x = dimensions[WIDTH] - (river_width * 3);
-  int river_end_x = river_start_x + river_width;
+  int river_end_x = river_start_x + river_width - 1;
   int river_start_y = 0;
   int centre_y = dimensions[HEIGHT] / 2;
   mapping counts = ([
@@ -519,7 +520,7 @@ public void setup_exits(object room) {
 
   // Setup the exit to the maze, if there is one.
   maze_entrance = "/d/maze/maze_daemon"->query_east_entrance();
-  if(maze_entrance[0] == z && maze_entrance[1] == y && maze_entrance[2] == x) {
+  if(pointerp(maze_entrance) && maze_entrance[0] == z && maze_entrance[1] == y && maze_entrance[2] == x) {
     maze_entrance_file = sprintf("%d,%d,%d",
       maze_entrance[2], maze_entrance[1], maze_entrance[0]);
 
@@ -533,7 +534,7 @@ public void setup_exits(object room) {
   // Do we have a valid exit to the caverns?
   cavern_entrance = "/d/cavern/cavern_daemon"->query_entrance();
   cavern_exit = "/d/cavern/cavern_daemon"->query_exit();
-  if(z == cavern_entrance[0] && y == cavern_entrance[1] && x == cavern_entrance[2])
+  if(pointerp(cavern_entrance) && z == cavern_entrance[0] && y == cavern_entrance[1] && x == cavern_entrance[2])
     room->add_exit("down",
       sprintf("../cavern/%d,%d,%d",
         cavern_exit[2], cavern_exit[1], cavern_exit[0]
@@ -600,6 +601,54 @@ varargs string determine_room_type(int z, int y, int x) {
     }
 
   return room_type;
+}
+
+/**
+ * Collects the coordinates of every cell that classifies as the
+ * given terrain type, optionally only those with at least one of
+ * their eight neighbours classifying as a second type. The scan
+ * runs layer by layer and row by row, so the order is stable for a
+ * given map and safe to feed into a seeded pick.
+ *
+ * @param {string} type - The terrain-type name to match.
+ * @param {string} [neighbour] - A terrain-type name at least one
+ *                               neighbour must match.
+ * @returns {(int*)*} The ({ z, y, x }) coordinates of each matching
+ *                    cell, or an empty array if none match.
+ */
+public varargs mixed *query_rooms_of_type(string type, string neighbour) {
+  mixed *rooms = ({});
+  int depth = get_map_depth();
+  int height = get_map_height();
+  int width = get_map_width();
+
+  for(int z = 0; z < depth; z++)
+    for(int y = 0; y < height; y++)
+      for(int x = 0; x < width; x++)
+        if(determine_room_type(z, y, x) == type && (!neighbour || has_neighbour_of_type(z, y, x, neighbour)))
+          rooms += ({ ({ z, y, x }) });
+
+  return rooms;
+}
+
+/**
+ * Tests whether any of the eight cells around (z, y, x) classifies
+ * as the given terrain type. Neighbours off the edge of the map
+ * classify as nothing and never match.
+ *
+ * @param {int} z - The z (layer) coordinate.
+ * @param {int} y - The y (row) coordinate.
+ * @param {int} x - The x (column) coordinate.
+ * @param {string} type - The terrain-type name to look for.
+ * @returns {int} 1 if a neighbour matches, otherwise 0.
+ */
+private int has_neighbour_of_type(int z, int y, int x, string type) {
+  for(int dy = -1; dy <= 1; dy++)
+    for(int dx = -1; dx <= 1; dx++)
+      if((dy || dx) && determine_room_type(z, y + dy, x + dx) == type)
+        return 1;
+
+  return 0;
 }
 
 /**
