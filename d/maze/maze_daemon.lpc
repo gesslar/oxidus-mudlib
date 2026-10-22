@@ -1003,7 +1003,7 @@ mixed *find_neighbour_path(int z, int y, int x, int source) {
  * @param {int} z - The layer index.
  */
 private void determine_centre_room(int z) {
-  int mid_y = MAX_Y / 2, mid_x = MAX_X / 2;
+  int *mid = ({ MAX_Y / 2, MAX_X / 2 });
   int best = -1;
 
   for(int y = MIN_Y; y <= MAX_Y; y++)
@@ -1011,7 +1011,7 @@ private void determine_centre_room(int z) {
       if(!is_path(z, y, x))
         continue;
 
-      int distance = abs(y - mid_y) + abs(x - mid_x);
+      int distance = manhattan_distance(({ y, x }), mid);
 
       if(best == -1 || distance < best) {
         best = distance;

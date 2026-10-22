@@ -5,7 +5,8 @@
  *              percent/percent_of, clamp/clamped/between, remainder, sum,
  *              evaluate_number (condition DSL), and the diminishing-return
  *              family (diminish, dim_square_root, dim_logarithmic,
- *              dim_hyperbolic, dim_exponential_decay, dim_sigmoid).
+ *              dim_hyperbolic, dim_exponential_decay, dim_sigmoid), and the
+ *              grid distances (manhattan_distance, chebyshev_distance).
  *
  * Exact IEEE results are asserted directly; irrational results (sqrt/log/exp)
  * are asserted to fall within a tight band via `ASSERT_EQ(1, lo < r && r < hi)`.
@@ -319,6 +320,69 @@ void setup() {
     test("negative input mirrors the positive result", function() {
       float r = dim_sigmoid(-10, 10, 1);
       ASSERT_EQ(1, r < -9.99 && r > -10.0);
+    }),
+  }));
+
+  describe("manhattan_distance", ({
+    test("sums the per-axis differences in 3D", function() {
+      ASSERT_EQ(5, manhattan_distance(({ 0, 2, 3 }), ({ 0, 5, 1 })));
+    }),
+    test("handles negative coordinates in 2D", function() {
+      ASSERT_EQ(16, manhattan_distance(({ -4, 7 }), ({ 3, -2 })));
+    }),
+    test("a point is zero from itself", function() {
+      ASSERT_EQ(0, manhattan_distance(({ 4, 4 }), ({ 4, 4 })));
+    }),
+    test("is symmetric", function() {
+      ASSERT_EQ(manhattan_distance(({ 1, 9 }), ({ 6, 2 })),
+        manhattan_distance(({ 6, 2 }), ({ 1, 9 })));
+    }),
+    test("works on a single axis", function() {
+      ASSERT_EQ(7, manhattan_distance(({ -3 }), ({ 4 })));
+    }),
+    test("mismatched axis counts error", function() {
+      ASSERT_NE(0, catch(manhattan_distance(({ 1, 2 }), ({ 1, 2, 3 }))));
+    }),
+    test("empty points error", function() {
+      ASSERT_NE(0, catch(manhattan_distance(({}), ({}))));
+    }),
+    test("non-integer coordinates error", function() {
+      ASSERT_NE(0, catch(manhattan_distance(({ 1.5, 2 }), ({ 1, 2 }))));
+    }),
+    test("a missing point errors", function() {
+      ASSERT_NE(0, catch(manhattan_distance(({ 1, 2 }), undefined)));
+    }),
+  }));
+
+  describe("chebyshev_distance", ({
+    test("takes the largest per-axis difference in 3D", function() {
+      ASSERT_EQ(3, chebyshev_distance(({ 0, 2, 3 }), ({ 0, 5, 1 })));
+    }),
+    test("a pure diagonal costs one step per square", function() {
+      ASSERT_EQ(4, chebyshev_distance(({ 0, 0 }), ({ 4, 4 })));
+    }),
+    test("handles negative coordinates in 2D", function() {
+      ASSERT_EQ(9, chebyshev_distance(({ -4, 7 }), ({ 3, -2 })));
+    }),
+    test("a point is zero from itself", function() {
+      ASSERT_EQ(0, chebyshev_distance(({ 1, 1 }), ({ 1, 1 })));
+    }),
+    test("never exceeds the Manhattan distance", function() {
+      int *a = ({ 2, -5, 8 }), *b = ({ -1, 3, 8 });
+
+      ASSERT_EQ(1, chebyshev_distance(a, b) <= manhattan_distance(a, b));
+    }),
+    test("mismatched axis counts error", function() {
+      ASSERT_NE(0, catch(chebyshev_distance(({ 1, 2 }), ({ 1, 2, 3 }))));
+    }),
+    test("empty points error", function() {
+      ASSERT_NE(0, catch(chebyshev_distance(({}), ({}))));
+    }),
+    test("non-integer coordinates error", function() {
+      ASSERT_NE(0, catch(chebyshev_distance(({ 1, 2 }), ({ "1", 2 }))));
+    }),
+    test("a missing point errors", function() {
+      ASSERT_NE(0, catch(chebyshev_distance(undefined, ({ 1, 2 }))));
     }),
   }));
 }

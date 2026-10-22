@@ -1,0 +1,43 @@
+---
+{
+  title: "chebyshev_distance"
+}
+---
+### NAME
+
+    chebyshev_distance() - Calculates the Chebyshev distance between two
+    points: the number of steps between them when a diagonal step costs the
+    same as a straight one, like a king in chess. Points may have any number
+    of axes, so 2D and 3D coordinates both work.
+
+### SYNOPSIS
+
+    int chebyshev_distance( int *a, int *b );
+
+### DESCRIPTION
+
+    Calculates the Chebyshev distance between two points: the number of
+    steps between them when a diagonal step costs the same as a straight
+    one, like a king in chess. Points may have any number of axes, so 2D and
+    3D coordinates both work.
+
+### PARAMETERS
+
+    a  (int*)
+       The first point's coordinates.
+
+    b  (int*)
+       The second point's coordinates, in the same axis order as `a`.
+
+### RETURN VALUES
+
+    (int) The largest absolute difference along any one axis.
+
+### ERRORS
+
+    If either point is not a non-empty array of integers. If the points have
+    different numbers of axes.
+
+### EXAMPLE
+
+    {{di1}}chebyshev_distance(({ 0, 2, 3 }), ({ 0, 5, 1 })) // 3{{di0}}
