@@ -944,43 +944,31 @@ private nosave string wastes_daemon = "/d/wastes/wastes_daemon";
 /**
  * Picks the cavern's outbound exit and the matching wastes-side
  * entrance. The cavern exit is any random path on layer 0; the
- * wastes entrance is rolled until it lands on a "rocky" room in
- * the wastes daemon's map. Both coordinates are cached on the
- * exit/entrance globals for use by setup_exits and the wastes
- * daemon's own exit wiring.
+ * wastes entrance is a seeded pick from the wastes daemon's "rocky"
+ * rooms that border sand, so it sits on the slope down to the
+ * lowland rather than in a pocket ringed by peaks, falling back to
+ * its "sandy" rooms when there are none. Both coordinates are cached on the exit/entrance globals
+ * for use by setup_exits and the wastes daemon's own exit wiring.
+ * If the wastes has neither, the entrance is left unset.
  */
 void determine_exit_and_entrance() {
   mixed *result;
-  int height, width;
+  mixed *candidates;
 
   // Set the exit from a random place in the cavern.
   exit = find_a_path(0);
 
-  // Find a random place in the wastes to set the entrance.
-  height = /** @type {WastesDaemon} */ (wastes_daemon)->get_map_height();
-  width = /** @type {WastesDaemon} */ (wastes_daemon)->get_map_width();
+  // Pick the wastes room that gets the down exit to the cavern.
+  candidates = /** @type {WastesDaemon} */ (wastes_daemon)->query_rooms_of_type("rocky", "sandy");
+  if(!sizeof(candidates))
+    candidates = /** @type {WastesDaemon} */ (wastes_daemon)->query_rooms_of_type("sandy");
 
-  int max = 100;
-  // Pick a random room in the wastes and set a down exit to the cavern
-  while(true && --max > 0) {
-    int y, x;
-    string room_type;
+  if(!sizeof(candidates))
+    return;
 
-    result = prandom(seed, height);
-    seed = result[0];
-    y = result[1];
-
-    result = prandom(seed, width);
-    seed = result[0];
-    x = result[1];
-
-    room_type = /** @type {WastesDaemon} */ (wastes_daemon)->determine_room_type(0, y, x);
-
-    if(room_type == "rocky") {
-      entrance = ({ 0, y, x });
-      break;
-    }
-  }
+  result = pelement_of(seed, candidates);
+  seed = result[0];
+  entrance = result[1];
 }
 
 /**
