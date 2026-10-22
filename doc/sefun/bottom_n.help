@@ -1,0 +1,46 @@
+---
+{
+  title: "bottom_n"
+}
+---
+### NAME
+
+    bottom_n() - The elements with the lowest scores, lowest first. Works
+    like top_n(), ties included, from the other end.
+
+### SYNOPSIS
+
+    varargs mixed *bottom_n( mixed *arr, int n, mixed fn, int strict );
+
+### DESCRIPTION
+
+    The elements with the lowest scores, lowest first. Works like top_n(),
+    ties included, from the other end.
+
+### PARAMETERS
+
+    arr     (mixed*)
+            The elements to rank.
+
+    n       (int)
+            How many places to keep.
+
+    fn      (function|int, optional)
+            Returns each element's score; or strict, when an int.
+
+    strict  (int, optional, default: 0)
+            Whether to keep exactly n elements, when fn is a function.
+
+### RETURN VALUES
+
+    (mixed*) The kept elements, lowest score first.
+
+### ERRORS
+
+    If arr is not an array If n is not a non-negative integer If fn is not
+    undefined, an integer or a function
+
+### EXAMPLE
+
+    {{di1}}bottom_n(({ 3, 1, 1, 2 }), 1);    // ({ 1, 1 })
+    bottom_n(({ 3, 1, 1, 2 }), 1, 1); // ({ 1 }){{di0}}
