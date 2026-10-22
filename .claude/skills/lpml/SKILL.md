@@ -172,6 +172,7 @@ Values beginning with `#` followed by a path denote file includes.
 
 Rules:
 - A conforming implementation SHOULD replace the `#path` value with the parsed contents of the referenced file.
+- An include is a single literal. A `#` fragment inside a string concatenation is literal text, since the concatenated value does not begin with `#`.
 - File includes are processed recursively (included files may themselves contain includes).
 - If a file cannot be found, an implementation SHOULD keep the include string as its literal value.
 - To produce a literal `#` at the start of a string (preventing include processing), escape it: `\#`.

@@ -51,6 +51,11 @@ void setup() {
         "{ \"#./lpml_stats.lpml\": 1 }", FIXTURE_DIR);
       ASSERT_EQ(1, r["#./lpml_stats.lpml"]);
     }),
+    test("a # fragment in a concatenation is not an include", function() {
+      mixed r = lpml_decode(
+        "{ s: \"prefix\" \"#./lpml_stats.lpml\" }", FIXTURE_DIR);
+      ASSERT_EQ("prefix #./lpml_stats.lpml", r["s"]);
+    }),
   }));
 
   describe("lpml_decode hash escape", ({
