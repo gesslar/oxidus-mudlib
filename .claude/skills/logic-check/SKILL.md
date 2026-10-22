@@ -1,6 +1,6 @@
 ---
 name: logic-check
-description: Review a file, set of files, or system in Oxidus for logic flaws, errors, and crashers. Reports only concrete defects with a trigger path (or, if masked, what masks them) and evidence; no style, refactoring, or defensive suggestions, and no proposed fixes unless asked. Use when asked to logic-check, sanity-check, or hunt for bugs in specific code.
+description: Review a file, set of files, or system in Oxidus for logic flaws, errors, and crashers. Reports only concrete defects with a trigger path (or, if masked, what masks them) and evidence (uncalled API functions and hooks count as reachable); no style, refactoring, or defensive suggestions, and no proposed fixes unless asked. Use when asked to logic-check, sanity-check, or hunt for bugs in specific code.
 argument-hint: <file | files | system>
 ---
 
@@ -75,6 +75,13 @@ Do not report:
 - Issues outside the requested scope unless they directly cause a defect
   within it.
 
+A function's own entry point counts as reachable. Public functions, hooks, and
+properties the code reads are API waiting for a caller, so their defects are
+findings even when nothing calls or sets them today. Report them like any other
+finding, and use "nothing calls or sets this today" as the trigger note. Code
+that can never run (an override that is always shadowed, a branch that can't be
+taken) stays out.
+
 Do not assume that unusual behaviour is incorrect. Establish the intended
 behaviour from the implementation and its usage before reporting it. The
 **lpc-semantics** skill lists the LPC/FluffOS semantics most often mistaken for
@@ -99,4 +106,8 @@ efun documentation, include that evidence.
 
 Do not propose changes unless asked.
 
-If no concrete logic flaws are found, say so.
+The report is the findings and nothing else. Suspicions that were traced
+and cleared, callers that turned out fine, and data that was checked stay
+unsaid. A clean trace is just part of the work, not something to report.
+
+If no concrete logic flaws are found, say so in one line.
