@@ -1,0 +1,79 @@
+// @lpc-nocheck
+/**
+ * @file /tests/adm/simul_efun/array.rank.test.lpc
+ *
+ * Tests for top_n() and bottom_n() in /adm/simul_efun/array.c.
+ * Ties share a place unless strict, so order within a tie is
+ * not guaranteed. Tie results are therefore checked loosely
+ * with same_array(), and ordered results with
+ * same_array(expected, actual, 1).
+ */
+
+#include <test.h>
+
+inherit STD_TEST;
+
+mapping visits = ([ "Ana" : 15, "Bo" : 15, "Cy" : 14, "Di" : 13 ]);
+
+void setup() {
+  describe("top_n", ({
+    test("ties share a place, so three places can keep four", function() {
+      ASSERT_EQ(1, same_array(
+        ({ 15, 15, 14, 13 }),
+        top_n(({ 15, 13, 15, 14 }), 3),
+        1));
+    }),
+    test("strict keeps exactly n", function() {
+      ASSERT_EQ(1, same_array(
+        ({ 15, 15, 14 }),
+        top_n(({ 15, 13, 15, 14 }), 3, 1),
+        1));
+    }),
+    test("scores elements with a function", function() {
+      ASSERT_EQ(1, same_array(
+        ({ "Ana", "Bo" }),
+        top_n(keys(visits), 1, (: $(visits)[$1] :))));
+    }),
+    test("strict with a function keeps exactly n", function() {
+      ASSERT_EQ(1, sizeof(top_n(keys(visits), 1, (: $(visits)[$1] :), 1)));
+    }),
+    test("n larger than the array keeps everything", function() {
+      ASSERT_EQ(1, same_array(
+        ({ 3, 2, 1 }),
+        top_n(({ 1, 3, 2 }), 10),
+        1));
+    }),
+    test("n of zero returns empty", function() {
+      ASSERT_EQ(0, sizeof(top_n(({ 1, 2, 3 }), 0)));
+    }),
+    test("empty array returns empty", function() {
+      ASSERT_EQ(0, sizeof(top_n(({}), 3)));
+    }),
+    test("works with floats", function() {
+      ASSERT_EQ(1, same_array(
+        ({ 2.5, 1.5 }),
+        top_n(({ 1.5, 0.5, 2.5 }), 2),
+        1));
+    }),
+  }));
+
+  describe("bottom_n", ({
+    test("ties share a place", function() {
+      ASSERT_EQ(1, same_array(
+        ({ 1, 1 }),
+        bottom_n(({ 3, 1, 1, 2 }), 1),
+        1));
+    }),
+    test("strict keeps exactly n", function() {
+      ASSERT_EQ(1, same_array(
+        ({ 1 }),
+        bottom_n(({ 3, 1, 1, 2 }), 1, 1),
+        1));
+    }),
+    test("scores elements with a function", function() {
+      ASSERT_EQ(1, same_array(
+        ({ "Di" }),
+        bottom_n(keys(visits), 1, (: $(visits)[$1] :))));
+    }),
+  }));
+}

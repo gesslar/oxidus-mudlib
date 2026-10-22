@@ -40,6 +40,8 @@ varargs mixed find(mixed *arr, function fun, mixed extra...);
 int in_range(int index, mixed *arr);
 varargs mixed eval_first(mixed *src, function fun, mixed extra...);
 varargs mixed eval_last(mixed *src, function fun, mixed extra...);
+varargs mixed *top_n(mixed *arr, int n, mixed fn, int strict);
+varargs mixed *bottom_n(mixed *arr, int n, mixed fn, int strict);
 int every(mixed *arr, mixed criteria);
 int some(mixed *arr, mixed criteria);
 varargs int includes(mixed *arr, mixed elem, function f);

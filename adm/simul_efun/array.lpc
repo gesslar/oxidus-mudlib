@@ -1228,3 +1228,118 @@ varargs mixed eval_last(mixed *src, function fun, mixed extra...) {
 
   return eval_first(reverse_array(src), fun, extra...);
 }
+
+/**
+ * Shared ranking for top_n() and bottom_n(). Sorts the elements by score,
+ * best first, then cuts the list.
+ *
+ * @private
+ * @param {mixed*} arr - The elements to rank.
+ * @param {int} n - How many places to keep.
+ * @param {function|int} [fn] - Scores each element; or strict, when an int.
+ * @param {int} [strict=0] - Whether to keep exactly n elements.
+ * @param {int} lowest - Whether the lowest score is best.
+ * @returns {mixed*} The kept elements, best first.
+ */
+private mixed *_rank_n(mixed *arr, int n, mixed fn, int strict, int lowest) {
+  assert_arg(pointerp(arr), 1, "Array is required");
+  assert_arg(intp(n) && n >= 0, 2, "Count must be a non-negative integer");
+  assert_arg(nullp(fn) || intp(fn) || valid_function(fn), 3,
+    "Must be undefined, an integer or a function");
+
+  if(intp(fn)) {
+    strict = fn;
+    fn = 0;
+  }
+
+  if(!n || !sizeof(arr))
+    return ({ });
+
+  mixed *pairs = ({ });
+
+  foreach(mixed elem in arr)
+    pairs += ({ ({ elem, fn ? evaluate(fn, elem) : elem }) });
+
+  pairs = sort_array(pairs, function(mixed *a, mixed *b, int lowest) {
+    if(a[1] == b[1])
+      return 0;
+
+    return (a[1] < b[1]) == !!lowest ? -1 : 1;
+  }, lowest);
+
+  int keep = n;
+
+  if(!strict) {
+    int places;
+    mixed last;
+
+    for(keep = 0; keep < sizeof(pairs); keep++) {
+      if(keep && pairs[keep][1] == last)
+        continue;
+
+      if(++places > n)
+        break;
+
+      last = pairs[keep][1];
+    }
+  }
+
+  return map(pairs[0..keep - 1], (: $1[0] :));
+}
+
+/**
+ * The elements with the highest scores, highest first. By default ties
+ * share a place, so everyone within the top n distinct scores is kept:
+ * with scores 15, 15, 14, 13 and n of 3, all four are. Strict keeps
+ * exactly n elements, breaking ties at the cut arbitrarily.
+ *
+ * Without a function, each element is its own score.
+ *
+ * @param {mixed*} arr - The elements to rank.
+ * @param {int} n - How many places to keep.
+ * @param {function|int} [fn] - Returns each element's score; or strict,
+ *                              when an int.
+ * @param {int} [strict=0] - Whether to keep exactly n elements, when fn is
+ *                           a function.
+ * @returns {mixed*} The kept elements, highest score first.
+ * @errors If arr is not an array
+ * @errors If n is not a non-negative integer
+ * @errors If fn is not undefined, an integer or a function
+ *
+ * @example
+ * ```c
+ * top_n(({ 15, 13, 15, 14 }), 3);    // ({ 15, 15, 14, 13 })
+ * top_n(({ 15, 13, 15, 14 }), 3, 1); // ({ 15, 15, 14 })
+ *
+ * mapping visits = ([ "Ana" : 15, "Bo" : 15, "Cy" : 14, "Di" : 13 ]);
+ * top_n(keys(visits), 1, (: $(visits)[$1] :)); // ({ "Ana", "Bo" })
+ * ```
+ */
+varargs mixed *top_n(mixed *arr, int n, mixed fn, int strict) {
+  return _rank_n(arr, n, fn, strict, 0);
+}
+
+/**
+ * The elements with the lowest scores, lowest first. Works like top_n(),
+ * ties included, from the other end.
+ *
+ * @param {mixed*} arr - The elements to rank.
+ * @param {int} n - How many places to keep.
+ * @param {function|int} [fn] - Returns each element's score; or strict,
+ *                              when an int.
+ * @param {int} [strict=0] - Whether to keep exactly n elements, when fn is
+ *                           a function.
+ * @returns {mixed*} The kept elements, lowest score first.
+ * @errors If arr is not an array
+ * @errors If n is not a non-negative integer
+ * @errors If fn is not undefined, an integer or a function
+ *
+ * @example
+ * ```c
+ * bottom_n(({ 3, 1, 1, 2 }), 1);    // ({ 1, 1 })
+ * bottom_n(({ 3, 1, 1, 2 }), 1, 1); // ({ 1 })
+ * ```
+ */
+varargs mixed *bottom_n(mixed *arr, int n, mixed fn, int strict) {
+  return _rank_n(arr, n, fn, strict, 1);
+}

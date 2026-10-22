@@ -1,0 +1,55 @@
+---
+{
+  title: "top_n"
+}
+---
+### NAME
+
+    top_n() - The elements with the highest scores, highest first. By
+    default ties share a place, so everyone within the top n distinct scores
+    is kept: with scores 15, 15, 14, 13 and n of 3, all four are. Strict
+    keeps exactly n elements, breaking ties at the cut arbitrarily.
+
+### SYNOPSIS
+
+    varargs mixed *top_n( mixed *arr, int n, mixed fn, int strict );
+
+### DESCRIPTION
+
+    The elements with the highest scores, highest first. By default ties
+    share a place, so everyone within the top n distinct scores is kept:
+    with scores 15, 15, 14, 13 and n of 3, all four are. Strict keeps
+    exactly n elements, breaking ties at the cut arbitrarily.
+
+    Without a function, each element is its own score.
+
+### PARAMETERS
+
+    arr     (mixed*)
+            The elements to rank.
+
+    n       (int)
+            How many places to keep.
+
+    fn      (function|int, optional)
+            Returns each element's score; or strict, when an int.
+
+    strict  (int, optional, default: 0)
+            Whether to keep exactly n elements, when fn is a function.
+
+### RETURN VALUES
+
+    (mixed*) The kept elements, highest score first.
+
+### ERRORS
+
+    If arr is not an array If n is not a non-negative integer If fn is not
+    undefined, an integer or a function
+
+### EXAMPLE
+
+    {{di1}}top_n(({ 15, 13, 15, 14 }), 3);    // ({ 15, 15, 14, 13 })
+    top_n(({ 15, 13, 15, 14 }), 3, 1); // ({ 15, 15, 14 })
+
+    mapping visits = ([ "Ana" : 15, "Bo" : 15, "Cy" : 14, "Di" : 13 ]);
+    top_n(keys(visits), 1, (: $(visits)[$1] :)); // ({ "Ana", "Bo" }){{di0}}
