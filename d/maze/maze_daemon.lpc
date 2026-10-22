@@ -994,53 +994,30 @@ mixed *find_neighbour_path(int z, int y, int x, int source) {
 }
 
 /**
- * Determines the centre room of a layer of the maze. Starting from
- * the geometric centre of the layer, spirals outward in the four
- * cardinal directions until a path cell is found, then records its
- * ({ z, y, x }) coordinates in centre_rooms.
+ * Determines the centre room of a layer of the maze. Scans the whole
+ * layer for the path cell nearest the geometric centre by Manhattan
+ * distance, then records its ({ z, y, x }) coordinates in
+ * centre_rooms. Every layer holds at least its depth-first search
+ * start cell, so a path cell is always found.
  *
  * @param {int} z - The layer index.
- * @errors If the search runs off the layer bounds without finding
- *         a path room.
  */
 private void determine_centre_room(int z) {
-  // Initialise the centre room to the middle of the maze
-  int *centre = ({ z, MAX_Y/2, MAX_X/2, });
-  int n, s, e, w;
+  int mid_y = MAX_Y / 2, mid_x = MAX_X / 2;
+  int best = -1;
 
-  n = s = e = w = 0;
+  for(int y = MIN_Y; y <= MAX_Y; y++)
+    for(int x = MIN_X; x <= MAX_X; x++) {
+      if(!is_path(z, y, x))
+        continue;
 
-  // Now we need to find the closest path room to the centre of the maze
-  // and set that as the centre room.
-  while(centre[2]-w > MIN_X && centre[2]+e < MAX_X &&
-        centre[1]-n > MIN_Y && centre[1]+s < MAX_Y) {
+      int distance = abs(y - mid_y) + abs(x - mid_x);
 
-    //North
-    if(is_path(centre[0], centre[1]-n, centre[2])) {
-      centre[1] -= n;
-      break ; // We've found the closest north path room
-    } else n++;
-    // South
-    if(is_path(centre[0], centre[1]+s, centre[2])) {
-      centre[1] += s;
-      break ; // We've found the closest south path room
-    } else s++;
-    // West
-    if(is_path(centre[0], centre[1], centre[2]-w)) {
-      centre[2] -= w;
-      break ; // We've found the closest west path room
-    } else w++;
-    // East
-    if(is_path(centre[0], centre[1], centre[2]+e)) {
-      centre[2] += e;
-      break ; // We've found the closest east path room
-    } else e++;
-  }
-
-  if(!is_path(centre[0], centre[1], centre[2]))
-    error("Ran out of bounds determining centre room.");
-
-  centre_rooms[z] = centre;
+      if(best == -1 || distance < best) {
+        best = distance;
+        centre_rooms[z] = ({ z, y, x });
+      }
+    }
 }
 
 /**
