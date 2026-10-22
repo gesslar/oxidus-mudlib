@@ -35,7 +35,11 @@ Consult when the work touches them:
 - **`/testing`** — Writing and running tests under `/tests/`
 - **`/mud-telnet`** — Connecting to the running MUD for in-game verification
 - **`/lpc-review`** — The review standard: scope, what qualifies as a finding,
-  and the driver semantics most often mistaken for defects
+  how much to report, and the evidence bar
+- **`/lpc-semantics`** — The LPC/FluffOS semantics most often mistaken for
+  defects — check any suspected bug against it, in a review or otherwise
+- **`/logic-check`** — Hunting for logic flaws and crashers in existing code,
+  as it stands rather than as a change
 
 Subsystem skills exist for most of the lib — commands, rooms, NPCs, combat,
 skills, equipment, messaging, persistence, GMCP, signals, daemons, shops,
@@ -483,10 +487,12 @@ classes require `inherit`. For shared constants, expose a daemon getter.
 The review standard for this repository is
 [.claude/skills/lpc-review/SKILL.md](.claude/skills/lpc-review/SKILL.md). Read
 it before reviewing anything and follow it as written — it governs what
-qualifies as a finding, how scope is bounded, how much to report, the evidence
-required before asserting a driver failure mode, and the LPC/FluffOS semantics
-most often mistaken for defects. The rules below are the load-bearing ones,
-restated so they hold even when that file is not read.
+qualifies as a finding, how scope is bounded, how much to report, and the
+evidence required before asserting a driver failure mode. The LPC/FluffOS
+semantics most often mistaken for defects live alongside it in
+[.claude/skills/lpc-semantics/SKILL.md](.claude/skills/lpc-semantics/SKILL.md);
+read that too. The rules below are the load-bearing ones, restated so they hold
+even when those files are not read.
 
 - **Scope findings to the change.** Repository knowledge and unchanged code may
   be used to understand and validate the change; they are not permission to

@@ -1,7 +1,11 @@
 [
   {
     "path": ".claude/skills/lpc-review/SKILL.md",
-    "description": "The review standard for this repository: scope rules, what qualifies as a finding, evidence requirements, and LPC/FluffOS semantics that are commonly mistaken for defects. Read before reviewing anything."
+    "description": "The review standard for this repository: scope rules, what qualifies as a finding, how much to report, and evidence requirements. Read before reviewing anything."
+  },
+  {
+    "path": ".claude/skills/lpc-semantics/SKILL.md",
+    "description": "LPC/FluffOS semantics commonly mistaken for defects: truthiness, calls to undefined functions, functionals, how errors surface, and async/promise behaviour. Read before reporting any finding."
   },
   {
     "path": "AGENTS.md",

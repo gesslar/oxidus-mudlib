@@ -56,6 +56,10 @@ concrete flaw exists.
 
 This is not a general code review.
 
+The scope is the requested code as it stands, not a change. A defect is in
+scope whether or not it is new; the change-scoping rules of a PR review do not
+apply.
+
 Do not report:
 
 - Style or formatting preferences.
@@ -68,7 +72,7 @@ Do not report:
 
 Do not assume that unusual behaviour is incorrect. Establish the intended
 behaviour from the implementation and its usage before reporting it. The
-**lpc-review** skill lists the LPC/FluffOS semantics most often mistaken for
+**lpc-semantics** skill lists the LPC/FluffOS semantics most often mistaken for
 defects — check a suspected finding against it.
 
 ## Findings
