@@ -1,0 +1,66 @@
+---
+{
+  title: "settle_async"
+}
+---
+### NAME
+
+    settle_async() - Applies an async function to every element of an array
+    at once and reports how each one ended.
+
+### SYNOPSIS
+
+    async varargs mapping *settle_async( mixed *src, function fun, mixed extra... );
+
+### DESCRIPTION
+
+    Applies an async function to every element of an array at once and
+    reports how each one ended.
+
+    map_async() for the case where a failure is an outcome to record rather
+    than an error to abandon the batch for. Nothing rejects: every element
+    produces an entry, positionally matching src, in promise_status()'s
+    vocabulary:
+
+    ([ "status": PROMISE_FULFILLED, "value": v ]) ([ "status":
+    PROMISE_REJECTED, "reason": r ]) ([ "status": PROMISE_CANCELLED,
+    "reason": r ])
+
+    A cancelled element reports PROMISE_CANCELLED and carries no value, so
+    `status != PROMISE_FULFILLED` is the test for "did not deliver" —
+    checking only for PROMISE_REJECTED misses it.
+
+    "Nothing rejects" holds for a synchronous callback too. One that throws
+    — which an async callback cannot do, having an implicit catch — is
+    reported as that element rejecting, and the elements after it are still
+    started.
+
+    The same unbounded fan-out applies as for map_async(); batch a large
+    array.
+
+### PARAMETERS
+
+    src    (mixed *)
+           Array to fan out over.
+
+    fun    (function)
+           Function called per element, as map_async() calls it.
+
+    extra  (mixed, optional)
+           Additional arguments passed to the callback starting at $4.
+
+### RETURN VALUES
+
+    (mapping *) A promise for one outcome mapping per element, positionally
+    matching src.
+
+### ERRORS
+
+    If src is not an array, or fun is not a valid function. Either rejects
+    the returned promise.
+
+### EXAMPLE
+
+    {{di1}}foreach(mapping outcome in await settle_async(dirs, (: async_getdir($1) :)))
+      if(outcome["status"] == PROMISE_FULFILLED)
+        index(outcome["value"]);{{di0}}

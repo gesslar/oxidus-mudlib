@@ -1,25 +1,37 @@
 /**
  * @file LPC parser for the gLPU simul_efun help generator.
  *
- * Extracts LPCDoc comment blocks and the function signatures that follow them
- * from LPC source files, producing the structured `functions` payload consumed
- * by the help formatter.
+ * Parses LPC source with the LPC language server's compiler
+ * (`@lpc-lang/core`) and walks the resulting syntax tree, producing the
+ * structured `functions` payload consumed by the help formatter.
  *
- * This is adapted from the BeDoc sample LPC parser with Oxidus-specific
- * changes:
- *   - the signature regex captures the array `*` return marker,
- *   - blocks that are not attached to a function (file headers, documented
- *     variables) are dropped instead of crashing the run,
+ * The compiler attaches each LPCDoc comment block to the declaration it
+ * documents, so there are no heuristics for pairing blocks with functions:
+ *   - only top-level function definitions (with a body) that carry a doc block
+ *     are emitted; file headers and documented variables never attach to one,
  *   - `private` functions are excluded (not part of the public API),
+ *   - signatures come from the syntax tree, `async` functions included,
+ *   - tag types are taken verbatim from the braces, so unions with spaces,
+ *     macro types, quoted object paths, variadics and the like all survive,
+ *   - `@overload` parameter lists are flattened into one,
  *   - free-form `@errors` / `@throws` tags are captured.
+ *
+ * `#include` directives are answered with empty source: documentation
+ * extraction needs no macro expansion, and the compiler requires a file
+ * handler to get past them.
  *
  * @author gesslar
  */
 
-import {ActionBuilder, ACTIVITY} from "@gesslar/actioneer"
-import {Collection, Data, Util} from "@gesslar/toolkit"
+import lpc from "@lpc-lang/core"
 
-const {WHILE} = ACTIVITY
+const ACCESS = ["public", "protected", "private"]
+const MODIFIERS = ["async", "nomask", "varargs"]
+
+const fileHandler = Object.freeze({
+  loadIncludeFile: (_source, filename) => ({filename, source: ""}),
+  loadInclude: (_source, filename) => ({uri: filename, source: ""}),
+})
 
 export default class LpcParser {
   static meta = Object.freeze({
@@ -29,242 +41,175 @@ export default class LpcParser {
   })
 
   setup = builder => builder
-    .do("Extract blocks", this.#extractBlocks)
-    .do("Process functions", ACTIVITY.SPLIT,
-      ctx => ctx, // splitter
-      ctx => ctx, // rejoiner
-      new ActionBuilder()
-        .do("Extract signature", this.#johnHandcock)
-        .do("Extract description", this.#extractDescription)
-        .do("Extract tags", WHILE, ctx => {
-          return ctx.lines.length > 0
-        }, this.#extractTag)
+    .do("Parse source", this.#parse)
+
+  #parse = ctx => {
+    const sourceFile = lpc.createSourceFile(
+      "source.lpc",
+      String(ctx),
+      {languageVersion: lpc.ScriptTarget.Latest, fileHandler},
+      true,
+      undefined,
+      // FluffOS-only syntax such as `async` is not recognized otherwise.
+      lpc.LanguageVariant.FluffOS
     )
-    .done(this.#finally)
 
-  async #extractBlocks(ctx) {
-    ctx = Data.append(ctx, "\n")
+    const functions = []
 
-    const result = []
-    const lines = ctx.split("\n")
+    lpc.forEachChild(sourceFile, node => {
+      if(!lpc.isFunctionDeclaration(node) || !node.body || !node.name)
+        return
 
-    while(lines.length) {
-      const block = {}
+      if(!node.jsDoc?.length)
+        return
 
-      const startIndex = lines.findIndex(line => this.#regexes.get("block-start").exec(line))
-      // The closing `*/` must come after this block's opening — otherwise a
-      // plain `/* ... */` header comment earlier in the file would steal it
-      // and abort the whole file.
-      const endIndex = lines.findIndex((line, i) =>
-        i > startIndex && this.#regexes.get("block-stop").exec(line))
+      const signature = this.#signature(node, sourceFile)
 
-      if(startIndex < 0 || endIndex <= startIndex)
-        break
+      if(signature.access === "private")
+        return
 
-      block.lines = lines.slice(startIndex+1, endIndex)
-
-      lines.splice(0, endIndex+1)
-
-      const idIndex = lines.findIndex(line => this.#regexes.get("function").test(line))
-      const nextBlockIndex = lines.findIndex(line => this.#regexes.get("block-start").test(line))
-
-      if(idIndex > -1) {
-        if(nextBlockIndex !== -1 && idIndex > nextBlockIndex) {
-          // The next thing is another doc block, not a function — this block
-          // documents a file header or a variable. Leave block.function unset;
-          // #finally drops it.
-          lines.splice(0, nextBlockIndex)
-        } else {
-          const func = this.#regexes.get("function").exec(lines[idIndex])
-          block.function = func
-
-          lines.splice(0, 1)
-        }
-      }
-
-      result.push(block)
-    }
-
-    return result
-  }
-
-  #gimme = ob =>
-    Object.fromEntries(Object.entries(ob).filter(([_, v]) => v != null))
-
-  #johnHandcock = ctx => {
-    const {function: func} = ctx
-    const signature = this.#gimme(func?.groups ?? {})
-
-    signature.array = signature.array ? true : false
-
-    signature.parameters = signature.parms
-      ? signature.parms.split(",").map(p => p.trim()).filter(Boolean)
-      : []
-    delete signature.parms
-
-    return Object.assign(ctx, {signature})
-  }
-
-  #extractDescription = ctx => {
-    const {lines} = ctx
-
-    const comment = this.#regexes.get("comment-line")
-    const tagId = this.#regexes.get("tag-id")
-
-    const description = []
-    Object.assign(ctx, {description})
-
-    if(!(comment.test(lines.join("\n"))))
-      return ctx
-
-    while(lines.length > 0) {
-      const line = lines.shift()
-
-      if(!comment.test(line))
-        continue
-
-      if(tagId.test(line)) {
-        lines.unshift(line)
-        break
-      }
-
-      const {content} = comment.exec(line)?.groups ?? {}
-      description.push(content ?? "")
-    }
-
-    return ctx
-  }
-
-  #extractTag = async ctx => {
-    const {lines, tag: extractedTags = {}} = ctx
-
-    const comment = this.#regexes.get("comment-line")
-    const tagId = this.#regexes.get("tag-id")
-    // narrower to broader
-    const patterns = ["return", "example", "simple", "tag"].map(e => this.#regexes.get(e))
-
-    const line = lines.shift()
-
-    if(!comment.test(line))
-      return ctx
-
-    if(!tagId.test(line))
-      return ctx
-
-    const pattern = patterns.find(e => e.test(line))
-
-    if(!pattern)
-      return ctx
-
-    const {groups} = pattern.exec(line) ?? {}
-    if(!groups)
-      return ctx
-
-    const {tag} = groups
-    if(!tag)
-      return ctx
-
-    delete groups.tag
-    if(groups.content)
-      groups.content = [groups.content]
-    else
-      groups.content = []
-
-    while(lines.length > 0) {
-      const continued = lines.shift()
-
-      if(tagId.test(continued)) {
-        lines.unshift(continued)
-        break
-      }
-
-      const {content} = comment.exec(continued)?.groups ?? {}
-
-      groups.content.push(content ?? "")
-    }
-
-    const curr = extractedTags[tag] ?? []
-    curr.push(groups)
-
-    Object.assign(extractedTags, {[tag]: curr})
-
-    return Object.assign(ctx, {tag: extractedTags})
-  }
-
-  async #finally(ctx) {
-    // Keep only blocks attached to a non-private function. File headers and
-    // documented variables have no function; private functions are not part of
-    // the public API.
-    const documented = ctx.filter(block =>
-      block.function && block.signature?.access !== "private")
-
-    const functions = await Collection.asyncMap(documented, async func => {
-      const result = {
-        name: func.function.groups.name,
-        description: func.description,
-        signature: func.signature,
-      }
-
-      const tags = func.tag ?? {}
-
-      if(tags.param)
-        result.param = tags.param
-          .map(({type, name, content}) => ({type, name, content}))
-
-      if(tags.return || tags.returns) {
-        const ret = (tags.return ?? tags.returns)[0]
-        result.return = {type: ret.type, content: ret.content}
-      }
-
-      if(tags.errors || tags.throws) {
-        const errs = [...(tags.errors ?? []), ...(tags.throws ?? [])]
-        result.errors = errs.flatMap(({content}) => content)
-      }
-
-      if(tags.example || tags.examples) {
-        const examples = tags.example ?? tags.examples
-        result.example = examples.flatMap(({content}) => content)
-      }
-
-      return result
+      functions.push(this.#function(node, signature, sourceFile))
     })
 
     return {functions}
   }
 
-  #regexes = new Map([
-    ["block-start", /^\s*\/\*\*.*$/],
-    ["block-stop", /^\s*\*\/\s*$/],
-    ["comment-line", /^\s\*((?:\s)(?<content>[\s\S]+))?/],
-    ["tag-id", /^\s\*\s@[a-zA-Z]/],
-    ["tag", Util.regexify(`
-      ^\\s*\\*(\\s
-      @(?<tag>\\w+)\\s*
-      \\{(?<type>\\w+(?:\\|\\w+)*(?:\\*)?)\\}\\s+
-      (?<name>(\\w+(\\.\\w?)*=?\\w*\\s*(?<rest>\\.{3})?|\\[\\w+=?.*]))(?:\\s+-)?\\s+|\\s)
-      (?<content>[\\s\\S]+?)
-      $
-    `
-    )],
-    ["simple", /^\s*\*\s*@(?<tag>errors|throws)\b\s*(?:-\s+)?(?<content>.*)$/],
-    ["return", /^\s*\*\s*@(?<tag>returns?)\s+\{(?<type>[^}]*)\}(?:\s+(?:-\s+)?(?<content>.*))?/],
-    ["example", /^\s\* @(?<tag>examples?)((?:\s)(?<content>[\s\S]+))?/],
-    ["function", Util.regexify(`
-      ^\\s*
-      (?<access>public|protected|private)?
-      \\s*
-      (?<modifier1>nomask|varargs)?
-      \\s*
-      (?<modifier2>nomask|varargs)?
-      \\s*
-      (?<type>(int|float|void|string|object|mixed|mapping|array|buffer|function))\\s*(?<array>\\*)?
-      \\s*
-      (?<name>[a-zA-Z_][a-zA-Z0-9_]*)
-      \\s*
-      \\((?<parms>.*)\\)
-      \\s*
-      \\{?.*
-      `
-    )]
-  ])
+  // -- Signature ------------------------------------------------------------
+
+  #signature = (node, sourceFile) => {
+    const keywords = (node.modifiers ?? []).map(m => m.getText(sourceFile))
+    const [modifier1, modifier2] = keywords.filter(k => MODIFIERS.includes(k))
+
+    let type = node.type?.getText(sourceFile).trim() ?? "mixed"
+    const array = /\*$/.test(type)
+
+    if(array)
+      type = type.replace(/\s*\*$/, "")
+
+    return this.#gimme({
+      access: keywords.find(k => ACCESS.includes(k)),
+      modifier1,
+      modifier2,
+      type,
+      array,
+      name: node.name.text,
+      parameters: node.parameters.map(p => p.getText(sourceFile).trim()),
+    })
+  }
+
+  // -- Doc block ------------------------------------------------------------
+
+  // The compiler decides which block documents the function, but its JSDoc
+  // type parser does not understand LPC types (`{object STD_ROOM}`,
+  // `{string | STD_BODY}`) and nests `@overload` parameters out of reach. The
+  // tags are therefore read from the block's raw text, matching braces, which
+  // keeps types verbatim and flattens overloads into one parameter list.
+  #function = (node, signature, sourceFile) => {
+    // Only the block nearest the function documents it.
+    const {description, tags} = this.#readBlock(node.jsDoc.at(-1).getText(sourceFile))
+    const named = (...names) => tags.filter(t => names.includes(t.tag))
+
+    const result = {name: node.name.text, description, signature}
+
+    const params = named("param").map(t => this.#typed(t, true))
+    if(params.length)
+      result.param = params
+
+    const [ret] = named("return", "returns").map(t => this.#typed(t, false))
+    if(ret)
+      result.return = {type: ret.type, content: ret.content}
+
+    const errors = named("errors", "throws")
+    if(errors.length)
+      result.errors = errors.flatMap(t => this.#dropDash(t.lines))
+
+    const examples = named("example", "examples")
+    if(examples.length)
+      result.example = examples.flatMap(t => t.lines)
+
+    return result
+  }
+
+  // Splits a `/** ... */` block into description lines and tags, each tag
+  // holding the lines from its `@name` up to the next tag. Lines keep any
+  // indentation past the ` * ` margin so examples survive intact.
+  #readBlock = text => {
+    const lines = text
+      .replace(/^\/\*\*/, "")
+      .replace(/\*\/$/, "")
+      .split(/\r?\n/)
+      .map(line => line.replace(/^\s*\* ?/, "").trimEnd())
+
+    while(lines.length && lines.at(-1) === "")
+      lines.pop()
+
+    const description = []
+    const tags = []
+
+    for(const line of lines) {
+      const tag = line.match(/^@(\w+)\s?(.*)$/)
+
+      if(tag)
+        tags.push({tag: tag[1], lines: tag[2] ? [tag[2]] : []})
+      else if(tags.length)
+        tags.at(-1).lines.push(line)
+      else
+        description.push(line)
+    }
+
+    while(description.length && description[0].trim() === "")
+      description.shift()
+
+    return {description, tags}
+  }
+
+  // Reads `{type} [name] - text` off a tag, taking the type and a bracketed
+  // `[name=default]` each up to its matching close, so nesting such as
+  // `[init=arr[0]]` survives. Parameters carry a name; return values do not.
+  #typed = ({lines}, hasName) => {
+    let [first = "", ...rest] = lines
+    let type = "mixed"
+
+    if(first.startsWith("{")) {
+      const end = this.#closing(first, "{", "}")
+
+      type = first.slice(1, end).trim() || "mixed"
+      first = first.slice(end + 1).trimStart()
+    }
+
+    let name
+
+    if(hasName) {
+      name = first.startsWith("[")
+        ? first.slice(0, this.#closing(first, "[", "]") + 1)
+        : first.match(/^\S*/)[0]
+      first = first.slice(name.length).trimStart()
+    }
+
+    const content = this.#dropDash([first, ...rest])
+      .filter((line, i) => i > 0 || line !== "")
+
+    return hasName ? {type, name, content} : {type, content}
+  }
+
+  // Index of the `close` matching the `open` that begins `text`, or the end of
+  // the text when it is unbalanced.
+  #closing = (text, open, close) => {
+    let depth = 0
+
+    for(let i = 0; i < text.length; i++) {
+      if(text[i] === open)
+        depth++
+      else if(text[i] === close && --depth === 0)
+        return i
+    }
+
+    return text.length
+  }
+
+  // Tag text conventionally opens with a `- ` separator; drop it.
+  #dropDash = ([first = "", ...rest]) => [first.replace(/^-\s+/, ""), ...rest]
+
+  #gimme = ob =>
+    Object.fromEntries(Object.entries(ob).filter(([_, v]) => v != null))
 }

@@ -22,6 +22,9 @@
     str       (string)
               The message string to send (sent to previous_object()).
 
+    ob        (object | object*)
+              The object to send the message to.
+
     str       (string)
               The message string to send.
 

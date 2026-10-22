@@ -21,6 +21,9 @@
     names  (string|string*)
            The name of the player objects to locate.
 
+    room   (object STD_ROOM)
+           The room to search for the player objects in.
+
 ### RETURN VALUES
 
     (object STD_PLAYER*) An array of located player objects.

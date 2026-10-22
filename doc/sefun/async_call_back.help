@@ -1,0 +1,52 @@
+---
+{
+  title: "async_call_back"
+}
+---
+### NAME
+
+    async_call_back() - Executes a previously assembled callback, delivering
+    its result through a promise.
+
+### SYNOPSIS
+
+    async mixed async_call_back( mixed *cb, mixed new_arg... );
+
+### DESCRIPTION
+
+    Executes a previously assembled callback, delivering its result through
+    a promise.
+
+    The async-aware counterpart to call_back(). Where call_back() reports
+    only whether the callback errored, this delivers what it actually
+    returned, and waits for it: if the callback is an async function, the
+    promise adopts its promise and settles only once the callback has
+    genuinely finished. An error in the callback, or a malformed callback
+    structure, rejects instead.
+
+    Await it inside an async function, or attach promise_then() outside one.
+    A rejection that is never observed is reported to the debug log, so do
+    not call this and discard the result.
+
+### PARAMETERS
+
+    cb       (mixed*)
+             Callback array from assemble_call_back()
+
+    new_arg  (...mixed)
+             Additional arguments to prepend
+
+### RETURN VALUES
+
+    (mixed) A promise for the callback's return value, or for undefined if
+    cb does not describe a callable.
+
+### ERRORS
+
+    If the callback structure is invalid, or the callback itself errors;
+    either rejects the returned promise.
+
+### EXAMPLE
+
+    {{di1}}mixed *cb = assemble_call_back(ob, "fetch_record", "gesslar");
+    mapping record = await async_call_back(cb);{{di0}}

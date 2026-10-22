@@ -18,8 +18,11 @@
 
 ### PARAMETERS
 
-    ids  (string|string*)
-         The name of the living objects to locate.
+    ids   (string|string*)
+          The name of the living objects to locate.
+
+    room  (object STD_ROOM)
+          The room to search for the living objects in.
 
 ### RETURN VALUES
 

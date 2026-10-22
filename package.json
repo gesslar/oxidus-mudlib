@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "@gesslar/bedoc": "*",
-    "@gesslar/lpc-mcp": "^1.6.1"
+    "@gesslar/lpc-mcp": "^1.6.1",
+    "@lpc-lang/core": "file:../../../projects/git/lpc-language-server/lib"
   }
 }

@@ -30,8 +30,11 @@
 
 ### PARAMETERS
 
-    f  (function)
-       The function to evaluate.
+    f    (function)
+         The function to evaluate.
+
+    arg  (mixed...)
+         Optional trailing arguments forwarded to the function.
 
 ### RETURN VALUES
 

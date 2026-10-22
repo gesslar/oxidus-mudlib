@@ -15,6 +15,11 @@
 
     Gets the objective pronoun for a gender.
 
+### PARAMETERS
+
+    ob  (string | STD_BODY)
+        Gender string or object with query_gender()
+
 ### RETURN VALUES
 
     (string) Objective pronoun (him/her/it/them)

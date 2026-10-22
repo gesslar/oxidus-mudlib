@@ -5,11 +5,21 @@
 ---
 ### NAME
 
-    _ok()
+    _ok() - Sends a message to a player using accessible notation to
+    indicate that it is a confirmation/success system message.
 
 ### SYNOPSIS
 
     varargs int _ok( mixed args... );
+
+### DESCRIPTION
+
+    Sends a message to a player using accessible notation to indicate that
+    it is a confirmation/success system message.
+
+    Provides a confirmation message, optionally formatted with arguments. If
+    no object is provided, the message will be sent to this_body(). If no
+    object is found, the message will be sent to the debug log.
 
 ### PARAMETERS
 

@@ -15,6 +15,11 @@
 
     Gets the possessive adjective for a gender.
 
+### PARAMETERS
+
+    ob  (string | STD_BODY)
+        Gender string or object with query_gender()
+
 ### RETURN VALUES
 
     (string) Possessive adjective (his/her/its/their)

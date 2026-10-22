@@ -26,10 +26,10 @@ accepts:
                 enum: [protected, public, private]
               modifier1:
                 type: string
-                enum: [nomask, varargs]
+                enum: [async, nomask, varargs]
               modifier2:
                 type: string
-                enum: [nomask, varargs]
+                enum: [async, nomask, varargs]
               type:
                 type: string
               array:

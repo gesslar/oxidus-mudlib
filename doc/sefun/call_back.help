@@ -27,8 +27,11 @@
 
 ### PARAMETERS
 
-    cb  (mixed*)
-        Callback array from assemble_call_back()
+    cb       (mixed*)
+             Callback array from assemble_call_back()
+
+    new_arg  (...mixed)
+             Additional arguments to prepend
 
 ### RETURN VALUES
 

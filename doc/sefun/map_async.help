@@ -1,0 +1,71 @@
+---
+{
+  title: "map_async"
+}
+---
+### NAME
+
+    map_async() - Applies an async function to every element of an array at
+    once and collects the results.
+
+### SYNOPSIS
+
+    async varargs mixed *map_async( mixed *src, function fun, mixed extra... );
+
+### DESCRIPTION
+
+    Applies an async function to every element of an array at once and
+    collects the results.
+
+    The fan-out counterpart to each_async(): where that one visits elements
+    in order and waits for each before starting the next, this starts them
+    all and then waits for the set. Use it when the elements do not depend
+    on each other and the waiting is what costs — a batch of file listings,
+    a batch of requests. For work that is expensive to *run* rather than to
+    wait for, each_async() is still the right shape, because starting a
+    thousand pieces of computation at once does not make the driver compute
+    them any faster.
+
+    The callback is called with (element, index, array, ...extra), as each()
+    and each_async() call it. Results are positional: entry i is what the
+    callback returned for src[i], whatever order the calls settled in. A
+    callback that is not async contributes its plain return value, so a
+    mixed batch works.
+
+    The first rejection rejects the whole thing, and the calls already
+    running are not stopped — nothing here cancels anything. When a partial
+    failure is a result rather than an error, reach for settle_async()
+    instead.
+
+    Every element is started before any of them is judged, including past
+    one that fails. A synchronous callback can throw where an async one
+    would only reject; that counts as its own element rejecting and nothing
+    more.
+
+    The fan-out is unbounded: every element holds a suspended frame until
+    the set settles, so slice a large array into batches rather than handing
+    the whole thing over at once.
+
+### PARAMETERS
+
+    src    (mixed *)
+           Array to fan out over.
+
+    fun    (function)
+           Function called per element (see above).
+
+    extra  (mixed, optional)
+           Additional arguments passed to the callback starting at $4.
+
+### RETURN VALUES
+
+    (mixed *) A promise for the results, positionally matching src.
+
+### ERRORS
+
+    If src is not an array, or fun is not a valid function. Either rejects
+    the returned promise.
+
+### EXAMPLE
+
+    {{di1}}string **listings = await map_async(dirs, (: async_getdir($1) :));{{di0}}

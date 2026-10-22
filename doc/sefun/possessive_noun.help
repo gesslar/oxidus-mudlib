@@ -15,6 +15,11 @@
 
     Creates the possessive form of a noun.
 
+### PARAMETERS
+
+    ob  (string | STD_ITEM | STD_BODY)
+        Noun or object with query_name()
+
 ### RETURN VALUES
 
     (string) Possessive form ("'s" or "'" depending on ending)

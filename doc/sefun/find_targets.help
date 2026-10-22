@@ -27,6 +27,9 @@
 
 ### PARAMETERS
 
+    user    (object STD_PLAYER | object STD_NPC)
+            The body object of the player or NPC searching
+
     arg     (string)
             The argument to match objects against
 

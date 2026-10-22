@@ -17,6 +17,9 @@
 
 ### PARAMETERS
 
+    &arr   (mixed*)
+           Array to modify
+
     value  (mixed)
            Value to insert
 

@@ -19,6 +19,9 @@
 
 ### PARAMETERS
 
+    ob        (object STD_OBJECT)
+              The object to send the message from.
+
     str       (string)
               The message string to send.
 

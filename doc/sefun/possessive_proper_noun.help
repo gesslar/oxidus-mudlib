@@ -17,6 +17,11 @@
 
     Always adds "'s" regardless of ending, following proper noun rules.
 
+### PARAMETERS
+
+    ob  (string | STD_ITEM | STD_BODY)
+        Proper noun or object with query_name()
+
 ### RETURN VALUES
 
     (string) Possessive form with "'s"

@@ -19,6 +19,9 @@
 
 ### PARAMETERS
 
+    &arr   (mixed*)
+           The array to which to unshift an element.
+
     value  (mixed)
            The element to unshift onto the array.
 

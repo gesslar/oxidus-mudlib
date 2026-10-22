@@ -23,5 +23,8 @@
 
 ### PARAMETERS
 
-    str  (string)
-         The debug message.
+    str   (string)
+          The debug message.
+
+    args  (...mixed, optional)
+          Optional arguments to format the message.

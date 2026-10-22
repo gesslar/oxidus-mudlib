@@ -25,6 +25,10 @@
     result  (mixed)
             Initial value to thread through the pipeline.
 
+    funcs   (...function, optional)
+            Functions applied in order; each receives the running result and
+            returns the next.
+
 ### RETURN VALUES
 
     (mixed) The final transformed value.
