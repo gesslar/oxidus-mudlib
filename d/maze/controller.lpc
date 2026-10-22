@@ -15,8 +15,15 @@ inherit STD_VIRTUAL_SERVER;
 
 object generate_object(string file) {
   object result;
+  int x, y, z;
 
   if(pcre_match(file, "^\\d+,\\d+,-?\\d+$")) {
+    sscanf(file, "%d,%d,%d", x, y, z);
+
+    // Layers run downward as negative z, so layer = -z.
+    if(__DIR__ "maze_daemon"->oob(-z, y, x))
+      return 0;
+
     result = new(__DIR__ "maze_base", file);
 
     result->set_virtual_master(__DIR__ "maze_base");
