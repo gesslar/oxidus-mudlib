@@ -1,6 +1,6 @@
 ---
 name: logic-check
-description: Review a file, set of files, or system in Oxidus for logic flaws, errors, and crashers. Reports only concrete, reachable defects with a trigger path and evidence; no style, refactoring, or defensive suggestions, and no proposed fixes unless asked. Use when asked to logic-check, sanity-check, or hunt for bugs in specific code.
+description: Review a file, set of files, or system in Oxidus for logic flaws, errors, and crashers. Reports only concrete defects with a trigger path (or, if masked, what masks them) and evidence; no style, refactoring, or defensive suggestions, and no proposed fixes unless asked. Use when asked to logic-check, sanity-check, or hunt for bugs in specific code.
 argument-hint: <file | files | system>
 ---
 
@@ -31,6 +31,11 @@ Check for:
 - State transitions or sequencing that contradict the apparent intended
   behaviour.
 - Reachable cases that cause invalid operations.
+
+The test is whether the code does what it evidently means to do. Logic that is
+wrong on its own terms — an off-by-one, a misaligned index range, an inverted
+condition — is a finding even when other code currently cancels its effect.
+That masking determines the severity, not whether the defect is reported.
 
 ## Verify behaviour
 
@@ -84,8 +89,10 @@ For each finding, identify:
 1. Where the defect is (`file:line`).
 2. What the code currently does.
 3. Why that conflicts with the apparent intended behaviour.
-4. A concrete path or circumstance that triggers the problem.
-5. The resulting incorrect behaviour, error, or crash.
+4. A concrete path or circumstance that triggers the problem — or, for a
+   masked defect, what is masking it and what change would expose it.
+5. The resulting incorrect behaviour, error, or crash, or that the defect is
+   currently masked.
 
 If supporting evidence comes from a call site, simul_efun implementation, or
 efun documentation, include that evidence.
