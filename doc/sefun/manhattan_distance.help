@@ -1,0 +1,43 @@
+---
+{
+  title: "manhattan_distance"
+}
+---
+### NAME
+
+    manhattan_distance() - Calculates the Manhattan distance between two
+    points: the number of steps between them when movement runs along the
+    axes only, with no diagonals. Points may have any number of axes, so 2D
+    and 3D coordinates both work.
+
+### SYNOPSIS
+
+    int manhattan_distance( int *a, int *b );
+
+### DESCRIPTION
+
+    Calculates the Manhattan distance between two points: the number of
+    steps between them when movement runs along the axes only, with no
+    diagonals. Points may have any number of axes, so 2D and 3D coordinates
+    both work.
+
+### PARAMETERS
+
+    a  (int*)
+       The first point's coordinates.
+
+    b  (int*)
+       The second point's coordinates, in the same axis order as `a`.
+
+### RETURN VALUES
+
+    (int) The sum of the absolute differences along each axis.
+
+### ERRORS
+
+    If either point is not a non-empty array of integers. If the points have
+    different numbers of axes.
+
+### EXAMPLE
+
+    {{di1}}manhattan_distance(({ 0, 2, 3 }), ({ 0, 5, 1 })) // 5{{di0}}

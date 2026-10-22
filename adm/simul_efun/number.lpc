@@ -427,3 +427,59 @@ varargs float dim_sigmoid(mixed val, mixed scale, mixed k) {
 
   return (2.0 / (1.0 + exp(-mult)) - 1.0) * to_float(scale);
 }
+
+/**
+ * Calculates the Manhattan distance between two points: the number of
+ * steps between them when movement runs along the axes only, with no
+ * diagonals. Points may have any number of axes, so 2D and 3D
+ * coordinates both work.
+ *
+ * @param {int*} a - The first point's coordinates.
+ * @param {int*} b - The second point's coordinates, in the same axis
+ *                   order as `a`.
+ * @returns {int} The sum of the absolute differences along each axis.
+ * @errors If either point is not a non-empty array of integers.
+ * @errors If the points have different numbers of axes.
+ * @example
+ * manhattan_distance(({ 0, 2, 3 }), ({ 0, 5, 1 })) // 5
+ */
+int manhattan_distance(int *a, int *b) {
+  assert_arg(pointerp(a) && sizeof(a) && uniformp(a, T_INT), 1, "Invalid, empty, or missing point.");
+  assert_arg(pointerp(b) && sizeof(b) && uniformp(b, T_INT), 2, "Invalid, empty, or missing point.");
+  assert_arg(sizeof(a) == sizeof(b), 2, "Points must have the same number of axes.");
+
+  int result = 0;
+
+  for(int i = 0; i < sizeof(a); i++)
+    result += abs(a[i] - b[i]);
+
+  return result;
+}
+
+/**
+ * Calculates the Chebyshev distance between two points: the number of
+ * steps between them when a diagonal step costs the same as a straight
+ * one, like a king in chess. Points may have any number of axes, so 2D
+ * and 3D coordinates both work.
+ *
+ * @param {int*} a - The first point's coordinates.
+ * @param {int*} b - The second point's coordinates, in the same axis
+ *                   order as `a`.
+ * @returns {int} The largest absolute difference along any one axis.
+ * @errors If either point is not a non-empty array of integers.
+ * @errors If the points have different numbers of axes.
+ * @example
+ * chebyshev_distance(({ 0, 2, 3 }), ({ 0, 5, 1 })) // 3
+ */
+int chebyshev_distance(int *a, int *b) {
+  assert_arg(pointerp(a) && sizeof(a) && uniformp(a, T_INT), 1, "Invalid, empty, or missing point.");
+  assert_arg(pointerp(b) && sizeof(b) && uniformp(b, T_INT), 2, "Invalid, empty, or missing point.");
+  assert_arg(sizeof(a) == sizeof(b), 2, "Points must have the same number of axes.");
+
+  int result = 0;
+
+  for(int i = 0; i < sizeof(a); i++)
+    result = max(({ result, abs(a[i] - b[i]) }));
+
+  return result;
+}

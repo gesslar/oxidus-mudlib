@@ -183,6 +183,8 @@ float dim_logarithmic(mixed val, mixed scale);
 float dim_hyperbolic(mixed val, mixed scale);
 float dim_exponential_decay(mixed val, mixed scale);
 varargs float dim_sigmoid(mixed val, mixed scale, mixed k);
+int manhattan_distance(int *a, int *b);
+int chebyshev_distance(int *a, int *b);
 
 // File: object.c
 int caller_is(mixed ob);
