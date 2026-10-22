@@ -826,8 +826,9 @@ void determine_exits_and_entrances() {
   minimum -= 3;
 
   // Now we need to determine if we have enough height to have a valid
-  // entrance and exit.
-  if(height >= minimum && wastes_height >= minimum) {
+  // entrance and exit: at least one candidate row between the top gap and
+  // the bottom.
+  if(minimum > 2) {
     // Now we need to find a possible y coordinate in the wastes that is not
     // impassable.
     possible = ({});
@@ -1011,7 +1012,7 @@ private void determine_centre_room(int z) {
 
   // Now we need to find the closest path room to the centre of the maze
   // and set that as the centre room.
-  while(centre[0]-w > MIN_X && centre[0]+e < MAX_X &&
+  while(centre[2]-w > MIN_X && centre[2]+e < MAX_X &&
         centre[1]-n > MIN_Y && centre[1]+s < MAX_Y) {
 
     //North
@@ -1036,10 +1037,7 @@ private void determine_centre_room(int z) {
     } else e++;
   }
 
-  if(centre[2] - w <= MIN_X ||
-     centre[2] + e >= MAX_X ||
-     centre[1] - n <= MIN_Y ||
-     centre[1] + s >= MAX_Y)
+  if(!is_path(centre[0], centre[1], centre[2]))
     error("Ran out of bounds determining centre room.");
 
   centre_rooms[z] = centre;
