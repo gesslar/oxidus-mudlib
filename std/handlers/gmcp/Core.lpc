@@ -3,7 +3,7 @@
 
 inherit __DIR__ "gmcp_module";
 
-void manage_hierarchy(mapping current, string key, int version, int depth);
+private void add_support(mapping supports, string item);
 
 void setup() {
   cooldown_limits = ([
@@ -35,67 +35,22 @@ void Supports(string submodule, mixed data) {
   switch(submodule) {
     case "Set": {
       supports = ([ ]);
-      foreach(string item in data) {
-        // Splitting the package.module version format
-        string *parts = explode(item, " ");
-        string full_name = parts[0];
-        int version = to_int(parts[1]);
-        string *path = explode(full_name, ".");
 
-        // Building the hierarchical structure
-        mapping current = supports;
-        for(int i = 0; i < sizeof(path); i++) {
-          string key = path[i];
-          // If it's the last element, set the version
-          if(i == sizeof(path) - 1) {
-            if(sizeof(path) == 1) { // Directly under the root
-              if(!current[key])
-                current[key] = ([ "version": version ]);
-              else
-                current[key]["version"] = version;
-            } else { // It's a module or submodule
-              string type = (i == 1) ? "modules" : "submodules";
-              if(!current[type])
-                current[type] = ([ ]);
+      foreach(string item in data)
+        add_support(supports, item);
 
-              if(!current[type][key])
-                current[type][key] = ([ "version": version ]);
-              else
-                current[type][key]["version"] = version;
-            }
-          } else { // Not the last element, navigate or create the structure
-            if(!current[key])
-              current[key] = ([ ]);
-            current = current[key];
-          }
-        }
-      }
       break;
     }
     case "Add" : {
       if(stringp(data))
         data = ({ data });
 
-      foreach(string item in data) {
-        string *parts = explode(item, " ");
-        string full_name = parts[0];
-        int version = to_int(parts[1]);
-        string *path = explode(full_name, ".");
+      if(!supports)
+        supports = ([ ]);
 
-        mapping current = supports;
+      foreach(string item in data)
+        add_support(supports, item);
 
-        for(int i = 0; i < sizeof(path); i++) {
-          string key = path[i];
-          if(i == sizeof(path) - 1) {
-            // Handle setting the version for package/module/submodule
-            manage_hierarchy(current, key, version, sizeof(path));
-          } else {
-            if(!current[key])
-              current[key] = ([ "modules": ([ ]) ]);
-            current = current[key]["modules"];
-          }
-        }
-      }
       break;
     }
     case "Remove" : {
@@ -143,15 +98,38 @@ void Supports(string submodule, mixed data) {
   prev->set_gmcp_supports(supports);
 }
 
-void manage_hierarchy(mapping current, string key, int version, int depth) {
-  if(depth == 1) // Directly under root
-    current[key] = ([ "version": version ]);
-  else { // Module or submodule
-    string type = (depth == 2) ? "modules" : "submodules";
-    if(!current[type])
-      current[type] = ([ ]);
+/**
+ * Records one "Package.Module.Submodule version" entry in a supports mapping,
+ * creating any missing levels on the way down. Packages hold their modules
+ * under "modules", and modules hold their submodules under "submodules", so
+ * an entry lands in the same place whichever order its ancestors arrive in.
+ *
+ * @param {mapping} supports - The supports mapping to update in place.
+ * @param {string} item - The entry, e.g. "Char.Items 1".
+ */
+private void add_support(mapping supports, string item) {
+  string *parts = explode(item, " ");
+  string *path = explode(parts[0], ".");
+  int version = to_int(parts[1]);
+  mapping level = supports;
 
-    current[type][key] = ([ "version": version ]);
+  for(int i = 0; i < sizeof(path); i++) {
+    string key = path[i];
+
+    if(!level[key])
+      level[key] = ([ ]);
+
+    if(i == sizeof(path) - 1) {
+      level[key]["version"] = version;
+      break;
+    }
+
+    string container = i == 0 ? "modules" : "submodules";
+
+    if(!level[key][container])
+      level[key][container] = ([ ]);
+
+    level = level[key][container];
   }
 }
 

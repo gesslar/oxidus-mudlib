@@ -141,6 +141,12 @@ Chat/communication messages:
 
 - `"Install"` — sends UI package URL and version for client auto-install
 
+Bare `Client.GUI {"baseui": false}` tells Mudlet not to load its bundled
+baseui package. It does not go through this module: the login object's
+`gmcp_enable()` apply sends it raw with the `send_gmcp()` efun, because the
+payload needs a JSON boolean and neither `json_encode()` nor
+`gmcp_stringify()` can produce one.
+
 ### Room.Info
 
 **Module:** `Room.lpc::Info(object who, object room)`
@@ -156,6 +162,13 @@ Room information. Calls `room->gmcp_room_info(who)` for custom data.
 Travel path data. Converts stop paths to MD4 hashes.
 
 ## When GMCP Gets Sent
+
+### On Negotiation (`gmcp_enable()`)
+
+The driver calls the `gmcp_enable()` apply on the login object as soon as
+GMCP is negotiated, before any GMCP traffic in either direction. It sends
+`Client.GUI {"baseui": false}`. The client negotiates only once, so the body
+the connection is later `exec()`ed into does not need it.
 
 ### On Login (`init_gmcp()`)
 

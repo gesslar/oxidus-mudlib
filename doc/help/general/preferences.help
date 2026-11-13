@@ -110,6 +110,11 @@ Default: 0
  Effect: Verbosity of body event logging, {{bl1}}1{{res}} (least) to {{bl1}}4{{res}} (most). {{bl1}}0{{res}} or unset
          disables it; higher levels are noisy.
 
+Setting: no_mp_cost
+Default: none (off)
+ Effect: Set to {{bl1}}yes{{res}} to walk through exits without spending movement
+         points, and without needing enough of them to make the trip.
+
 Setting: ls_directory
 Default: 5087b4
  Effect: Colour used for directories in {{bl1}}ls{{res}} listings.

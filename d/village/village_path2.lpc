@@ -27,7 +27,7 @@ void setup() {
 
 set_exits(([
   "east" : "square",
-  "south": "tavern",
+  // "south": "tavern",
   "west" : "village_path5",
 ]));
 

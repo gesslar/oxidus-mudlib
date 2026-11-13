@@ -31,6 +31,7 @@ mixed main(
   mixed dest;
   mixed result;
   /** @type {STD_ROOM} */ object room = environment(tp);
+  int free_move = devp(tp) && tp->query_pref("no_mp_cost") == "yes";
   float cost, mp;
 
   result = MOVE_D->allow_walk_direction(tp, room, arg);
@@ -44,7 +45,7 @@ mixed main(
   cost = room->move_cost(arg);
   mp = tp->query_mp();
 
-  if(mp < cost)
+  if(!free_move && mp < cost)
     return "That location is too far away to travel to right now.";
 
   dest = room->query_exit_dest(arg);
@@ -63,7 +64,8 @@ mixed main(
   MOVE_D->pre_walk_direction(tp, room, arg);
   MOVE_D->post_walk_direction(tp, dest, arg);
 
-  tp->adjust_mp(-cost);
+  if(!free_move)
+    tp->adjust_mp(-cost);
 
   return 1;
 }

@@ -117,71 +117,71 @@ private async mixed bounded_gmcp_wait(string name, promise p, float seconds) {
 // respond to the client, it should route its message through the GMCP_D which
 // will check if the player has GMCP enabled and behave accordingly.
 void gmcp(string message) {
-    class ClassGMCP gmcp;
-    string err;
-    string gmcp_module;
-    object ob;
+  class ClassGMCP gmcp;
+  string err;
+  string gmcp_module;
+  object ob;
 
-    gmcp = GMCP_D->convert_message(message);
+  gmcp = GMCP_D->convert_message(message);
 
-    if(gmcp == null)
-        return;
+  if(gmcp == null)
+    return;
 
-    if(gmcp.package == null || gmcp.module == null)
-        return;
+  if(gmcp.package == null || gmcp.module == null)
+    return;
 
+  // Wake anything awaiting this message. Done before the handler lookup
+  // below, which returns early when a package has no handler file -- a
+  // message we are only waiting on does not need one. The waiter does not
+  // resume here: promise deliveries are drained after this call returns,
+  // so the handler dispatched below still runs first.
+  if(gmcp_waiting[gmcp.name]) {
+    promise waiting = gmcp_waiting[gmcp.name];
 
-    // Wake anything awaiting this message. Done before the handler lookup
-    // below, which returns early when a package has no handler file -- a
-    // message we are only waiting on does not need one. The waiter does not
-    // resume here: promise deliveries are drained after this call returns,
-    // so the handler dispatched below still runs first.
-    if(gmcp_waiting[gmcp.name]) {
-        promise waiting = gmcp_waiting[gmcp.name];
+    map_delete(gmcp_waiting, gmcp.name);
+    promise_resolve(waiting, gmcp.payload);
+  }
 
-        map_delete(gmcp_waiting, gmcp.name);
-        promise_resolve(waiting, gmcp.payload);
-    }
+  gmcp_module = DIR_STD_HANDLERS "gmcp/" + gmcp.package + ".lpc";
+  if(!file_exists(gmcp_module)) {
+    log_file("system/gmcp", "[%s] Module %s not found [%O]",
+      ldatetime(),
+      gmcp_module,
+      previous_object() || this_object()
+    );
 
-    gmcp_module = DIR_STD_HANDLERS "gmcp/" + gmcp.package + ".lpc";
-    if(!file_exists(gmcp_module)) {
-        log_file("system/gmcp", "[%s] Module %s not found [%O]",
-            ldatetime(),
-            gmcp_module,
-            previous_object() || this_object()
-        );
-        return;
-    }
+    return;
+  }
 
-    if(err = catch(ob = load_object(gmcp_module)))
-        return;
+  if(err = catch(ob = load_object(gmcp_module)))
+    return;
 
-    if(gmcp.submodule)
-        call_other(ob, gmcp.module, gmcp.submodule, gmcp.payload);
-    else
-        call_other(ob, gmcp.module, gmcp.payload);
+  if(gmcp.submodule)
+    call_other(ob, gmcp.module, gmcp.submodule, gmcp.payload);
+  else
+    call_other(ob, gmcp.module, gmcp.payload);
 }
 
 // This function sends a GMCP message to the client. It will only send the
 // message if the player has GMCP enabled. If the player does not have GMCP
 // enabled, the message will be ignored.
 varargs void do_gmcp(string package, mixed data) {
-    string message;
+  string message;
 
-    if(!get_config(__RC_ENABLE_GMCP__))
-        return;
+  if(!get_config(__RC_ENABLE_GMCP__))
+    return;
 
-    if(!gmcp_enabled())
-        return;
+  if(!gmcp_enabled())
+    return;
 
-    if(data)
-        data = json_encode(gmcp_stringify(data));
-    else
-        data = "";
+  if(data)
+    data = json_encode(gmcp_stringify(data));
+  else
+    data = "";
 
-    message = trim(sprintf("%s %s", package, data));
+  message = trim(sprintf("%s %s", package, data));
 
-    send_gmcp(message);
+  send_gmcp(message);
 }
 
 // This function sanitises the data to be sent to the client. It will convert

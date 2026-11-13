@@ -6,7 +6,7 @@
  * transitioning the player into the game world.
  *
  * @created 2021-09-29 - Gesslar
- * @last_modified 2026-09-15 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
  *
  * @history
  * 2021-09-29 - Gesslar - Created
@@ -14,6 +14,7 @@
  * 2026-08-31 - Gesslar - Account, character and password flow rewritten
  * 2026-09-15 - Gesslar - Client state moved to EXT_CLIENT, handed to the body
  *                        with adopt_client()
+ * 2026-11-13 - Gesslar - Client.GUI baseui:false sent on GMCP negotiation
  */
 
 #include <daemons.h>
@@ -189,6 +190,19 @@ private async void no_gmcp_probe() {
     await call_out_walltime(1.0);
 
   throw("connection is not using GMCP");
+}
+
+/**
+ * Called by the driver once GMCP has been negotiated, ahead of any GMCP
+ * traffic in either direction. Tells Mudlet not to load its baseui package.
+ *
+ * Sent raw rather than through GMCP_D: the payload needs a JSON boolean,
+ * which json_encode() and gmcp_stringify() cannot produce.
+ *
+ * @apply
+ */
+private void gmcp_enable() {
+  send_gmcp(`${GMCP_PKG_CLIENT_GUI} {"baseui": false}`);
 }
 
 /**

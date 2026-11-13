@@ -56,6 +56,7 @@ These take effect only for characters holding the developer role. They are still
 | `look_filename` | unset (off) | Set to `on` to show the source filename above the description of rooms, objects, and livings when you `look`. |
 | `error_output` | unset (enabled) | Compile and runtime errors attributed to you are echoed to your screen as well as written to your home log. Set to `off` to silence them. |
 | `log_level` | `0` | Verbosity of body event logging, `1` (least) to `4` (most). `0` or unset disables it; higher levels are noisy. |
+| `no_mp_cost` | unset (off) | Set to `yes` to walk through exits without spending movement points, and without needing enough of them to make the trip. |
 
 ### `ls` Colours
 
