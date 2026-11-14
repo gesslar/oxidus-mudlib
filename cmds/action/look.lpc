@@ -16,6 +16,14 @@
 
 inherit STD_ACT;
 
+private mixed identify_filename(object ob, int vm);
+private mixed describe_environment(object tp);
+private mixed describe_object(object tp, object ob);
+private mixed describe_contents(object tp, object ob);
+private mixed describe_living(object tp, object ob);
+private mixed describe_item(object tp, string item);
+private string *format_contents(object *obs, int fns);
+
 void setup() {
   help_text =
     "Describes your surroundings, or something in particular. On its own it "
@@ -28,14 +36,6 @@ void setup() {
     "\n"
     "See also: inventory\n";
 }
-
-mixed identify_filename(object ob, int vm);
-mixed describe_environment(object tp);
-mixed describe_object(object tp, object ob);
-mixed describe_contents(object tp, object ob);
-mixed describe_living(object tp, object ob);
-mixed describe_item(object tp, string item);
-private string *format_contents(object *obs, int fns);
 
 mixed main(
   /** @type {STD_BODY} */ object tp,
@@ -85,9 +85,14 @@ mixed main(
   return "You don't see that here.";
 }
 
-mixed describe_environment(
-  /** @type {STD_BODY} */ object tp
-) {
+/**
+ * Describes the room the looker is standing in: its name, description,
+ * exits, doors, and what can be seen there.
+ *
+ * @param {STD_BODY} tp - The body looking.
+ * @returns {string} The room's description.
+ */
+private mixed describe_environment(object tp) {
   /** @type {STD_ROOM} */ object env = environment(tp);
   string result = "";
   int fns = devp(tp) && tp->query_pref("look_filename") == "on";
@@ -99,9 +104,8 @@ mixed describe_environment(
   }
 
   string short = ob_short(env);
-  if(truthy(short)) {
-    result += append(short, "\n");
-  }
+  if(truthy(short))
+    result += append(short, "\n\n");
 
   string long = ob_long(env);
   if(truthy(long))
@@ -109,9 +113,8 @@ mixed describe_environment(
 
   string *exits = env->query_exit_ids();
   if(sizeof(exits)) {
-    if(truthy(long)) {
+    if(truthy(long))
       result += "\n";
-    }
 
     result += `You may go ${simple_list(exits, "and")}.`;
 
@@ -149,10 +152,14 @@ mixed describe_environment(
   return result;
 }
 
-mixed describe_object(
-  /** @type {STD_BODY} */ object tp,
-  /** @type {STD_ITEM | STD_BODY} */ object ob
-) {
+/**
+ * Describes an object, handing livings off to describe_living().
+ *
+ * @param {STD_BODY} tp - The body looking.
+ * @param {STD_ITEM | STD_BODY} ob - The object looked at.
+ * @returns {string} The object's description.
+ */
+private mixed describe_object(object tp, object ob) {
   if(living(ob))
     return describe_living(tp, ob);
 
@@ -166,9 +173,8 @@ mixed describe_object(
   }
 
   string short = ob_short(ob);
-  if(truthy(short)) {
+  if(truthy(short))
     result += append(short, "\n");
-  }
 
   string long = ob_long(ob);
   if(truthy(long))
@@ -177,10 +183,14 @@ mixed describe_object(
   return result;
 }
 
-mixed describe_contents(
-  /** @type {STD_BODY} */ object tp,
-  /** @type {STD_CONTAINER} */ object ob
-) {
+/**
+ * Describes what a container holds, or that it is closed.
+ *
+ * @param {STD_BODY} tp - The body looking.
+ * @param {STD_CONTAINER} ob - The container looked in.
+ * @returns {string} The container's contents.
+ */
+private mixed describe_contents(object tp, object ob) {
   if(living(ob))
     return "Wouldn't that be amazing?";
 
@@ -194,9 +204,8 @@ mixed describe_contents(
   }
 
   string short = ob_short(ob);
-  if(truthy(short)) {
+  if(truthy(short))
     result += append(short, "\n");
-  }
 
   if(ob->is_closed()) {
     result += "It is closed.";
@@ -211,7 +220,7 @@ mixed describe_contents(
         result += "\n";
 
       shorts = map(shorts, (: `  ${$1}` :));
-      unshift(& shorts, "Contents:");
+      unshift(ref shorts, "Contents:");
       result += implode(shorts, "\n");
     } else {
       result += "You see nothing inside.";
@@ -221,10 +230,15 @@ mixed describe_contents(
   return result;
 }
 
-mixed describe_living(
-  /** @type {STD_BODY} */ object tp,
-  /** @type {STD_BODY} */ object ob
-) {
+/**
+ * Describes a living: its description, race and gender, condition, and what
+ * it has equipped and wielded.
+ *
+ * @param {STD_BODY} tp - The body looking.
+ * @param {STD_BODY} ob - The living looked at, which may be the looker.
+ * @returns {string} The living's description.
+ */
+private mixed describe_living(object tp, object ob) {
   string result = "";
   int fns = devp(tp) && tp->query_pref("look_filename") == "on";
 
@@ -235,9 +249,8 @@ mixed describe_living(
   }
 
   string short = ob_short(ob);
-  if(truthy(short)) {
+  if(truthy(short))
     result += append(short, "\n");
-  }
 
   string long = ob_long(ob);
   if(truthy(long))
@@ -256,29 +269,22 @@ mixed describe_living(
     result += `${sub} ${verb} ${gender}.\n`;
 
   string *vitals = ob->query_condition_string();
-  if(pointerp(vitals)) {
-    if(strlen(result))
-      result += `${sub} ${verb} ${vitals[0]}.\n`;
-  }
+  if(pointerp(vitals) && strlen(result))
+    result += `${sub} ${verb} ${vitals[0]}.\n`;
 
   // Copied from eq.lpc. kekela
-  mapping eq, wielded;
-  string slot, *slots;
-  string out = "";
-  int max;
-
-  eq = ob->query_equipped();
-  wielded = ob->query_wielded();
+  mapping eq = ob->query_equipped();
+  mapping wielded = ob->query_wielded();
 
   if(sizeof(eq) || sizeof(wielded)) {
-    slots = keys(wielded);
-    slots += keys(eq);
+    string *slots = keys(wielded) + keys(eq);
+    int width = max(map(slots, (: strlen :)));
+    string out = "";
 
-    max = max(map(slots, (: strlen :)));
-
-    foreach(slot in slots) {
+    foreach(string slot in slots) {
       object item = wielded[slot] || eq[slot];
-      out += sprintf("%*s : %s\n", max, capitalize(slot), get_short(item));
+
+      out += sprintf("%*s : %s\n", width, capitalize(slot), get_short(item));
     }
 
     if(strlen(out))
@@ -288,16 +294,26 @@ mixed describe_living(
   return result;
 }
 
-mixed describe_item(object tp, string item) {
+/**
+ * Describes one of the room's extra items.
+ *
+ * @param {STD_BODY} tp - The body looking.
+ * @param {string} item - The item looked at.
+ * @returns {mixed} The item's description.
+ */
+private mixed describe_item(object tp, string item) {
   return /** @type {STD_ROOM} */ (environment(tp))->get_item(item);
 }
 
 /**
+ * Returns an object's file name for display, marking virtual objects.
  *
- * @param {STD_OBJECT} ob
- * @param vm
+ * @param {STD_OBJECT} ob - The object to identify.
+ * @param {int} vm - Nonzero to name a virtual object's master rather than
+ *                   just marking it virtual.
+ * @returns {string} The file name, with any virtual marker.
  */
-mixed identify_filename(object ob, int vm) {
+private mixed identify_filename(object ob, int vm) {
   vm = !!vm;
 
   string fn = file_name(ob);
@@ -318,6 +334,14 @@ mixed identify_filename(object ob, int vm) {
   }
 }
 
+/**
+ * Returns the short descriptions of a set of objects, dropping any without
+ * one.
+ *
+ * @param {object*} obs - The objects to list.
+ * @param {int} fns - Nonzero to append each object's file name.
+ * @returns {string*} The short descriptions.
+ */
 private string *format_contents(object *obs, int fns) {
   string *shorts = map(obs, function(object ob, int fns) {
     string short = ob_short(ob);

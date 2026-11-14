@@ -1,6 +1,7 @@
 /**
  * @file /d/village/village_path2.lpc
- * Path through the village
+ *
+ * Path through the village.
  *
  * @created 2024-02-04 - Gesslar
  * @last_modified 2024-02-04 - Gesslar
@@ -9,27 +10,30 @@
  * 2024-02-04 - Gesslar - Created
  */
 
+#include <classes.h>
+
 inherit __DIR__ "village_base";
+inherit CLASS_DOOR;
 
 void setup() {
   set_short("A Path Through the Village");
   set_long(
   "Westward from the village square, the path transitions from cobblestone "
-  "to packed earth, guiding travelers towards the quieter side of the "
+  "to packed earth, guiding travellers towards the quieter side of the "
   "village. Here, nestled among the modest dwellings, a small, unassuming "
   "tavern quietly asserts its presence. Its wooden facade, weathered by "
   "time, and a dimly lit lantern by the door, offer a welcoming if "
   "understated, invitation. The sign, swaying gently, depicts a frothy "
   "mug, symbolizing the simple comforts waiting within. This stretch of the "
-  "path, less traveled yet worn smooth by the tavern's regulars, leads to "
+  "path, less travelled yet worn smooth by the tavern's regulars, leads to "
   "a place of rest and camaraderie, where tales and ale are shared with "
   "equal generosity.");
 
-set_exits(([
-  "east" : "square",
-  // "south": "tavern",
-  "west" : "village_path5",
-]));
+  set_exits(([
+    "east" : "square",
+    "south": "inn/tavern",
+    "west" : "village_path5",
+  ]));
 
   set_distance("east", 2);
 
@@ -41,7 +45,7 @@ set_exits(([
     ({ "packed earth path", "path" }) :
       "Shifting from the structured cobblestone, this path of packed "
       "earth offers a softer journey underfoot, leading adventurers "
-      "towards serenity. It's a road less traveled, but rich in the "
+      "towards serenity. It's a road less travelled, but rich in the "
       "promise of quiet discovery.",
     "tavern" :
       "A small haven of warmth and welcome, the tavern's modest size "
@@ -64,4 +68,13 @@ set_exits(([
       "language of rest and refreshment, offering a silent but "
       "heartfelt invitation to come and partake.",
   ]));
+
+  add_door(new(class Door,
+    id: "tavern door",
+    direction: "south",
+    short: "A weathered wooden door",
+    long: "A stout door of weathered planks bound with iron, a dimly lit "
+      "lantern hanging beside it. Warmth, the murmur of voices, and the "
+      "smell of ale and woodsmoke leak around its frame."
+  ));
 }

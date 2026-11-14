@@ -1,0 +1,238 @@
+/**
+ * @file /d/apt/apartment.lpc
+ *
+ * One room of a resident's apartment, served virtually by
+ * /d/apt/controller. Its description, exits, and access all come from
+ * APT_D. The resident decorates it with the decorate command, invites
+ * guests, and keeps a private store of belongings.
+ *
+ * @created 2026-11-13 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
+ *
+ * @history
+ * 2026-11-13 - Gesslar - Created, ported from Threshold's apartment system
+ */
+
+#include <classes.h>
+
+inherit STD_ROOM;
+inherit STD_STORAGE_ROOM;
+
+inherit CLASS_STORAGE;
+
+private nosave string __resident, __key, __building;
+private nosave mapping __storage_commands = ([]);
+
+public void refresh_description();
+private mixed owner_storage(string command, object tp, string arg);
+private mixed cmd_invite(object tp, string arg);
+private mixed cmd_uninvite(object tp, string arg);
+
+void setup() {
+  set_light(1);
+  set_terrain("indoor");
+  set_room_type("apartment");
+}
+
+/**
+ * Binds the room to its resident and room key, then builds it from APT_D.
+ *
+ * @param {mixed...} args - The resident's name and the room key.
+ */
+void virtual_setup(mixed args...) {
+  __resident = args[0];
+  __key = args[1];
+  __building = APT_D->query_building_of(__resident);
+
+  mapping building = APT_D->query_building(__building);
+  /** @type {STD_ROOM} */ object out = load_object(building.building);
+
+  if(out->query_zone())
+    set_zone(out->query_zone());
+
+  refresh_description();
+
+  set_exits(APT_D->query_room_exits(__resident, __key));
+
+  if(__key == building.entrance)
+    add_exit("out", building.building);
+
+  set_storage_options(new(class StorageOptions,
+    storage_type: "private",
+    storage_org: "apt",
+    storage_id: __resident,
+    clean_on_empty: true,
+    restore_on_load: true,
+    max_items: building.storage_limit
+  ));
+
+  init_storage_room();
+
+  foreach(string command in ({ "list", "store", "take" })) {
+    __storage_commands[command] = query_command(command);
+    add_command(command, (: owner_storage, command :));
+  }
+
+  add_command("invite", (: cmd_invite :));
+  add_command("uninvite", (: cmd_uninvite :));
+}
+
+/**
+ * Reapplies the room's short and long from APT_D, after decorating.
+ */
+public void refresh_description() {
+  mapping desc = APT_D->query_room_desc(__resident, __key);
+
+  if(!mapp(desc))
+    return;
+
+  set_short(desc.short);
+  set_long(desc.long);
+}
+
+/**
+ * Returns the name of the resident who rents this apartment.
+ *
+ * @returns {string} The resident's name.
+ */
+public string query_resident() {
+  return __resident;
+}
+
+/**
+ * Returns this room's key within the apartment.
+ *
+ * @returns {string} The room key.
+ */
+public string query_room_key() {
+  return __key;
+}
+
+/**
+ * Reports whether someone is this apartment's resident.
+ *
+ * @param {STD_BODY} who - The body to check.
+ * @returns {int} 1 if they are the resident, otherwise 0.
+ */
+public int is_resident(object who) {
+  return objectp(who) && who->query_real_name() == __resident;
+}
+
+/**
+ * Identifies this room as part of an apartment.
+ *
+ * @returns {int} Always 1.
+ */
+public int is_apartment() {
+  return 1;
+}
+
+/**
+ * Admits players arriving from outside the apartment only as APT_D allows.
+ * Moves between rooms of the same apartment are never stopped.
+ *
+ * @param {object} ob - The object entering.
+ * @returns {int} 1 if it may enter, otherwise 0.
+ */
+public int can_receive(object ob) {
+  if(!userp(ob))
+    return 1;
+
+  /** @type {"/d/apt/apartment.lpc"} */ object from = environment(ob);
+
+  if(from && from->is_apartment() && from->query_resident() == __resident)
+    return 1;
+
+  return APT_D->query_entry(__resident, ob) == 1;
+}
+
+/**
+ * Lets only the resident use the store, take, and list commands.
+ *
+ * @param {string} command - The storage command used.
+ * @param {STD_BODY} tp - The body using it.
+ * @param {string} arg - The command's argument.
+ * @returns {mixed} The storage command's result, or 0 for anyone else.
+ */
+private mixed owner_storage(string command, object tp, string arg) {
+  if(!is_resident(tp))
+    return 0;
+
+  function action = __storage_commands[command];
+
+  return action(tp, arg);
+}
+
+/**
+ * Invites a player, or opens the door to everyone, or lists the invitations.
+ *
+ * @param {STD_BODY} tp - The body inviting.
+ * @param {string} arg - A name, "open", or nothing to list.
+ * @returns {mixed} The result message, or 0 for anyone but the resident.
+ */
+private mixed cmd_invite(object tp, string arg) {
+  if(!is_resident(tp))
+    return 0;
+
+  if(!arg) {
+    string *invites = APT_D->query_invites(__resident);
+
+    if(!sizeof(invites))
+      return "You have not invited anyone.";
+
+    string *names = map(invites - ({ "open" }), (: capitalize :));
+    string out = member_array("open", invites) > -1
+      ? "Your door is open to everyone."
+      : "";
+
+    if(sizeof(names))
+      out += `${strlen(out) ? " " : ""}You have invited ${simple_list(names)}.`;
+
+    return out;
+  }
+
+  arg = lower_case(arg);
+
+  if(arg == __resident)
+    return "You already live here.";
+
+  if(arg != "open" && !user_exists(arg))
+    return "There is nobody by that name.";
+
+  mixed result = APT_D->add_invite(__resident, arg);
+
+  if(stringp(result))
+    return result;
+
+  if(arg == "open")
+    return "You open your door to anyone who cares to visit.";
+
+  return `You invite ${capitalize(arg)} to visit.`;
+}
+
+/**
+ * Withdraws an invitation, or closes an open door.
+ *
+ * @param {STD_BODY} tp - The body uninviting.
+ * @param {string} arg - A name or "open".
+ * @returns {mixed} The result message, or 0 for anyone but the resident.
+ */
+private mixed cmd_uninvite(object tp, string arg) {
+  if(!is_resident(tp))
+    return 0;
+
+  if(!arg)
+    return "Uninvite whom?";
+
+  arg = lower_case(arg);
+
+  mixed result = APT_D->remove_invite(__resident, arg);
+
+  if(stringp(result))
+    return result;
+
+  if(arg == "open")
+    return "You close your door to uninvited visitors.";
+
+  return `You withdraw your invitation to ${capitalize(arg)}.`;
+}

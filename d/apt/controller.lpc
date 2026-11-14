@@ -1,0 +1,43 @@
+/**
+ * @file /d/apt/controller.lpc
+ *
+ * Virtual server for apartments. Serves /d/apt/<resident>/<room> for any
+ * current resident and any room their building defines.
+ *
+ * @created 2026-11-13 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
+ *
+ * @history
+ * 2026-11-13 - Gesslar - Created
+ */
+
+inherit STD_VIRTUAL_SERVER;
+
+/**
+ * Builds one apartment room, if the path names a resident and a room their
+ * building has.
+ *
+ * @param {string} path - "<resident>/<room>", relative to /d/apt.
+ * @returns {object | 0} The new room, or 0 if the path names no apartment
+ *                       room.
+ */
+protected object generate_object(string path) {
+  string name, key;
+
+  if(sscanf(path, "%s/%s", name, key) != 2)
+    return 0;
+
+  string building = APT_D->query_building_of(name);
+
+  if(!building)
+    return 0;
+
+  if(member_array(key, APT_D->query_room_keys(building)) == -1)
+    return 0;
+
+  object room = new(__DIR__ "apartment", name, key);
+
+  room->set_virtual_master(__DIR__ "apartment");
+
+  return room;
+}

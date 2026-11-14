@@ -1,0 +1,149 @@
+/**
+ * @file /cmds/std/decorate.lpc
+ *
+ * Lets a resident redecorate a room of their apartment: its short and long
+ * descriptions.
+ *
+ * @created 2026-11-13 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
+ *
+ * @history
+ * 2026-11-13 - Gesslar - Created, ported from Threshold's adecorate
+ */
+
+#include <ed.h>
+
+inherit STD_CMD;
+
+#define MAX_SHORT 60
+#define MAX_LONG  1600
+
+private void finish_long(int status, string edit_file, string temp_file, object tp, object room);
+
+void setup() {
+  usage_text =
+    "decorate\n"
+    "decorate short <text>\n"
+    "decorate long\n"
+    "decorate reset <short|long>";
+
+  help_text =
+    "Redecorates the room of your apartment you are standing in. With no "
+    "argument, shows how the room is described now. 'decorate short' sets "
+    `the room's name, up to ${MAX_SHORT} characters. 'decorate long' `
+    `opens an editor for the room's description, up to ${MAX_LONG} `
+    "characters. 'decorate reset' puts either back the way the room came."
+    "\n"
+    "See also: invite, store";
+}
+
+mixed main(
+  /** @type {STD_PLAYER} */ object tp,
+  string str
+) {
+  /** @type {"/d/apt/apartment.lpc"} */ object room = environment(tp);
+
+  if(!room || !room->is_apartment() || !room->is_resident(tp))
+    return "You can only decorate a room you rent.";
+
+  string resident = room->query_resident();
+  string key = room->query_room_key();
+  string text;
+
+  if(!str) {
+    mapping desc = APT_D->query_room_desc(resident, key);
+
+    return `Short: ${desc.short}\n\nLong:\n${desc.long}`;
+  }
+
+  if(str == "long") {
+    tell(tp, `Describe the room. You are limited to ${MAX_LONG} characters.\n\n`);
+    tp->start_edit(null, assemble_call_back((: finish_long :), tp, room));
+
+    return 1;
+  }
+
+  if(sscanf(str, "reset %s", text) == 1) {
+    if(text != "short" && text != "long")
+      return _usage(tp);
+
+    mixed result = APT_D->set_room_desc(resident, key, text, undefined);
+
+    if(stringp(result))
+      return result;
+
+    return `You restore the room's ${text} description.`;
+  }
+
+  if(sscanf(str, "short %s", text) == 1) {
+    text = trim(replace_string(text, "\n", " "));
+
+    if(!strlen(text))
+      return _usage(tp);
+
+    if(strlen(no_ansi(text)) > MAX_SHORT)
+      return `That is too long. Keep it to ${MAX_SHORT} characters.`;
+
+    mixed result = APT_D->set_room_desc(resident, key, "short", text);
+
+    if(stringp(result))
+      return result;
+
+    return `The room is now known as: ${text}`;
+  }
+
+  return _usage(tp);
+}
+
+/**
+ * Applies the long description once the editor closes.
+ *
+ * @param {int} status - The editor's exit status.
+ * @param {string} _edit_file - Unused; the composer edits no real file.
+ * @param {string} temp_file - The file holding the composed text.
+ * @param {STD_PLAYER} tp - The decorating resident.
+ * @param {"/d/apt/apartment.lpc"} room - The room being decorated.
+ */
+private void finish_long(
+  int status,
+  string _edit_file,
+  string temp_file,
+  object tp,
+  object room
+) {
+  defer((: rm, temp_file :));
+
+  if(!objectp(tp))
+    return;
+
+  if(status == ED_STATUS_ABORTED || file_size(temp_file) < 1) {
+    _info(tp, "Decorating aborted.");
+
+    return;
+  }
+
+  if(!objectp(room) || environment(tp) != room) {
+    _info(tp, "You have left the room, so nothing was changed.");
+
+    return;
+  }
+
+  string text = trim(read_file(temp_file));
+
+  if(strlen(no_ansi(text)) > MAX_LONG) {
+    _error(tp, "That is too long. Keep it to %d characters.", MAX_LONG);
+
+    return;
+  }
+
+  string resident = room->query_resident();
+  mixed result = APT_D->set_room_desc(resident, room->query_room_key(), "long", text);
+
+  if(stringp(result)) {
+    _error(tp, result);
+
+    return;
+  }
+
+  tell(tp, "You redecorate the room.\n");
+}

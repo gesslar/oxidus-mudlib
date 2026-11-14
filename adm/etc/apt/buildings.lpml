@@ -1,0 +1,44 @@
+// adm/etc/apt/buildings.lpml
+//
+// Apartment buildings. Each key is a building's display name.
+//
+//   building      - the room residents rent from and return to; it carries
+//                   the home/visit/movein commands
+//   entrance      - the room key a resident or visitor arrives in
+//   rooms         - room keys, each with its undecorated short, long, and
+//                   exits to other room keys in the same apartment
+//   rent          - annual rent in copper; move-in is prorated by month
+//   pc_limit      - most players in an apartment at once; the resident is
+//                   always admitted
+//   max_invites   - most names on a resident's invite list
+//   storage_limit - most items a resident's storage holds
+//   idle_eviction - seconds a resident may stay offline before eviction
+
+{
+  "The Frothy Mug": {
+    building: "/d/village/inn/gallery",
+    entrance: "room",
+    rooms: {
+      room: {
+        short: "A Rented Room",
+        long: "A small, low-ceilinged room tucked beneath the eaves, quiet"
+          "after the din downstairs. The taproom's noise reaches here only"
+          "as a faint, rhythmic murmur through the floorboards, like distant"
+          "surf. A narrow bed stands against one wall, its straw-stuffed"
+          "mattress heaped with a patchwork quilt that smells of sun-dried"
+          "linen and cedar. A washstand holds a chipped basin and a jug of"
+          "cold water, and a rag rug softens the floor beside the bed."
+          "Warmth from the chimney stack that runs through the wall makes"
+          "the room snug, while a shuttered window lets in a thin whistle of"
+          "wind and the occasional bark of a village dog. A battered sea"
+          "chest at the foot of the bed offers a place to store your things.",
+        exits: {},
+      },
+    },
+    rent: 1000,
+    pc_limit: 2,
+    max_invites: 4,
+    storage_limit: 10,
+    idle_eviction: 1814400,
+  },
+}

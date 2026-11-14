@@ -1,0 +1,661 @@
+/**
+ * @file /adm/daemons/apt.lpc
+ *
+ * Apartment daemon. Owns temporary player housing: the building catalogue,
+ * who rents where, each apartment's decorated descriptions and invite list,
+ * annual rent, and eviction. Apartment rooms are virtual, served from
+ * /d/apt/<resident>/<room> by /d/apt/controller.
+ *
+ * @created 2026-11-13 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
+ *
+ * @history
+ * 2026-11-13 - Gesslar - Created, ported from Threshold's apartment system
+ */
+
+inherit STD_DAEMON;
+
+/**
+ * One resident's tenancy record.
+ *
+ * @typedef {mapping} Resident
+ * @property {string} building - The building rented in.
+ * @property {int} moved_in - When the resident moved in.
+ * @property {int} paid_through - The last game year the rent covers.
+ * @property {int} last_on - When the resident last logged in or out.
+ * @property {string*} invites - Invited names, or "open" for anyone.
+ * @property {mapping} rooms - Room key to decorated "short" and "long".
+ */
+
+public void process_rent();
+public varargs mixed evict(string name, string reason);
+
+private nosave string buildings_file = "/adm/etc/apt/buildings.lpml";
+private nosave string apt_dir = "/d/apt/";
+
+/**
+ * Building configuration from the buildings file, keyed by building name.
+ *
+ * @type {([ string: mapping ])}
+ */
+private nosave mapping __buildings = ([]);
+
+/**
+ * Tenancy records, keyed by resident name.
+ *
+ * @type {([ string: Resident ])}
+ */
+private mapping residents = ([]);
+
+void setup() {
+  set_no_clean(1);
+  set_persistent(1);
+
+  __buildings = load_lpml(buildings_file);
+  assure_dir(resolve_path(mud_config("STORAGE_DATA_DIR"), "apt"));
+
+  slot(SIG_GAME_MIDNIGHT, "process_rent");
+  slot(SIG_USER_LOGIN, "touch_resident");
+  slot(SIG_USER_LOGOUT, "touch_resident");
+
+  call_out((: process_rent :), 1);
+}
+
+// Buildings
+
+/**
+ * Returns the names of every building.
+ *
+ * @returns {string*} Building names, sorted.
+ */
+public string *query_building_names() {
+  return sort_array(keys(__buildings), 1);
+}
+
+/**
+ * Returns a building's configuration.
+ *
+ * @param {string} building - The building name.
+ * @returns {mapping | undefined} A copy of the building's configuration, or
+ *                                undefined for an unknown building.
+ */
+public mapping query_building(string building) {
+  if(!stringp(building) || !mapp(__buildings[building]))
+    return undefined;
+
+  return copy(__buildings[building]);
+}
+
+/**
+ * Finds the building whose rental room is the given file.
+ *
+ * @param {string} file - A building room's file name.
+ * @returns {string | undefined} The building name, or undefined if none
+ *                               matches.
+ */
+public string query_building_by_room(string file) {
+  foreach(string name, mapping data in __buildings)
+    if(data.building == file)
+      return name;
+
+  return undefined;
+}
+
+/**
+ * Returns the annual rent of a building.
+ *
+ * @param {string} building - The building name.
+ * @returns {int} Annual rent in copper.
+ */
+public int query_rent(string building) {
+  return __buildings[building]?.rent;
+}
+
+/**
+ * Returns what moving in costs right now: the annual rent prorated over the
+ * months left in the current game year, the current month included.
+ *
+ * @param {string} building - The building name.
+ * @returns {int} Move-in cost in copper.
+ */
+public int query_movein_cost(string building) {
+  int months = TIME_D->query_months_in_year();
+  int left = months - TIME_D->query_month();
+
+  return query_rent(building) * left / months;
+}
+
+// Residents
+
+/**
+ * Returns the building a player rents in.
+ *
+ * @param {mixed} name - A player name or body.
+ * @returns {string | undefined} The building name, or undefined if they rent
+ *                               nothing.
+ */
+public string query_building_of(mixed name) {
+  if(objectp(name))
+    name = /** @type {STD_BODY} */ (name)->query_real_name();
+
+  if(!stringp(name))
+    return undefined;
+
+  return residents[lower_case(name)]?.building;
+}
+
+/**
+ * Returns the names of every resident, optionally of one building.
+ *
+ * @param {string} [building] - Limit to this building, or undefined for all.
+ * @returns {string*} Resident names, sorted.
+ */
+public varargs string *query_residents(string building) {
+  string *names = keys(residents);
+
+  if(stringp(building))
+    names = filter(names, (: residents[$1].building == $2 :), building);
+
+  return sort_array(names, 1);
+}
+
+/**
+ * Returns a resident's record.
+ *
+ * @param {string} name - The resident's name.
+ * @returns {Resident | undefined} A copy of the record, or undefined if they
+ *                                 rent nothing.
+ */
+public mapping query_resident(string name) {
+  if(!stringp(name) || !mapp(residents[lower_case(name)]))
+    return undefined;
+
+  return copy(residents[lower_case(name)]);
+}
+
+/**
+ * Records a resident's login or logout time, the clock idle eviction runs
+ * against. Slotted to SIG_USER_LOGIN and SIG_USER_LOGOUT.
+ *
+ * @param {STD_PLAYER} who - The player logging in or out.
+ */
+public void touch_resident(object who) {
+  if(!objectp(who))
+    return;
+
+  string name = who->query_real_name();
+
+  if(!mapp(residents[name]))
+    return;
+
+  residents[name].last_on = time();
+  save_data();
+}
+
+// Rooms
+
+/**
+ * Returns one room's configuration within a building.
+ *
+ * @param {string} building - The building name.
+ * @param {string} key - The room key.
+ * @returns {mapping | undefined} The room's configuration, or undefined if
+ *                                either is unknown.
+ */
+private mapping room_config(string building, string key) {
+  mapping rooms = __buildings[building]?.rooms;
+
+  if(!mapp(rooms) || !mapp(rooms[key]))
+    return undefined;
+
+  return rooms[key];
+}
+
+/**
+ * Returns the room keys of a building's apartments.
+ *
+ * @param {string} building - The building name.
+ * @returns {string*} Room keys, or an empty array for an unknown building.
+ */
+public string *query_room_keys(string building) {
+  mapping rooms = __buildings[building]?.rooms;
+
+  return mapp(rooms) ? keys(rooms) : ({});
+}
+
+/**
+ * Returns the virtual path of one room of a resident's apartment.
+ *
+ * @param {string} name - The resident's name.
+ * @param {string} key - The room key.
+ * @returns {string} The room's path.
+ */
+public string query_room_path(string name, string key) {
+  return `${apt_dir}${lower_case(name)}/${key}`;
+}
+
+/**
+ * Returns the path of a resident's entrance room.
+ *
+ * @param {string} name - The resident's name.
+ * @returns {string | undefined} The entrance path, or undefined if they rent
+ *                               nothing.
+ */
+public string query_entrance(string name) {
+  string building = query_building_of(name);
+
+  if(!building)
+    return undefined;
+
+  return query_room_path(name, __buildings[building].entrance);
+}
+
+/**
+ * Returns a room's description: the resident's decoration where set,
+ * otherwise the building's default.
+ *
+ * @param {string} name - The resident's name.
+ * @param {string} key - The room key.
+ * @returns {([ string: string ]) | undefined} "short" and "long", or
+ *                                             undefined for an unknown room.
+ */
+public mapping query_room_desc(string name, string key) {
+  string building = query_building_of(name);
+  mapping base = room_config(building, key);
+
+  if(!mapp(base))
+    return undefined;
+
+  mapping decor = residents[lower_case(name)].rooms[key] || ([]);
+
+  return ([
+    "short": decor.short || base.short,
+    "long" : decor.long || base.long,
+  ]);
+}
+
+/**
+ * Returns a room's exits as full paths into the same apartment.
+ *
+ * @param {string} name - The resident's name.
+ * @param {string} key - The room key.
+ * @returns {([ string: string ])} Direction to room path.
+ */
+public mapping query_room_exits(string name, string key) {
+  string building = query_building_of(name);
+  mapping exits = room_config(building, key)?.exits || ([]);
+  mapping result = ([]);
+
+  foreach(string dir, string dest in exits)
+    result[dir] = query_room_path(name, dest);
+
+  return result;
+}
+
+/**
+ * Sets or clears one decorated field of a room, and refreshes the room if it
+ * is loaded.
+ *
+ * @param {string} name - The resident's name.
+ * @param {string} key - The room key.
+ * @param {string} field - "short" or "long".
+ * @param {string} text - The new text, or undefined to restore the default.
+ * @returns {mixed} 1 on success, or a string explaining the failure.
+ * @errors If field is neither "short" nor "long".
+ */
+public mixed set_room_desc(string name, string key, string field, string text) {
+  assert_arg(field == "short" || field == "long", 3, "Field must be short or long.");
+
+  name = lower_case(name);
+
+  if(!mapp(residents[name]))
+    return "That person rents no apartment.";
+
+  if(member_array(key, query_room_keys(residents[name].building)) == -1)
+    return "That apartment has no such room.";
+
+  mapping decor = residents[name].rooms[key] || ([]);
+
+  if(stringp(text))
+    decor[field] = text;
+  else
+    map_delete(decor, field);
+
+  if(sizeof(decor))
+    residents[name].rooms[key] = decor;
+  else
+    map_delete(residents[name].rooms, key);
+
+  save_data();
+
+  /** @type {"/d/apt/apartment.lpc"} */ object room = find_object(query_room_path(name, key));
+
+  if(room)
+    room->refresh_description();
+
+  return 1;
+}
+
+/**
+ * Returns a resident's loaded apartment rooms.
+ *
+ * @param {string} name - The resident's name.
+ * @returns {STD_ROOM*} The loaded rooms.
+ */
+public object *query_loaded(string name) {
+  string building = query_building_of(name);
+
+  if(!building)
+    return ({});
+
+  object *rooms = map(query_room_keys(building),
+    (: find_object(query_room_path($(name), $1)) :));
+
+  return rooms - ({ 0 });
+}
+
+/**
+ * Returns the players currently inside a resident's apartment.
+ *
+ * @param {string} name - The resident's name.
+ * @returns {object*} The players present.
+ */
+public object *query_occupants(string name) {
+  object *result = ({});
+
+  foreach(object room in query_loaded(name))
+    result += filter(all_inventory(room), (: userp :));
+
+  return result;
+}
+
+// Access
+
+/**
+ * Returns the invite list of a resident's apartment.
+ *
+ * @param {string} name - The resident's name.
+ * @returns {string*} Invited names, with "open" meaning anyone.
+ */
+public string *query_invites(string name) {
+  mapping res = residents[lower_case(name)];
+
+  return mapp(res) ? copy(res.invites) : ({});
+}
+
+/**
+ * Adds a name, or "open", to a resident's invite list.
+ *
+ * @param {string} name - The resident's name.
+ * @param {string} guest - The name to invite, or "open".
+ * @returns {mixed} 1 on success, or a string explaining the failure.
+ */
+public mixed add_invite(string name, string guest) {
+  mapping res = residents[name = lower_case(name)];
+
+  if(!mapp(res))
+    return "That person rents no apartment.";
+
+  guest = lower_case(guest);
+
+  if(member_array(guest, res.invites) > -1)
+    return guest == "open"
+      ? "Your door is already open to everyone."
+      : `${capitalize(guest)} is already invited.`;
+
+  if(sizeof(res.invites) >= __buildings[res.building].max_invites)
+    return "Your invite list is full.";
+
+  res.invites += ({ guest });
+  save_data();
+
+  return 1;
+}
+
+/**
+ * Removes a name, or "open", from a resident's invite list.
+ *
+ * @param {string} name - The resident's name.
+ * @param {string} guest - The name to uninvite, or "open".
+ * @returns {mixed} 1 on success, or a string explaining the failure.
+ */
+public mixed remove_invite(string name, string guest) {
+  mapping res = residents[name = lower_case(name)];
+
+  if(!mapp(res))
+    return "That person rents no apartment.";
+
+  guest = lower_case(guest);
+
+  if(member_array(guest, res.invites) == -1)
+    return guest == "open"
+      ? "Your door is not open to everyone."
+      : `${capitalize(guest)} is not invited.`;
+
+  res.invites -= ({ guest });
+  save_data();
+
+  return 1;
+}
+
+/**
+ * Decides whether a player may enter a resident's apartment from outside it.
+ * The resident and developers always may; anyone else needs an invitation,
+ * or an open door, and room under the building's player limit.
+ *
+ * @param {string} name - The resident's name.
+ * @param {STD_BODY} who - The body trying to enter.
+ * @returns {mixed} 1 if they may enter, or a string saying why not.
+ */
+public mixed query_entry(string name, object who) {
+  name = lower_case(name);
+
+  mapping res = residents[name];
+
+  if(!mapp(res))
+    return "Nobody lives there.";
+
+  string who_name = who->query_real_name();
+
+  if(who_name == name || devp(who))
+    return 1;
+
+  if(member_array("open", res.invites) == -1 &&
+     member_array(who_name, res.invites) == -1)
+    return "The door is locked, and you have not been invited.";
+
+  if(sizeof(query_occupants(name)) >= __buildings[res.building].pc_limit)
+    return "There is no room for anyone else in there.";
+
+  return 1;
+}
+
+// Tenancy
+
+/**
+ * Moves a player into a building, charging the prorated move-in cost from
+ * their bank account unless waived.
+ *
+ * @param {string} name - The player's name.
+ * @param {string} building - The building name.
+ * @param {int} [free] - Nonzero to waive the move-in cost.
+ * @returns {mixed} 1 on success, or a string explaining the failure.
+ */
+public varargs mixed movein(string name, string building, int free) {
+  if(!mapp(__buildings[building]))
+    return "There is no such building.";
+
+  name = lower_case(name);
+
+  if(mapp(residents[name]))
+    return `You already rent a room at ${residents[name].building}.`;
+
+  if(!free) {
+    mixed result = BANK_D->add_balance(name, -query_movein_cost(building));
+
+    if(stringp(result))
+      return result == "Insufficient funds."
+        ? "You do not have enough in the bank to cover the move-in cost."
+        : "You need an account with the bank to rent a room.";
+  }
+
+  residents[name] = ([
+    "building"    : building,
+    "moved_in"    : time(),
+    "paid_through": TIME_D->query_year(),
+    "last_on"     : time(),
+    "invites"     : ({}),
+    "rooms"       : ([]),
+  ]);
+
+  save_data();
+  log_file("apartment", `[${ldatetime()}] ${name} moved into ${building}\n`);
+
+  return 1;
+}
+
+/**
+ * Moves a resident to another building, keeping their decoration and invites
+ * where the new building has the same rooms. Charges nothing.
+ *
+ * @param {string} name - The resident's name.
+ * @param {string} building - The new building name.
+ * @returns {mixed} 1 on success, or a string explaining the failure.
+ */
+public mixed relocate(string name, string building) {
+  name = lower_case(name);
+
+  if(!mapp(residents[name]))
+    return "That person rents no apartment.";
+
+  if(!mapp(__buildings[building]))
+    return "There is no such building.";
+
+  if(sizeof(query_occupants(name)))
+    return "Their apartment is occupied.";
+
+  query_loaded(name)->remove();
+
+  string old = residents[name].building;
+  string *keep = query_room_keys(building);
+
+  residents[name].building = building;
+  residents[name].rooms = filter(residents[name].rooms, (: member_array($1, $(keep)) > -1 :));
+
+  save_data();
+  log_file("apartment", `[${ldatetime()}] ${name} relocated from ${old} to ${building}\n`);
+
+  return 1;
+}
+
+/**
+ * Ends a resident's tenancy at their request. Refused while their storage
+ * holds anything, since ending a tenancy destroys the storage. No rent is
+ * refunded.
+ *
+ * @param {string} name - The resident's name.
+ * @returns {mixed} 1 on success, or a string explaining the refusal.
+ */
+public mixed moveout(string name) {
+  name = lower_case(name);
+
+  if(!mapp(residents[name]))
+    return "You do not rent a room anywhere.";
+
+  object store = find_object(`/storage/apt/${name}`);
+  string file = resolve_path(mud_config("STORAGE_DATA_DIR"), `apt/${name}`);
+
+  if((store && sizeof(all_inventory(store))) || file_exists(file))
+    return "Take your belongings out of storage before you move out.";
+
+  return evict(name, "moved out");
+}
+
+/**
+ * Evicts a resident: anyone inside is shown out to the building, the rooms
+ * unload, the storage and its contents are destroyed, and the record goes.
+ *
+ * @param {string} name - The resident's name.
+ * @param {string} [reason] - Why, for the log.
+ * @returns {mixed} 1 on success, or a string explaining the failure.
+ */
+public varargs mixed evict(string name, string reason) {
+  name = lower_case(name);
+
+  mapping res = residents[name];
+
+  if(!mapp(res))
+    return "That person rents no apartment.";
+
+  object out = load_object(__buildings[res.building].building);
+
+  foreach(object room in query_loaded(name)) {
+    foreach(object who in filter(all_inventory(room), (: living :))) {
+      tell(who, "You are shown out of the apartment.\n");
+      who->move_living(out, null, "SILENT");
+    }
+
+    room->remove();
+  }
+
+  /** @type {STD_STORAGE_OBJECT} */ object store = find_object(`/storage/apt/${name}`);
+
+  if(store) {
+    all_inventory(store)->remove();
+    store->remove();
+  }
+
+  string file = resolve_path(mud_config("STORAGE_DATA_DIR"), `apt/${name}`);
+
+  if(file_exists(file))
+    rm(file);
+
+  map_delete(residents, name);
+  save_data();
+
+  log_file("apartment", `[${ldatetime()}] ${name} evicted from ${res.building}: ${reason || "no reason given"}\n`);
+
+  return 1;
+}
+
+/**
+ * Settles rent at the turn of the game year and evicts residents who have
+ * been offline too long. Rent for a new year comes out of the bank in full;
+ * a resident who cannot pay is evicted. Slotted to SIG_GAME_MIDNIGHT.
+ */
+public void process_rent() {
+  int year = TIME_D->query_year();
+
+  foreach(string name in keys(residents)) {
+    mapping res = residents[name];
+    mapping building = __buildings[res.building];
+
+    if(!user_exists(name)) {
+      evict(name, "character no longer exists");
+      continue;
+    }
+
+    if(!mapp(building)) {
+      evict(name, "building no longer exists");
+      continue;
+    }
+
+    if(!find_player(name) && time() - res.last_on > building.idle_eviction) {
+      evict(name, "offline too long");
+      continue;
+    }
+
+    if(res.paid_through >= year)
+      continue;
+
+    if(stringp(BANK_D->add_balance(name, -building.rent))) {
+      evict(name, `could not pay the rent for ${year}`);
+      continue;
+    }
+
+    res.paid_through = year;
+    log_file("apartment", `[${ldatetime()}] ${name} paid ${building.rent} rent for ${year}\n`);
+  }
+
+  save_data();
+}

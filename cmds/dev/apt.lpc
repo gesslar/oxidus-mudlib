@@ -1,0 +1,249 @@
+/**
+ * @file /cmds/dev/apt.lpc
+ *
+ * Developer tool for apartments: inspect buildings and residents, visit any
+ * apartment room, move a resident between buildings, and evict.
+ *
+ * @created 2026-11-13 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
+ *
+ * @history
+ * 2026-11-13 - Gesslar - Created, ported from Threshold's apt command
+ */
+
+inherit STD_CMD;
+
+private mixed apt_buildings(object tp);
+private mixed apt_residents(object tp, string arg);
+private mixed apt_who(object tp);
+private mixed apt_info(object tp, string name);
+private mixed apt_visit(object tp, string name, string key);
+private mixed apt_move(object tp, string name, string building);
+private mixed apt_evict(object tp, string name);
+private string match_building(string name);
+
+void setup() {
+  usage_text =
+    "apt buildings\n"
+    "apt residents <building>\n"
+    "apt who\n"
+    "apt <name>\n"
+    "apt <name> <room>\n"
+    "apt move <name> to <building>\n"
+    "apt evict <name>";
+
+  help_text =
+    "Inspects and manages apartments. 'apt buildings' lists the buildings "
+    "and how many residents each has, and 'apt residents' names them. "
+    "'apt who' shows who is inside an apartment right now. 'apt <name>' "
+    "shows a resident's tenancy, and 'apt <name> <room>' takes you into a "
+    "room of their apartment. 'apt move' moves a resident to another "
+    "building at no charge, keeping matching decoration. 'apt evict' shows "
+    "everyone out, destroys the resident's stored belongings, and ends the "
+    "tenancy.";
+}
+
+mixed main(
+  /** @type {STD_PLAYER} */ object tp,
+  string str
+) {
+  string name, arg;
+
+  if(!str)
+    return _usage(tp);
+
+  if(str == "buildings")
+    return apt_buildings(tp);
+
+  if(str == "who")
+    return apt_who(tp);
+
+  if(sscanf(str, "residents %s", arg) == 1)
+    return apt_residents(tp, arg);
+
+  if(sscanf(str, "move %s to %s", name, arg) == 2)
+    return apt_move(tp, name, arg);
+
+  if(sscanf(str, "evict %s", name) == 1)
+    return apt_evict(tp, name);
+
+  if(sscanf(str, "%s %s", name, arg) == 2)
+    return apt_visit(tp, name, arg);
+
+  return apt_info(tp, str);
+}
+
+/**
+ * Resolves a building name case-insensitively.
+ *
+ * @param {string} name - The name as typed.
+ * @returns {string} The building's proper name, or undefined if none
+ *                   matches.
+ */
+private string match_building(string name) {
+  name = lower_case(name);
+
+  foreach(string building in APT_D->query_building_names())
+    if(lower_case(building) == name)
+      return building;
+
+  return undefined;
+}
+
+/**
+ * Lists every building with its rent and resident count.
+ *
+ * @param {STD_PLAYER} tp - The developer.
+ * @returns {mixed} The listing.
+ */
+private mixed apt_buildings(object tp) {
+  string *out = ({});
+
+  foreach(string building in APT_D->query_building_names()) {
+    mapping data = APT_D->query_building(building);
+
+    out += ({
+      `${building} - ${sizeof(APT_D->query_residents(building))} resident(s), `
+      `${add_commas(data.rent)} coins a year`,
+      `  Rents from: ${data.building}`,
+    });
+  }
+
+  if(!sizeof(out))
+    return _info(tp, "There are no apartment buildings.");
+
+  return out;
+}
+
+/**
+ * Names the residents of a building.
+ *
+ * @param {STD_PLAYER} tp - The developer.
+ * @param {string} arg - The building name.
+ * @returns {mixed} The listing.
+ */
+private mixed apt_residents(object tp, string arg) {
+  string building = match_building(arg);
+
+  if(!building)
+    return _error(tp, "No such building: %s", arg);
+
+  string *names = map(APT_D->query_residents(building), (: capitalize :));
+
+  if(!sizeof(names))
+    return _info(tp, "Nobody rents at %s.", building);
+
+  return `Residents of ${building}: ${simple_list(names)}.`;
+}
+
+/**
+ * Shows every player currently inside an apartment.
+ *
+ * @param {STD_PLAYER} tp - The developer.
+ * @returns {mixed} The listing.
+ */
+private mixed apt_who(object tp) {
+  string *out = ({});
+
+  foreach(object user in users()) {
+    /** @type {"/d/apt/apartment.lpc"} */ object room = environment(user);
+
+    if(room && room->is_apartment())
+      out += ({ sprintf("%-15s %s", user->query_name(), file_name(room)) });
+  }
+
+  if(!sizeof(out))
+    return _info(tp, "Nobody is in an apartment.");
+
+  return sort_array(out, 1);
+}
+
+/**
+ * Shows a resident's tenancy.
+ *
+ * @param {STD_PLAYER} tp - The developer.
+ * @param {string} name - The resident's name.
+ * @returns {mixed} The report.
+ */
+private mixed apt_info(object tp, string name) {
+  mapping res = APT_D->query_resident(name);
+
+  if(!mapp(res))
+    return _error(tp, "%s rents no apartment.", capitalize(name));
+
+  string *invites = map(res.invites, (: capitalize :));
+  string *decorated = sort_array(keys(res.rooms), 1);
+
+  return ({
+    `Apartment of ${capitalize(name)}`,
+    `  Building:     ${res.building}`,
+    `  Moved in:     ${ctime(res.moved_in)}`,
+    `  Paid through: ${res.paid_through}`,
+    `  Last on:      ${ctime(res.last_on)}`,
+    `  Invites:      ${sizeof(invites) ? implode(invites, ", ") : "none"}`,
+    `  Decorated:    ${sizeof(decorated) ? implode(decorated, ", ") : "nothing"}`,
+    `  Rooms:        ${implode(APT_D->query_room_keys(res.building), ", ")}`,
+    `  Entrance:     ${APT_D->query_entrance(name)}`,
+  });
+}
+
+/**
+ * Takes the developer into a room of a resident's apartment.
+ *
+ * @param {STD_PLAYER} tp - The developer.
+ * @param {string} name - The resident's name.
+ * @param {string} key - The room key.
+ * @returns {mixed} A message on failure, or 1.
+ */
+private mixed apt_visit(object tp, string name, string key) {
+  string building = APT_D->query_building_of(name);
+
+  if(!building)
+    return _error(tp, "%s rents no apartment.", capitalize(name));
+
+  if(member_array(key, APT_D->query_room_keys(building)) == -1)
+    return _error(tp, "Their apartment has no room '%s'.", key);
+
+  if(tp->move_living(APT_D->query_room_path(name, key)))
+    return _error(tp, "You could not get there.");
+
+  return 1;
+}
+
+/**
+ * Moves a resident to another building at no charge.
+ *
+ * @param {STD_PLAYER} tp - The developer.
+ * @param {string} name - The resident's name.
+ * @param {string} arg - The new building name.
+ * @returns {mixed} The result.
+ */
+private mixed apt_move(object tp, string name, string arg) {
+  string building = match_building(arg);
+
+  if(!building)
+    return _error(tp, "No such building: %s", arg);
+
+  mixed result = APT_D->relocate(name, building);
+
+  if(stringp(result))
+    return _error(tp, result);
+
+  return _ok(tp, "%s now rents at %s.", capitalize(name), building);
+}
+
+/**
+ * Evicts a resident.
+ *
+ * @param {STD_PLAYER} tp - The developer.
+ * @param {string} name - The resident's name.
+ * @returns {mixed} The result.
+ */
+private mixed apt_evict(object tp, string name) {
+  mixed result = APT_D->evict(name, `evicted by ${tp->query_name()}`);
+
+  if(stringp(result))
+    return _error(tp, result);
+
+  return _ok(tp, "%s has been evicted.", capitalize(name));
+}

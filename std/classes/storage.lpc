@@ -14,14 +14,19 @@
 #define __CLASS_STORAGE_OPTIONS__
 
 /**
- * Configures behavior of storage objects and rooms.
+ * Configures behaviour of storage objects and rooms.
  *
- * @property {string} storage_type - Type of storage ("public", "private", or custom)
- * @property {mixed} storage_id - ID for private storage (string or function)
- * @property {string} storage_org - Organization name for storage directory
- * @property {string} storage_directory - Directory path for storage
- * @property {int} clean_on_empty - Whether to clean storage when empty
- * @property {int} restore_on_load - Whether to restore storage on load
+ * @property {string} storage_type - Type of storage ("public", "private", or
+ *                                   custom).
+ * @property {string | function} storage_id - ID for private storage, or a
+ *                                            functional returning one.
+ * @property {string} storage_org - Organisation name for storage directory.
+ * @property {string} storage_directory - Directory path for storage.
+ * @property {int} clean_on_empty - Whether to clean storage when empty.
+ * @property {int} restore_on_load - Whether to restore storage on load.
+ * @property {int | function} max_items - Most items the storage holds: an
+ *                                        int, or a functional returning one.
+ *                                        Unset is unlimited.
  */
 class StorageOptions {
   string storage_type;
@@ -30,6 +35,7 @@ class StorageOptions {
   string storage_directory;
   int clean_on_empty;
   int restore_on_load;
+  mixed max_items;
 }
 
 #endif // __CLASS_STORAGE_OPTIONS__

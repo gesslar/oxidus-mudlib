@@ -9,6 +9,7 @@
 #define ADVANCE_D       DIR_DAEMONS "advance"
 #define ALARM_D         DIR_DAEMONS "alarm"
 #define ALIAS_D         DIR_DAEMONS "alias"
+#define APT_D           DIR_DAEMONS "apt"
 #define BANK_D          DIR_DAEMONS "bank"
 #define BODY_D          DIR_DAEMONS "body"
 #define BOOT_D          DIR_DAEMONS "boot"

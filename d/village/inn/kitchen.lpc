@@ -1,0 +1,67 @@
+/**
+ * @file /d/village/inn/kitchen.lpc
+ *
+ * The kitchen behind the bar of the Frothy Mug.
+ *
+ * @created 2026-11-13 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
+ *
+ * @history
+ * 2026-11-13 - Gesslar - Created
+ */
+
+inherit __DIR__ "inn";
+
+void setup() {
+  set_short("The Kitchen of the Frothy Mug");
+  set_long(
+  "Heat hits like a wall here, wet and heavy with the smell of rendering "
+  "fat, onions gone soft and sweet in the pan, and bread crusting in a "
+  "brick oven. A great iron pot hangs over an open fire, its lid rattling "
+  "as a thick stew blips and burbles beneath it. A side of pork turns "
+  "slowly on a spit, fat dripping into the coals with a steady hiss and a "
+  "puff of savoury smoke. Bunches of thyme, sage, and garlic dangle from "
+  "the ceiling, and a scarred block table in the centre is scattered with "
+  "onion skins, flour, and the blade-marks of countless meals. The flagstones "
+  "are slick near the washing tub, and everything, from the walls to your "
+  "own clothes, soon takes on a faint film of grease and smoke.");
+
+  set_exits(([
+    "east": "tavern",
+  ]));
+
+  set_items(([
+    ({ "iron pot", "pot", "stew" }) :
+      "A blackened cauldron big enough to bathe a child in, hung from a "
+      "swinging iron crane. The stew within is thick and brown, bobbing "
+      "with barley, carrot, and chunks of mutton. Its rich, peppery steam "
+      "beads on your face and makes your stomach clench with longing.",
+    ({ "open fire", "fire", "coals" }) :
+      "A bed of glowing coals, banked high beneath the pot and spit. It "
+      "radiates a dry, prickling heat that makes the air above it waver.",
+    ({ "pork", "spit", "side of pork" }) :
+      "A side of pork skewered on an iron spit, its skin crackled to a "
+      "glossy mahogany and blistered in places. Fat beads, runs, and drips "
+      "into the coals, each drop answered with a hiss and a gust of smoke "
+      "that smells almost unbearably good.",
+    ({ "brick oven", "oven" }) :
+      "A domed oven of soot-streaked brick set into the wall, its iron door "
+      "too hot to touch bare-handed. The smell of browning crust seeps out "
+      "around its edges, toasty and faintly sweet.",
+    ({ "herbs", "thyme", "sage", "garlic", "bunches" }) :
+      "Bundles of herbs tied with twine hang from pegs in the low ceiling. "
+      "Brush against them and they release a burst of scent: the woody "
+      "sharpness of thyme, sage's soft musk, and the pungent bite of "
+      "garlic that lingers on the fingers.",
+    ({ "block table", "table", "worktable" }) :
+      "A thick slab of beech on stout legs, its surface hollowed by years of "
+      "chopping. Papery onion skins crackle under your fingertips, and the "
+      "wood smells of onion, blood, and flour all at once.",
+    ({ "washing tub", "tub" }) :
+      "A half-barrel of greasy grey water, rimmed with suds and bobbing with "
+      "a wooden spoon or two. It smells of lye and old dinners, and the "
+      "floor around it is slippery underfoot.",
+  ]));
+
+  set_room_type("food");
+}

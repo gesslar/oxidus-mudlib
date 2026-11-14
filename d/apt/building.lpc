@@ -1,0 +1,276 @@
+/**
+ * @file /d/apt/building.lpc
+ *
+ * Inheritable module for the room an apartment building rents from. Inherit
+ * it alongside a room, list the room as a building's "building" in
+ * /adm/etc/apt/buildings.lpml, and call init_apt_building() from setup().
+ * Provides the home, visit, movein, moveout, and rent commands.
+ *
+ * @created 2026-11-13 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
+ *
+ * @history
+ * 2026-11-13 - Gesslar - Created, ported from Threshold's apartment system
+ */
+
+#include "/std/object/include/command.h"
+#include "/std/object/include/object.h"
+
+private nosave string __apt_building;
+
+private mixed cmd_home(object tp, string arg);
+private mixed cmd_visit(object tp, string arg);
+private mixed cmd_movein(object tp, string arg);
+private mixed cmd_rent(object tp, string arg);
+private void confirm_movein(object tp, int cost, string input);
+private mixed cmd_moveout(object tp, string arg);
+private void confirm_moveout(object tp, string input);
+
+/**
+ * Binds this room to the building that lists it, and adds the building's
+ * commands.
+ *
+ * @errors If no building in the apartment configuration lists this room.
+ */
+protected void init_apt_building() {
+  __apt_building = APT_D->query_building_by_room(file_name());
+
+  if(!__apt_building)
+    error(`No apartment building lists ${file_name()}.`);
+
+  add_command("home", (: cmd_home :));
+  add_command("visit", (: cmd_visit :));
+  add_command("movein", (: cmd_movein :));
+  add_command("moveout", (: cmd_moveout :));
+  add_command("rent", (: cmd_rent :));
+}
+
+/**
+ * Returns the name of the building this room rents for.
+ *
+ * @returns {string} The building name.
+ */
+public string query_apt_building() {
+  return __apt_building;
+}
+
+/**
+ * Describes the building's terms and commands, for a sign or similar item.
+ * The text is shaped by whether the reader already rents here.
+ *
+ * @param {string} _id - The item looked at.
+ * @returns {string} The terms.
+ */
+public string query_apt_terms(string _id) {
+  object tp = this_body();
+  int rent = APT_D->query_rent(__apt_building);
+  string out = `Rooms at ${__apt_building} let by the year, at `
+    `${add_commas(rent)} coins a year, drawn from your bank account.\n\n`;
+
+  if(APT_D->query_building_of(tp) == __apt_building) {
+    out += "To return to your room: home\n"
+      "To give up your room: moveout\n";
+  } else {
+    int cost = APT_D->query_movein_cost(__apt_building);
+
+    out += `To take a room: movein\n`
+      `  Moving in now costs ${add_commas(cost)} coins, the rest of this `
+      `year's rent.\n`;
+  }
+
+  out += "To call on a resident: visit <name>\n"
+    "To check your tenancy: rent\n";
+
+  return out;
+}
+
+/**
+ * Takes the resident to their room.
+ *
+ * @param {STD_BODY} tp - The body.
+ * @param {string} _arg - Unused.
+ * @returns {mixed} A message on failure, or 1.
+ */
+private mixed cmd_home(object tp, string _arg) {
+  if(APT_D->query_building_of(tp) != __apt_building)
+    return "You do not rent a room here.";
+
+  if(tp->move_living(APT_D->query_entrance(tp->query_real_name()), null,
+     "$N heads off to a rented room."))
+    return "You cannot seem to reach your room.";
+
+  return 1;
+}
+
+/**
+ * Calls on a resident of this building.
+ *
+ * @param {STD_BODY} tp - The body.
+ * @param {string} arg - The resident's name.
+ * @returns {mixed} A message on failure, or 1.
+ */
+private mixed cmd_visit(object tp, string arg) {
+  if(!arg)
+    return "Visit whom?";
+
+  string name = lower_case(arg);
+
+  if(APT_D->query_building_of(name) != __apt_building)
+    return `${capitalize(name)} does not rent a room here.`;
+
+  mixed entry = APT_D->query_entry(name, tp);
+
+  if(stringp(entry))
+    return entry;
+
+  if(tp->move_living(APT_D->query_entrance(name), null,
+     `$N heads off to call on ${capitalize(name)}.`))
+    return "You cannot seem to reach that room.";
+
+  return 1;
+}
+
+/**
+ * Offers a room in this building, asking for confirmation before charging.
+ *
+ * @param {STD_BODY} tp - The body.
+ * @param {string} _arg - Unused.
+ * @returns {mixed} A message on refusal, or 1 once the offer is made.
+ */
+private mixed cmd_movein(object tp, string _arg) {
+  string current = APT_D->query_building_of(tp);
+
+  if(current)
+    return `You already rent a room at ${current}.`;
+
+  int cost = APT_D->query_movein_cost(__apt_building);
+
+  tell(tp, `A room at ${__apt_building} costs ${add_commas(cost)} coins for `
+    `the rest of this year, drawn from your bank account. After that, rent `
+    `of ${add_commas(APT_D->query_rent(__apt_building))} coins is drawn at `
+    "the turn of each year.\n"
+    "Take the room? (yes/no) ");
+
+  input_to((: confirm_movein, tp, cost :), 0);
+
+  return 1;
+}
+
+/**
+ * Completes a move-in once the player confirms.
+ *
+ * @param {STD_PLAYER} tp - The player.
+ * @param {int} cost - The cost quoted, for the message.
+ * @param {string} input - The player's answer.
+ */
+private void confirm_movein(object tp, int cost, string input) {
+  if(!objectp(tp))
+    return;
+
+  input = lower_case(input || "");
+
+  if(input != "yes" && input != "y") {
+    tell(tp, "You decide against it.\n");
+
+    return;
+  }
+
+  if(environment(tp) != this_object()) {
+    tell(tp, "You have wandered off before settling the matter.\n");
+
+    return;
+  }
+
+  mixed result = APT_D->movein(tp->query_real_name(), __apt_building);
+
+  if(stringp(result)) {
+    tell(tp, append(result, "\n"));
+
+    return;
+  }
+
+  tell(tp, `You pay ${add_commas(cost)} coins and take a room at `
+    `${__apt_building}. Type 'home' here to go to it.\n`);
+}
+
+/**
+ * Asks a resident to confirm giving up their room.
+ *
+ * @param {STD_BODY} tp - The body.
+ * @param {string} _arg - Unused.
+ * @returns {mixed} A message on refusal, or 1 once the question is asked.
+ */
+private mixed cmd_moveout(object tp, string _arg) {
+  if(APT_D->query_building_of(tp) != __apt_building)
+    return "You do not rent a room here.";
+
+  tell(tp, "Rent already paid is not refunded, and your decorating and "
+    "invitations go with the room.\n"
+    "Give up your room? (yes/no) ");
+
+  input_to((: confirm_moveout, tp :), 0);
+
+  return 1;
+}
+
+/**
+ * Completes a move-out once the player confirms.
+ *
+ * @param {STD_PLAYER} tp - The player.
+ * @param {string} input - The player's answer.
+ */
+private void confirm_moveout(object tp, string input) {
+  if(!objectp(tp))
+    return;
+
+  input = lower_case(input || "");
+
+  if(input != "yes" && input != "y") {
+    tell(tp, "You keep your room.\n");
+
+    return;
+  }
+
+  if(environment(tp) != this_object()) {
+    tell(tp, "You have wandered off before settling the matter.\n");
+
+    return;
+  }
+
+  mixed result = APT_D->moveout(tp->query_real_name());
+
+  if(stringp(result)) {
+    tell(tp, append(result, "\n"));
+
+    return;
+  }
+
+  tell(tp, `You give up your room at ${__apt_building}.\n`);
+}
+
+/**
+ * Reports the player's tenancy here.
+ *
+ * @param {STD_BODY} tp - The body.
+ * @param {string} _arg - Unused.
+ * @returns {string} The tenancy report.
+ */
+private mixed cmd_rent(object tp, string _arg) {
+  mapping res = APT_D->query_resident(tp->query_real_name());
+
+  if(!mapp(res) || res.building != __apt_building)
+    return query_apt_terms(null);
+
+  int rent = APT_D->query_rent(__apt_building);
+  int year = TIME_D->query_year();
+  string out = `Your rent is paid through the year ${res.paid_through}. `;
+
+  if(res.paid_through > year)
+    out += "You are paid well ahead.";
+  else
+    out += `At the turn of the year, ${add_commas(rent)} coins will be drawn `
+      "from your bank account. If they cannot be, you will lose the room and "
+      "everything stored in it.";
+
+  return out;
+}

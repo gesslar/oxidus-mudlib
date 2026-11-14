@@ -1,0 +1,73 @@
+/**
+ * @file /d/village/inn/gallery.lpc
+ *
+ * The upstairs gallery of the Frothy Mug, overlooking the taproom. Guests
+ * rent rooms here and reach them with the apartment commands.
+ *
+ * @created 2026-11-13 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
+ *
+ * @history
+ * 2026-11-13 - Gesslar - Created
+ */
+
+inherit __DIR__ "inn";
+inherit "/d/apt/building";
+
+void setup() {
+  set_short("The Upstairs Gallery");
+  set_long(
+  "The stairs open onto a narrow gallery that runs above the taproom, "
+  "fenced by a rail of turned spindles. The noise from below rises up "
+  "softened and blurred into a warm, wordless hum, broken now and then by "
+  "a burst of laughter or the scrape of a bench. The air is warmer up here, "
+  "trapped under the slope of the roof, and smells of smoke, beeswax, and "
+  "the lavender someone has tucked into the linen cupboard. Floorboards "
+  "give underfoot with soft complaints, and a single tallow candle gutters "
+  "in a tin sconce, its flame leaning toward a draughty window at the "
+  "gallery's end. Plain doors line the inner wall, each leading to a "
+  "guest room, and a chalk slate hangs at the head of the stairs.");
+
+  set_exits(([
+    "down": "tavern",
+  ]));
+
+  set_items(([
+    ({ "rail", "spindles", "railing" }) :
+      "A waist-high rail of turned ash, smooth and cool under the palm. "
+      "Leaning over it, you look down onto the tops of heads, the glow of "
+      "the hearth, and the haze of smoke drifting beneath the beams.",
+    ({ "taproom", "below" }) :
+      "From up here the taproom is a pool of amber light and shifting "
+      "shadow. The smells of ale and roasting meat rise on the heat, and "
+      "the hubbub of voices blends into one comfortable murmur.",
+    ({ "floorboards", "floor", "boards" }) :
+      "Wide planks of pine, worn pale along the centre and dark at the "
+      "edges. They flex and creak with every step, announcing each guest "
+      "to anyone listening below.",
+    ({ "linen cupboard", "cupboard", "lavender" }) :
+      "A narrow cupboard with a latched door, stacked with folded sheets "
+      "and rough wool blankets. Sprigs of dried lavender tucked between "
+      "them give off a clean, dusty-sweet fragrance that drifts across the "
+      "gallery whenever the latch is lifted.",
+    ({ "tallow candle", "candle", "sconce", "tin sconce" }) :
+      "A stub of yellowed tallow in a dented tin sconce. It burns with a "
+      "smoky, faintly meaty smell and a flame that ducks and flutters with "
+      "every draught.",
+    ({ "draughty window", "window" }) :
+      "A small window of thick, bubbled glass set into the gable. Cold "
+      "seeps in around the frame, and through the warped panes the lights "
+      "of the village blur into soft smudges.",
+    ({ "roof", "ceiling" }) :
+      "The ceiling slopes sharply here, following the line of the roof. "
+      "Rough rafters show between the plaster, and on a windy night you "
+      "can hear the thatch shift and whisper overhead.",
+    ({ "plain doors", "doors" }) :
+      "A row of plain pine doors, each with a simple iron latch and a small "
+      "brass numeral polished bright by thumbs. Behind one, someone is "
+      "snoring with tremendous dedication.",
+    ({ "chalk slate", "slate" }) : "@@query_apt_terms",
+  ]));
+
+  init_apt_building();
+}

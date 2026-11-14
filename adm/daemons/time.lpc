@@ -16,7 +16,14 @@
 
 inherit STD_DAEMON;
 
+/**
+ * Clock configuration from /adm/etc/time/time.lpml.
+ *
+ * @type {([ string: int ])}
+ */
 private nosave mapping config;
+
+// Month definitions: each a name, a length in days, and a season.
 private nosave mixed *months;
 private nosave string *seasons;
 
@@ -39,7 +46,10 @@ void setup() {
   call_out("change_day", next_day - time());
 }
 
-void change_day() {
+/**
+ * Emits SIG_GAME_MIDNIGHT and schedules itself for the next game midnight.
+ */
+public void change_day() {
   int next_day;
 
   emit(SIG_GAME_MIDNIGHT);
@@ -48,6 +58,12 @@ void change_day() {
   call_out("change_day", next_day - time());
 }
 
+/**
+ * Returns the real seconds elapsed since the game epoch.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {int} Seconds since the epoch.
+ */
 private varargs int since_start(int t) {
   if(nullp(t))
     t = time();
@@ -55,7 +71,14 @@ private varargs int since_start(int t) {
   return t - config["epoch_start"];
 }
 
-varargs mixed *query_full_date(int t) {
+/**
+ * Breaks a time down into its game calendar parts.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {mixed*} The year, zero-based month, one-based day, hour, minute,
+ *                   second, month name, and season.
+ */
+public varargs mixed *query_full_date(int t) {
   mixed *result = allocate(8);
   int elapsed, second, year, month, day, hour, minute;
   string month_name, season;
@@ -92,7 +115,7 @@ varargs mixed *query_full_date(int t) {
 
   result[0] = year;
   result[1] = month;
-  result[2] = day + 1 ; // 1-based index for day
+  result[2] = day + 1; // 1-based index for day
   result[3] = hour;
   result[4] = minute;
   result[5] = second;
@@ -102,7 +125,13 @@ varargs mixed *query_full_date(int t) {
   return result;
 }
 
-varargs int query_year(int t) {
+/**
+ * Returns the game year.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {int} The game year.
+ */
+public varargs int query_year(int t) {
   int elapsed, year;
 
   elapsed = since_start(t);
@@ -111,7 +140,22 @@ varargs int query_year(int t) {
   return year + year_start;
 }
 
-varargs int query_month(int t) {
+/**
+ * Returns the number of months in a game year.
+ *
+ * @returns {int} The number of months in a game year.
+ */
+public int query_months_in_year() {
+  return months_in_year;
+}
+
+/**
+ * Returns the game month.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {int} The zero-based month of the game year.
+ */
+public varargs int query_month(int t) {
   int elapsed, month;
 
   elapsed = since_start(t);
@@ -120,7 +164,13 @@ varargs int query_month(int t) {
   return month;
 }
 
-varargs int query_day(int t) {
+/**
+ * Returns the day of the game month.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {int} The one-based day of the month.
+ */
+public varargs int query_day(int t) {
   int elapsed, year, month, day;
 
   elapsed = since_start(t);
@@ -130,10 +180,16 @@ varargs int query_day(int t) {
   elapsed -= month * hours_in_day * hour_length * (days_in_year / months_in_year);
   day = elapsed / (hours_in_day * hour_length);
 
-  return day + 1 ; // Adjust for 0-based index
+  return day + 1; // Adjust for 0-based index
 }
 
-varargs int query_hour(int t) {
+/**
+ * Returns the game hour.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {int} The hour of the game day.
+ */
+public varargs int query_hour(int t) {
   int elapsed, year, month, day, hour;
 
   elapsed = since_start(t);
@@ -148,7 +204,13 @@ varargs int query_hour(int t) {
   return hour;
 }
 
-varargs int query_minute(int t) {
+/**
+ * Returns the game minute.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {int} The minute of the game hour.
+ */
+public varargs int query_minute(int t) {
   int elapsed, year, month, day, hour, minute;
 
   elapsed = since_start(t);
@@ -165,7 +227,13 @@ varargs int query_minute(int t) {
   return minute;
 }
 
-varargs int query_second(int t) {
+/**
+ * Returns the game second.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {int} The second of the game minute.
+ */
+public varargs int query_second(int t) {
   int elapsed, year, month, day, hour, minute, second;
 
   elapsed = since_start(t);
@@ -184,31 +252,68 @@ varargs int query_second(int t) {
   return second;
 }
 
-varargs string query_season(int t) {
+/**
+ * Returns the season of the game month.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {string} The season.
+ */
+public varargs string query_season(int t) {
   return months[query_month(t)][2];
 }
 
-varargs string query_month_name(int t) {
+/**
+ * Returns the name of the game month.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {string} The month name.
+ */
+public varargs string query_month_name(int t) {
   return months[query_month(t)][0];
 }
 
-varargs string query_date(int t) {
+/**
+ * Formats the game date, as "Month day, year".
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {string} The formatted date.
+ */
+public varargs string query_date(int t) {
   mixed *date = query_full_date(t);
+
   return sprintf("%s %d, %d", date[6], date[2], date[0]);
 }
 
-varargs string query_time(int t) {
+/**
+ * Formats the game time of day, as "hour:minute:second".
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {string} The formatted time.
+ */
+public varargs string query_time(int t) {
   mixed *date = query_full_date(t);
+
   return sprintf("%d:%02d:%02d", date[3], date[4], date[5]);
 }
 
-varargs string query_full_time(int t) {
+/**
+ * Formats the full game date and time.
+ *
+ * @param {int} [t] - A Unix time, or undefined for now.
+ * @returns {string} The formatted date and time.
+ */
+public varargs string query_full_time(int t) {
   mixed *date = query_full_date(t);
 
   return sprintf("%s %d, %d %d:%02d:%02d", date[6], date[2], date[0], date[3], date[4], date[5]);
 }
 
-int last_midnight() {
+/**
+ * Returns when the current game day began.
+ *
+ * @returns {int} The Unix time of the last game midnight.
+ */
+private int last_midnight() {
   int elapsed, year, current_year_start, year_offset;
   int elapsed_in_year, complete_days, current_day_start;
   int last_midnight_unix_timestamp;
@@ -217,7 +322,7 @@ int last_midnight() {
   elapsed = since_start();
 
   // Calculate the number of full in-game years that have passed
-  year = query_year() ; // Current in-game year
+  year = query_year(); // Current in-game year
   year_offset = year - year_start;
   current_year_start = year_offset * (days_in_year * hours_in_day * hour_length);
 

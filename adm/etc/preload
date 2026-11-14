@@ -46,3 +46,6 @@
 
 # Time Daemon
 /adm/daemons/time
+
+# Apartment Daemon
+/adm/daemons/apt

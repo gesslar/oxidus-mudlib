@@ -1,0 +1,132 @@
+/**
+ * @file /d/village/inn/tavern.lpc
+ *
+ * The taproom of the Frothy Mug, the first room a visitor enters from the
+ * village path.
+ *
+ * @created 2026-11-13 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
+ *
+ * @history
+ * 2026-11-13 - Gesslar - Created
+ */
+
+#include <classes.h>
+
+inherit __DIR__ "inn";
+inherit CLASS_DOOR;
+
+void setup() {
+  set_short("The Taproom of the Frothy Mug");
+  set_long(
+  "Warmth closes around you the moment the door swings shut, thick with "
+  "woodsmoke, spilled ale, and the savoury drift of something roasting "
+  "beyond the bar. Low beams blackened by years of hearth smoke press close "
+  "overhead, hung with bundles of drying hops that rustle faintly whenever "
+  "the door lets in a draught. A broad stone hearth crackles and pops "
+  "against the far wall, throwing a restless amber light across scarred "
+  "oak tables whose surfaces are faintly tacky beneath the elbow. A long "
+  "bar of dark, polished wood runs along the west side, backed by casks "
+  "that tick and gurgle as they settle. The low murmur of conversation, the "
+  "clack of tankards set down too hard, and the occasional bark of laughter "
+  "blend into a comfortable din. Worn wooden stairs climb into the shadows "
+  "toward the rooms above, and a swinging door behind the bar breathes out "
+  "kitchen heat and the clatter of pans.");
+
+  set_exits(([
+    "north": "../village_path2",
+    "west" : "kitchen",
+    "up"   : "gallery",
+  ]));
+
+  set_items(([
+    ({ "low beams", "beams", "rafters" }) :
+      "Thick timbers of old oak, smoke-darkened nearly to black and rubbed "
+      "smooth where tall patrons have steadied themselves for generations. "
+      "Run a hand along one and it comes away faintly greasy, smelling of "
+      "char and old tallow.",
+    ({ "drying hops", "hops", "bundles" }) :
+      "Papery green-gold cones hang in loose bundles from iron hooks "
+      "driven into the beams. They give off a sharp, resinous, faintly "
+      "grassy bitterness that cuts through the smoke and rustles like dry "
+      "leaves whenever the air stirs.",
+    ({ "stone hearth", "hearth", "fireplace", "fire" }) :
+      "A deep hearth of rough fieldstone, its mantel crowded with pewter "
+      "mugs and a single cracked horseshoe. Split birch logs burn with a "
+      "sweet, papery smoke, snapping now and again to spit a spark onto the "
+      "flagstones. The heat is fierce enough up close to tighten the skin "
+      "of your face.",
+    "mantel" :
+      "A heavy slab of oak above the hearth, warm to the touch and lined "
+      "with dented pewter mugs. A cracked horseshoe sits at its centre, "
+      "nailed open-end up for luck that has, by the look of the place, held "
+      "reasonably well.",
+    ({ "pewter mugs", "mugs" }) :
+      "Dented, dull, and much loved, each mug bears a scratched initial or "
+      "crude mark. These belong to the regulars, and woe to the stranger "
+      "who drinks from one uninvited.",
+    ({ "cracked horseshoe", "horseshoe" }) :
+      "An old iron shoe, rusted to a deep russet and split clean through "
+      "one heel. It is cool despite the fire beneath it, and smells of "
+      "nothing but iron.",
+    ({ "oak tables", "tables", "table" }) :
+      "Heavy trestle tables, their tops carved with initials, tally marks, "
+      "and at least one crude drawing of a goat. The wood is tacky with the "
+      "residue of a thousand spilled pints and smells sweetly of malt.",
+    ({ "benches", "stools", "chairs" }) :
+      "Sturdy benches and three-legged stools, their seats polished to a "
+      "dull shine by countless backsides. More than one wobbles on the "
+      "uneven floor.",
+    ({ "long bar", "bar", "counter" }) :
+      "A single length of dark walnut, oiled and buffed until the firelight "
+      "swims in it. The near edge is worn into a shallow groove where "
+      "forearms have rested for decades, and a damp rag lies folded beside "
+      "a row of upturned tankards.",
+    ({ "tankards", "rag" }) :
+      "The tankards are heavy fired clay, glazed a mottled brown and still "
+      "beaded with water from the wash. The rag beside them smells of soap "
+      "and stale beer in roughly equal measure.",
+    ({ "casks", "barrels", "kegs" }) :
+      "Squat oak casks rest on their sides in a wooden cradle behind the "
+      "bar, brass taps gleaming. They creak and tick softly as the fire's "
+      "warmth works into the staves, and the air around them carries a "
+      "rich, bready yeastiness.",
+    ({ "brass taps", "taps" }) :
+      "Polished brass spigots, cool and slightly sticky, each topped with a "
+      "wooden handle burned with a symbol: a sheaf of barley, an apple, and "
+      "a crescent moon.",
+    ({ "flagstones", "floor" }) :
+      "Uneven slate flagstones strewn with fresh rushes that crunch "
+      "underfoot and release a faint green scent, doing their best against "
+      "the smell of spilled ale.",
+    "rushes" :
+      "Dried reeds scattered across the floor to catch the spills. Fresh "
+      "ones crackle and smell of riverbank; older ones near the bar have "
+      "gone soft, dark, and pungent.",
+    ({ "wooden stairs", "stairs", "staircase" }) :
+      "A narrow flight of stairs climbs along the east wall to the rooms "
+      "above. Each tread is dished in the middle from wear, and the third "
+      "from the bottom lets out a long, mournful creak no matter how softly "
+      "it is taken.",
+    ({ "swinging door", "kitchen door" }) :
+      "A short wooden door on leather hinges, scorched along its lower "
+      "edge. Each time it swings it lets out a gust of hot, herb-laden air "
+      "and the hiss and clatter of a busy kitchen.",
+    ({ "regulars", "patrons", "conversation" }) :
+      "Farmers in mud-caked boots, a pair of off-duty guards, and an old "
+      "woman knitting by the fire make up most of the company. Their talk "
+      "is of weather, prices, and whose cow got loose again, punctuated by "
+      "the scrape of benches and the clink of mugs.",
+  ]));
+
+  add_door(new(class Door,
+    id: "tavern door",
+    direction: "north",
+    short: "A weathered wooden door",
+    long: "A stout door of weathered planks bound with iron, its handle worn "
+      "bright by countless hands. Cold seeps through the gaps around its "
+      "frame, carrying the earthy smell of the village path."
+  ));
+
+  set_room_type("inn");
+}

@@ -1,0 +1,18 @@
+/**
+ * @file /d/village/inn/inn.lpc
+ *
+ * Inheritable for the Frothy Mug, the inn on the quiet western side of Olum.
+ *
+ * @created 2026-11-13 - Gesslar
+ * @last_modified 2026-11-13 - Gesslar
+ *
+ * @history
+ * 2026-11-13 - Gesslar - Created
+ */
+
+inherit STD_ROOM;
+
+void base_setup() {
+  set_zone(__DIR__ "../olum");
+  set_terrain("indoor");
+}

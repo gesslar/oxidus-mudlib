@@ -1,7 +1,7 @@
 /**
  * @file /std/container/storage_object.lpc
- * Object for permanent or temporary storage, like shops or
- * armouries.
+ *
+ * Object for permanent or temporary storage, like shops or armouries.
  *
  * @created 2024-08-01 - Gesslar
  * @last_modified 2025-03-16 - GitHub Copilot
@@ -38,15 +38,15 @@ void mudlib_setup() {
 /**
  * Configures storage behaviours based on provided options.
  *
- * Sets up the storage identification, file paths, and optionally
- * restores contents from a saved file.
+ * Sets up the storage identification, file paths, and optionally restores
+ * contents from a saved file.
  *
- * @param {class StorageOptions} storage - Configuration for this storage
- * @errors If neither storage_id nor storage_org is specified
- * @errors If storage_id does not resolve to a string
- * @errors If private storage is missing required directory info
+ * @param {class StorageOptions} storage - Configuration for this storage.
+ * @errors If neither storage_id nor storage_org is specified.
+ * @errors If storage_id does not resolve to a string.
+ * @errors If private storage is missing required directory info.
  */
-void set_storage_options(class StorageOptions storage) {
+public void set_storage_options(class StorageOptions storage) {
   storage_options = copy(storage);
 
   mixed storage_id = storage_options.storage_id;
@@ -87,155 +87,178 @@ void set_storage_options(class StorageOptions storage) {
 /**
  * Returns the current storage options.
  *
- * @returns {class StorageOptions} The current storage configuration
+ * @returns {class StorageOptions} The current storage configuration.
  */
-class StorageOptions query_storage_options() {
+public class StorageOptions query_storage_options() {
   return storage_options;
 }
 
 /**
  * Saves the contents of the storage to a persistent file.
  *
- * If the storage is empty and a file exists, it will be removed.
- * Only saves if restore_on_load is enabled and a storage_id is set.
+ * If the storage is empty and a file exists, it will be removed. Only saves
+ * if restore_on_load is enabled and a storage_id is set.
  */
 public nomask void save_contents() {
-    if(classp(storage_options)) {
-        if(storage_options.restore_on_load &&
-           storage_options.storage_id) {
-            string storage_dir = mud_config("STORAGE_DATA_DIR");
-            string dest;
-            string data;
+  if(!classp(storage_options))
+    return;
 
-            if(storage_options.storage_directory) {
-                storage_dir = resolve_path(storage_dir, storage_options.storage_directory);
-                storage_dir = append(storage_dir, "/");
-            }
+  if(!storage_options.restore_on_load || !storage_options.storage_id)
+    return;
 
-            dest = sprintf("%s%s",
-                storage_dir,
-                storage_options.storage_id
-            );
+  string storage_dir = mud_config("STORAGE_DATA_DIR");
 
-            assure_file(dest);
+  if(storage_options.storage_directory) {
+    storage_dir = resolve_path(storage_dir, storage_options.storage_directory);
+    storage_dir = append(storage_dir, "/");
+  }
 
-            if(sizeof(all_inventory())) {
-                data = save_to_string(1);
-                write_file(dest, data, 1);
-            } else {
-                if(file_exists(dest))
-                    rm(dest);
-            }
-        }
-    }
+  string dest = `${storage_dir}${storage_options.storage_id}`;
+
+  assure_file(dest);
+
+  if(sizeof(all_inventory()))
+    write_file(dest, save_to_string(1), 1);
+  else if(file_exists(dest))
+    rm(dest);
 }
 
 /**
  * Restores storage contents from a saved file.
  *
- * Only restores if restore_on_load is enabled and a storage_id is set.
- * Sets up the storage directory for future save operations.
+ * Only restores if restore_on_load is enabled and a storage_id is set. Sets
+ * up the storage directory for future save operations.
  */
-public nomask void restore_contents() {
-    if(classp(storage_options)) {
-        if(storage_options.restore_on_load &&
-           storage_options.storage_id) {
-            string storage_dir = mud_config("STORAGE_DATA_DIR");
-            string dest;
-            string data;
+private nomask void restore_contents() {
+  if(!classp(storage_options))
+    return;
 
-            if(storage_options.storage_directory) {
-                storage_dir = resolve_path(storage_dir, storage_options.storage_directory);
-                storage_dir = append(storage_dir, "/");
-            }
-            storage_options.storage_directory = storage_dir;
+  if(!storage_options.restore_on_load || !storage_options.storage_id)
+    return;
 
-            dest = sprintf("%s%s",
-                storage_dir,
-                storage_options.storage_id
-            );
+  string storage_dir = mud_config("STORAGE_DATA_DIR");
 
-            if(file_exists(dest)) {
-                data = read_file(dest);
-                if(sizeof(data))
-                    load_from_string(data, 1);
+  if(storage_options.storage_directory) {
+    storage_dir = resolve_path(storage_dir, storage_options.storage_directory);
+    storage_dir = append(storage_dir, "/");
+  }
 
-                save_contents();
-            }
-        }
-    }
+  storage_options.storage_directory = storage_dir;
+
+  string dest = `${storage_dir}${storage_options.storage_id}`;
+
+  if(file_exists(dest)) {
+    string data = read_file(dest);
+
+    if(sizeof(data))
+      load_from_string(data, 1);
+
+    save_contents();
+  }
+}
+
+/**
+ * Resolves the storage's item limit from its options.
+ *
+ * @returns {int} The most items this storage holds, or 0 for no limit.
+ */
+public int query_max_items() {
+  if(!classp(storage_options))
+    return 0;
+
+  mixed max = storage_options.max_items;
+
+  if(valid_function(max))
+    max = evaluate(max);
+
+  return intp(max) ? max : 0;
+}
+
+/**
+ * Refuses new items once the storage holds its limit.
+ *
+ * @param {object} _ob - The object attempting to enter.
+ * @returns {int} 1 if the object can be received, 0 if not.
+ */
+public int can_receive(object _ob) {
+  int limit = query_max_items();
+
+  if(limit > 0 && sizeof(all_inventory()) >= limit)
+    return 0;
+
+  return 1;
 }
 
 /**
  * Sets whether the storage object should be cleaned up when empty.
  *
- * @param {int} clean - 1 to enable cleanup when empty, 0 to disable
+ * @param {int} clean - 1 to enable cleanup when empty, 0 to disable.
  */
-void set_clean_on_empty(int clean) {
-    storage_options.clean_on_empty = clean;
+public void set_clean_on_empty(int clean) {
+  storage_options.clean_on_empty = clean;
 }
 
 /**
  * Checks if the storage object will be cleaned up when empty.
  *
- * @returns {int} 1 if cleanup is enabled, 0 if disabled
+ * @returns {int} 1 if cleanup is enabled, 0 if disabled.
  */
-int query_clean_on_empty() {
-    return storage_options.clean_on_empty;
+public int query_clean_on_empty() {
+  return storage_options.clean_on_empty;
 }
 
 /**
  * Sets whether storage contents should be restored from file on load.
  *
- * @param {int} restore - 1 to enable restore on load, 0 to disable
+ * @param {int} restore - 1 to enable restore on load, 0 to disable.
  */
-void set_restore_on_load(int restore) {
-    storage_options.restore_on_load = restore;
+public void set_restore_on_load(int restore) {
+  storage_options.restore_on_load = restore;
 }
 
 /**
  * Checks if storage contents are restored from file on load.
  *
- * @returns {int} 1 if restore is enabled, 0 if disabled
+ * @returns {int} 1 if restore is enabled, 0 if disabled.
  */
-int query_restore_on_load() {
-    return storage_options.restore_on_load;
+public int query_restore_on_load() {
+  return storage_options.restore_on_load;
 }
 
 /**
  * Sets the storage identifier for file operations.
  *
- * @param {string} id - The unique identifier for this storage
+ * @param {string} id - The unique identifier for this storage.
  */
-void set_storage_id(string id) {
-    storage_options.storage_id = id;
+public void set_storage_id(string id) {
+  storage_options.storage_id = id;
 }
 
 /**
  * Returns the storage identifier.
  *
- * @returns {string} The storage identifier
+ * @returns {string} The storage identifier.
  */
-string query_storage_id() {
-    return storage_options.storage_id;
+public string query_storage_id() {
+  return storage_options.storage_id;
 }
 
 /**
  * Sets the directory where storage files are saved.
  *
- * @param {string} dir - The directory path
+ * @param {string} dir - The directory path.
  */
-void set_storage_directory(string dir) {
-    storage_options.storage_directory = dir;
+public void set_storage_directory(string dir) {
+  storage_options.storage_directory = dir;
 }
 
 /**
  * Returns the directory where storage files are saved.
  *
- * @returns {string} The directory path
+ * @returns {string} The directory path.
  */
-string query_storage_directory() {
-    return storage_options.storage_directory;
+public string query_storage_directory() {
+  return storage_options.storage_directory;
 }
 
 /**
@@ -243,33 +266,29 @@ string query_storage_directory() {
  *
  * Returns true if the storage is empty and clean_on_empty is enabled.
  *
- * @returns {int} 1 if the object should be cleaned up, 0 if not
+ * @returns {int} 1 if the object should be cleaned up, 0 if not.
  */
-int can_clean_up() {
-    if(sizeof(all_inventory()) == 0 && classp(storage_options) &&
-       storage_options.clean_on_empty)
-        return 1;
+public int can_clean_up() {
+  if(sizeof(all_inventory()) == 0 && classp(storage_options) &&
+     storage_options.clean_on_empty)
+    return 1;
 
-    return 0;
+  return 0;
 }
 
 /**
  * Checks if a given ID matches this storage.
  *
- * In addition to normal ID checks, also returns true if the ID matches
- * the storage_id.
+ * In addition to normal ID checks, also returns true if the ID matches the
+ * storage_id.
  *
- * @param {string} to_check - The ID to check
- * @returns {int} 1 if ID matches, 0 if not
+ * @param {string} to_check - The ID to check.
+ * @returns {int} 1 if ID matches, 0 if not.
  */
-int id(string to_check) {
-  if(classp(storage_options)) {
-    if(storage_options.storage_id) {
-      if(storage_options.storage_id == to_check) {
-        return 1;
-      }
-    }
-  }
+public int id(string to_check) {
+  if(classp(storage_options) && storage_options.storage_id &&
+     storage_options.storage_id == to_check)
+    return 1;
 
   return ::id(to_check);
 }
@@ -277,20 +296,20 @@ int id(string to_check) {
 /**
  * Sets the link to the associated storage room.
  *
- * @param {string} link - The filename of the linked storage room
- * @returns {string} The link that was set
+ * @param {string} new_link - The filename of the linked storage room.
+ * @returns {string} The link that was set.
  */
-string set_link(string link) {
-    return link;
+public string set_link(string new_link) {
+  return link = new_link;
 }
 
 /**
  * Returns the link to the associated storage room.
  *
- * @returns {string} The filename of the linked storage room
+ * @returns {string} The filename of the linked storage room.
  */
-string query_link() {
-    return link;
+public string query_link() {
+  return link;
 }
 
 /**
@@ -298,6 +317,8 @@ string query_link() {
  *
  * Used for type checking.
  *
- * @returns {int} Always returns 1
+ * @returns {int} Always returns 1.
  */
-int is_storage_object() { return 1 ; }
+public int is_storage_object() {
+  return 1;
+}
